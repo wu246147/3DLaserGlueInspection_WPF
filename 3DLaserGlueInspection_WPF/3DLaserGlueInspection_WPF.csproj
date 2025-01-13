@@ -6,14 +6,15 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{42D55624-1753-46E0-830E-F20708220B8E}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>_3DLaserGlueInspection_WPF</RootNamespace>
-    <AssemblyName>3DLaserGlueInspection_WPF</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <RootNamespace>_3DLaserGlueInspection</RootNamespace>
+    <AssemblyName>3DLaserGlueInspection</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -34,10 +35,30 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="halcondotnet, Version=23.5.0.0, Culture=neutral, PublicKeyToken=4973bed59ddbf2b8, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>bin\Debug\halcondotnet.dll</HintPath>
+    <Reference Include="halcondotnet">
+      <HintPath>C:\Program Files\MVTec\HALCON-23.05-Progress\bin\dotnet35\halcondotnet.dll</HintPath>
     </Reference>
     <Reference Include="HslCommunication, Version=12.1.1.0, Culture=neutral, PublicKeyToken=3d72ad3b6b5ec0e3, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -54,6 +75,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -72,11 +94,18 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Common\NotifyBase.cs" />
     <Compile Include="Converter\BoolToWidthConverter.cs" />
     <Compile Include="Converter\EnumToBooleanConverter.cs" />
     <Compile Include="Converter\FloatToPercentConverter.cs" />
     <Compile Include="Converter\HalfConverter.cs" />
     <Compile Include="Converter\VisibilityToWidthConverter.cs" />
+    <Compile Include="Model\MainModel.cs" />
+    <Compile Include="subForm\UserHWindowControl.xaml.cs">
+      <DependentUpon>UserHWindowControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="tool\CarSet.cs" />
+    <Compile Include="Model\MainWindowModel.cs" />
     <Compile Include="tool\Reg.cs" />
     <Compile Include="tool\Robot.cs" />
     <Compile Include="tool\Synchronized.cs" />
@@ -101,6 +130,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="subForm\UserHWindowControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="tool\MVCamera.cs" />
@@ -157,6 +190,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets\Icons\Logo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Themes\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
