@@ -8,7 +8,9 @@
 
 
         xmlns:local="clr-namespace:_3DLaserGlueInspection"
-        xmlns:subForm="clr-namespace:_3DLaserGlueInspection.subForm" x:Class="_3DLaserGlueInspection.MainWindow"
+        xmlns:subForm="clr-namespace:_3DLaserGlueInspection.subForm" 
+        x:Class="_3DLaserGlueInspection.MainWindow"
+    
         mc:Ignorable="d"
         Title="MainWindow" Height="1040.4" Width="1918" WindowStyle="None"  WindowStartupLocation="CenterScreen" Loaded="Window_Loaded" 
         MinHeight="800"
@@ -125,10 +127,11 @@
             <Label Content="异常" HorizontalAlignment="Left" Margin="78,224,0,0" VerticalAlignment="Top" Foreground="White" FontSize="14"/>
             <Label Content="正常" HorizontalAlignment="Left" Margin="78,141,0,0" VerticalAlignment="Top" Foreground="White" FontSize="14"/>
             <Grid x:Name="GridTotalResultImage" Grid.Column="1" Background="#FF373737" Margin="0,0,10,0">
-                <subForm:UserHWindowControl  x:Name="hWindow数模图" Margin="0,0,0,0" />
+                <subForm:ImageControl2 x:Name="hWindowModel" Margin="0,0,0,0" />
             </Grid>
             <Grid x:Name="GridCheckImage" Grid.Column="2" Margin="10,0,0,0" Background="#FF373737">
-                <subForm:UserHWindowControl x:Name="hWindowControl" Margin="0,0,0,0" />
+                <subForm:ImageControl2 x:Name="hWindowControl" Margin="0,0,0,0" Visibility="Visible" />
+                <subForm:User3DShowControl x:Name="_3DShowControl" Visibility="Hidden" Background="#FFFFFF" />
             </Grid>
         </Grid>
 

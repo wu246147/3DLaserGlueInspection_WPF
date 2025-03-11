@@ -1,0 +1,51 @@
+﻿<UserControl x:Class="_3DLaserGlueInspection.subForm.ImageControl2"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:_3DLaserGlueInspection.subForm"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <!--<conv:ImageConverter2 x:Key="imageConv"></conv:ImageConverter2>-->
+        <TransformGroup x:Name="transformGroup" x:Key="imageView">
+            <ScaleTransform />
+            <TranslateTransform />
+            <RotateTransform />
+        </TransformGroup>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="35"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0">
+            <ScrollViewer   VerticalScrollBarVisibility="Disabled" Background="Black" Grid.RowSpan="2">
+                <ContentControl  Background="Black">
+                    <Grid x:Name="grid" RenderTransform="{StaticResource imageView}" Margin="0,0,0,0">
+                        <ScrollViewer  Grid.Column="0" VerticalScrollBarVisibility="Disabled" Background="Black">
+                            <ContentControl  Background="Black">
+                                <Image  
+                                x:Name="image" Margin="0,0,0,0">
+                                </Image>
+                            </ContentControl>
+                        </ScrollViewer>
+                        <Canvas x:Name="canvas" Margin="0,0,0,0">
+
+                        </Canvas>
+
+                    </Grid>
+
+                </ContentControl>
+            </ScrollViewer>
+        </Grid>
+
+        <Border Grid.Row="1" Margin="0,0,0,0" BorderThickness="0,2,0,0" BorderBrush="White" Background="Black">
+            <Label Name="infoLabel" Foreground="White"  Grid.Row="1" Content="" HorizontalAlignment="Left" Margin="20,2,0,0" VerticalAlignment="Top" Height="35"/>
+        </Border>
+
+    </Grid>
+
+
+</UserControl>

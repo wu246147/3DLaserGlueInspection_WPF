@@ -1,218 +1,72 @@
-﻿using HalconDotNet;
+﻿//using HalconDotNet;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media.Media3D;
 using System.Xml.Serialization;
+using OpenCvSharp;
+using Wpf_Replace_halcon;
 
 namespace _3DLaserGlueInspection
 {
     public class Vision
     {
+        private const string DllName = "RaivasAlgTransform.dll"; // Replace with the actual DLL 
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern int poseToHomMat3d(int PoseType, double x, double y, double z, double rx, double ry, double rz, IntPtr transformMat);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern int affineTransPoint3d(IntPtr srcPoints, IntPtr transformPoints, IntPtr transformMat);
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+
+        public static extern int imagePointsToWorldPlane(double Focus, double Kappa, double CamSx, double CamSy, double CamCx, double CamCy,
+        int PoseType, double PoseX, double PoseY, double PoseZ, double PoseRx, double PoseRy, double PoseRz,
+        IntPtr srcPoints, IntPtr transformPoints);
+
+        private const string DllName2 = "RaivasAlgGB.dll"; // Replace with the actual DLL 
+        [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
+        public static extern int thinning(IntPtr inputMat, IntPtr outImage, IntPtr outPointMat);
+        [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
+        public static extern int singleFrameDet(IntPtr inputPointMat, out bool existGlue, out double centerX, out double centerY,
+            out double phi, out double width, out double height);
+        [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
+
+        public static extern int trajectoryDiscreteFilter(IntPtr inputPointMat, double distThre, double segmentalThre, IntPtr pointsFilterMat);
+
+
         /// <summary>
-        /// 仅适用无重影，无噪点，激光明显
+        /// 获取激光位置
         /// </summary>
-        public Dictionary<double, double> 获取激光像素位置(HImage hImage, double minThreshold, int offsetX = 0, int offsetY = 0)
+        /// <param name="Image"></param>
+        /// <param name="minThreshold"></param>
+        /// <param name="outlinePoints"></param>
+        /// <param name="offsetX"></param>
+        /// <param name="offsetY"></param>
+        public void getLaserPosition(Mat Image, double minThreshold,out Mat outlinePoints, int offsetX = 0, int offsetY = 0)
         {
-            Dictionary<double, double> map = new Dictionary<double, double>();
+            Mat outImage = new Mat();
+            outlinePoints = new Mat();
+            thinning(Image.CvPtr, outImage.CvPtr, outlinePoints.CvPtr);
 
-            hImage.GetImageSize(out int width, out int height);
-            HRegion lineRegion = hImage.Threshold(minThreshold, 255);
-            int halfRectangle = 1;//采样宽度
-            for (int i = 0; i < width; i++)
+            if (offsetX != 0)
             {
-                HRegion rectangle = new HRegion(0.0, i - halfRectangle, height, i + halfRectangle);
-                HRegion region = rectangle.Intersection(lineRegion);
-                //求区域中心
-                if (region.AreaCenter(out double y, out double x) > 2)
+                for (int i = 0; i < outlinePoints.Cols; i++)
                 {
-                    map.Add(i + offsetX, y + offsetY);
+                    outlinePoints.At<double>(0, i) += offsetX;
                 }
-                rectangle.Dispose();
-                region.Dispose();
             }
-            lineRegion.Dispose();
-            return map;
-        }
-        /// <summary>
-        /// 仅适用无重影，无噪点，激光明显
-        /// </summary>
-        public Dictionary<double, double> 获取激光像素位置2(HImage hImage, double minThreshold, int offsetX = 0, int offsetY = 0)
-        {
-            Dictionary<double, double> map0 = new Dictionary<double, double>();
-            Dictionary<double, double> maphalf = new Dictionary<double, double>();
-
-            hImage.GetImageSize(out int width, out int height);
-            HRegion lineRegion = hImage.Threshold(minThreshold, 255);
-            int halfRectangle = 1;//采样宽度
-            int half = width / 2;
-            Task task = Task.Run(() =>
+            if (offsetY != 0)
             {
-                for (int i = 0; i < half; i++)
+                for (int i = 0; i < outlinePoints.Cols; i++)
                 {
-                    HRegion rectangle = new HRegion(0.0, i - halfRectangle, height, i + halfRectangle);
-                    HRegion region = rectangle.Intersection(lineRegion);
-                    //求区域中心
-                    if (region.AreaCenter(out double y, out double x) > 2)
-                    {
-                        map0.Add(i + offsetX, y + offsetY);
-                    }
-                    rectangle.Dispose();
-                    region.Dispose();
+                    outlinePoints.At<double>(1, i) += offsetY;
                 }
-            });
-
-            for (int i = half; i < width; i++)
-            {
-                HRegion rectangle = new HRegion(0.0, i - halfRectangle, height, i + halfRectangle);
-                HRegion region = rectangle.Intersection(lineRegion);
-                //求区域中心
-                if (region.AreaCenter(out double y, out double x) > 2)
-                {
-                    maphalf.Add(i + offsetX, y + offsetY);
-                }
-                rectangle.Dispose();
-                region.Dispose();
             }
-            while (!task.IsCompleted) { }
-            lineRegion.Dispose();
-            return map0.Concat(maphalf).ToDictionary(key => key.Key, value => value.Value);
-        }
 
-        public Dictionary<double, double> 获取激光像素位置HDR(HImage hImage, double minThreshold, int offsetX = 0, int offsetY = 0)
-        {
-            Dictionary<double, double> map = new Dictionary<double, double>();
-
-            hImage.GetImageSize(out int width, out int height);
-            Dictionary<double, HRegion> regionThresholds = new Dictionary<double, HRegion>();//缓存避免重复运算
-            int halfRectangle = 1;//采样宽度
-            for (int i = 0; i < width; i++)
-            {
-                HRegion rectangle = new HRegion(0.0, i - halfRectangle, height, i + halfRectangle);
-                rectangle.MinMaxGray(hImage, 0.2, out double min, out double max, out double range);
-                double threshold = Math.Max(max - 1, minThreshold);
-                if (!regionThresholds.TryGetValue(threshold, out HRegion value))
-                {
-                    value = hImage.Threshold(threshold, 255);
-                    regionThresholds.Add(threshold, value);
-                }
-                HRegion region = rectangle.Intersection(value);
-                HRegion regionConnection = region.Connection();
-                //寻找面积最大的
-                int index = 1;
-                for (int j = 2; j - 1 < regionConnection.CountObj(); j++)
-                {
-                    if (regionConnection[j].Area > regionConnection[index].Area)
-                    {
-                        index = j;
-                    }
-                }
-                //求区域中心
-                if (regionConnection[index].AreaCenter(out double y, out double x) > 2)
-                {
-                    map.Add(i + offsetX, y + offsetY);
-                }
-                rectangle.Dispose();
-                region.Dispose();
-                regionConnection.Dispose();
-            }
-            foreach (HRegion region in regionThresholds.Values)
-            {
-                region.Dispose();
-            }
-            return map;
-        }
-        public Dictionary<double, double> 获取激光像素位置HDR2(HImage hImage, double minThreshold, int offsetX = 0, int offsetY = 0)
-        {
-            Dictionary<double, double> map0 = new Dictionary<double, double>();
-            Dictionary<double, double> maphalf = new Dictionary<double, double>();
-
-            hImage.GetImageSize(out int width, out int height);
-            object olock_regionThresholds = new object();
-            Dictionary<double, HRegion> regionThresholds = new Dictionary<double, HRegion>();//缓存避免重复运算
-            int halfRectangle = 3;//采样宽度
-            int half = width / 2;
-            Task task = Task.Run(() =>
-            {
-                for (int i = 0; i < half; i++)
-                {
-                    HRegion rectangle = new HRegion(0.0, i - halfRectangle, height, i + halfRectangle);
-                    rectangle.MinMaxGray(hImage, 0.2, out double min, out double max, out double range);
-                    double threshold = Math.Max(max - 1, minThreshold);
-                    HRegion value;
-                    lock (olock_regionThresholds)
-                    {
-                        if (!regionThresholds.TryGetValue(threshold, out value))
-                        {
-                            value = hImage.Threshold(threshold, 255);
-                            regionThresholds.Add(threshold, value);
-                        }
-                    }
-                    HRegion region = rectangle.Intersection(value);
-                    HRegion regionConnection = region.Connection();
-                    //寻找面积最大的
-                    int index = 1;
-                    for (int j = 2; j - 1 < regionConnection.CountObj(); j++)
-                    {
-                        if (regionConnection[j].Area > regionConnection[index].Area)
-                        {
-                            index = j;
-                        }
-                    }
-                    //求区域中心
-                    if (regionConnection[index].AreaCenter(out double y, out double x) > 2)
-                    {
-                        map0.Add(i + offsetX, y + offsetY);
-                    }
-                    rectangle.Dispose();
-                    region.Dispose();
-                    regionConnection.Dispose();
-                }
-            });
-
-            for (int i = half; i < width; i++)
-            {
-                HRegion rectangle = new HRegion(0.0, i - halfRectangle, height, i + halfRectangle);
-                rectangle.MinMaxGray(hImage, 0.2, out double min, out double max, out double range);
-                double threshold = Math.Max(max - 1, minThreshold);
-                HRegion value;
-                lock (olock_regionThresholds)
-                {
-                    if (!regionThresholds.TryGetValue(threshold, out value))
-                    {
-                        value = hImage.Threshold(threshold, 255);
-                        regionThresholds.Add(threshold, value);
-                    }
-                }
-                HRegion region = rectangle.Intersection(value);
-                HRegion regionConnection = region.Connection();
-                //寻找面积最大的
-                int index = 1;
-                for (int j = 2; j - 1 < regionConnection.CountObj(); j++)
-                {
-                    if (regionConnection[j].Area > regionConnection[index].Area)
-                    {
-                        index = j;
-                    }
-                }
-                //求区域中心
-                if (regionConnection[index].AreaCenter(out double y, out double x) > 2)
-                {
-                    maphalf.Add(i + offsetX, y + offsetY);
-                }
-                rectangle.Dispose();
-                region.Dispose();
-                regionConnection.Dispose();
-            }
-            while (!task.IsCompleted) { }
-            foreach (HRegion region in regionThresholds.Values)
-            {
-                region.Dispose();
-            }
-            return map0.Concat(maphalf).ToDictionary(key => key.Key, value => value.Value);
         }
 
 
@@ -220,346 +74,57 @@ namespace _3DLaserGlueInspection
         /// <summary>
         /// 输入像素坐标，输出物理坐标xy
         /// </summary>
-        public void GetXY(HCamPar hCamPar, HPose hWorldPose, Dictionary<double, double> xys, out HTuple hx, out HTuple hy, bool 反转X = false, bool 反转Y = false)
+        public void GetXY(CameraParameters hCamPar, PoseParameters hWorldPose, Mat srcPoints, out Mat transformPoints, bool 反转X = false, bool 反转Y = false)
         {
-            GetXY(hCamPar, hWorldPose, xys.Keys.ToArray(), xys.Values.ToArray(), out hx, out hy, 反转X, 反转Y);
-        }
-        /// <summary>
-        /// 输入像素坐标，输出物理坐标xy
-        /// </summary>
-        public void GetXY(HCamPar hCamPar, HPose hWorldPose, List<double> xs, List<double> ys, out HTuple hx, out HTuple hy, bool 反转X = false, bool 反转Y = false)
-        {
-            GetXY(hCamPar, hWorldPose, xs.ToArray(), ys.ToArray(), out hx, out hy, 反转X, 反转Y);
-        }
-        /// <summary>
-        /// 输入像素坐标，输出物理坐标xy
-        /// </summary>
-        public void GetXY(HCamPar hCamPar, HPose hWorldPose, double[] xs, double[] ys, out HTuple hx, out HTuple hy, bool 反转X = false, bool 反转Y = false)
-        {
-            hCamPar.ImagePointsToWorldPlane(hWorldPose, new HTuple(ys), new HTuple(xs), "m", out hx, out hy);
+            transformPoints = new Mat();
+
+            //hCamPar.ImagePointsToWorldPlane(hWorldPose, new HTuple(ys), new HTuple(xs), "m", out hx, out hy);
+
+
+            imagePointsToWorldPlane(hCamPar.Focus, hCamPar.Kappa, hCamPar.Sx, hCamPar.Sy, hCamPar.Cx, hCamPar.Cy, hWorldPose.PoseType, hWorldPose.x, hWorldPose.y, hWorldPose.z,
+                hWorldPose.rx, hWorldPose.ry, hWorldPose.rz, srcPoints.CvPtr, transformPoints.CvPtr);
+
             if (反转X)
             {
-                hx = hx * -1d;
+                for (int i = 0; i < transformPoints.Cols; i++)
+                {
+                    transformPoints.At<double>(0, i) *= -1;
+                }
             }
             if (反转Y)
             {
-                hy = hy * -1d;
+                for (int i = 0; i < transformPoints.Cols; i++)
+                {
+                    transformPoints.At<double>(1, i) *= -1;
+                }
             }
+
+
         }
 
 
-        public HXLDCont 轮廓提取_像素(List<double> xs, List<double> ys, int 分段距离, int 成段点数, int offsetX = 0, int offsetY = 0)
+        public void getOutline(Mat srcPoints, out Mat transformPoints, double distThre, int segmentalThre)
         {
-            //距离分段
-            List<double[]> doublesX = new List<double[]>();
-            List<double[]> doublesY = new List<double[]>();
-            int sIndex = 0;
-            for (int i = 1; i < ys.Count; i++)
-            {
-                double dd = Math.Sqrt(Math.Pow(xs[i] - xs[i - 1], 2) + Math.Pow(ys[i] - ys[i - 1], 2));
-                if (dd > 分段距离)
-                {
-                    doublesX.Add(xs.Skip(sIndex).Take(i - sIndex).ToArray());
-                    doublesY.Add(ys.Skip(sIndex).Take(i - sIndex).ToArray());
-                    sIndex = i;
-                }
-            }
-            doublesX.Add(xs.Skip(sIndex).ToArray());
-            doublesY.Add(ys.Skip(sIndex).ToArray());
-            //剔除
-            doublesX.RemoveAll(n => n.Length < 成段点数);
-            doublesY.RemoveAll(n => n.Length < 成段点数);
-            //重组
-            HTuple hTupleX = new HTuple();
-            doublesX.ForEach(n => hTupleX.Append(n));
-            HTuple hTupleY = new HTuple();
-            doublesY.ForEach(n => hTupleY.Append(n));
+            transformPoints = new Mat();
 
-            HXLDCont hXLDCont = new HXLDCont(hTupleY + offsetY, hTupleX + offsetX);
-
-            return hXLDCont;
-        }
-        public HXLDCont 轮廓提取(HTuple xs, HTuple ys, double 分段距离, int 成段点数)
-        {
-            //距离分段
-            List<double[]> doublesX = new List<double[]>();
-            List<double[]> doublesY = new List<double[]>();
-            int sIndex = 0;
-            for (int i = 1; i < ys.Length; i++)
-            {
-                double dd = Math.Sqrt(Math.Pow(xs[i] - xs[i - 1], 2) + Math.Pow(ys[i] - ys[i - 1], 2));
-                if (dd > 分段距离)
-                {
-                    doublesX.Add(xs.TupleSelectRange(sIndex, i - 1).ToDArr());
-                    doublesY.Add(ys.TupleSelectRange(sIndex, i - 1).ToDArr());
-                    sIndex = i;
-                }
-            }
-            doublesX.Add(xs.TupleSelectRange(sIndex, ys.Length - 1).ToDArr());
-            doublesY.Add(ys.TupleSelectRange(sIndex, ys.Length - 1).ToDArr());
-            //剔除
-            doublesX.RemoveAll(n => n.Length < 成段点数);
-            doublesY.RemoveAll(n => n.Length < 成段点数);
-            //重组
-            HTuple hTupleX = new HTuple();
-            doublesX.ForEach(n => hTupleX.Append(n));
-            HTuple hTupleY = new HTuple();
-            doublesY.ForEach(n => hTupleY.Append(n));
-
-            HXLDCont hXLDCont = new HXLDCont(hTupleY, hTupleX);
-
-            return hXLDCont;
-        }
-        public HXLDCont 轮廓提取(HTuple xs, HTuple ys, double 分段距离, int 成段点数, double 分段角度, double 分段角度距离, out HTuple 转折坐标X, out HTuple 转折坐标Y, out HTuple 转折标记)
-        {
-            //距离分段
-            List<double[]> doublesX = new List<double[]>();
-            List<double[]> doublesY = new List<double[]>();
-            int sIndex = 0;
-            for (int i = 1; i < ys.Length; i++)
-            {
-                double dd = Math.Sqrt(Math.Pow(xs[i] - xs[i - 1], 2) + Math.Pow(ys[i] - ys[i - 1], 2));
-                if (dd > 分段距离)
-                {
-                    doublesX.Add(xs.TupleSelectRange(sIndex, i - 1).ToDArr());
-                    doublesY.Add(ys.TupleSelectRange(sIndex, i - 1).ToDArr());
-                    sIndex = i;
-                }
-            }
-            doublesX.Add(xs.TupleSelectRange(sIndex, ys.Length - 1).ToDArr());
-            doublesY.Add(ys.TupleSelectRange(sIndex, ys.Length - 1).ToDArr());
-            //剔除
-            doublesX.RemoveAll(n => n.Length < 成段点数);
-            doublesY.RemoveAll(n => n.Length < 成段点数);
-            //重组
-            HTuple hTupleX = new HTuple();
-            doublesX.ForEach(n => hTupleX.Append(n));
-            HTuple hTupleY = new HTuple();
-            doublesY.ForEach(n => hTupleY.Append(n));
-
-            HXLDCont hXLDCont = new HXLDCont(hTupleY, hTupleX);
-
-            //以下新增
-
-            Dictionary<int, int> 角度分段下标 = new Dictionary<int, int>();
-            int 角度分段起点 = -1;
-            int 角度分段上一点 = -1;
-            var angle = hXLDCont.GetContourAngleXld("rel", "mean", 3);
-            for (int i = 0; i < angle.Length; i++)
-            {
-                if (Math.Abs(angle[i].D) > 分段角度)
-                {
-                    if (角度分段上一点 != -1)
-                    {
-                        double dd = Math.Sqrt(Math.Pow(hTupleX[i] - hTupleX[角度分段上一点], 2) + Math.Pow(hTupleY[i] - hTupleY[角度分段上一点], 2));
-                        if (dd > 分段角度距离)
-                        {
-                            角度分段下标.Add(角度分段起点, 角度分段上一点);
-                            角度分段起点 = i;
-                        }
-                    }
-                    else
-                    {
-                        角度分段起点 = i;
-                    }
-                    角度分段上一点 = i;
-                }
-            }
-            角度分段下标.Add(角度分段起点, 角度分段上一点);
-            List<int> 折点下标 = new List<int>();
-            foreach (var item in 角度分段下标)
-            {
-                if (item.Value - item.Key + 1 >= 2)
-                {
-                    折点下标.Add((item.Value + item.Key) / 2);
-                }
-            }
-            int[] indexs = new int[doublesX.Count * 2];
-            int indexsAdd = 0;
-            for (int i = 0; i < doublesX.Count; i++)
-            {
-                indexs[i * 2] = indexsAdd;
-                indexs[i * 2 + 1] = indexsAdd + doublesX[i].Length - 1;
-                indexsAdd += doublesX[i].Length;
-            }
-
-            折点下标.AddRange(indexs);
-            indexs = 折点下标.OrderBy(n => n).ToArray();
-
-            //新重组
-            HTuple newTupleX = new HTuple();
-            HTuple newTupleY = new HTuple();
-            Array.ForEach(indexs, i => { newTupleX.Append(hTupleX[i]); newTupleY.Append(hTupleY[i]); });
-            //HXLDCont newXLDCont = new HXLDCont(newTupleY, newTupleX);
-
-            bool[] 下位点 = Enumerable.Repeat(true, indexs.Length).ToArray();
-            for (int i = 1; i < indexs.Length - 1; i++)
-            {
-                HOperatorSet.AngleLl(hTupleY[indexs[i - 1]], hTupleX[indexs[i - 1]], hTupleY[indexs[i]], hTupleX[indexs[i]], hTupleY[indexs[i]], hTupleX[indexs[i]], hTupleY[indexs[i + 1]], hTupleX[indexs[i + 1]], out HTuple hTuple);
-                if (hTuple.D < 0)
-                {
-                    下位点[i] = false;
-                }
-            }
-            for (int i = 1; i < indexs.Length - 1; i++)
-            {
-                if (下位点[i] && !下位点[i - 1] && !下位点[i + 1])//单点下位转上位
-                {
-                    下位点[i] = false;
-                }
-            }
-            转折坐标X = newTupleX;
-            转折坐标Y = newTupleY;
-            转折标记 = new HTuple(Array.ConvertAll(下位点, n => n ? GlobalVarAndFunc.LanguageTranslate("下") : GlobalVarAndFunc.LanguageTranslate("上")));
+            trajectoryDiscreteFilter(srcPoints.CvPtr, distThre, segmentalThre, transformPoints.CvPtr);
 
 
-            return hXLDCont;
-        }
-        public HXLDCont 轮廓提取(HTuple xs, HTuple ys, double 分段距离, int 成段点数, double 分段角度, double 分段角度距离, out HTuple 转折坐标X, out HTuple 转折坐标Y, out HTuple 转折标记, out HXLDCont 胶轮廓)
-        {
-            //距离分段
-            List<double[]> doublesX = new List<double[]>();
-            List<double[]> doublesY = new List<double[]>();
-            int sIndex = 0;
-            for (int i = 1; i < ys.Length; i++)
-            {
-                double dd = Math.Sqrt(Math.Pow(xs[i] - xs[i - 1], 2) + Math.Pow(ys[i] - ys[i - 1], 2));
-                if (dd > 分段距离)
-                {
-                    doublesX.Add(xs.TupleSelectRange(sIndex, i - 1).ToDArr());
-                    doublesY.Add(ys.TupleSelectRange(sIndex, i - 1).ToDArr());
-                    sIndex = i;
-                }
-            }
-            doublesX.Add(xs.TupleSelectRange(sIndex, ys.Length - 1).ToDArr());
-            doublesY.Add(ys.TupleSelectRange(sIndex, ys.Length - 1).ToDArr());
-            //剔除
-            doublesX.RemoveAll(n => n.Length < 成段点数);
-            doublesY.RemoveAll(n => n.Length < 成段点数);
-            //重组
-            HTuple hTupleX = new HTuple();
-            doublesX.ForEach(n => hTupleX.Append(n));
-            HTuple hTupleY = new HTuple();
-            doublesY.ForEach(n => hTupleY.Append(n));
-
-            HXLDCont hXLDCont = new HXLDCont(hTupleY, hTupleX);
-
-            //以下新增
-
-            Dictionary<int, int> 角度分段下标 = new Dictionary<int, int>();
-            int 角度分段起点 = -1;
-            int 角度分段上一点 = -1;
-            var angle = hXLDCont.GetContourAngleXld("rel", "mean", 3);
-            for (int i = 0; i < angle.Length; i++)
-            {
-                if (Math.Abs(angle[i].D) > 分段角度)
-                {
-                    if (角度分段上一点 != -1)
-                    {
-                        double dd = Math.Sqrt(Math.Pow(hTupleX[i] - hTupleX[角度分段上一点], 2) + Math.Pow(hTupleY[i] - hTupleY[角度分段上一点], 2));
-                        if (dd > 分段角度距离)
-                        {
-                            角度分段下标.Add(角度分段起点, 角度分段上一点);
-                            角度分段起点 = i;
-                        }
-                    }
-                    else
-                    {
-                        角度分段起点 = i;
-                    }
-                    角度分段上一点 = i;
-                }
-            }
-            角度分段下标.Add(角度分段起点, 角度分段上一点);
-            List<int> 折点下标 = new List<int>();
-            foreach (var item in 角度分段下标)
-            {
-                if (item.Value - item.Key + 1 >= 2)
-                {
-                    折点下标.Add((item.Value + item.Key) / 2);
-                }
-            }
-            int[] indexs = new int[doublesX.Count * 2];
-            int indexsAdd = 0;
-            for (int i = 0; i < doublesX.Count; i++)
-            {
-                indexs[i * 2] = indexsAdd;
-                indexs[i * 2 + 1] = indexsAdd + doublesX[i].Length - 1;
-                indexsAdd += doublesX[i].Length;
-            }
-
-            折点下标.AddRange(indexs);
-            indexs = 折点下标.OrderBy(n => n).ToArray();
-
-            //新重组
-            HTuple newTupleX = new HTuple();
-            HTuple newTupleY = new HTuple();
-            Array.ForEach(indexs, i => { newTupleX.Append(hTupleX[i]); newTupleY.Append(hTupleY[i]); });
-            //HXLDCont newXLDCont = new HXLDCont(newTupleY, newTupleX);
-
-            bool[] 下位点 = Enumerable.Repeat(true, indexs.Length).ToArray();
-            for (int i = 1; i < indexs.Length - 1; i++)
-            {
-                HOperatorSet.AngleLl(hTupleY[indexs[i - 1]], hTupleX[indexs[i - 1]], hTupleY[indexs[i]], hTupleX[indexs[i]], hTupleY[indexs[i]], hTupleX[indexs[i]], hTupleY[indexs[i + 1]], hTupleX[indexs[i + 1]], out HTuple hTuple);
-                if (hTuple.D < 0)
-                {
-                    下位点[i] = false;
-                }
-            }
-            for (int i = 1; i < indexs.Length - 1; i++)
-            {
-                if (下位点[i] && !下位点[i - 1] && !下位点[i + 1])//单点下位转上位
-                {
-                    下位点[i] = false;
-                }
-            }
-            转折坐标X = newTupleX;
-            转折坐标Y = newTupleY;
-            转折标记 = new HTuple(Array.ConvertAll(下位点, n => n ? GlobalVarAndFunc.LanguageTranslate("下") : GlobalVarAndFunc.LanguageTranslate("上")));
-
-            //以下新增
-
-            HXLDCont hXLDConts = null;
-            int 下标记录 = 0;
-            for (int i = 1; i < indexs.Length; i++)
-            {
-                if (下位点[i])
-                {
-                    if (!下位点[i - 1])
-                    {
-                        HXLDCont XLDCont = new HXLDCont(hTupleY.TupleSelectRange(indexs[下标记录], indexs[i]), hTupleX.TupleSelectRange(indexs[下标记录], indexs[i]));
-                        if (hXLDConts == null)
-                        {
-                            hXLDConts = XLDCont;
-                        }
-                        else
-                        {
-                            var temp = hXLDConts.ConcatObj(XLDCont);
-                            hXLDConts.Dispose();
-                            XLDCont.Dispose();
-                            hXLDConts = temp;
-                        }
-                    }
-                    下标记录 = i;
-                }
-            }
-            胶轮廓 = hXLDConts;
-
-            return hXLDCont;
         }
 
-        public void RunRegion(HRegion hRegion, ImageSet imageSet, out HRegion hRegionGenRectangle2, out Data data, out bResult bResult)
+        public void RunRegion(Mat hRegion, ImageSet imageSet, out RotatedRect hRegionGenRectangle2, out Data data, out bResult bResult)
         {
             data = new Data();
             bResult = new bResult();
-            hRegion.SmallestRectangle2(out data.row, out data.column, out double phi, out double length1, out double length2);
-            hRegionGenRectangle2 = new HRegion();
-            hRegionGenRectangle2.GenRectangle2(data.row, data.column, phi, length1, length2);
+            hRegionGenRectangle2 = Cv2.MinAreaRect(hRegion);
+            ////hRegion.SmallestRectangle2(out data.row, out data.column, out double phi, out double length1, out double length2);
+            //hRegionGenRectangle2 = new Rect();
+            //hRegionGenRectangle2.GenRectangle2(data.row, data.column, phi, length1, length2);
 
-            bool heng = Math.Abs(phi) <= Math.PI / 4;
-            data.胶高 = (heng ? length2 : length1) / 100d * 2;
-            data.胶宽 = (heng ? length1 : length2) / 100d * 2;
-            data.面积 = hRegion.Area / 10000d;
+            bool heng = Math.Abs(hRegionGenRectangle2.Angle * Math.PI / 180) <= Math.PI / 4;
+            data.胶高 = (heng ? hRegionGenRectangle2.Size.Height : hRegionGenRectangle2.Size.Width) / 100d * 2;
+            data.胶宽 = (heng ? hRegionGenRectangle2.Size.Width : hRegionGenRectangle2.Size.Height) / 100d * 2;
+            data.面积 = hRegion.Width * hRegion.Height / 10000d;
             if (data.胶高 >= imageSet.heightMin && data.胶高 <= imageSet.heightMax)
             {
                 bResult.胶高 = true;
@@ -575,70 +140,6 @@ namespace _3DLaserGlueInspection
             if (bResult.胶高 && bResult.胶宽 && bResult.面积)
             {
                 bResult.Result = true;
-            }
-        }
-
-        public void XLDData拆分(XLDData XLDData, int 步数, out HTuple rows, out HTuple cols)
-        {
-            HXLDCont hXLDCont = new HXLDCont();
-            hXLDCont.GenContourNurbsXld(XLDData.ControlRows, XLDData.ControlCols, XLDData.Knots, "auto", 3, 1, 5);
-            hXLDCont.GetContourXld(out HTuple row, out HTuple col);
-            hXLDCont.Dispose();
-            double 总长 = 0;
-            List<double> 各长 = new List<double>();
-            for (int i = 1; i < row.Length; i++)
-            {
-                double d = Math.Sqrt(Math.Pow(row[i] - row[i - 1], 2) + Math.Pow(col[i] - col[i - 1], 2));
-                各长.Add(d);
-                总长 += d;
-            }
-            double 步长 = 步数 > 1 ? 总长 / (步数 - 1) : 总长;
-            rows = new double[步数];
-            cols = new double[步数];
-            int index各长 = 0;
-            double 顶点里程 = 各长[0];
-            for (int i = 0; i < rows.Length - 1; i++)
-            {
-                double 目标里程 = 步长 * i;
-                while (目标里程 > 顶点里程)
-                {
-                    index各长++;
-                    顶点里程 += 各长[index各长];
-                }
-                double 占比 = 1 - ((顶点里程 - 目标里程) / 各长[index各长]);
-                rows[i] = (row[index各长 + 1] - row[index各长]) * 占比 + row[index各长];
-                cols[i] = (col[index各长 + 1] - col[index各长]) * 占比 + col[index各长];
-            }
-            rows[rows.Length - 1] = row[row.Length - 1];
-            cols[cols.Length - 1] = col[col.Length - 1];
-        }
-        public void XLDData拆分(XLDData XLDData, int 步数, out HTuple rows, out HTuple cols, out HTuple angles)
-        {
-            XLDData拆分(XLDData, 步数, out rows, out cols);
-            angles = new double[步数];
-            if (rows.Length >= 5)
-            {
-                HXLDCont XLDCont = new HXLDCont(rows, cols);
-                angles = XLDCont.GetContourAngleXld("abs", "range", 1);
-                XLDCont.Dispose();
-            }
-            else if (rows.Length >= 2)
-            {
-                //自己求角度
-                double[] phi = new double[rows.Length];
-                HOperatorSet.LineOrientation(rows[0], cols[0], rows[1], cols[1], out HTuple angle0);
-                phi[0] = angle0.D;
-                for (int i = 1; i < phi.Length - 1; i++)
-                {
-                    HXLDCont XLDCont = new HXLDCont(new HTuple(rows[i - 1].D, rows[i].D, rows[i + 1].D), new HTuple(cols[i - 1].D, cols[i].D, cols[i + 1].D));
-                    XLDCont.FitLineContourXld("regression", -1, 0, 2, 2, out double rowBegin, out double colBegin, out double rowEnd, out double colEnd, out double nr, out double nc, out double dist);
-                    XLDCont.Dispose();
-                    HOperatorSet.LineOrientation(rowBegin, colBegin, rowEnd, colEnd, out HTuple angle);
-                    phi[i] = angle.D;
-                }
-                HOperatorSet.LineOrientation(rows[phi.Length - 2], cols[phi.Length - 2], rows[phi.Length - 1], cols[phi.Length - 1], out HTuple angle9);
-                phi[phi.Length - 1] = angle9.D;
-                angles = new HTuple(phi);
             }
         }
     }
@@ -670,7 +171,7 @@ namespace _3DLaserGlueInspection
         public OtherSet OtherSet = new OtherSet();
 
         //数模图
-        public HImage HImage;
+        public Mat image;
         public List<XLDData> XLDDatas = new List<XLDData>();
 
         public Setting(string name)
@@ -768,7 +269,7 @@ namespace _3DLaserGlueInspection
                 string fPath = basePath + "Image.png";
                 if (File.Exists(fPath))
                 {
-                    HImage = new HImage(fPath);
+                    image = new Mat(fPath, (ImreadModes)(-1));
                 }
                 else
                 {
@@ -845,7 +346,10 @@ namespace _3DLaserGlueInspection
                 }
                 {
                     string fPath = basePath + "Image.png";
-                    HImage?.WriteImage("png 1", 0, fPath);
+                    if (!image.Empty())
+                    {
+                        Cv2.ImWrite(fPath, image);
+                    }
                 }
                 {
                     string fPath = basePath + "XLDData.xml";

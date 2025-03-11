@@ -10,7 +10,7 @@ using System.Drawing;
 //using System.Windows.Forms;
 using System.Xml.Linq;
 using System.Globalization;
-using HalconDotNet;
+//using HalconDotNet;
 using System.Threading;
 //using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using static System.Net.Mime.MediaTypeNames;

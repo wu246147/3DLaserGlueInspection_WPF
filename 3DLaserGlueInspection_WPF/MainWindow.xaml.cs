@@ -1,4 +1,5 @@
 ﻿using _3DLaserGlueInspection.subForm;
+using HalconDotNet;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -20,6 +21,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using static _3DLaserGlueInspection.MainWindowModel;
 
+
 namespace _3DLaserGlueInspection
 {
     /// <summary>
@@ -33,6 +35,8 @@ namespace _3DLaserGlueInspection
 
         //readonly UserHWindowControl hWindow数模图 = new UserHWindowControl();
         //readonly UserHWindowControl hWindowControl = new UserHWindowControl();
+        //readonly Wpf_halcon.ImageControl2 hWindowModel = new Wpf_halcon.ImageControl2();
+        //readonly Wpf_halcon.ImageControl2 hWindowControl = new Wpf_halcon.ImageControl2();
 
 
 
@@ -45,6 +49,14 @@ namespace _3DLaserGlueInspection
         }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            model.DispImageHWindow数模图Event += hWindowModel.SetImageSource;
+            model.DispObjHWindow数模图Event += hWindowModel.DispObj;
+
+            model.DispClearHWindowControlEvent += hWindowControl.DispClear;
+            model.DispImageWithoutCloneHWindowControlEvent += hWindowControl.DispImageWithoutClone;
+            model.DispTextInImageHWindowControlEvent += hWindowControl.DispTextInImage;
+            model.DispTextInWindowHWindowControlEvent += hWindowControl.DispTextInWindow;
+            model.DispObjHWindowControlEvent += hWindowControl.DispObj;
 
         }
 
@@ -135,6 +147,17 @@ namespace _3DLaserGlueInspection
 
         private void simulationCheck_Click(object sender, RoutedEventArgs e)
         {
+            if ((bool)simulationCheck.IsChecked)
+            {
+                hWindowControl.Visibility = Visibility.Visible;
+                _3DShowControl.Visibility = Visibility.Hidden;
+            }
+            else 
+            {
+                hWindowControl.Visibility = Visibility.Hidden;
+                _3DShowControl.Visibility = Visibility.Visible;
+            }
+
             model.simulation = (bool)simulationCheck.IsChecked;
             //测试
             //model.ShowMessage(GlobalVarAndFunc.LanguageTranslate("开启仿真模式"), LogType.warn);

@@ -10,15 +10,17 @@ using System.Drawing;
 //using System.Windows.Forms;
 using System.Xml.Linq;
 using System.Globalization;
-using HalconDotNet;
+//using HalconDotNet;
 using System.Threading;
 //using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using static System.Net.Mime.MediaTypeNames;
 using System.Security.Cryptography;
+using OpenCvSharp;
+using Wpf_Replace_halcon;
 
 namespace _3DLaserGlueInspection
 {
-   
+
     public class Cam : MvCamera
     {
         public string ErrMsg => _errMsg;
@@ -87,11 +89,11 @@ namespace _3DLaserGlueInspection
             }
             return true;
         }
-       
+
         /// <summary>
-       /// 打开相机，打开第一个
-       /// </summary>
-       /// <returns></returns>
+        /// 打开相机，打开第一个
+        /// </summary>
+        /// <returns></returns>
         public bool Open()
         {
             if (Find(out string[] names, out string[] SNs, out string[] ManufacturerNames, out MV_CC_DEVICE_INFO[] DeviceList))
@@ -136,7 +138,7 @@ namespace _3DLaserGlueInspection
                             return Open(DeviceList[i]);
                         }
                     }
-                    _errMsg = GlobalVarAndFunc.LanguageTranslate("未找到相机") +name;
+                    _errMsg = GlobalVarAndFunc.LanguageTranslate("未找到相机") + name;
                     return false;
                 }
                 else
@@ -288,17 +290,17 @@ namespace _3DLaserGlueInspection
         /// <param name="pUser"></param>
         void ImageCallbackFunc(IntPtr pData, ref MV_FRAME_OUT_INFO_EX pFrameInfo, IntPtr pUser)
         {
-            ToHImage(pData, pFrameInfo, out HImage hImage);
+            ToMImage(pData, pFrameInfo, out Mat mImage);
         }
 
         /// <summary>
-        /// 图像指针转HImage
+        /// 
         /// </summary>
         /// <param name="pData"></param>
         /// <param name="pFrameInfo"></param>
-        /// <param name="hImage"></param>
+        /// <param name="mImage"></param>
         /// <returns></returns>
-        private bool ToHImage(IntPtr pData, MV_FRAME_OUT_INFO_EX pFrameInfo, out HImage hImage)
+        private bool ToMImage(IntPtr pData, MV_FRAME_OUT_INFO_EX pFrameInfo, out Mat mImage)
         {
             if (IsColorPixelFormat(pFrameInfo.enPixelType))
             {
@@ -327,7 +329,7 @@ namespace _3DLaserGlueInspection
                     if (MvCamera.MV_OK != nRet)
                     {
                         _errMsg = GlobalVarAndFunc.LanguageTranslate("格式转换失败");
-                        hImage = null;
+                        mImage = null;
                         return false;
                     }
                     pTemp = pImageBuf;
@@ -335,14 +337,14 @@ namespace _3DLaserGlueInspection
 
                 try
                 {
-                    hImage = new HImage();
-                    hImage.GenImageInterleaved(pTemp, "rgb", pFrameInfo.nWidth, pFrameInfo.nHeight, -1, "byte", 0, 0, 0, 0, -1, 0);
+                    mImage = Mat.FromPixelData(pFrameInfo.nHeight, pFrameInfo.nWidth, MatType.CV_8UC3, pTemp);
+
                     return true;
                 }
                 catch (Exception ex)
                 {
                     _errMsg = GlobalVarAndFunc.LanguageTranslate("格式转换创建失败:") + ex.ToString();
-                    hImage = null;
+                    mImage = null;
                     return false;
                 }
             }
@@ -373,41 +375,45 @@ namespace _3DLaserGlueInspection
                     if (MvCamera.MV_OK != nRet)
                     {
                         _errMsg = GlobalVarAndFunc.LanguageTranslate("格式转换失败");
-                        hImage = null;
+                        mImage = null;
                         return false;
                     }
                     pTemp = pImageBuf;
                 }
                 try
                 {
-                    hImage = new HImage("byte", pFrameInfo.nWidth, pFrameInfo.nHeight, pTemp);
-                    //HImage hImage = new HImage();
-                    //hImage.GenImage1Extern("byte", pFrameInfo.nWidth, pFrameInfo.nHeight, pTemp, IntPtr.Zero);
+                    //mImage = new Mat("byte", pFrameInfo.nWidth, pFrameInfo.nHeight, pTemp);
+                    mImage = Mat.FromPixelData(pFrameInfo.nHeight, pFrameInfo.nWidth, MatType.CV_8UC1, pTemp);
+
+                    //Mat mImage = new Mat();
+                    //mImage.GenImage1Extern("byte", pFrameInfo.nWidth, pFrameInfo.nHeight, pTemp, IntPtr.Zero);
                     return true;
                 }
                 catch (Exception ex)
                 {
                     _errMsg = GlobalVarAndFunc.LanguageTranslate("格式转换创建失败:") + ex.ToString();
-                    hImage = null;
+                    mImage = null;
                     return false;
                 }
             }
             else
             {
                 _errMsg = GlobalVarAndFunc.LanguageTranslate("未知格式:") + pFrameInfo.enPixelType;
-                hImage = null;
+                mImage = null;
                 return false;
             }
+
         }
+
 
         /// <summary>
         /// 单帧取像
         /// </summary>
-        /// <param name="hImage"></param>
+        /// <param name="mImage"></param>
         /// <returns></returns>
-        public bool OneShot(out HImage hImage)
+        public bool OneShot(out Mat mImage)
         {
-            hImage = null;
+            mImage = null;
             if (IsOpen)
             {
                 if (!IsGrabbing)
@@ -424,13 +430,15 @@ namespace _3DLaserGlueInspection
                     StopGrabbing();
                     if (MvCamera.MV_OK == nRet)
                     {
-                        bool bflag = ToHImage(stFrameOut.pBufAddr, stFrameOut.stFrameInfo, out hImage);
+                        bool bflag = ToMImage(stFrameOut.pBufAddr, stFrameOut.stFrameInfo, out mImage);
                         if (_manufacturerName == "ChinaVision" && _ReverseX)
                         {
-                            HObject hImage_mirror;
-                            HalconDotNet.HOperatorSet.MirrorImage(hImage, out hImage_mirror, "column");
-                            hImage = new HImage(hImage_mirror);
-
+                            //HObject mImage_mirror;
+                            //HalconDotNet.HOperatorSet.MirrorImage(mImage, out mImage_mirror, "column");
+                            //mImage = new Mat(mImage_mirror);
+                            Mat mImageFlip = new Mat();
+                            Cv2.Flip(mImage, mImageFlip, 0);
+                            mImage = mImageFlip;
                         }
 
                         MV_CC_FreeImageBuffer_NET(ref stFrameOut);
@@ -453,16 +461,16 @@ namespace _3DLaserGlueInspection
         /// <summary>
         /// 单帧取像
         /// </summary>
-        /// <param name="hImage"></param>
+        /// <param name="mImage"></param>
         /// <param name="left"></param>
         /// <param name="top"></param>
         /// <param name="right"></param>
         /// <param name="down"></param>
         /// <param name="outGray"></param>
         /// <returns></returns>
-        public bool OneShot(out HImage hImage, double left, double top, double right, double down, out double outGray)
+        public bool OneShot(out Mat mImage, double left, double top, double right, double down, out double outGray)
         {
-            hImage = null;
+            mImage = null;
             outGray = -1;
             if (IsOpen)
             {
@@ -480,7 +488,7 @@ namespace _3DLaserGlueInspection
                     StopGrabbing();
                     if (MvCamera.MV_OK == nRet)
                     {
-                        bool bflag = ToHImage(stFrameOut.pBufAddr, stFrameOut.stFrameInfo, out hImage);
+                        bool bflag = ToMImage(stFrameOut.pBufAddr, stFrameOut.stFrameInfo, out mImage);
                         MV_CC_FreeImageBuffer_NET(ref stFrameOut);
                         if (bflag)
                         {
@@ -488,7 +496,13 @@ namespace _3DLaserGlueInspection
                             double col2 = stFrameOut.stFrameInfo.nWidth * right;
                             double row1 = stFrameOut.stFrameInfo.nHeight * top;
                             double row2 = stFrameOut.stFrameInfo.nHeight * down;
-                            outGray = hImage.Intensity(new HRegion(row1, col1, row2, col2), out double _);
+                            //outGray = mImage.Intensity(new HRegion(row1, col1, row2, col2), out double _);
+                            Rect rect = new Rect((int)col1, (int)row1, (int)(col2 - col1), (int)(row2 - row1));
+                            Mat cutImage = new Mat(mImage, rect);
+                            Scalar mean = Cv2.Mean(cutImage);
+                            outGray = mean.Val0;
+
+
                         }
                         return bflag;
                     }
@@ -508,7 +522,7 @@ namespace _3DLaserGlueInspection
         /// <summary>
         /// 单帧取像
         /// </summary>
-        /// <param name="hImage"></param>
+        /// <param name="mImage"></param>
         /// <param name="countMax"></param>
         /// <param name="left"></param>
         /// <param name="top"></param>
@@ -518,9 +532,9 @@ namespace _3DLaserGlueInspection
         /// <param name="grayMax"></param>
         /// <param name="outGray"></param>
         /// <returns></returns>
-        public bool OneShotByGray(out HImage hImage, int countMax, double left, double top, double right, double down, byte grayMin, byte grayMax, out double outGray)
+        public bool OneShotByGray(out Mat mImage, int countMax, double left, double top, double right, double down, byte grayMin, byte grayMax, out double outGray)
         {
-            hImage = null;
+            mImage = null;
             outGray = -1;
             if (IsOpen)
             {
@@ -551,7 +565,9 @@ namespace _3DLaserGlueInspection
                 double col2 = Width * right;
                 double row1 = Height * top;
                 double row2 = Height * down;
-                HRegion hRegion = new HRegion(row1, col1, row2, col2);
+                //HRegion hRegion = new HRegion(row1, col1, row2, col2);
+                Rect rect = new Rect((int)col1, (int)row1, (int)(col2 - col1), (int)(row2 - row1));
+
                 bool bflag = false;
                 while (bRun)
                 {
@@ -570,23 +586,27 @@ namespace _3DLaserGlueInspection
                         StopGrabbing();
                         if (MvCamera.MV_OK == nRet)
                         {
-                            bflag = ToHImage(stFrameOut.pBufAddr, stFrameOut.stFrameInfo, out hImage);
+                            bflag = ToMImage(stFrameOut.pBufAddr, stFrameOut.stFrameInfo, out mImage);
                             MV_CC_FreeImageBuffer_NET(ref stFrameOut);
                             if (bflag)
                             {
-                                double gray = hImage.Intensity(hRegion, out double _);
+                                //double gray = mImage.Intensity(hRegion, out double _);
+                                Mat cutImage = new Mat(mImage, rect);
+                                Scalar mean = Cv2.Mean(cutImage);
+                                double gray = mean.Val0;
+
                                 if (gray == 0)
                                 {
-                                    hRegion?.Dispose();
-                                    hRegion = new HRegion(row1, col1, row2, col2);
-                                    gray = hImage.Intensity(hRegion, out double _);
+                                    rect = new Rect((int)col1, (int)row1, (int)(col2 - col1), (int)(row2 - row1));
+                                    cutImage = new Mat(mImage, rect);
+                                    mean = Cv2.Mean(cutImage);
+                                    gray = mean.Val0;
                                 }
                                 if (gray < grayMin)
                                 {
                                     if (!GetExposure(out exposureMin))
                                     {
-                                        hImage?.Dispose();
-                                        hRegion?.Dispose();
+                                        mImage?.Dispose();
                                         return false;
                                     }
                                     Console.WriteLine(exposureMin + " " + gray + " " + count);
@@ -594,8 +614,7 @@ namespace _3DLaserGlueInspection
                                     {
                                         if (!SetExposure(Math.Min(exposureMin * 2, 最大曝光)))
                                         {
-                                            hImage?.Dispose();
-                                            hRegion?.Dispose();
+                                            mImage?.Dispose();
                                             return false;
                                         }
                                     }
@@ -609,8 +628,7 @@ namespace _3DLaserGlueInspection
                                         {
                                             if (!SetExposure((exposureMin + exposureMax) / 2))
                                             {
-                                                hImage?.Dispose();
-                                                hRegion?.Dispose();
+                                                mImage?.Dispose();
                                                 return false;
                                             }
                                         }
@@ -620,8 +638,7 @@ namespace _3DLaserGlueInspection
                                 {
                                     if (!GetExposure(out exposureMax))
                                     {
-                                        hImage?.Dispose();
-                                        hRegion?.Dispose();
+                                        mImage?.Dispose();
                                         return false;
                                     }
                                     Console.WriteLine(exposureMax + " " + gray + " " + count);
@@ -629,8 +646,7 @@ namespace _3DLaserGlueInspection
                                     {
                                         if (!SetExposure(Math.Max(exposureMax / 2, 最小曝光)))
                                         {
-                                            hImage?.Dispose();
-                                            hRegion?.Dispose();
+                                            mImage?.Dispose();
                                             return false;
                                         }
                                     }
@@ -644,8 +660,7 @@ namespace _3DLaserGlueInspection
                                         {
                                             if (!SetExposure((exposureMin + exposureMax) / 2))
                                             {
-                                                hImage?.Dispose();
-                                                hRegion?.Dispose();
+                                                mImage?.Dispose();
                                                 return false;
                                             }
                                         }
@@ -672,7 +687,6 @@ namespace _3DLaserGlueInspection
                         //}
                     }
                 }
-                hRegion?.Dispose();
                 return bflag;
             }
             else
@@ -687,7 +701,7 @@ namespace _3DLaserGlueInspection
         /// </summary>
         /// <param name="UseImages"></param>
         /// <returns></returns>
-        public bool KeepShot(Action<HImage> UseImages)
+        public bool KeepShot(Action<Mat> UseImages)
         {
             if (IsOpen)
             {
@@ -706,17 +720,19 @@ namespace _3DLaserGlueInspection
                         int nRet = MV_CC_GetImageBuffer_NET(ref stFrameOut, 1000);
                         if (MvCamera.MV_OK == nRet)
                         {
-                            bool bflag = ToHImage(stFrameOut.pBufAddr, stFrameOut.stFrameInfo, out HImage hImage);
+                            bool bflag = ToMImage(stFrameOut.pBufAddr, stFrameOut.stFrameInfo, out Mat mImage);
                             if (_manufacturerName == "ChinaVision" && _ReverseX)
                             {
-                                HObject hImage_mirror;
-                                HalconDotNet.HOperatorSet.MirrorImage(hImage, out hImage_mirror, "column");
-                                hImage = new HImage(hImage_mirror);
-
+                                //HObject mImage_mirror;
+                                //HalconDotNet.HOperatorSet.MirrorImage(mImage, out mImage_mirror, "column");
+                                //mImage = new Mat(mImage_mirror);
+                                Mat mImageFlip = new Mat();
+                                Cv2.Flip(mImage, mImageFlip, 0);
+                                mImage = mImageFlip;
                             }
                             if (bflag)
                             {
-                                UseImages(hImage);
+                                UseImages(mImage);
                             }
                             MV_CC_FreeImageBuffer_NET(ref stFrameOut);
                         }
@@ -803,7 +819,7 @@ namespace _3DLaserGlueInspection
             }
             return true;
         }
-        
+
         /// <summary>
         /// 相机初始化设置
         /// </summary>
@@ -1019,7 +1035,7 @@ namespace _3DLaserGlueInspection
             {
                 return false;
             }
-            
+
         }
         public bool GetExposure(out float value)
         {
@@ -1683,7 +1699,7 @@ namespace _3DLaserGlueInspection
             {
                 return false;
             }
-            
+
         }
 
         //public bool SetLine1Status(bool value)
@@ -1930,7 +1946,7 @@ namespace _3DLaserGlueInspection
             {
                 return false;
             }
-               
+
         }
         /// <summary>
         /// 设置线路2输出使能开关
@@ -2085,16 +2101,16 @@ namespace _3DLaserGlueInspection
         string _errMsg = string.Empty;
         //保存的参数
         public Dictionary<string, Dictionary<string, CamParam>> Param = new Dictionary<string, Dictionary<string, CamParam>>();
-        public Dictionary<string, Dictionary<string, HCamPar>> CamPar = new Dictionary<string, Dictionary<string, HCamPar>>();
-        public Dictionary<string, Dictionary<string, HPose>> LightInCam = new Dictionary<string, Dictionary<string, HPose>>();
-        //public Dictionary<string, Dictionary<string, HPose>> SensorInCam = new Dictionary<string, Dictionary<string, HPose>>();
-        public Dictionary<string, Dictionary<string, HPose>> ToolInCam = new Dictionary<string, Dictionary<string, HPose>>();
+        public Dictionary<string, Dictionary<string, CameraParameters>> CamPar = new Dictionary<string, Dictionary<string, CameraParameters>>();
+        public Dictionary<string, Dictionary<string, PoseParameters>> LightInCam = new Dictionary<string, Dictionary<string, PoseParameters>>();
+        //public Dictionary<string, Dictionary<string, PoseParameters>> SensorInCam = new Dictionary<string, Dictionary<string, PoseParameters>>();
+        public Dictionary<string, Dictionary<string, PoseParameters>> ToolInCam = new Dictionary<string, Dictionary<string, PoseParameters>>();
         //计算的参数
-        public Dictionary<string, Dictionary<string, HHomMat3D>> LightToCam = new Dictionary<string, Dictionary<string, HHomMat3D>>();
-        //public Dictionary<string, Dictionary<string, HHomMat3D>> CamToSensor = new Dictionary<string, Dictionary<string, HHomMat3D>>();
-        public Dictionary<string, Dictionary<string, HHomMat3D>> CamToTool = new Dictionary<string, Dictionary<string, HHomMat3D>>();
+        public Dictionary<string, Dictionary<string, Mat>> LightToCam = new Dictionary<string, Dictionary<string, Mat>>();
+        //public Dictionary<string, Dictionary<string, Mat>> CamToSensor = new Dictionary<string, Dictionary<string, Mat>>();
+        public Dictionary<string, Dictionary<string, Mat>> CamToTool = new Dictionary<string, Dictionary<string, Mat>>();
         ////保存的参数
-        //public Dictionary<string, HHomMat3D> SensorToTool = new Dictionary<string, HHomMat3D>();
+        //public Dictionary<string, Mat> SensorToTool = new Dictionary<string, Mat>();
 
         public bool Load()
         {
@@ -2116,13 +2132,13 @@ namespace _3DLaserGlueInspection
                 {
                     string name = Path.GetFileName(path);
                     Param.Add(name, new Dictionary<string, CamParam>());
-                    CamPar.Add(name, new Dictionary<string, HCamPar>());
-                    LightInCam.Add(name, new Dictionary<string, HPose>());
-                    //SensorInCam.Add(name, new Dictionary<string, HPose>());
-                    ToolInCam.Add(name, new Dictionary<string, HPose>());
-                    LightToCam.Add(name, new Dictionary<string, HHomMat3D>());
-                    //CamToSensor.Add(name, new Dictionary<string, HHomMat3D>());
-                    CamToTool.Add(name, new Dictionary<string, HHomMat3D>());
+                    CamPar.Add(name, new Dictionary<string, CameraParameters>());
+                    LightInCam.Add(name, new Dictionary<string, PoseParameters>());
+                    //SensorInCam.Add(name, new Dictionary<string, PoseParameters>());
+                    ToolInCam.Add(name, new Dictionary<string, PoseParameters>());
+                    LightToCam.Add(name, new Dictionary<string, Mat>());
+                    //CamToSensor.Add(name, new Dictionary<string, Mat>());
+                    CamToTool.Add(name, new Dictionary<string, Mat>());
 
                     string[] camPaths = Directory.GetDirectories(path);
                     foreach (string camPath in camPaths)
@@ -2202,8 +2218,9 @@ namespace _3DLaserGlueInspection
                             string paramPath = camPath + "\\camparam.cal";
                             if (File.Exists(paramPath))
                             {
-                                var hCamPar = new HCamPar();
-                                hCamPar.ReadCamPar(paramPath);
+                                var hCamPar = new CameraParameters();
+                                //hCamPar.ReadCamPar(paramPath);
+                                hCamPar = HFileIO.ReadCamPara(paramPath);
                                 if (CamPar[name].ContainsKey(camKey))
                                 {
                                     CamPar[name][camKey] = hCamPar;
@@ -2232,8 +2249,10 @@ namespace _3DLaserGlueInspection
                                 string paramPath = camPath + "\\camparam_bak.xml";
                                 if (File.Exists(paramPath))
                                 {
-                                    var hCamPar = new HCamPar();
-                                    hCamPar.ReadCamPar(paramPath);
+                                    var hCamPar = new CameraParameters();
+                                    //hCamPar.ReadCamPar(paramPath);
+                                    hCamPar = HFileIO.ReadCamPara(paramPath);
+
                                     if (CamPar[name].ContainsKey(camKey))
                                     {
                                         CamPar[name][camKey] = hCamPar;
@@ -2260,8 +2279,10 @@ namespace _3DLaserGlueInspection
                             string paramPath = camPath + "\\LightInCam.dat";
                             if (File.Exists(paramPath))
                             {
-                                var hWorldPose = new HPose();
-                                hWorldPose.ReadPose(paramPath);
+                                var hWorldPose = new PoseParameters();
+
+                                //hWorldPose.ReadPose(paramPath);
+                                hWorldPose = HFileIO.ReadPosePara(paramPath);
                                 if (LightInCam[name].ContainsKey(camKey))
                                 {
                                     LightInCam[name][camKey] = hWorldPose;
@@ -2290,8 +2311,9 @@ namespace _3DLaserGlueInspection
                                 string paramPath = camPath + "\\LightInCam_bak.dat";
                                 if (File.Exists(paramPath))
                                 {
-                                    var hWorldPose = new HPose();
-                                    hWorldPose.ReadPose(paramPath);
+                                    var hWorldPose = new PoseParameters();
+                                    //hWorldPose.ReadPose(paramPath);
+                                    hWorldPose = HFileIO.ReadPosePara(paramPath);
                                     if (LightInCam[name].ContainsKey(camKey))
                                     {
                                         LightInCam[name][camKey] = hWorldPose;
@@ -2318,7 +2340,7 @@ namespace _3DLaserGlueInspection
                         //    string paramPath = camPath + "\\SensorInCam.dat";
                         //    if (File.Exists(paramPath))
                         //    {
-                        //        var hWorldPose = new HPose();
+                        //        var hWorldPose = new PoseParameters();
                         //        hWorldPose.ReadPose(paramPath);
                         //        if (SensorInCam[name].ContainsKey(camKey))
                         //        {
@@ -2348,7 +2370,7 @@ namespace _3DLaserGlueInspection
                         //        string paramPath = camPath + "\\SensorInCam_bak.dat";
                         //        if (File.Exists(paramPath))
                         //        {
-                        //            var hWorldPose = new HPose();
+                        //            var hWorldPose = new PoseParameters();
                         //            hWorldPose.ReadPose(paramPath);
                         //            if (SensorInCam[name].ContainsKey(camKey))
                         //            {
@@ -2376,8 +2398,10 @@ namespace _3DLaserGlueInspection
                             string paramPath = camPath + "\\ToolInCam.dat";
                             if (File.Exists(paramPath))
                             {
-                                var hWorldPose = new HPose();
-                                hWorldPose.ReadPose(paramPath);
+                                var hWorldPose = new PoseParameters();
+                                //hWorldPose.ReadPose(paramPath);
+                                hWorldPose = HFileIO.ReadPosePara(paramPath);
+
                                 if (ToolInCam[name].ContainsKey(camKey))
                                 {
                                     ToolInCam[name][camKey] = hWorldPose;
@@ -2406,8 +2430,10 @@ namespace _3DLaserGlueInspection
                                 string paramPath = camPath + "\\ToolInCam_bak.dat";
                                 if (File.Exists(paramPath))
                                 {
-                                    var hWorldPose = new HPose();
-                                    hWorldPose.ReadPose(paramPath);
+                                    var hWorldPose = new PoseParameters();
+                                    //hWorldPose.ReadPose(paramPath);
+                                    hWorldPose = HFileIO.ReadPosePara(paramPath);
+
                                     if (ToolInCam[name].ContainsKey(camKey))
                                     {
                                         ToolInCam[name][camKey] = hWorldPose;
@@ -2436,11 +2462,18 @@ namespace _3DLaserGlueInspection
                             {
                                 if (LightToCam[name].ContainsKey(camKey))
                                 {
-                                    LightToCam[name][camKey] = LightInCam[name][camKey].PoseToHomMat3d();
+                                    Mat H = new Mat();
+                                    Vision.poseToHomMat3d(LightInCam[name][camKey].PoseType, LightInCam[name][camKey].x, LightInCam[name][camKey].y, LightInCam[name][camKey].z,
+                                        LightInCam[name][camKey].rx, LightInCam[name][camKey].ry, LightInCam[name][camKey].rz, H.CvPtr);
+                                    LightToCam[name][camKey] = H;
                                 }
                                 else
                                 {
-                                    LightToCam[name].Add(camKey, LightInCam[name][camKey].PoseToHomMat3d());
+                                    Mat H = new Mat();
+                                    Vision.poseToHomMat3d(LightInCam[name][camKey].PoseType, LightInCam[name][camKey].x, LightInCam[name][camKey].y, LightInCam[name][camKey].z,
+                                        LightInCam[name][camKey].rx, LightInCam[name][camKey].ry, LightInCam[name][camKey].rz, H.CvPtr);
+
+                                    LightToCam[name].Add(camKey, H);
                                 }
                             }
                             //if (SensorInCam[name].ContainsKey(camKey))
@@ -2458,11 +2491,20 @@ namespace _3DLaserGlueInspection
                             {
                                 if (CamToTool[name].ContainsKey(camKey))
                                 {
-                                    CamToTool[name][camKey] = ToolInCam[name][camKey].PoseInvert().PoseToHomMat3d();
+                                    //CamToTool[name][camKey] = ToolInCam[name][camKey].PoseInvert().PoseToHomMat3d();
+                                    Mat H = new Mat();
+                                    Vision.poseToHomMat3d(ToolInCam[name][camKey].PoseType, ToolInCam[name][camKey].x, ToolInCam[name][camKey].y, ToolInCam[name][camKey].z,
+                                        ToolInCam[name][camKey].rx, ToolInCam[name][camKey].ry, ToolInCam[name][camKey].rz, H.CvPtr);
+
+                                    CamToTool[name][camKey] = H.Inv();
                                 }
                                 else
                                 {
-                                    CamToTool[name].Add(camKey, ToolInCam[name][camKey].PoseInvert().PoseToHomMat3d());
+                                    Mat H = new Mat();
+                                    Vision.poseToHomMat3d(ToolInCam[name][camKey].PoseType, ToolInCam[name][camKey].x, ToolInCam[name][camKey].y, ToolInCam[name][camKey].z,
+                                        ToolInCam[name][camKey].rx, ToolInCam[name][camKey].ry, ToolInCam[name][camKey].rz, H.CvPtr);
+
+                                    CamToTool[name].Add(camKey, H.Inv());
                                 }
                             }
                         }
@@ -2487,7 +2529,7 @@ namespace _3DLaserGlueInspection
                     //    {
                     //        using (FileStream stream = new FileStream(paramPath, FileMode.Open))
                     //        {
-                    //            var hHomMat3D = HHomMat3D.Deserialize(stream);
+                    //            var hHomMat3D = Mat.Deserialize(stream);
                     //            if (SensorToTool.ContainsKey(name))
                     //            {
                     //                SensorToTool[name] = hHomMat3D;
@@ -2519,7 +2561,7 @@ namespace _3DLaserGlueInspection
                     //        {
                     //            using (FileStream stream = new FileStream(paramPath, FileMode.Open))
                     //            {
-                    //                var hHomMat3D = HHomMat3D.Deserialize(stream);
+                    //                var hHomMat3D = Mat.Deserialize(stream);
                     //                if (SensorToTool.ContainsKey(name))
                     //                {
                     //                    SensorToTool[name] = hHomMat3D;
@@ -2598,7 +2640,9 @@ namespace _3DLaserGlueInspection
                         }
 
                         string paramPath = $"{path}\\camparam.cal";
-                        CamPar[name][key].WriteCamPar(paramPath);
+                        //CamPar[name][key].WriteCamPar(paramPath);
+                        HFileIO.WriteCamPara(paramPath, CamPar[name][key]);
+
                         File.Copy(paramPath, path + "\\camparam_bak.cal", true);
                     }
                 }
@@ -2614,7 +2658,9 @@ namespace _3DLaserGlueInspection
                         }
 
                         string paramPath = $"{path}\\LightInCam.dat";
-                        LightInCam[name][key].WritePose(paramPath);
+                        //LightInCam[name][key].WritePose(paramPath);
+                        HFileIO.WritePosePara(paramPath, LightInCam[name][key]);
+
                         File.Copy(paramPath, path + "\\LightInCam_bak.dat", true);
                     }
                 }
@@ -2646,7 +2692,8 @@ namespace _3DLaserGlueInspection
                         }
 
                         string paramPath = $"{path}\\ToolInCam.dat";
-                        ToolInCam[name][key].WritePose(paramPath);
+                        //ToolInCam[name][key].WritePose(paramPath);
+                        HFileIO.WritePosePara(paramPath, ToolInCam[name][key]);
                         File.Copy(paramPath, path + "\\ToolInCam_bak.dat", true);
                     }
                 }
@@ -2715,7 +2762,7 @@ namespace _3DLaserGlueInspection
             }
             if (CamPar.ContainsKey(source) && CamPar[source] != null)
             {
-                Dictionary<string, HCamPar> pairs = new Dictionary<string, HCamPar>();
+                Dictionary<string, CameraParameters> pairs = new Dictionary<string, CameraParameters>();
                 foreach (var key in CamPar[source].Keys)
                 {
                     pairs.Add(key, CamPar[source][key].Clone());
@@ -2731,7 +2778,7 @@ namespace _3DLaserGlueInspection
             }
             if (LightInCam.ContainsKey(source) && LightInCam[source] != null)
             {
-                Dictionary<string, HPose> pairs = new Dictionary<string, HPose>();
+                Dictionary<string, PoseParameters> pairs = new Dictionary<string, PoseParameters>();
                 foreach (var key in LightInCam[source].Keys)
                 {
                     pairs.Add(key, LightInCam[source][key].Clone());
@@ -2747,7 +2794,7 @@ namespace _3DLaserGlueInspection
             }
             //if (SensorInCam.ContainsKey(source) && SensorInCam[source] != null)
             //{
-            //    Dictionary<string, HPose> pairs = new Dictionary<string, HPose>();
+            //    Dictionary<string, PoseParameters> pairs = new Dictionary<string, PoseParameters>();
             //    foreach (var key in SensorInCam[source].Keys)
             //    {
             //        pairs.Add(key, SensorInCam[source][key].Clone());
@@ -2763,7 +2810,7 @@ namespace _3DLaserGlueInspection
             //}
             if (ToolInCam.ContainsKey(source) && ToolInCam[source] != null)
             {
-                Dictionary<string, HPose> pairs = new Dictionary<string, HPose>();
+                Dictionary<string, PoseParameters> pairs = new Dictionary<string, PoseParameters>();
                 foreach (var key in ToolInCam[source].Keys)
                 {
                     pairs.Add(key, ToolInCam[source][key].Clone());
@@ -2779,7 +2826,7 @@ namespace _3DLaserGlueInspection
             }
             if (LightToCam.ContainsKey(source) && LightToCam[source] != null)
             {
-                Dictionary<string, HHomMat3D> pairs = new Dictionary<string, HHomMat3D>();
+                Dictionary<string, Mat> pairs = new Dictionary<string, Mat>();
                 foreach (var key in LightToCam[source].Keys)
                 {
                     pairs.Add(key, LightToCam[source][key].Clone());
@@ -2795,7 +2842,7 @@ namespace _3DLaserGlueInspection
             }
             //if (CamToSensor.ContainsKey(source) && CamToSensor[source] != null)
             //{
-            //    Dictionary<string, HHomMat3D> pairs = new Dictionary<string, HHomMat3D>();
+            //    Dictionary<string, Mat> pairs = new Dictionary<string, Mat>();
             //    foreach (var key in CamToSensor[source].Keys)
             //    {
             //        pairs.Add(key, CamToSensor[source][key].Clone());
@@ -2811,7 +2858,7 @@ namespace _3DLaserGlueInspection
             //}
             if (CamToTool.ContainsKey(source) && CamToTool[source] != null)
             {
-                Dictionary<string, HHomMat3D> pairs = new Dictionary<string, HHomMat3D>();
+                Dictionary<string, Mat> pairs = new Dictionary<string, Mat>();
                 foreach (var key in CamToTool[source].Keys)
                 {
                     pairs.Add(key, CamToTool[source][key].Clone());

@@ -1,4 +1,4 @@
-﻿using HalconDotNet;
+﻿//using HalconDotNet;
 using HslCommunication;
 using HslCommunication.Core;
 using HslCommunication.ModBus;
@@ -13,9 +13,12 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 //using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
+using Wpf_Replace_halcon;
 
 namespace _3DLaserGlueInspection
 {
+
+
     public interface IRobot
     {
         RobotParam Param { get; set; }
@@ -52,7 +55,7 @@ namespace _3DLaserGlueInspection
         /// </summary>
         /// <param name="hPose"></param>
         /// <returns></returns>
-        bool ReadPose(out HPose hPose);
+        bool ReadPose(out PoseParameters hPose);
 
         bool Read(DI eDI, out string value);
         bool Read(DO eDO, out string value);
@@ -100,7 +103,7 @@ namespace _3DLaserGlueInspection
                 return false;
             }
         }
-        public bool Read坐标(out HPose hPose)
+        public bool Read坐标(out PoseParameters hPose)
         {
             OperateResult<string[]> read = yrc.ReadPose();//关节坐标
             if (read.IsSuccess)
@@ -111,7 +114,10 @@ namespace _3DLaserGlueInspection
                 double rx = double.Parse(read.Content[3]) / 10000;
                 double ry = double.Parse(read.Content[4]) / 10000;
                 double rz = double.Parse(read.Content[5]) / 10000;
-                hPose = new HPose(x, y, z, rx, ry, rz, "Rp+T", "abg", "point");
+                hPose = new PoseParameters();
+                hPose.x = x; hPose.y = y; hPose.z = z;
+                hPose.rx = rx; hPose.ry = ry;   hPose.rz = rz;
+                hPose.PoseType = 2;
             }
             else
             {
@@ -121,7 +127,7 @@ namespace _3DLaserGlueInspection
             return read.IsSuccess;
         }
         private IByteTransform byteTransform = new RegularByteTransform();
-        public bool ReadPose(out HPose hPose)
+        public bool ReadPose(out PoseParameters hPose)
         {
             OperateResult<byte[]> operateResult = yrc.ReadCommand(117, 101, 0, 1, null);
             if (operateResult.IsSuccess && operateResult.Content.Length >= 44)
@@ -131,7 +137,13 @@ namespace _3DLaserGlueInspection
                 {
                     array[i] = byteTransform.TransInt32(operateResult.Content, 20 + i * 4);
                 }
-                hPose = new HPose(array[0] / 1000000, array[1] / 1000000, array[2] / 1000000, array[3] / 10000, array[4] / 10000, array[5] / 10000, "Rp+T", "abg", "point");
+                //hPose = new PoseParameters(array[0] / 1000000, array[1] / 1000000, array[2] / 1000000, array[3] / 10000, array[4] / 10000, array[5] / 10000, "Rp+T", "abg", "point");
+                hPose = new PoseParameters();
+
+                hPose.x = array[0] / 1000000; hPose.y = array[1] / 1000000; hPose.z = array[2] / 1000000;
+                hPose.rx = array[3] / 10000; hPose.ry = array[4] / 10000; hPose.rz = array[5] / 10000;
+                hPose.PoseType = 2;
+
                 return true;
             }
             else
@@ -188,13 +200,20 @@ namespace _3DLaserGlueInspection
             //new RobotForm(this).ShowDialog();
         }
 
-        public bool ReadPose(out HPose hPose)
+        public bool ReadPose(out PoseParameters hPose)
         {
             var operateResult = modbus.ReadFloat("x=4;406", 6);
             if (operateResult.IsSuccess)
             {
                 var array = operateResult.Content;
-                hPose = new HPose(array[0] / 1000, array[1] / 1000, array[2] / 1000, array[3], array[4], array[5], "Rp+T", "abg", "point");
+                //hPose = new PoseParameters(array[0] / 1000, array[1] / 1000, array[2] / 1000, array[3], array[4], array[5], "Rp+T", "abg", "point");
+
+                hPose = new PoseParameters();
+
+                hPose.x = array[0] / 1000; hPose.y = array[1] / 1000; hPose.z = array[2] / 1000;
+                hPose.rx = array[3] ; hPose.ry = array[4] ; hPose.rz = array[5] ;
+                hPose.PoseType = 2;
+
                 return true;
             }
             else
@@ -629,7 +648,7 @@ namespace _3DLaserGlueInspection
         HslCommunication.Robot.FANUC.FanucInterfaceNet robot = new HslCommunication.Robot.FANUC.FanucInterfaceNet();
         public FanucRobot() { }
 
-        public bool ReadPose(out HPose hPose)
+        public bool ReadPose(out PoseParameters hPose)
         {
             var read = robot.ReadFanucData();
             if (read.IsSuccess)
@@ -640,7 +659,13 @@ namespace _3DLaserGlueInspection
                 double rx = read.Content.CurrentPose.Xyzwpr[3];
                 double ry = read.Content.CurrentPose.Xyzwpr[4];
                 double rz = read.Content.CurrentPose.Xyzwpr[5];
-                hPose = new HPose(x, y, z, rx, ry, rz, "Rp+T", "abg", "point");
+                //hPose = new PoseParameters(x, y, z, rx, ry, rz, "Rp+T", "abg", "point");
+
+                hPose = new PoseParameters();
+                hPose.x = x; hPose.y = y; hPose.z = z;
+                hPose.rx = rx; hPose.ry = ry; hPose.rz = rz;
+                hPose.PoseType = 2;
+
             }
             else
             {
