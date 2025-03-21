@@ -187,7 +187,7 @@ namespace _3DLaserGlueInspection.subForm
             }
         }
 
-        private void ClearChildren()
+        public void ClearChildren()
         {
             childrenImagePointsList.Clear();
             childrenImageXList.Clear();
@@ -435,7 +435,7 @@ namespace _3DLaserGlueInspection.subForm
         /// <param name="points"></param>
         /// <param name="color"></param>
         /// <param name="StrokeThickness"></param>
-        public void AddPolyline(PointCollection points, Color color, int StrokeThickness = 12)
+        public void AddPolyline(PointCollection points, Color color, int StrokeThickness = 2)
         {
 
             Polyline polyline = new Polyline
@@ -452,6 +452,40 @@ namespace _3DLaserGlueInspection.subForm
                 polyline.Points.Add(point);
             }
             AddChildren(polyline, 0, 0, points);
+
+        }
+
+        /// <summary>
+        /// 添加多边形图案
+        /// </summary>
+        /// <param name="points"></param>
+        /// <param name="color"></param>
+        /// <param name="model"></param>
+        /// <param name="StrokeThickness"></param>
+        public void AddPolygon(PointCollection points, Color color, string model = null, int StrokeThickness = 2)
+        {
+            Polygon polygon;
+            polygon = new Polygon
+            {
+                Points = new PointCollection(),
+            };
+            if (model == "fill")
+            {
+                polygon.Fill = new SolidColorBrush(color);
+            }
+            else
+            {
+                polygon.Stroke = new SolidColorBrush(color);
+                polygon.StrokeThickness = StrokeThickness;
+            }
+            for (int i = 0; i < points.Count; i++)
+            {
+                Point point = new Point();
+                point.X = points[i].X * scaleX;
+                point.Y = points[i].Y * scaleY;
+                polygon.Points.Add(point);
+            }
+            AddChildren(polygon, 0, 0, points);
 
         }
 
@@ -498,6 +532,18 @@ namespace _3DLaserGlueInspection.subForm
                     ((Polyline)children).Points.Add(point);
                 }
             }
+
+            if (children is Polygon)
+            {
+                ((Polygon)children).Points.Clear();
+                for (int i = 0; i < points.Count; i++)
+                {
+                    Point point = new Point();
+                    point.X = points[i].X * scaleX;
+                    point.Y = points[i].Y * scaleY;
+                    ((Polygon)children).Points.Add(point);
+                }
+            }
         }
 
         /// <summary>
@@ -506,10 +552,39 @@ namespace _3DLaserGlueInspection.subForm
         /// <param name="bitmap">输入图片</param>
         public void SetImageSource(BitmapImage bitmap)
         {
-            this.image.Source = bitmap.Clone();
-            bitmapSource = bitmap;
+            Clear();
+            if (bitmap == null)
+            {
+                this.image.Source = null;
+                bitmapSource = null;
+            }
+            else
+            {
+                this.image.Source = bitmap.Clone();
+                bitmapSource = bitmap;
+            }
+
+            var group = grid.RenderTransform as TransformGroup;
+            var transform = group.Children[1] as TranslateTransform;
+            transform.X = 0;
+            transform.Y = 0;
+
+            var transform1 = group.Children[0] as ScaleTransform;
+            transform1.ScaleX = 1;
+            transform1.ScaleY = 1;
+
             Img_ResizeSpaceCal();
             UpdataChildren();
+        }
+        public void ClearImage()
+        {
+            this.image.Source = null;
+            bitmapSource = null;
+        }
+        public void Clear()
+        {
+            ClearChildren();
+            ClearImage();
         }
 
     }

@@ -28,7 +28,7 @@ namespace Wpf_Replace_halcon
     {
         public PoseParameters Clone() { return (PoseParameters)this.MemberwiseClone(); }
 
-        public int PoseType { get; set; } = 0;
+        public int PoseType { get; set; } = 2;
         public double rx { get; set; } = 0;
         public double ry { get; set; } = 0;
         public double rz { get; set; } = 0;

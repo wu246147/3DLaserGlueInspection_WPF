@@ -11,6 +11,10 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.IO;
+using OpenCvSharp;
+using System.Windows.Media.Imaging;
+using System.Windows.Media;
+using _3DLaserGlueInspection.subForm;
 
 namespace _3DLaserGlueInspection
 {
@@ -155,6 +159,170 @@ namespace _3DLaserGlueInspection
         }
 
 
+        public static BitmapImage ConvertMatToBitmapImage(Mat mat)
+        {
+            // 方法1：编码为JPEG流 
+            Cv2.ImEncode(".jpg", mat, out byte[] jpegData);
+
+            var bitmapImage = new BitmapImage();
+            using (var stream = new MemoryStream(jpegData))
+            {
+                bitmapImage.BeginInit();
+                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapImage.StreamSource = stream;
+                bitmapImage.EndInit();
+            }
+            return bitmapImage;
+        }
+
+
+
+        public static void ShowImageData(int showWidth, int showHeight, Mat hXLDCont10mm, ref ImageControl2 imageControl,ref bool showing, ref object olockShow)
+        {
+            if (!showing)
+            {
+                showing = true;
+                try
+                {
+                    lock (olockShow)
+                    {
+                        Mat mat = new Mat();
+                        mat = Mat.Zeros((int)(showHeight * Vision.scaleSize), (int)(showWidth * Vision.scaleSize), MatType.CV_8UC3);
+                        imageControl.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));
+                        //DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//扩画布
+                        PointCollection points = new PointCollection();
+                        for (int i = 0; i < hXLDCont10mm.Rows; i++)
+                        {
+                            System.Windows.Point point = new System.Windows.Point();
+                            point.X = hXLDCont10mm.At<double>(i, 0);
+                            point.Y = hXLDCont10mm.At<double>(i, 1);
+                            points.Add(point);
+                        }
+                        //DispPolylinejHWindowControlEvent(points, Colors.Gray);
+                        imageControl.AddPolyline(points, Colors.Gray);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Windows.Forms.MessageBox.Show(ex.ToString());
+                }
+                showing = false;
+            }
+        }
+        public static void ShowImageData(int showWidth, int showHeight, Mat hXLDCont10mm, Mat hRegion, Mat hRegionSmallestRectangle2, Data data, bResult bResult,
+             ref ImageControl2 imageControl, ref bool showing, ref object olockShow)
+        {
+            if (!showing)
+            {
+                showing = true;
+                try
+                {
+                    lock (olockShow)
+                    {
+                        Mat mat = new Mat();
+                        mat = Mat.Zeros((int)(showHeight * Vision.scaleSize), (int)(showWidth * Vision.scaleSize), MatType.CV_8UC3);
+
+                        //DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//扩画布
+                        imageControl.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));
+
+                        //Console.WriteLine($"mat.Size:{mat.Size()}");
+
+                        //Console.WriteLine($"Polyline :");
+
+                        PointCollection points = new PointCollection();
+                        for (int i = 0; i < hXLDCont10mm.Rows; i++)
+                        {
+                            System.Windows.Point point = new System.Windows.Point();
+                            point.X = hXLDCont10mm.At<double>(i, 0);
+                            point.Y = hXLDCont10mm.At<double>(i, 1);
+                            points.Add(point);
+
+                            //Console.WriteLine($"point:{point}");
+
+                        }
+                        //DispPolylinejHWindowControlEvent(points, Colors.Gray);
+                        imageControl.AddPolyline(points, Colors.Gray);
+
+                        if (!hRegion.Empty())
+                        {
+                            //Console.WriteLine($"text value :");
+                            string text = GlobalVarAndFunc.LanguageTranslate("胶高：") + $"{data.胶高:0.00}\r\n"
+                               + GlobalVarAndFunc.LanguageTranslate("胶宽：") + $"{data.胶宽:0.00}\r\n"
+                               + GlobalVarAndFunc.LanguageTranslate("面积：") + $"{data.面积:0.00}";
+
+                            //Console.WriteLine($"point :({data.column},{data.row})");
+                            //DispTextInImageHWindowControlEvent(text, Colors.Black, (int)data.column, (int)data.row);
+                            imageControl.AddTextBlock(text, Colors.White, (int)data.column + (int)(data.胶宽 / 2 * Vision.scaleSize),
+                                (int)data.row + (int)(data.胶高 / 2 * Vision.scaleSize));
+
+                            //Console.WriteLine($"text result :");
+                            //hWindowControl.DispTextInImage(text, data.row, data.column);
+                            string textWindow1 = GlobalVarAndFunc.LanguageTranslate("胶宽：") + (bResult.胶宽 ? "OK" : "NG");
+                            string textWindow2 = GlobalVarAndFunc.LanguageTranslate("胶高：") + (bResult.胶高 ? "OK" : "NG");
+                            string textWindow3 = GlobalVarAndFunc.LanguageTranslate("面积：") + (bResult.面积 ? "OK" : "NG");
+                            string textWindow = textWindow1 + "\r\n" + textWindow2 + "\r\n" + textWindow3;
+                            //Console.WriteLine($"point :({10},{10})");
+                            //DispTextInImageHWindowControlEvent(textWindow, Colors.Black, 10, 10);
+                            imageControl.AddTextBlock(textWindow, Colors.White, 10, 10);
+
+
+                            //Console.WriteLine($"region :");
+
+                            PointCollection regionPoints = new PointCollection();
+                            for (int i = 0; i < hRegion.Rows; i++)
+                            {
+                                System.Windows.Point point = new System.Windows.Point();
+                                point.X = hRegion.At<double>(i, 0);
+                                point.Y = hRegion.At<double>(i, 1);
+                                regionPoints.Add(point);
+                                //Console.WriteLine($"point:{point}");
+                            }
+
+                            imageControl.AddPolygon(regionPoints, Colors.Red, "fill");
+
+                            //DispPolygonjHWindowControlEvent(regionPoints, Colors.Red, "fill");
+
+                            //Console.WriteLine($"regionSmallestRectangle :");
+                            PointCollection regionSmallestRectangle2Points = new PointCollection();
+                            for (int i = 0; i < hRegionSmallestRectangle2.Rows; i++)
+                            {
+                                System.Windows.Point point = new System.Windows.Point();
+                                point.X = hRegionSmallestRectangle2.At<double>(i, 0);
+                                point.Y = hRegionSmallestRectangle2.At<double>(i, 1);
+                                regionSmallestRectangle2Points.Add(point);
+                                //Console.WriteLine($"point:{point}");
+                            }
+
+                            //DispPolygonjHWindowControlEvent(regionSmallestRectangle2Points, Colors.Blue, "margin");
+                            imageControl.AddPolygon(regionSmallestRectangle2Points, Colors.Blue, "margin");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Windows.Forms.MessageBox.Show(ex.ToString());
+                }
+                showing = false;
+            }
+        }
+
+        public static void AddCrossContour(int size, double rows, double cols, double angles, System.Windows.Media.Color color, ref ImageControl2 imageControl)
+        {
+            PointCollection Points1 = new PointCollection();
+            PointCollection Points2 = new PointCollection();
+
+            System.Windows.Point p1 = new System.Windows.Point(cols + Math.Cos(angles / 180 * Math.PI) * size, rows + Math.Sin(angles / 180 * Math.PI) * size);
+            System.Windows.Point p2 = new System.Windows.Point(cols + Math.Cos((angles + 180) / 180 * Math.PI) * size, rows + Math.Sin((angles + 180) / 180 * Math.PI) * size);
+            System.Windows.Point p3 = new System.Windows.Point(cols + Math.Cos((angles + 90) / 180 * Math.PI) * size, rows + Math.Sin((angles + 90) / 180 * Math.PI) * size);
+            System.Windows.Point p4 = new System.Windows.Point(cols + Math.Cos((angles + 270) / 180 * Math.PI) * size, rows + Math.Sin((angles + 270) / 180 * Math.PI) * size);
+            Points1.Add(p1);
+            Points1.Add(p2);
+            Points2.Add(p3);
+            Points2.Add(p4);
+
+            imageControl.AddPolyline(Points1, color);
+            imageControl.AddPolyline(Points2, color);
+        }
     }
 
 }

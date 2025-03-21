@@ -106,6 +106,9 @@
         <Setter Property="Width" Value="120"/>
         <Setter Property="FontFamily" Value="Microsoft YaHei"/>
     </Style>
+    
+    
+    
     <Style TargetType="Label">
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="HorizontalContentAlignment" Value="Left"/>
@@ -215,6 +218,34 @@
                 <Setter Property="Foreground" Value="Gray"/>
             </Trigger>
         </Style.Triggers>
+    </Style>
+    <!--密码TextBox-->
+    <Style x:Key="TxtPwd" TargetType="{x:Type TextBox}">
+        <Setter Property="TextDecorations">
+            <Setter.Value>
+                <TextDecorationCollection>
+                    <TextDecoration>
+                        <TextDecoration.Pen>
+                            <Pen Thickness="10" Brush="Black"   EndLineCap="Round" StartLineCap="Round"     DashCap="Round"  >
+                                <Pen.DashStyle>
+                                    <DashStyle Dashes="0.0,1.2" Offset="0.6"/>
+                                </Pen.DashStyle>
+                            </Pen>
+                        </TextDecoration.Pen>
+                        <TextDecoration.Location>
+                            <TextDecorationLocation>Strikethrough</TextDecorationLocation>
+                        </TextDecoration.Location>
+                    </TextDecoration>
+                </TextDecorationCollection>
+            </Setter.Value>
+
+
+        </Setter>
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="Background" Value="#FF484D5E"></Setter>
+        <Setter Property="Foreground" Value="Transparent"></Setter>
+        <Setter Property="FontSize" Value="20"></Setter>
+        <Setter Property="FontFamily" Value="Courier New"></Setter>
     </Style>
 
     <!--<Style TargetType="DataGridCell">

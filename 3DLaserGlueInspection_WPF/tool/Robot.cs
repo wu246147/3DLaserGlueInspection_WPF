@@ -14,6 +14,7 @@ using System.Xml.Linq;
 using System.Xml.Serialization;
 //using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
 using Wpf_Replace_halcon;
+using _3DLaserGlueInspection.subForm;
 
 namespace _3DLaserGlueInspection
 {
@@ -197,7 +198,7 @@ namespace _3DLaserGlueInspection
 
         public void ShowForm()
         {
-            //new RobotForm(this).ShowDialog();
+            new WindowRobot(this).ShowDialog();
         }
 
         public bool ReadPose(out PoseParameters hPose)

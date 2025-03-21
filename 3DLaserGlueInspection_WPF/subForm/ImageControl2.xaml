@@ -22,10 +22,10 @@
         </Grid.RowDefinitions>
         <Grid Grid.Row="0">
             <ScrollViewer   VerticalScrollBarVisibility="Disabled" Background="Black" Grid.RowSpan="2">
-                <ContentControl  Background="Black">
+                <ContentControl  Background="Gray">
                     <Grid x:Name="grid" RenderTransform="{StaticResource imageView}" Margin="0,0,0,0">
-                        <ScrollViewer  Grid.Column="0" VerticalScrollBarVisibility="Disabled" Background="Black">
-                            <ContentControl  Background="Black">
+                        <ScrollViewer  Grid.Column="0" VerticalScrollBarVisibility="Disabled" Background="DimGray">
+                            <ContentControl  Background="Gray">
                                 <Image  
                                 x:Name="image" Margin="0,0,0,0">
                                 </Image>
@@ -41,7 +41,7 @@
             </ScrollViewer>
         </Grid>
 
-        <Border Grid.Row="1" Margin="0,0,0,0" BorderThickness="0,2,0,0" BorderBrush="White" Background="Black">
+        <Border Grid.Row="1" Margin="0,0,0,0" BorderThickness="0,2,0,0" BorderBrush="White" Background="DimGray">
             <Label Name="infoLabel" Foreground="White"  Grid.Row="1" Content="" HorizontalAlignment="Left" Margin="20,2,0,0" VerticalAlignment="Top" Height="35"/>
         </Border>
 

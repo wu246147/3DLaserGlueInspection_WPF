@@ -10,6 +10,37 @@ using System.Windows.Media;
 
 namespace _3DLaserGlueInspection
 {
+    public class ImageResultRecord : NotifyBase
+    {
+        public string Cam1 { get; set; }
+        public string Cam2 { get; set; }
+        public string Cam3 { get; set; }
+        public string Cam4 { get; set; }
+        public string Cam1Result { get; set; }
+        public string Cam2Result { get; set; }
+        public string Cam3Result { get; set; }
+        public string Cam4Result { get; set; }
+
+    }
+
+
+    public class CarResultRecord : NotifyBase
+    {
+        public string CarDetTime { get; set; }
+        public string CarID { get; set; }
+        public string CarResult { get; set; }
+
+    }
+
+    public class LogRecord : NotifyBase
+    {
+        public string LogTime { get; set; }
+        public string LogInfo { get; set; }
+        public string LogResult { get; set; }
+
+    }
+
+
     public class MainModel: NotifyBase
     {
 
@@ -62,36 +93,7 @@ namespace _3DLaserGlueInspection
         public ObservableCollection<LogRecord> LogRecords { get { return _logRecord; } set { _logRecord = value; this.DoNotify(); } }
 
 
-        public class ImageResultRecord : NotifyBase
-        {
-            public string Cam1 { get; set; }
-            public string Cam2 { get; set; }
-            public string Cam3 { get; set; }
-            public string Cam4 { get; set; }
-            public string Cam1Result { get; set; }
-            public string Cam2Result { get; set; }
-            public string Cam3Result { get; set; }
-            public string Cam4Result { get; set; }
-
-        }
-
-
-        public class CarResultRecord : NotifyBase
-        {
-            public string CarDetTime { get; set; }
-            public string CarID { get; set; }
-            public string CarResult { get; set; }
-
-        }
-
-        public class LogRecord : NotifyBase
-        {
-            public string LogTime { get; set; }
-            public string LogInfo { get; set; }
-            public string LogResult { get; set; }
-
-        }
-
+     
 
     }
 }

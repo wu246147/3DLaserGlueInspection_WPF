@@ -3,10 +3,22 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:h="clr-namespace:HelixToolkit.Wpf;assembly=HelixToolkit.Wpf"
+             
              xmlns:local="clr-namespace:_3DLaserGlueInspection.subForm"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
+        <h:HelixViewport3D Name="hv3d" ShowViewCube="False"
+            IsRotationEnabled="True" IsZoomEnabled="True"
+                CalculateCursorPosition="True"
+            RotateAroundMouseDownPoint="True"
+            ZoomAroundMouseDownPoint="True" Margin="0,0,0,0">
+            <!--ItemsSource="{Binding Visual3DList}"-->
+            <h:HelixViewport3D.DefaultCamera>
+                <PerspectiveCamera NearPlaneDistance="0.001" FarPlaneDistance="50000" Position="0,0,580" LookDirection="0,0,-300" UpDirection="0,1,0" />
+            </h:HelixViewport3D.DefaultCamera>
 
+        </h:HelixViewport3D>
     </Grid>
 </UserControl>

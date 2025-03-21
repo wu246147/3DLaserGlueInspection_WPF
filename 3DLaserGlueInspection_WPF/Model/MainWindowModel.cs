@@ -20,28 +20,43 @@ using System.Windows.Input;
 using System.Drawing;
 using System.Collections.ObjectModel;
 using OpenCvSharp;
+using System.Windows.Media.Imaging;
+using _3DLaserGlueInspection.subForm;
+using System.Windows.Media.Media3D;
+using Wpf_Replace_halcon;
+using System.Windows.Markup;
+using HelixToolkit.Wpf;
 
 namespace _3DLaserGlueInspection
 {
     public delegate void DispClearHWindowEventHandler();
-    public delegate void DispImageHWindowEventHandler(HImage img);
-    public delegate void DispImageWithoutCloneHWindowEventHandler(HImage img);
-    public delegate void DispTextInImageHWindowEventHandler(string text, double row, double column);
-    public delegate void DispTextInWindowHWindowEventHandler(string text, double row, double column);
-    public delegate void DispObjHWindowEventHandler(HObject hObject, string mode = null, string color = null);
+    public delegate void DispImageHWindowEventHandler(BitmapImage img);
+    public delegate void DispImageWithoutCloneHWindowEventHandler(BitmapImage img);
+    public delegate void DispTextInImageHWindowEventHandler(string meg, System.Windows.Media.Color color, int imageX, int imageY, double fontSize = 12);
+    public delegate void DispTextInWindowHWindowEventHandler(string meg, System.Windows.Media.Color color, int imageX, int imageY, double fontSize = 12);
+    public delegate void DispPolylineHWindowEventHandler(PointCollection points, System.Windows.Media.Color color, int StrokeThickness = 2);
+    public delegate void DispPolygonHWindowEventHandler(PointCollection points, System.Windows.Media.Color color, string model, int StrokeThickness = 2);
 
-    public class MainWindowModel: NotifyBase
+    public delegate void Disp3DPointEventHandler(List<System.Windows.Media.Media3D.Point3D> points, System.Windows.Media.Color Color);
+    public delegate void Clear3DPointEventHandler();
+
+
+    public class MainWindowModel : NotifyBase
     {
         public MainModel mainModel { get; set; } = new MainModel();
 
-        public event DispImageHWindowEventHandler DispImageHWindow数模图Event;
-        public event DispObjHWindowEventHandler DispObjHWindow数模图Event;
+        public event DispImageHWindowEventHandler DispImageHWindowNumericalModelDiagramEvent;
+        public event DispPolylineHWindowEventHandler DispPolylineHWindowNumericalModelDiagramEvent;
 
         public event DispClearHWindowEventHandler DispClearHWindowControlEvent;
         public event DispImageWithoutCloneHWindowEventHandler DispImageWithoutCloneHWindowControlEvent;
         public event DispTextInImageHWindowEventHandler DispTextInImageHWindowControlEvent;
         public event DispTextInWindowHWindowEventHandler DispTextInWindowHWindowControlEvent;
-        public event DispObjHWindowEventHandler DispObjHWindowControlEvent;
+        public event DispPolylineHWindowEventHandler DispPolylinejHWindowControlEvent;
+        public event DispPolygonHWindowEventHandler DispPolygonjHWindowControlEvent;
+
+        public event Disp3DPointEventHandler Disp3DPointControlEvent;
+        public event Clear3DPointEventHandler Clear3DPointControlEvent;
 
 
         Dictionary<string, string> labelColorEnum = new Dictionary<string, string>{
@@ -50,8 +65,9 @@ namespace _3DLaserGlueInspection
             { "red", "Red" }
         };
 
-        public enum LogType { 
-            normal=0,
+        public enum LogType
+        {
+            normal = 0,
             ok = 1,
             ng = 2,
             warn = 3,
@@ -63,7 +79,7 @@ namespace _3DLaserGlueInspection
         CarNameIdSet cars = new CarNameIdSet();
         CamParams Params = new CamParams();
         Dictionary<string, Cam> cams = new Dictionary<string, Cam>();
-        Vision vision = new Vision();
+        //Vision vision = new Vision();
         JAKARobot robot = new JAKARobot();
         Mmf mmf = new Mmf();
         ISignal io;
@@ -73,22 +89,22 @@ namespace _3DLaserGlueInspection
         Stopwatch watch = new Stopwatch();
 
         SynchronizedList<long> robotPoseKeys = new SynchronizedList<long>();
-        SynchronizedList<HPose> robotPoseValues = new SynchronizedList<HPose>();
+        SynchronizedList<Wpf_Replace_halcon.PoseParameters> robotPoseValues = new SynchronizedList<Wpf_Replace_halcon.PoseParameters>();
         Task taskRobot = null;
 
-        Dictionary<string, SynchronizedList<SynchronizedList<long>>> ImageKeys = new Dictionary<string, SynchronizedList<SynchronizedList<long>>>();//指示拍照位置
-        Dictionary<string, SynchronizedList<Dictionary<long, HImage>>> Images = new Dictionary<string, SynchronizedList<Dictionary<long, HImage>>>();//相机-分段-时间-图片
+        public Dictionary<string, SynchronizedList<SynchronizedList<long>>> ImageKeys = new Dictionary<string, SynchronizedList<SynchronizedList<long>>>();//指示拍照位置
+        Dictionary<string, SynchronizedList<Dictionary<long, Mat>>> Images = new Dictionary<string, SynchronizedList<Dictionary<long, Mat>>>();//相机-分段-时间-图片
         SynchronizedList<int> dataGridViewImageListRows起点 = new SynchronizedList<int>();
-        Dictionary<string, SynchronizedList<Dictionary<long, HTuple>>> Point3DXs = new Dictionary<string, SynchronizedList<Dictionary<long, HTuple>>>();//相机-分段-时间-图片数据
-        Dictionary<string, SynchronizedList<Dictionary<long, HTuple>>> Point3DYs = new Dictionary<string, SynchronizedList<Dictionary<long, HTuple>>>();
-        Dictionary<string, SynchronizedList<Dictionary<long, HTuple>>> Point3DZs = new Dictionary<string, SynchronizedList<Dictionary<long, HTuple>>>();
-        Dictionary<string, SynchronizedList<Dictionary<long, HXLDCont>>> 轮廓 = new Dictionary<string, SynchronizedList<Dictionary<long, HXLDCont>>>();
-        Dictionary<string, SynchronizedList<Dictionary<long, HRegion>>> 胶区域 = new Dictionary<string, SynchronizedList<Dictionary<long, HRegion>>>();
-        Dictionary<string, SynchronizedList<Dictionary<long, HRegion>>> 胶外接 = new Dictionary<string, SynchronizedList<Dictionary<long, HRegion>>>();
-        Dictionary<string, SynchronizedList<Dictionary<long, Data>>> 胶数据 = new Dictionary<string, SynchronizedList<Dictionary<long, Data>>>();
-        Dictionary<string, SynchronizedList<Dictionary<long, bResult>>> 胶结果 = new Dictionary<string, SynchronizedList<Dictionary<long, bResult>>>();
+        Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>> Point3DXs = new Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>>();//相机-分段-时间-图片数据
+        Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>> Point3DYs = new Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>>();
+        Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>> Point3DZs = new Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>>();
+        public Dictionary<string, SynchronizedList<Dictionary<long, Mat>>> 轮廓 = new Dictionary<string, SynchronizedList<Dictionary<long, Mat>>>();
+        public Dictionary<string, SynchronizedList<Dictionary<long, Mat>>> 胶区域 = new Dictionary<string, SynchronizedList<Dictionary<long, Mat>>>();
+        public Dictionary<string, SynchronizedList<Dictionary<long, Mat>>> 胶外接 = new Dictionary<string, SynchronizedList<Dictionary<long, Mat>>>();
+        public Dictionary<string, SynchronizedList<Dictionary<long, Data>>> 胶数据 = new Dictionary<string, SynchronizedList<Dictionary<long, Data>>>();
+        public Dictionary<string, SynchronizedList<Dictionary<long, bResult>>> 胶结果 = new Dictionary<string, SynchronizedList<Dictionary<long, bResult>>>();
 
-        Dictionary<string, SynchronizedList<System.Windows.Size>> 画布大小 = new Dictionary<string, SynchronizedList<System.Windows.Size>>();
+        public Dictionary<string, SynchronizedList<System.Windows.Size>> 画布大小 = new Dictionary<string, SynchronizedList<System.Windows.Size>>();
 
         Dictionary<string, Task> tasks = new Dictionary<string, Task>();//相机-处理任务
 
@@ -305,8 +321,13 @@ namespace _3DLaserGlueInspection
                     画布大小.Clear();
                     tasks.Clear();
                     #endregion
-                    // 暂时屏蔽
                     //Invoke(new Action(() => { form3DShow.ClearCloud(); }));
+
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        Clear3DPointControlEvent();
+                    });
+                    
                     GC.Collect();
 
                     //清除信号
@@ -322,11 +343,7 @@ namespace _3DLaserGlueInspection
                         }
                         if (!Write(item, false)) return;
                     }
-                    //this.dataGridViewImageList.SelectionChanged -= new System.EventHandler(this.dataGridViewImageList_SelectionChanged);
-                    //dataGridViewImageList.Invoke(new Action(() =>
-                    //{
-                    //    dataGridViewImageList.Rows.Clear();
-                    //}));
+
                     Application.Current.Dispatcher.Invoke(() =>
                     {
                         mainModel.ImageResultRecords.Clear();
@@ -361,30 +378,12 @@ namespace _3DLaserGlueInspection
 
                     //获取车架号VIN
                     string inVIN = "";
-                    //if (Read(DI.InVIN, out string in_VIN))
-                    //{
-                    //    inVIN = in_VIN.ToString();
-                    //}
-                    //else
-                    //{
-                    //    return;
-                    //}
-                    //ShowMessage("收到车架号为" + inVIN);
 
                     DateTime dateTime = DateTime.Now;
-                    //BeginInvoke(new Action(() =>
-                    //{
-                    //    label产品号.Text = GlobalVarAndFunc.LanguageTranslate("产品号：") + ID;
-                    //    label名称.Text = GlobalVarAndFunc.LanguageTranslate("名称：") + car.Name;
-                    //    labelVIN.Text = "VIN：" + inVIN;
-                    //    label时间.Text = GlobalVarAndFunc.LanguageTranslate("时间：") + dateTime.ToString("G");
-                    //    label结果.Text = "--";
-                    //    label结果.ForeColor = Colors.White;
-                    //}));
                     mainModel.productIDControl = ID.ToString();
-                    mainModel.nameControl =  car.Name;
-                    mainModel.VINControl =  inVIN;
-                    mainModel.timeControl =  dateTime.ToString("G");
+                    mainModel.nameControl = car.Name;
+                    mainModel.VINControl = inVIN;
+                    mainModel.timeControl = dateTime.ToString("G");
                     mainModel.resultControl = "--";
                     mainModel.resultColorControl = "White";
 
@@ -403,25 +402,23 @@ namespace _3DLaserGlueInspection
                     }
                     if (stop) return;
 
-                    //显示数模图
-                    // 暂时屏蔽 
-                    // 已开放
-                    //hWindow数模图.DispImage(set.HImage);
-                    DispImageHWindow数模图Event(set.image);
-
-                    HTuple[] rowss = new HTuple[set.XLDDatas.Count];
-                    HTuple[] colss = new HTuple[set.XLDDatas.Count];
-                    HTuple[] angless = new HTuple[set.XLDDatas.Count];
+                    //显示NumericalModelDiagram
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        DispImageHWindowNumericalModelDiagramEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(set.image));
+                    });
+                    List<double>[] rowss = new List<double>[set.XLDDatas.Count];
+                    List<double>[] colss = new List<double>[set.XLDDatas.Count];
+                    List<double>[] angless = new List<double>[set.XLDDatas.Count];
                     for (int i = 0; i < set.XLDDatas.Count; i++)
                     {
                         int 步数 = set.CutSets[i].EndImageIndex - set.CutSets[i].StartImageIndex + 1;
                         if (步数 < 1) 步数 = 1;
-                        vision.XLDData拆分(set.XLDDatas[i], 步数, out rowss[i], out colss[i], out angless[i]);
+                        Vision.XLDDataDivide(set.XLDDatas[i], 步数, out rowss[i], out colss[i], out angless[i]);
+
                         for (int j = 0; j < 步数; j++)
                         {
-                            // 暂时屏蔽
-                            // 已开放
-                            hWindow数模图DispCross(rowss[i][j].D, colss[i][j].D, set.CutSets[i].Size, angless[i][j].D, "blue");
+                            hWindowNumericalModelDiagramDispCross(rowss[i][j], colss[i][j], set.CutSets[i].Size, angless[i][j], Colors.Blue);
                         }
                     }
                     if (stop) return;
@@ -452,7 +449,7 @@ namespace _3DLaserGlueInspection
                                         //    e灯颜色 = 灯颜色.红;
                                         //    label相机.Refresh();
                                         //}));
-                                        mainModel.camCommunicationLabelColorControl= labelColorEnum["red"];
+                                        mainModel.camCommunicationLabelColorControl = labelColorEnum["red"];
 
                                         return;
                                     }
@@ -499,20 +496,20 @@ namespace _3DLaserGlueInspection
                                             {
                                                 var dictImageKey = new SynchronizedList<SynchronizedList<long>>();
                                                 ImageKeys.Add(item.Key, dictImageKey);
-                                                var dictImage = new SynchronizedList<Dictionary<long, HImage>>();
+                                                var dictImage = new SynchronizedList<Dictionary<long, Mat>>();
                                                 Images.Add(item.Key, dictImage);
 
-                                                var dictX = new SynchronizedList<Dictionary<long, HTuple>>();
+                                                var dictX = new SynchronizedList<Dictionary<long, List<double>>>();
                                                 Point3DXs.Add(item.Key, dictX);
-                                                var dictY = new SynchronizedList<Dictionary<long, HTuple>>();
+                                                var dictY = new SynchronizedList<Dictionary<long, List<double>>>();
                                                 Point3DYs.Add(item.Key, dictY);
-                                                var dictZ = new SynchronizedList<Dictionary<long, HTuple>>();
+                                                var dictZ = new SynchronizedList<Dictionary<long, List<double>>>();
                                                 Point3DZs.Add(item.Key, dictZ);
-                                                var dictXLD = new SynchronizedList<Dictionary<long, HXLDCont>>();
+                                                var dictXLD = new SynchronizedList<Dictionary<long, Mat>>();
                                                 轮廓.Add(item.Key, dictXLD);
-                                                var dictRegion = new SynchronizedList<Dictionary<long, HRegion>>();
+                                                var dictRegion = new SynchronizedList<Dictionary<long, Mat>>();
                                                 胶区域.Add(item.Key, dictRegion);
-                                                var dictRegionRectangle2 = new SynchronizedList<Dictionary<long, HRegion>>();
+                                                var dictRegionRectangle2 = new SynchronizedList<Dictionary<long, Mat>>();
                                                 胶外接.Add(item.Key, dictRegionRectangle2);
                                                 var dictData = new SynchronizedList<Dictionary<long, Data>>();
                                                 胶数据.Add(item.Key, dictData);
@@ -558,21 +555,6 @@ namespace _3DLaserGlueInspection
                     总结果 = true;
                     if (stop) return;
 
-                    ////打开激光
-                    //foreach (var item in camParam)
-                    //{
-                    //    if (item.Value.Enable)
-                    //    {
-                    //        if (cams[item.Value.CamName].SetLine1Inverter(true))
-                    //        {
-                    //            ShowMessage($"相机{item.Key}:{item.Value.CamName}打开激光成功");
-                    //        }
-                    //        else
-                    //        {
-                    //            ShowMessage($"相机{item.Key}:{item.Value.CamName}打开激光失败：" + cams[item.Value.CamName].ErrMsg, LogType.ng);
-                    //        }
-                    //    }
-                    //}
                     // 暂时屏蔽
                     //form3DShow.RefreshOn(10, true);
 
@@ -588,8 +570,8 @@ namespace _3DLaserGlueInspection
                         double 范围 = 颜色上限值 - 颜色下限值;
                         if (simulation)
                         {
-                            SynchronizedList<long> robotPoseKeys仿真 = new SynchronizedList<long>();
-                            SynchronizedList<HPose> robotPoseValues仿真 = new SynchronizedList<HPose>();
+                            SynchronizedList<long> robotPoseKeysSimulation = new SynchronizedList<long>();
+                            SynchronizedList<Wpf_Replace_halcon.PoseParameters> robotPoseValuesSimulation = new SynchronizedList<Wpf_Replace_halcon.PoseParameters>();
                             string basePath = simulationPath;
                             try
                             {
@@ -602,7 +584,7 @@ namespace _3DLaserGlueInspection
                                         var paramList = (SynchronizedList<long>)xml.Deserialize(stream);
                                         if (paramList != null)
                                         {
-                                            robotPoseKeys仿真 = paramList;
+                                            robotPoseKeysSimulation = paramList;
                                         }
                                         else
                                         {
@@ -624,20 +606,33 @@ namespace _3DLaserGlueInspection
                             }
                             try
                             {
-                                string robotPoseValuesPath = $"{basePath}\\robotPoseValues";
+                                string robotPoseValuesPath = $"{basePath}\\robotPoseValues.xml";
                                 if (File.Exists(robotPoseValuesPath))
                                 {
-                                    using (FileStream stream = new FileStream(robotPoseValuesPath, FileMode.Open))
+                                    XmlSerializer xml = new XmlSerializer(typeof(SynchronizedList<double[]>));
+                                    using (FileStream stream = new FileStream(robotPoseValuesPath, FileMode.OpenOrCreate))
                                     {
-                                        BinaryFormatter bf = new BinaryFormatter();
-                                        var list = (SynchronizedList<HPose>)bf.Deserialize(stream);
-                                        if (list != null)
+                                        var paramList = (SynchronizedList<double[]>)xml.Deserialize(stream);
+                                        if (paramList != null)
                                         {
-                                            robotPoseValues仿真 = list;
+                                            robotPoseValuesSimulation.Clear();
+                                            //robotPoseValues = paramList;
+                                            foreach (var pose in paramList)
+                                            {
+                                                PoseParameters posePara = new PoseParameters();
+                                                posePara.x = pose[0];
+                                                posePara.y = pose[1];
+                                                posePara.z = pose[2];
+                                                posePara.rx = pose[3];
+                                                posePara.ry = pose[4];
+                                                posePara.rz = pose[5];
+                                                posePara.PoseType = (int)pose[6];
+                                                robotPoseValuesSimulation.Add(posePara);
+                                            }
                                         }
                                         else
                                         {
-                                            ShowMessage(robotPoseValuesPath + GlobalVarAndFunc.LanguageTranslate("文件格式异常"));
+                                            System.Windows.Forms.MessageBox.Show(robotPoseValuesPath + GlobalVarAndFunc.LanguageTranslate("文件格式异常"));
                                             return;
                                         }
                                     }
@@ -654,14 +649,14 @@ namespace _3DLaserGlueInspection
                                 return;
                             }
 
-                            for (int i = 0; i < robotPoseKeys仿真.Count; i++)
+                            for (int i = 0; i < robotPoseKeysSimulation.Count; i++)
                             {
                                 if (!bRobotRun)
                                 {
                                     break;
                                 }
-                                var key = robotPoseKeys仿真[i];
-                                var hPose = robotPoseValues仿真[i];
+                                var key = robotPoseKeysSimulation[i];
+                                var hPose = robotPoseValuesSimulation[i];
                                 {
                                     robotPoseValues.Add(hPose);
                                     robotPoseKeys.Add(key);
@@ -674,7 +669,7 @@ namespace _3DLaserGlueInspection
                         {
                             while (bRobotRun)
                             {
-                                if (robot.ReadPose(out HPose hPose))
+                                if (robot.ReadPose(out Wpf_Replace_halcon.PoseParameters hPose))
                                 {
                                     var key = watch.ElapsedTicks;
                                     {
@@ -701,7 +696,7 @@ namespace _3DLaserGlueInspection
                             var LightInCam = Params.LightInCam[camParamName][item.Key];
                             var LightToCam = Params.LightToCam[camParamName][item.Key];
                             var CamToTool = Params.CamToTool[camParamName][item.Key];
-                            tasks.Add(item.Key, Task.Run(() =>
+                            tasks.Add(item.Key, Task.Run((Action)(() =>
                             {
                                 while (indexImageCut < 0)//等待采集开始，数据集合完成添加
                                 {
@@ -780,199 +775,98 @@ namespace _3DLaserGlueInspection
                                                 {
                                                     var cutSet = set.CutSets[indexTaskCut];
                                                     var imageSet = set.CutSets[indexTaskCut].imageSet[camIndex][indexImage];
+                                                    // 临时结果保存变量
+                                                    bool getOutlineResult = false;
+                                                    bool singleFrameExisOutline = false;
+                                                    bool singleFrameExistGlue = false;
+                                                    Data resultData = new Data();
+                                                    bResult bResult = new bResult();
+                                                    Mat outMaxRegion = new Mat();
+                                                    Mat outRegionRectangle2 = new Mat();
+                                                    Mat hXLDCont10mm = new Mat();
+                                                    List<double> robotX, robotY, robotZ;
+                                                    robotX = new List<double>();
+                                                    robotY = new List<double>();
+                                                    robotZ = new List<double>();
+
                                                     if (imageSet.轮廓检测)
                                                     {
-                                                        Dictionary<double, double> xy = vision.获取激光像素位置HDR2(dictImage[imageKey], imageSet.minThreshold, item.Value.OffsetX, item.Value.OffsetY);
+                                                        //激光轮廓提取
+                                                        Mat xy = new Mat();
+                                                        Vision.getLaserPosition(dictImage[imageKey], imageSet.minThreshold, out xy, item.Value.OffsetX, item.Value.OffsetY);
 
-                                                        if (xy.Count > 0)
+                                                        if (xy.Rows > 0)
                                                         {
-                                                            //转激光坐标系
-                                                            vision.GetXY(hCamPar, LightInCam, xy, out HTuple lightX, out HTuple lightY);
-                                                            HTuple lightZ = new HTuple(new double[lightX.Length]);
-                                                            //转相机坐标系
-                                                            HTuple camX = LightToCam.AffineTransPoint3d(lightX, lightY, lightZ, out HTuple camY, out HTuple camZ);
-                                                            ////转传感器坐标系
-                                                            //HTuple sensorX = CamToSensor.AffineTransPoint3d(camX, camY, camZ, out HTuple sensorY, out HTuple sensorZ);
-                                                            //转工具
-                                                            HTuple toolX = CamToTool.AffineTransPoint3d(camX, camY, camZ, out HTuple toolY, out HTuple toolZ);
-                                                            //转机器人坐标
-                                                            HPose robotPose = MathHPose(robotPoseValues[indexRobotPose - 1], robotPoseValues[indexRobotPose],
-                                                                (imageKey - robotPoseKeys[indexRobotPose - 1]) / (double)(robotPoseKeys[indexRobotPose] - robotPoseKeys[indexRobotPose - 1]));
-                                                            var ToolToRobot = robotPose.PoseToHomMat3d();
-                                                            HTuple robotX = ToolToRobot.AffineTransPoint3d(toolX, toolY, toolZ, out HTuple robotY, out HTuple robotZ);
+                                                            getOutlineResult = true;
+                                                            //坐标转换
+                                                            Wpf_Replace_halcon.PoseParameters robotPose = new PoseParameters();
+                                                            HMatrixTransform.mathHPose(robotPoseValues[indexRobotPose - 1],
+                                                                robotPoseValues[indexRobotPose], out robotPose,
+                                                                (imageKey - robotPoseKeys[indexRobotPose - 1]) /
+                                                                (double)(robotPoseKeys[indexRobotPose] - robotPoseKeys[indexRobotPose - 1])
+                                                                );
+                                                            Mat lightXY = new Mat();
+                                                            Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToTool,
+                                                                robotPose, out lightXY, out robotX, out robotY, out robotZ);
 
                                                             //三维数据添加(机器人坐标)
                                                             dictX.Add(imageKey, robotX);
                                                             dictY.Add(imageKey, robotY);
                                                             dictZ.Add(imageKey, robotZ);
-                                                            // 暂时屏蔽
-                                                            //form3DShow.InsertNextPoints(robotX.DArr, robotY.DArr, robotZ.DArr, ((robotZ - cutSet.ShowColorMin / 1000) / ((cutSet.ShowColorMax - cutSet.ShowColorMin) / 1000)).DArr);
 
                                                             if (imageSet.单帧检测)
                                                             {
-                                                                Data data = new Data();
-                                                                bResult bResult = new bResult();
-                                                                HTuple lightXcut, lightYcut;
-                                                                if (imageSet.启用裁剪)
-                                                                {
-                                                                    dictImage[imageKey].GetImageSize(out int imageWidth, out int imageHeight);
-                                                                    double LeftX = imageWidth * imageSet.LeftX + item.Value.OffsetX;
-                                                                    double RightX = imageWidth * imageSet.RightX + item.Value.OffsetX;
-                                                                    double TopY = imageHeight * imageSet.TopY + item.Value.OffsetY;
-                                                                    double DownY = imageHeight * imageSet.DownY + item.Value.OffsetY;
-                                                                    List<double> x = new List<double>();
-                                                                    List<double> y = new List<double>();
-                                                                    foreach (var n in xy)
-                                                                    {
-                                                                        if (n.Key >= LeftX && n.Key <= RightX && n.Value >= TopY && n.Value <= DownY)
-                                                                        {
-                                                                            x.Add(n.Key);
-                                                                            y.Add(n.Value);
-                                                                        }
-                                                                    }
-                                                                    //转激光坐标系
-                                                                    vision.GetXY(hCamPar, LightInCam, x, y, out lightXcut, out lightYcut);
-                                                                }
-                                                                else
-                                                                {
-                                                                    lightXcut = lightX;
-                                                                    lightYcut = lightY;
-                                                                }
-
-                                                                if (lightXcut.Length > 0)
-                                                                {
-                                                                    //单帧检测(使用激光坐标系)
-                                                                    //轮廓只计算整数，所以数据单位放大至0.01mm，并把原点移至画布中心
-                                                                    HTuple hx_10微米 = lightXcut * (1000 * 100) + cutSet.ShowWidth * 100 / 2;
-                                                                    HTuple hy_10微米 = lightYcut * (1000 * 100 * Math.Cos(5 / 180 * Math.PI)) + cutSet.ShowHeight * 100 / 2;//补偿激光线5°倾斜
-                                                                    HXLDCont hXLDCont10微米, 胶轮廓;
-                                                                    if (imageSet.拐点分段)
-                                                                    {
-                                                                        hXLDCont10微米 = vision.轮廓提取(hx_10微米, hy_10微米, imageSet.分段距离 * 100, imageSet.成段点数, imageSet.分段弧度, imageSet.弧度分段距离 * 100, out HTuple 转折坐标X, out HTuple 转折坐标Y, out HTuple 转折标记, out 胶轮廓);
-                                                                    }
-                                                                    else if (imageSet.离散去噪)
-                                                                    {
-                                                                        hXLDCont10微米 = vision.轮廓提取(hx_10微米, hy_10微米, imageSet.分段距离 * 100, imageSet.成段点数);
-                                                                        胶轮廓 = hXLDCont10微米.Clone();
-                                                                    }
-                                                                    else
-                                                                    {
-                                                                        hXLDCont10微米 = new HXLDCont(hy_10微米, hx_10微米);
-                                                                        胶轮廓 = hXLDCont10微米.Clone();
-                                                                    }
-                                                                    dictXLD.Add(imageKey, hXLDCont10微米);
-
-                                                                    if (胶轮廓 != null)
-                                                                    {
-                                                                        // 测试显示问题
-                                                                        //DispImageWithoutCloneHWindowControlEvent(set.HImage.Clone());
-                                                                        //DispObjHWindowControlEvent(胶轮廓, null, "red");
-                                                                        //ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, hXLDCont10微米);
-                                                                        // 测试显示问题
-
-                                                                        HRegion hRegion = 胶轮廓.GenRegionContourXld("filled");
-
-                                                                        HRegion hRegion1 = hRegion.OpeningCircle(7d);
-                                                                        hRegion.Dispose();
-
-                                                                        HRegion hRegionCon = hRegion1.Connection();
-                                                                        hRegion1.Dispose();
-
-                                                                        //取一个面积最大的
-                                                                        int indexBig = 1;
-                                                                        for (int i = 2; i < hRegionCon.CountObj(); i++)
-                                                                        {
-                                                                            if (hRegionCon[i].Area > hRegionCon[indexBig].Area)
-                                                                            {
-                                                                                indexBig = i;
-                                                                            }
-                                                                        }
-                                                                        HRegion hRegionBig = hRegionCon[indexBig].Clone();
-                                                                        hRegionCon.Dispose();
-
-                                                                        if (hRegionBig.Area > 0)
-                                                                        {
-                                                                            vision.RunRegion(hRegionBig, imageSet, out var hRegionGenRectangle2, out data, out bResult);
-                                                                            dictRegion.Add(imageKey, hRegionBig);
-                                                                            dictRegionRectangle2.Add(imageKey, hRegionGenRectangle2);
-                                                                            dictData.Add(imageKey, data);
-                                                                            dictResult.Add(imageKey, bResult);
-                                                                            // 暂时屏蔽
-                                                                            // 已开放
-                                                                            ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, hXLDCont10微米, hRegionBig, hRegionGenRectangle2, data, bResult);
-                                                                        }
-                                                                        else
-                                                                        {
-                                                                            ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, hXLDCont10微米);
-                                                                        }
-                                                                    }
-                                                                    else
-                                                                    {
-                                                                        //ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, hXLDCont10微米);
-                                                                    }
-                                                                    胶轮廓?.Dispose();
-                                                                }
-
-                                                                //dataGridViewImageList.BeginInvoke(new Action(() =>
-                                                                //{
-                                                                //    lock (olockDataGridViewImageList)
-                                                                //    {
-                                                                //        dataGridViewImageList.Rows[dataGridViewImageListRows起点[indexTaskCut传递] + indexImage传递].Cells[item.Key].Style.BackColor = bResult.Result ? Colors.Green : LogType.ng;
-                                                                //    }
-                                                                //}));
-                                                                // 暂时屏蔽
-                                                                // 已开放
-                                                                hWindow数模图DispCross(rowss[indexTaskCut], colss[indexTaskCut], angless[indexTaskCut], indexImage, cutSet, bResult.Result ? "green" : "red");
+                                                                Mat detImage = dictImage[imageKey];
+                                                                //单帧检测
+                                                                Vision.singleFrameDetTotal(item.Value, hCamPar, LightInCam, detImage, cutSet, imageSet, ref singleFrameExistGlue, ref singleFrameExisOutline, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2, ref hXLDCont10mm, xy, lightXY);
                                                                 if (!bResult.Result)
                                                                 {
                                                                     总结果 = false;
                                                                 }
-                                                            }
-                                                            else
-                                                            {
-                                                                ////不单帧检测
-                                                                //dataGridViewImageList.BeginInvoke(new Action(() =>
-                                                                //{
-                                                                //    lock (olockDataGridViewImageList)
-                                                                //    {
-                                                                //        //dataGridViewImageList.Rows[dataGridViewImageListRows起点[indexTaskCut传递] + indexImage传递].Cells[item.Key].Style.BackColor = Colors.Gray;
-
-                                                                //        if ((dataGridViewImageListRows起点[indexTaskCut传递] + indexImage传递) % 2 == 0)
-                                                                //        {
-                                                                //            dataGridViewImageList.Rows[dataGridViewImageListRows起点[indexTaskCut传递] + indexImage传递].Cells[item.Key].Style.BackColor = Colors.FromArgb(38, 56, 81);
-                                                                //        }
-                                                                //        else
-                                                                //        {
-                                                                //            dataGridViewImageList.Rows[dataGridViewImageListRows起点[indexTaskCut传递] + indexImage传递].Cells[item.Key].Style.BackColor = Colors.FromArgb(42, 52, 64);
-                                                                //        }
-                                                                //    }
-                                                                //}));
-                                                                // 暂时屏蔽
-                                                                // 已开放
-                                                                hWindow数模图DispCross(rowss[indexTaskCut], colss[indexTaskCut], angless[indexTaskCut], indexImage, cutSet, "gray");
+                                                                if (hXLDCont10mm.Rows > 0)
+                                                                {
+                                                                    dictXLD.Add(imageKey, hXLDCont10mm);
+                                                                }
+                                                                if (resultData.面积>0)
+                                                                {                                                                    dictRegion.Add(imageKey, outMaxRegion);
+                                                                    dictRegionRectangle2.Add(imageKey, outRegionRectangle2);
+                                                                    dictData.Add(imageKey, resultData);
+                                                                    dictResult.Add(imageKey, bResult);
+                                                                }
                                                             }
                                                         }
                                                     }
-                                                    else
+
+                                                    //界面更新：
+                                                    //if (getOutlineResult)
+                                                    //{
+                                                    //    // 暂时屏蔽
+                                                    //    //form3DShow.InsertNextPoints(robotX.DArr, robotY.DArr, robotZ.DArr, ((robotZ - cutSet.ShowColorMin / 1000) / ((cutSet.ShowColorMax - cutSet.ShowColorMin) / 1000)).DArr);
+                                                    //    List<Point3D> points = new List<Point3D>();
+                                                    //    for (int i = 0; i < robotX.Count; i++)
+                                                    //    {
+                                                    //        points.Add(new Point3D(robotX[i], robotY[i], robotZ[i]));
+                                                    //    }
+                                                    //    //Application.Current.Dispatcher.Invoke(() =>
+                                                    //    //{
+                                                    //    //    Disp3DPointControlEvent(points, Colors.Blue);
+                                                    //    //});
+                                                    //}
+                                                    if (singleFrameExistGlue)
                                                     {
-                                                        ////不轮廓检测
-                                                        //dataGridViewImageList.BeginInvoke(new Action(() =>
-                                                        //{
-                                                        //    lock (olockDataGridViewImageList)
-                                                        //    {
-                                                        //        if ((dataGridViewImageListRows起点[indexTaskCut传递] + indexImage传递) % 2 == 0)
-                                                        //        {
-                                                        //            dataGridViewImageList.Rows[dataGridViewImageListRows起点[indexTaskCut传递] + indexImage传递].Cells[item.Key].Style.BackColor = Colors.FromArgb(38, 56, 81);
-                                                        //        }
-                                                        //        else
-                                                        //        {
-                                                        //            dataGridViewImageList.Rows[dataGridViewImageListRows起点[indexTaskCut传递] + indexImage传递].Cells[item.Key].Style.BackColor = Colors.FromArgb(42, 52, 64);
-                                                        //        }
-                                                        //    }
-                                                        //}));
-                                                        // 暂时屏蔽
-                                                        // 已开放
-                                                        hWindow数模图DispCross(rowss[indexTaskCut], colss[indexTaskCut], angless[indexTaskCut], indexImage, cutSet, "gray");
+                                                        Application.Current.Dispatcher.Invoke(() =>
+                                                        {
+                                                            ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, hXLDCont10mm, outMaxRegion, outRegionRectangle2, resultData, bResult);
+                                                        });
+                                                    }
+                                                    if (imageSet.轮廓检测)
+                                                    {
+                                                        if (imageSet.单帧检测)
+                                                        {
+                                                            // 已开放
+                                                            hWindowNumericalModelDiagramDispCross(rowss[indexTaskCut], colss[indexTaskCut], angless[indexTaskCut], indexImage, cutSet, bResult.Result ? Colors.Green : Colors.Red);
+
+                                                        }
                                                     }
                                                 }
                                                 else
@@ -992,7 +886,7 @@ namespace _3DLaserGlueInspection
                                     if (!bTaskRun) return;
                                     if (stop) return;
                                 }
-                            }));
+                            })));
                         }
                     }
                     ShowMessage(GlobalVarAndFunc.LanguageTranslate("图像处理任务启动完成"));
@@ -1074,20 +968,20 @@ namespace _3DLaserGlueInspection
                             {
                                 var dictImageKey = new SynchronizedList<long>();
                                 ImageKeys[item.Key].Add(dictImageKey);
-                                var dictImage = new Dictionary<long, HImage>(new Dictionary<long, HImage>());
+                                var dictImage = new Dictionary<long, Mat>(new Dictionary<long, Mat>());
                                 Images[item.Key].Add(dictImage);
 
-                                var dictX = new Dictionary<long, HTuple>();
+                                var dictX = new Dictionary<long, List<double>>();
                                 Point3DXs[item.Key].Add(dictX);
-                                var dictY = new Dictionary<long, HTuple>();
+                                var dictY = new Dictionary<long, List<double>>();
                                 Point3DYs[item.Key].Add(dictY);
-                                var dictZ = new Dictionary<long, HTuple>();
+                                var dictZ = new Dictionary<long, List<double>>();
                                 Point3DZs[item.Key].Add(dictZ);
-                                var dictXLD = new Dictionary<long, HXLDCont>();
+                                var dictXLD = new Dictionary<long, Mat>();
                                 轮廓[item.Key].Add(dictXLD);
-                                var dictRegion = new Dictionary<long, HRegion>();
+                                var dictRegion = new Dictionary<long, Mat>();
                                 胶区域[item.Key].Add(dictRegion);
-                                var dictRegionRectangle2 = new Dictionary<long, HRegion>();
+                                var dictRegionRectangle2 = new Dictionary<long, Mat>();
                                 胶外接[item.Key].Add(dictRegionRectangle2);
                                 var dictData = new Dictionary<long, Data>();
                                 胶数据[item.Key].Add(dictData);
@@ -1123,26 +1017,6 @@ namespace _3DLaserGlueInspection
                                                     dictImage.Add(key, image);
                                                     dictImageKey.Add(key);
                                                     var dictImageKeyCount = dictImageKey.Count;
-                                                    //dataGridViewImageList.BeginInvoke(new Action(() =>
-                                                    //{
-                                                    //    lock (olockDataGridViewImageList)
-                                                    //    {
-                                                    //        if (dataGridViewImageList.Rows.Count - 起点 < dictImageKeyCount)
-                                                    //        {
-                                                    //            do
-                                                    //            {
-                                                    //                int indexRow = dataGridViewImageList.Rows.Add();
-                                                    //                dataGridViewImageList.Rows[indexRow].Cells[item.Key].Value = $"{段数下标}:{dictImageKeyCount - 1}";
-                                                    //                dataGridViewImageList.FirstDisplayedScrollingRowIndex = indexRow;
-                                                    //            }
-                                                    //            while (dataGridViewImageList.Rows.Count - 起点 < dictImageKeyCount);
-                                                    //        }
-                                                    //        else
-                                                    //        {
-                                                    //            dataGridViewImageList.Rows[起点 + dictImageKeyCount - 1].Cells[item.Key].Value = $"{段数下标}:{dictImageKeyCount - 1}";
-                                                    //        }
-                                                    //    }
-                                                    //}));
 
                                                     Application.Current.Dispatcher.Invoke(() =>
                                                     {
@@ -1227,7 +1101,7 @@ namespace _3DLaserGlueInspection
                                                         {
                                                             try
                                                             {
-                                                                HImage image = new HImage(filePaths[i]);
+                                                                Mat image = new Mat(filePaths[i],ImreadModes.Unchanged);
                                                                 dictImage.Add(key, image);
                                                                 dictImageKey.Add(key);
                                                                 var dictImageKeyCount = dictImageKey.Count;
@@ -1288,26 +1162,6 @@ namespace _3DLaserGlueInspection
                                                                 });
 
 
-                                                                //        dataGridViewImageList.BeginInvoke(new Action(() =>
-                                                                //{
-                                                                //    lock (olockDataGridViewImageList)
-                                                                //    {
-                                                                //        if (dataGridViewImageList.Rows.Count - 起点 < dictImageKeyCount)
-                                                                //        {
-                                                                //            do
-                                                                //            {
-                                                                //                int indexRow = dataGridViewImageList.Rows.Add();
-                                                                //                dataGridViewImageListdataGridViewImageList.Rows[indexRow].Cells[item.Key].Value = $"{段数下标}:{dictImageKeyCount - 1}";
-                                                                //                dataGridViewImageList.FirstDisplayedScrollingRowIndex = indexRow;
-                                                                //            }
-                                                                //            while (dataGridViewImageList.Rows.Count - 起点 < dictImageKeyCount);
-                                                                //        }
-                                                                //        else
-                                                                //        {
-                                                                //            dataGridViewImageList.Rows[起点 + dictImageKeyCount - 1].Cells[item.Key].Value = $"{段数下标}:{dictImageKeyCount - 1}";
-                                                                //        }
-                                                                //    }
-                                                                //}));
                                                             }
                                                             catch (Exception ex)
                                                             {
@@ -1394,21 +1248,6 @@ namespace _3DLaserGlueInspection
                                 }
                             }
 
-                            ////关闭激光
-                            //foreach (var item in camParam)
-                            //{
-                            //    if (item.Value.Enable)
-                            //    {
-                            //        if (cams[item.Value.CamName].SetLine1Inverter(false))
-                            //        {
-                            //            ShowMessage($"相机{item.Key}:{item.Value.CamName}关闭激光成功");
-                            //        }
-                            //        else
-                            //        {
-                            //            ShowMessage($"相机{item.Key}:{item.Value.CamName}关闭激光失败：" + cams[item.Value.CamName].ErrMsg, LogType.ng);
-                            //        }
-                            //    }
-                            //}
                         }
                         bTriggering = false;
 
@@ -1431,24 +1270,6 @@ namespace _3DLaserGlueInspection
                         }
                     }
 
-                    ////关闭激光
-                    //if (!simulation)
-                    //{
-                    //    foreach (var item in camParam)
-                    //    {
-                    //        if (item.Value.Enable)
-                    //        {
-                    //            if (cams[item.Value.CamName].SetLine1Inverter(false))
-                    //            {
-                    //                ShowMessage($"相机{item.Key}:{item.Value.CamName}关闭激光成功");
-                    //            }
-                    //            else
-                    //            {
-                    //                ShowMessage($"相机{item.Key}:{item.Value.CamName}关闭激光失败：" + cams[item.Value.CamName].ErrMsg, LogType.ng);
-                    //            }
-                    //        }
-                    //    }
-                    //}
 
                     if (stop) return;
                     if (bAbort) continue;
@@ -1619,7 +1440,9 @@ namespace _3DLaserGlueInspection
                                             Directory.CreateDirectory(imageDirectory);
                                             foreach (var image in camValue.Value[i])//图片
                                             {
-                                                image.Value.WriteImage("png 1", 0, $"{imageDirectory}\\{image.Key:000000000000}.png");
+                                                //image.Value.WriteImage("png 1", 0, $"{imageDirectory}\\{image.Key:000000000000}.png");
+                                                Cv2.ImWrite($"{imageDirectory}\\{image.Key:000000000000}.png", image.Value);
+
                                             }
                                         }
                                     }
@@ -1634,7 +1457,7 @@ namespace _3DLaserGlueInspection
                                     List<double[]> pose = new List<double[]>();
                                     foreach (var poseKey in robotPoseValues)
                                     {
-                                        pose.Add(new double[] { poseKey.RawData[0], poseKey.RawData[1], poseKey.RawData[2], poseKey.RawData[3], poseKey.RawData[4], poseKey.RawData[5], poseKey.RawData[6] });
+                                        pose.Add(new double[] { poseKey.x, poseKey.y, poseKey.z, poseKey.rx, poseKey.ry, poseKey.rz, poseKey.PoseType });
                                     }
                                     new XmlSerializer(pose.GetType()).Serialize(stream, pose);
                                 }
@@ -1712,20 +1535,43 @@ namespace _3DLaserGlueInspection
         }
 
 
-        private void hWindow数模图DispCross(double row, double col, double angle, double size, string color)
+
+
+        private void hWindowNumericalModelDiagramDispCross(double row, double col, double angle, double size, System.Windows.Media.Color color)
         {
-            HXLDCont hXLDCont = new HXLDCont();
-            hXLDCont.GenCrossContourXld(row, col, size, angle);
-            //hWindow数模图.DispObj(hXLDCont, null, color);
-            DispObjHWindow数模图Event(hXLDCont, null, color);
+            Mat hXLDCont = new Mat();
+            //生成交叉图案
+            //hXLDCont.GenCrossContourXld(row, col, size, angle);
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                PointCollection Points1 = new PointCollection();
+                PointCollection Points2 = new PointCollection();
+
+                System.Windows.Point p1 = new System.Windows.Point(col + Math.Cos(angle / 180 * Math.PI) * size, row + Math.Sin(angle / 180 * Math.PI) * size);
+                System.Windows.Point p2 = new System.Windows.Point(col + Math.Cos((angle + 180) / 180 * Math.PI) * size, row + Math.Sin((angle + 180) / 180 * Math.PI) * size);
+                System.Windows.Point p3 = new System.Windows.Point(col + Math.Cos((angle + 90) / 180 * Math.PI) * size, row + Math.Sin((angle + 90) / 180 * Math.PI) * size);
+                System.Windows.Point p4 = new System.Windows.Point(col + Math.Cos((angle + 270) / 180 * Math.PI) * size, row + Math.Sin((angle + 270) / 180 * Math.PI) * size);
+                Points1.Add(p1);
+                Points1.Add(p2);
+                Points2.Add(p3);
+                Points2.Add(p4);
+
+                //Console.WriteLine(p1);
+                //Console.WriteLine(p2);
+                //Console.WriteLine(p3);
+                //Console.WriteLine(p4);
+                //hWindowNumericalModelDiagram.DispObj(hXLDCont, null, color);
+                DispPolylineHWindowNumericalModelDiagramEvent(Points1, color, 2);
+                DispPolylineHWindowNumericalModelDiagramEvent(Points2, color, 2);
+            });
             hXLDCont.Dispose();
         }
-        private void hWindow数模图DispCross(HTuple rows, HTuple cols, HTuple angles, int indexImage, CutSet cutSet, string color)
+        private void hWindowNumericalModelDiagramDispCross(List<double> rows, List<double> cols, List<double> angles, int indexImage, CutSet cutSet, System.Windows.Media.Color color)
         {
             int indexCross = indexImage - cutSet.StartImageIndex;
-            if (indexCross >= 0 && indexCross < angles.Length)
+            if (indexCross >= 0 && indexCross < angles.Count)
             {
-                hWindow数模图DispCross(rows[indexCross].D, cols[indexCross].D, angles[indexCross].D, cutSet.Size, color);
+                hWindowNumericalModelDiagramDispCross(rows[indexCross], cols[indexCross], angles[indexCross], cutSet.Size, color);
             }
         }
 
@@ -1882,12 +1728,7 @@ namespace _3DLaserGlueInspection
             return false;
         }
         #endregion
-        HPose MathHPose(HPose hPose1, HPose hPose2, double s)
-        {
-            var mathPose = new HPose(hPose1.RawData + (hPose2.RawData - hPose1.RawData) * s);
-            //mathPose.RawData[6] = hPose1.RawData[6];
-            return mathPose;
-        }
+
 
         public void ShowMessage(string mesage)
         {
@@ -1928,7 +1769,7 @@ namespace _3DLaserGlueInspection
                 {
                     mainModel.LogRecords.RemoveAt(mainModel.LogRecords.Count - 1);
                 }
-                mainModel.LogRecords.Insert(0, logRecord); 
+                mainModel.LogRecords.Insert(0, logRecord);
             });
 
         }
@@ -1936,7 +1777,7 @@ namespace _3DLaserGlueInspection
 
         object olockShow = new object();
         bool showing = false;
-        void ShowImageData(int showWidth, int showHeight, HXLDCont hXLDCont10微米)
+        void ShowImageData(int showWidth, int showHeight, Mat hXLDCont10mm)
         {
             if (!showing)
             {
@@ -1945,8 +1786,20 @@ namespace _3DLaserGlueInspection
                 {
                     lock (olockShow)
                     {
-                        DispImageWithoutCloneHWindowControlEvent(new HImage("byte", showWidth * 100, showHeight * 100));//扩画布
-                        DispObjHWindowControlEvent (hXLDCont10微米, null, "gray");
+                        Mat mat = new Mat();
+                        mat = Mat.Zeros((int)(showHeight * Vision.scaleSize), (int)(showWidth * Vision.scaleSize), MatType.CV_8UC3);
+
+                        DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//扩画布
+
+                        PointCollection points = new PointCollection();
+                        for (int i = 0; i < hXLDCont10mm.Rows; i++)
+                        {
+                            System.Windows.Point point = new System.Windows.Point();
+                            point.X = hXLDCont10mm.At<double>(i, 0);
+                            point.Y = hXLDCont10mm.At<double>(i, 1);
+                            points.Add(point);
+                        }
+                        DispPolylinejHWindowControlEvent(points, Colors.Gray);
                         //hWindowControl.DispImageWithoutClone(new HImage("byte", showWidth * 100, showHeight * 100));//扩画布
                         //hWindowControl.DispObj(hXLDCont10微米, null, "gray");
                     }
@@ -1958,7 +1811,7 @@ namespace _3DLaserGlueInspection
                 showing = false;
             }
         }
-        void ShowImageData(int showWidth, int showHeight, HXLDCont hXLDCont10微米, HRegion hRegion, HRegion hRegionSmallestRectangle2, Data data, bResult bResult)
+        void ShowImageData(int showWidth, int showHeight, Mat hXLDCont10mm, Mat hRegion, Mat hRegionSmallestRectangle2, Data data, bResult bResult)
         {
             if (!showing)
             {
@@ -1967,30 +1820,56 @@ namespace _3DLaserGlueInspection
                 {
                     lock (olockShow)
                     {
-                        //hWindowControl.DispImageWithoutClone(new HImage("byte", showWidth * 100, showHeight * 100));//扩画布
-                        //hWindowControl.DispObj(hXLDCont10微米, null, "gray");
-                        DispImageWithoutCloneHWindowControlEvent(new HImage("byte", showWidth * 100, showHeight * 100));//扩画布
-                        DispObjHWindowControlEvent(hXLDCont10微米, null, "gray");
+                        Mat mat = new Mat();
+                        mat = Mat.Zeros((int)(showHeight * Vision.scaleSize), (int)(showWidth * Vision.scaleSize), MatType.CV_8UC3);
 
-                        if (hRegion != null)
+                        DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//扩画布
+
+                        PointCollection points = new PointCollection();
+                        for (int i = 0; i < hXLDCont10mm.Rows; i++)
                         {
-                            DispObjHWindowControlEvent(hRegion, "fill", "red");
-                            DispObjHWindowControlEvent(hRegionSmallestRectangle2, "margin", "blue");
+                            System.Windows.Point point = new System.Windows.Point();
+                            point.X = hXLDCont10mm.At<double>(i, 0);
+                            point.Y = hXLDCont10mm.At<double>(i, 1);
+                            points.Add(point);
+                        }
+                        DispPolylinejHWindowControlEvent(points, Colors.Gray);
+                        if (!hRegion.Empty())
+                        {
+                            PointCollection regionPoints = new PointCollection();
+                            for (int i = 0; i < hRegion.Rows; i++)
+                            {
+                                System.Windows.Point point = new System.Windows.Point();
+                                point.X = hRegion.At<double>(i, 0);
+                                point.Y = hRegion.At<double>(i, 1);
+                                regionPoints.Add(point);
+                            }
 
-                            //hWindowControl.DispObj(hRegion, "fill", "red");
-                            //hWindowControl.DispObj(hRegionSmallestRectangle2, "margin", "blue");
+                            DispPolygonjHWindowControlEvent(regionPoints, Colors.Red, "fill");
+                            PointCollection regionSmallestRectangle2Points = new PointCollection();
+                            for (int i = 0; i < hRegionSmallestRectangle2.Rows; i++)
+                            {
+                                System.Windows.Point point = new System.Windows.Point();
+                                point.X = hRegionSmallestRectangle2.At<double>(i, 0);
+                                point.Y = hRegionSmallestRectangle2.At<double>(i, 1);
+                                regionSmallestRectangle2Points.Add(point);
+                            }
+
+                            DispPolygonjHWindowControlEvent(regionSmallestRectangle2Points, Colors.Blue, "margin");
+
                             string text = GlobalVarAndFunc.LanguageTranslate("胶高：") + $"{data.胶高:0.00}\r\n"
                                + GlobalVarAndFunc.LanguageTranslate("胶宽：") + $"{data.胶宽:0.00}\r\n"
                                + GlobalVarAndFunc.LanguageTranslate("面积：") + $"{data.面积:0.00}";
+                            DispTextInImageHWindowControlEvent(text, Colors.Black, (int)data.column + (int)(data.胶宽 / 2 * Vision.scaleSize),
+                                (int)data.row + (int)(data.胶高 / 2 * Vision.scaleSize));
 
-                            DispTextInImageHWindowControlEvent(text, data.row, data.column);
                             //hWindowControl.DispTextInImage(text, data.row, data.column);
                             string textWindow1 = GlobalVarAndFunc.LanguageTranslate("胶宽：") + (bResult.胶宽 ? "OK" : "NG");
                             string textWindow2 = GlobalVarAndFunc.LanguageTranslate("胶高：") + (bResult.胶高 ? "OK" : "NG");
                             string textWindow3 = GlobalVarAndFunc.LanguageTranslate("面积：") + (bResult.面积 ? "OK" : "NG");
                             string textWindow = textWindow1 + "\r\n" + textWindow2 + "\r\n" + textWindow3;
-                            //hWindowControl.DispTextInWindow(textWindow, 10, 10);
-                            DispTextInWindowHWindowControlEvent(textWindow, 10, 10);
+                            DispTextInImageHWindowControlEvent(textWindow, Colors.Black, 10, 10);
+
                         }
                     }
                 }

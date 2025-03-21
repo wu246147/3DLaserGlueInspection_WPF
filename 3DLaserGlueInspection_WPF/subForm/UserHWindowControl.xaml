@@ -9,7 +9,7 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid x:Name="Controls">
 
-        <ha:HWindowControlWPF x:Name="hWindowControlWPF" />
+        <!--<ha:HWindowControlWPF x:Name="hWindowControlWPF" />-->
 
     </Grid>
 </UserControl>

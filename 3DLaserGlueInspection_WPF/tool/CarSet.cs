@@ -6,6 +6,8 @@ using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
+using _3DLaserGlueInspection.subForm;
+using RAIVASCS.Common;
 
 namespace _3DLaserGlueInspection
 {
@@ -68,65 +70,18 @@ namespace _3DLaserGlueInspection
             Cars = NewCars;
             Save();
         }
-        
+
         //先屏蔽，后面在其他地方补上
-        //public void ShowCarSetForm(string[] CamParamNames)
-        //{
-        //    Load();
-        //    FormCarSet fcs = new FormCarSet(Cars, CamParamNames);
-        //    if (System.Windows.Forms.DialogResult.Yes == fcs.ShowDialog())
-        //    {
-        //        string basePath = AppDomain.CurrentDomain.BaseDirectory + "Data\\Project\\";
-        //        //改名//删除
-        //        foreach (var item in Cars.Keys)
-        //        {
-        //            if (fcs.NewCars.ContainsKey(item))
-        //            {
-        //                if (Cars[item].Name != fcs.NewCars[item].Name)
-        //                {
-        //                    //修改文件夹名称Cars[item].Name→fcs.NewCars[item].Name
-        //                    string oldPath = basePath + Cars[item].Name;
-        //                    string newPath = basePath + fcs.NewCars[item].Name;
+        public void ShowCarSetForm(string[] CamParamNames)
+        {
+            Load();
+            WindowCarSet fcs = new WindowCarSet(Cars, CamParamNames);
+            if (fcs.ShowDialog()==true)
+            {
+                UpdateCarSet(fcs.NewCars);
+            }
 
-        //                    if (Directory.Exists(oldPath))
-        //                    {
-        //                        if (!Directory.Exists(newPath))
-        //                        {
-        //                            Directory.Move(oldPath, newPath);
-        //                        }
-        //                    }
-        //                    else
-        //                    {
-        //                        if (!Directory.Exists(newPath))
-        //                        {
-        //                            Directory.CreateDirectory(newPath);
-        //                        }
-        //                    }
-        //                }
-        //            }
-        //            else
-        //            {
-        //                //删除文件夹名称Cars[item].Name
-        //                if (Directory.Exists(basePath + Cars[item].Name))
-        //                {
-        //                    Directory.Delete(basePath + Cars[item].Name, true);
-        //                }
-        //            }
-        //        }
-        //        //添加
-        //        foreach (var item in fcs.NewCars.Keys)
-        //        {
-        //            if (!Cars.ContainsKey(item))
-        //            {
-        //                //添加fcs.NewCars[item].Name
-        //                Directory.CreateDirectory(basePath + fcs.NewCars[item].Name);
-        //            }
-        //        }
-        //        Cars = fcs.NewCars;
-        //        Save();
-        //    }
-
-        //}
+        }
         public bool Load()
         {
             bool result = true;
@@ -239,9 +194,8 @@ namespace _3DLaserGlueInspection
             return names.ToArray();
         }
     }
-
     [Serializable]
-    public class Car
+    public class Car 
     {
         public string Name;
         public List<int> IDs;

@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
-using System.Xml.Serialization;
 using OpenCvSharp;
 using Wpf_Replace_halcon;
+using System.Xml.Serialization;
 
 namespace _3DLaserGlueInspection
 {
@@ -20,9 +20,8 @@ namespace _3DLaserGlueInspection
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
         public static extern int poseToHomMat3d(int PoseType, double x, double y, double z, double rx, double ry, double rz, IntPtr transformMat);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern int affineTransPoint3d(IntPtr srcPoints, IntPtr transformPoints, IntPtr transformMat);
+        public static extern int affineTransPoint3d(IntPtr srcPoints, IntPtr transformMat, IntPtr transformPoints);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-
         public static extern int imagePointsToWorldPlane(double Focus, double Kappa, double CamSx, double CamSy, double CamCx, double CamCy,
         int PoseType, double PoseX, double PoseY, double PoseZ, double PoseRx, double PoseRy, double PoseRz,
         IntPtr srcPoints, IntPtr transformPoints);
@@ -32,11 +31,16 @@ namespace _3DLaserGlueInspection
         public static extern int thinning(IntPtr inputMat, IntPtr outImage, IntPtr outPointMat);
         [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
         public static extern int singleFrameDet(IntPtr inputPointMat, out bool existGlue, out double centerX, out double centerY,
-            out double phi, out double width, out double height);
+            out double phi, out double width, out double height, out double maxArea, IntPtr outMaxRegion, IntPtr outRegionRectangle2, bool isDebug = false);
+
         [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
+        public static extern int trajectoryDiscreteFilter(IntPtr inputPointMat, double distThre, int segmentalThre, IntPtr pointsFilterMat, bool isDebug = false);
 
-        public static extern int trajectoryDiscreteFilter(IntPtr inputPointMat, double distThre, double segmentalThre, IntPtr pointsFilterMat);
+        [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
+        public static extern int dividePolyline(IntPtr polyline, int divideCout, IntPtr dividedPoints);
 
+
+        public static double scaleSize = 10;
 
         /// <summary>
         /// 获取激光位置
@@ -46,27 +50,60 @@ namespace _3DLaserGlueInspection
         /// <param name="outlinePoints"></param>
         /// <param name="offsetX"></param>
         /// <param name="offsetY"></param>
-        public void getLaserPosition(Mat Image, double minThreshold,out Mat outlinePoints, int offsetX = 0, int offsetY = 0)
+        public static void getLaserPosition(Mat Image, double minThreshold, out Mat outlinePoints, int offsetX = 0, int offsetY = 0)
         {
             Mat outImage = new Mat();
             outlinePoints = new Mat();
             thinning(Image.CvPtr, outImage.CvPtr, outlinePoints.CvPtr);
+            //Console.WriteLine($"Image type:{Image.Type()}.");
+            //Console.WriteLine($"outImage type:{outImage.Type()}.");
 
             if (offsetX != 0)
             {
-                for (int i = 0; i < outlinePoints.Cols; i++)
+                for (int i = 0; i < outlinePoints.Rows; i++)
                 {
-                    outlinePoints.At<double>(0, i) += offsetX;
+                    outlinePoints.At<double>(i, 0) += offsetX;
                 }
             }
             if (offsetY != 0)
             {
-                for (int i = 0; i < outlinePoints.Cols; i++)
+                for (int i = 0; i < outlinePoints.Rows; i++)
                 {
-                    outlinePoints.At<double>(1, i) += offsetY;
+                    outlinePoints.At<double>(i, 1) += offsetY;
                 }
             }
 
+            //Cv2.NamedWindow("Image", WindowFlags.Normal);
+            //Cv2.ImShow("Image", Image);
+            //Cv2.NamedWindow("outImage", WindowFlags.Normal);
+            //Cv2.ImShow("outImage", outImage);
+            //Cv2.WaitKey(0);
+            //showMatPoint(outlinePoints, "imagePoints");
+
+        }
+
+        public static void showMatPoint(Mat Points, string windowName)
+        {
+            //临时显示
+            double imgW = 0;
+            double imgH = 0;
+            for (int i = 0; i < Points.Rows; i++)
+            {
+                double x = Points.At<double>(i, 0);
+                double y = Points.At<double>(i, 1);
+                imgW = Math.Max(x, imgW);
+                imgH = Math.Max(y, imgH);
+            }
+            Mat imgShow = Mat.Zeros((int)imgH + 1, (int)imgW + 1, MatType.CV_8UC1);
+            for (int i = 0; i < Points.Rows; i++)
+            {
+                double x = Points.At<double>(i, 0);
+                double y = Points.At<double>(i, 1);
+                imgShow.At<byte>((int)y, (int)x) = 255;
+            }
+            Cv2.NamedWindow(windowName, WindowFlags.Normal);
+            Cv2.ImShow(windowName, imgShow);
+            Cv2.WaitKey(0);
         }
 
 
@@ -74,7 +111,7 @@ namespace _3DLaserGlueInspection
         /// <summary>
         /// 输入像素坐标，输出物理坐标xy
         /// </summary>
-        public void GetXY(CameraParameters hCamPar, PoseParameters hWorldPose, Mat srcPoints, out Mat transformPoints, bool 反转X = false, bool 反转Y = false)
+        public static void GetXY(CameraParameters hCamPar, PoseParameters hWorldPose, Mat srcPoints, out Mat transformPoints, bool 反转X = false, bool 反转Y = false)
         {
             transformPoints = new Mat();
 
@@ -102,8 +139,14 @@ namespace _3DLaserGlueInspection
 
         }
 
-
-        public void getOutline(Mat srcPoints, out Mat transformPoints, double distThre, int segmentalThre)
+        /// <summary>
+        /// 离散滤波
+        /// </summary>
+        /// <param name="srcPoints"></param>
+        /// <param name="transformPoints"></param>
+        /// <param name="distThre"></param>
+        /// <param name="segmentalThre"></param>
+        public static void TrajectoryDiscreteFilter(Mat srcPoints, out Mat transformPoints, double distThre, int segmentalThre)
         {
             transformPoints = new Mat();
 
@@ -112,28 +155,79 @@ namespace _3DLaserGlueInspection
 
         }
 
-        public void RunRegion(Mat hRegion, ImageSet imageSet, out RotatedRect hRegionGenRectangle2, out Data data, out bResult bResult)
+        /// <summary>
+        /// 点云切割
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="hCamPar"></param>
+        /// <param name="LightInCam"></param>
+        /// <param name="dictImage"></param>
+        /// <param name="imageKey"></param>
+        /// <param name="imageSet"></param>
+        /// <param name="xy"></param>
+        /// <param name="lightXYcut"></param>
+        public static void cutLight(Mat xy, CamParam camParam, CameraParameters hCamPar, PoseParameters LightInCam, Mat img, ImageSet imageSet, out Mat lightXYcut)
         {
-            data = new Data();
-            bResult = new bResult();
-            hRegionGenRectangle2 = Cv2.MinAreaRect(hRegion);
-            ////hRegion.SmallestRectangle2(out data.row, out data.column, out double phi, out double length1, out double length2);
-            //hRegionGenRectangle2 = new Rect();
-            //hRegionGenRectangle2.GenRectangle2(data.row, data.column, phi, length1, length2);
+            lightXYcut = new Mat();
+            int imageWidth, imageHeight;
+            imageWidth = img.Cols;
+            imageHeight = img.Rows;
 
-            bool heng = Math.Abs(hRegionGenRectangle2.Angle * Math.PI / 180) <= Math.PI / 4;
-            data.胶高 = (heng ? hRegionGenRectangle2.Size.Height : hRegionGenRectangle2.Size.Width) / 100d * 2;
-            data.胶宽 = (heng ? hRegionGenRectangle2.Size.Width : hRegionGenRectangle2.Size.Height) / 100d * 2;
-            data.面积 = hRegion.Width * hRegion.Height / 10000d;
-            if (data.胶高 >= imageSet.heightMin && data.胶高 <= imageSet.heightMax)
+            double LeftX = imageWidth * imageSet.LeftX + camParam.OffsetX;
+            double RightX = imageWidth * imageSet.RightX + camParam.OffsetX;
+            double TopY = imageHeight * imageSet.TopY + camParam.OffsetY;
+            double DownY = imageHeight * imageSet.DownY + camParam.OffsetY;
+            List<int> idList = new List<int>();
+            for (int i = 0; i < xy.Rows; i++)
+            {
+                double x = xy.At<double>(i, 0);
+                double y = xy.At<double>(i, 1);
+                if (x >= LeftX && x <= RightX && y >= TopY && y <= DownY)
+                {
+                    idList.Add(i);
+                }
+            }
+            Mat selectXY = new Mat(idList.Count, 2, MatType.CV_64FC1);
+            for (int i = 0; i < idList.Count; i++)
+            {
+                selectXY.At<double>(i, 0) = xy.At<double>(idList[i], 0);
+                selectXY.At<double>(i, 1) = xy.At<double>(idList[i], 1);
+            }
+            //转激光坐标系
+            Vision.GetXY(hCamPar, LightInCam, selectXY, out lightXYcut);
+        }
+
+        /// <summary>
+        /// 分析涂胶结果
+        /// </summary>
+        /// <param name="imageSet"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="phi"></param>
+        /// <param name="maxArea"></param>
+        /// <param name="resultData"></param>
+        /// <param name="bResult"></param>
+        public static void judgeGlueResult(ImageSet imageSet,double centerX,double centerY, double width, double height, double phi, double maxArea, out Data resultData, out bResult bResult)
+        {
+            resultData = new Data();
+            bResult = new bResult();
+
+            resultData.row = centerY;
+            resultData.column = centerX;
+
+            bool heng = Math.Abs(phi) <= Math.PI / 4;
+            resultData.胶高 = (heng ? height : width) / scaleSize * 2;
+            resultData.胶宽 = (heng ? width : height) / scaleSize * 2;
+            resultData.面积 = maxArea / (scaleSize* scaleSize);
+            if (resultData.胶高 >= imageSet.heightMin && resultData.胶高 <= imageSet.heightMax)
             {
                 bResult.胶高 = true;
             }
-            if (data.胶宽 >= imageSet.widthMin && data.胶宽 <= imageSet.widthMax)
+            if (resultData.胶宽 >= imageSet.widthMin && resultData.胶宽 <= imageSet.widthMax)
             {
                 bResult.胶宽 = true;
             }
-            if (data.面积 >= imageSet.areaMin && data.面积 <= imageSet.areaMax)
+            if (resultData.面积 >= imageSet.areaMin && resultData.面积 <= imageSet.areaMax)
             {
                 bResult.面积 = true;
             }
@@ -142,19 +236,189 @@ namespace _3DLaserGlueInspection
                 bResult.Result = true;
             }
         }
-    }
-    public struct Point3D
-    {
-        public double X;
-        public double Y;
-        public double Z;
-        public Point3D(double x, double y, double z)
+
+        /// <summary>
+        /// 轨迹分段，把多段线划分成指定段数
+        /// </summary>
+        /// <param name="XLDData"></param>
+        /// <param name="divideCount"></param>
+        /// <param name="rows"></param>
+        /// <param name="cols"></param>
+        /// <param name="angles"></param>
+        public static void XLDDataDivide(XLDData XLDData, int divideCount, out List<double> rows, out List<double> cols, out List<double> angles)
         {
-            X = x;
-            Y = y;
-            Z = z;
+            rows = new List<double>();
+            cols = new List<double>();
+            angles = new List<double>();
+
+            Mat inputPointMat = new Mat();
+            Mat dividedPoints = new Mat();
+            inputPointMat = Mat.Zeros(XLDData.ControlRows.Length, 2, MatType.CV_64FC1);
+            for (int i = 0; i < XLDData.ControlRows.Length; i++)
+            {
+                inputPointMat.At<double>(i, 0) = XLDData.ControlCols[i];
+                inputPointMat.At<double>(i, 1) = XLDData.ControlRows[i];
+
+            }
+
+            dividePolyline(inputPointMat.CvPtr, divideCount, dividedPoints.CvPtr);
+            for (int i = 0; i < divideCount; i++)
+            {
+                cols.Add(dividedPoints.At<double>(i, 0));
+                rows.Add(dividedPoints.At<double>(i, 1));
+                angles.Add(dividedPoints.At<double>(i, 2));
+            }
+
         }
+
+        /// <summary>
+        /// 点坐标转换，从相机转为激光坐标系和机器人坐标系
+        /// </summary>
+        /// <param name="imagePoint"></param>
+        /// <param name="hCamPar"></param>
+        /// <param name="LightInCam"></param>
+        /// <param name="LightToCam"></param>
+        /// <param name="CamToTool"></param>
+        /// <param name="robotPose"></param>
+        /// <param name="lightXY"></param>
+        /// <param name="robotX"></param>
+        /// <param name="robotY"></param>
+        /// <param name="robotZ"></param>
+        public static void pointTransform2CamAndRobot(Mat imagePoint, CameraParameters hCamPar, PoseParameters LightInCam,
+            Mat LightToCam, Mat CamToTool, PoseParameters robotPose, out Mat lightXY, out List<double> robotX, out List<double> robotY,
+            out List<double> robotZ)
+        {
+            //转激光坐标系
+            GetXY(hCamPar, LightInCam, imagePoint, out lightXY);
+            Mat lightXY4 = new Mat();
+            lightXY4 = Mat.Zeros(lightXY.Rows, 4, MatType.CV_64FC1);
+            Mat ones = new Mat();
+            ones = Mat.Ones(lightXY.Rows, 1, MatType.CV_64FC1);
+            ones.CopyTo(lightXY4.Col(3));
+
+            lightXY.CopyTo(lightXY4[new OpenCvSharp.Rect(0, 0, 2, lightXY4.Rows)]);
+            //转相机坐标系
+            Mat camXY4 = new Mat();
+            affineTransPoint3d(lightXY4.CvPtr, camXY4.CvPtr, LightToCam.CvPtr);
+            ////转传感器坐标系
+            Mat toolXY4 = new Mat();
+            //转工具
+            affineTransPoint3d(camXY4.CvPtr, toolXY4.CvPtr, CamToTool.CvPtr);
+
+            //转机器人坐标
+            Mat robotXY4 = new Mat();
+            Mat ToolToRobot = new Mat();
+
+            Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToRobot.CvPtr);
+            Vision.affineTransPoint3d(toolXY4.CvPtr, robotXY4.CvPtr, ToolToRobot.CvPtr);
+
+            robotX = new List<double>();
+            robotY = new List<double>();
+            robotZ = new List<double>();
+            for (int i = 0; i < robotXY4.Rows; i++)
+            {
+                robotX.Add(robotXY4.At<double>(i, 0));
+                robotY.Add(robotXY4.At<double>(i, 1));
+                robotZ.Add(robotXY4.At<double>(i, 2));
+            }
+        }
+        /// <summary>
+        /// 单帧检测整体算法
+        /// </summary>
+        /// <param name="camParam"></param>
+        /// <param name="hCamPar"></param>
+        /// <param name="LightInCam"></param>
+        /// <param name="detImage"></param>
+        /// <param name="cutSet"></param>
+        /// <param name="imageSet"></param>
+        /// <param name="singleFrameExistGlue"></param>
+        /// <param name="singleFrameExistOutline"></param>
+        /// <param name="resultData"></param>
+        /// <param name="bResult"></param>
+        /// <param name="outMaxRegion"></param>
+        /// <param name="outRegionRectangle2"></param>
+        /// <param name="hXLDCont10mm"></param>
+        /// <param name="xy"></param>
+        /// <param name="lightXY"></param>
+        public static void singleFrameDetTotal(CamParam camParam, CameraParameters hCamPar, PoseParameters LightInCam, Mat detImage, CutSet cutSet, ImageSet imageSet, ref bool singleFrameExistGlue, ref bool singleFrameExistOutline, ref Data resultData, ref bResult bResult, ref Mat outMaxRegion, ref Mat outRegionRectangle2, ref Mat hXLDCont10mm, Mat xy, Mat lightXY)
+        {
+            Mat OutLine;
+            Mat lightXYcut;
+            if (imageSet.启用裁剪)
+            {
+                Vision.cutLight(xy, camParam, hCamPar, LightInCam, detImage, imageSet, out lightXYcut);
+            }
+            else
+            {
+                lightXYcut = lightXY;
+            }
+
+            //Vision.showMatPoint(lightXY, "lightXY");
+            //Vision.showMatPoint(lightXYcut, "lightXYcut");
+
+            if (lightXYcut.Rows > 0)
+            {
+                singleFrameExistOutline = true;
+                //单帧检测(使用激光坐标系)
+                //轮廓只计算整数，所以数据单位放大至0.01mm，并把原点移至画布中心
+                Mat XY_10um = new Mat(lightXYcut.Size(), lightXYcut.Type());
+                //X
+                Cv2.Multiply(lightXYcut.Col(0), new Scalar(1000 * scaleSize), XY_10um.Col(0));
+                Cv2.Add(XY_10um.Col(0), new Scalar(cutSet.ShowWidth * scaleSize / 2), XY_10um.Col(0));
+                //Y
+                Cv2.Multiply(lightXYcut.Col(1), new Scalar(1000 * scaleSize * Math.Cos(5 / 180 * Math.PI)), XY_10um.Col(1));
+                Cv2.Add(XY_10um.Col(1), new Scalar(cutSet.ShowHeight * scaleSize / 2), XY_10um.Col(1));
+                //离散滤波
+                if (imageSet.离散去噪)
+                {
+                    Vision.TrajectoryDiscreteFilter(XY_10um, out hXLDCont10mm, imageSet.分段距离 * scaleSize, imageSet.成段点数);
+                    OutLine = hXLDCont10mm.Clone();
+                }
+                else
+                {
+                    hXLDCont10mm = XY_10um.Clone();
+                    OutLine = XY_10um.Clone();
+                }
+
+                //Vision.showMatPoint(hXLDCont10mm, "hXLDCont10mm");
+
+                //如果存在
+                if (!OutLine.Empty())
+                {
+
+                    bool existGlue = false;
+                    double centerX = 0;
+                    double centerY = 0;
+                    double phi = 0;
+                    double width = 0;
+                    double height = 0;
+                    double maxArea = 0;
+                    Vision.singleFrameDet(OutLine.CvPtr, out existGlue, out centerX, out centerY, out phi, out width, out height, out maxArea,
+                        outMaxRegion.CvPtr, outRegionRectangle2.CvPtr, false);
+
+                    if (maxArea > 0)
+                    {
+                        singleFrameExistGlue = true;
+                        Vision.judgeGlueResult(imageSet, centerX,centerY, width, height, phi, maxArea, out resultData, out bResult);
+
+                    }
+                }
+            }
+        }
+
     }
+    //public struct Point3D
+    //{
+    //    public double X;
+    //    public double Y;
+    //    public double Z;
+    //    public Point3D(double x, double y, double z)
+    //    {
+    //        X = x;
+    //        Y = y;
+    //        Z = z;
+    //    }
+    //}
 
     public class Setting
     {
@@ -171,7 +435,7 @@ namespace _3DLaserGlueInspection
         public OtherSet OtherSet = new OtherSet();
 
         //数模图
-        public Mat image;
+        public Mat image = new Mat();
         public List<XLDData> XLDDatas = new List<XLDData>();
 
         public Setting(string name)
