@@ -20,7 +20,7 @@ namespace _3DLaserGlueInspection
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
         public static extern int poseToHomMat3d(int PoseType, double x, double y, double z, double rx, double ry, double rz, IntPtr transformMat);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern int affineTransPoint3d(IntPtr srcPoints, IntPtr transformMat, IntPtr transformPoints);
+        public static extern int affineTransPoint3d(IntPtr srcPoints, IntPtr transformMat, IntPtr transformPoints,bool isDebug = false);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
         public static extern int imagePointsToWorldPlane(double Focus, double Kappa, double CamSx, double CamSy, double CamCx, double CamCy,
         int PoseType, double PoseX, double PoseY, double PoseZ, double PoseRx, double PoseRy, double PoseRz,
@@ -216,8 +216,8 @@ namespace _3DLaserGlueInspection
             resultData.column = centerX;
 
             bool heng = Math.Abs(phi) <= Math.PI / 4;
-            resultData.胶高 = (heng ? height : width) / scaleSize * 2;
-            resultData.胶宽 = (heng ? width : height) / scaleSize * 2;
+            resultData.胶高 = (heng ? height : width) / scaleSize;
+            resultData.胶宽 = (heng ? width : height) / scaleSize;
             resultData.面积 = maxArea / (scaleSize* scaleSize);
             if (resultData.胶高 >= imageSet.heightMin && resultData.胶高 <= imageSet.heightMax)
             {
@@ -270,6 +270,20 @@ namespace _3DLaserGlueInspection
             }
 
         }
+        public static void printPoint(Mat Points,string Name)
+        { 
+            Console.WriteLine(Name+":");
+            for (int i = 0; i < Points.Rows; i++)
+            {
+                string meg = $"point {i}:(";
+                for (int j = 0; j < Points.Cols; j++)
+                {
+                    meg += $"{Points.At<double>(i,j)},";
+                }
+                meg += ")";
+                Console.WriteLine(meg);
+            }
+        }
 
         /// <summary>
         /// 点坐标转换，从相机转为激光坐标系和机器人坐标系
@@ -290,6 +304,9 @@ namespace _3DLaserGlueInspection
         {
             //转激光坐标系
             GetXY(hCamPar, LightInCam, imagePoint, out lightXY);
+            //printPoint(imagePoint, "imagePoint");
+
+            //printPoint(lightXY, "lightXY");
             Mat lightXY4 = new Mat();
             lightXY4 = Mat.Zeros(lightXY.Rows, 4, MatType.CV_64FC1);
             Mat ones = new Mat();
@@ -299,18 +316,28 @@ namespace _3DLaserGlueInspection
             lightXY.CopyTo(lightXY4[new OpenCvSharp.Rect(0, 0, 2, lightXY4.Rows)]);
             //转相机坐标系
             Mat camXY4 = new Mat();
-            affineTransPoint3d(lightXY4.CvPtr, camXY4.CvPtr, LightToCam.CvPtr);
+            //Console.WriteLine("LightToCam:");
+            affineTransPoint3d(lightXY4.CvPtr, camXY4.CvPtr, LightToCam.CvPtr, false);
+            //printPoint(LightToCam, "LightToCam");
+            //printPoint(camXY4, "camXY4");
+
             ////转传感器坐标系
             Mat toolXY4 = new Mat();
             //转工具
-            affineTransPoint3d(camXY4.CvPtr, toolXY4.CvPtr, CamToTool.CvPtr);
+            //Console.WriteLine("CamToTool:");
+            affineTransPoint3d(camXY4.CvPtr, toolXY4.CvPtr, CamToTool.CvPtr, false);
+            //printPoint(CamToTool, "CamToTool")
+            //printPoint(toolXY4, "toolXY4");
 
             //转机器人坐标
             Mat robotXY4 = new Mat();
             Mat ToolToRobot = new Mat();
 
             Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToRobot.CvPtr);
-            Vision.affineTransPoint3d(toolXY4.CvPtr, robotXY4.CvPtr, ToolToRobot.CvPtr);
+            //Console.WriteLine("ToolToRobot:");
+            Vision.affineTransPoint3d(toolXY4.CvPtr, robotXY4.CvPtr, ToolToRobot.CvPtr,false);
+            //printPoint(ToolToRobot, "ToolToRobot");
+            //printPoint(robotXY4, "robotXY4");
 
             robotX = new List<double>();
             robotY = new List<double>();

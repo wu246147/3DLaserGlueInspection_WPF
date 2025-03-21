@@ -157,50 +157,7 @@ namespace _3DLaserGlueInspection
 
         private void simulationCheck_Click(object sender, RoutedEventArgs e)
         {
-            if ((bool)simulationCheck.IsChecked)
-            {
-                hWindowControl.Visibility = Visibility.Visible;
-                _3DShowControl.Visibility = Visibility.Hidden;
-            }
-            else
-            {
-                hWindowControl.Visibility = Visibility.Hidden;
-                _3DShowControl.Visibility = Visibility.Visible;
-            }
-
             model.simulation = (bool)simulationCheck.IsChecked;
-            //测试
-            //model.ShowMessage(GlobalVarAndFunc.LanguageTranslate("开启仿真模式"), LogType.warn);
-            //model.mainModel.OKCountControl = 100;
-
-            // 保存car文件
-            bool result = true;
-            Dictionary<Guid, Car> cars = new Dictionary<Guid, Car>();
-            Car car = new Car();
-            car.CamParamName = "beifen";
-            car.IDs = new List<int> { 1 };
-            car.Name = "节卡(lin3D涂胶)";
-
-            cars.Add(Guid.NewGuid(), car);
-            try
-            {
-                string basePath = AppDomain.CurrentDomain.BaseDirectory + "Data\\";
-                if (!Directory.Exists(basePath))
-                {
-                    Directory.CreateDirectory(basePath);
-                }
-                string fPath = basePath + "CarID";
-                using (FileStream stream = new FileStream(fPath, FileMode.Create))
-                {
-                    BinaryFormatter bf = new BinaryFormatter();
-                    bf.Serialize(stream, cars);
-                }
-                File.Copy(fPath, basePath + "CarID_bak", true);
-            }
-            catch (Exception ex)
-            {
-                result = false;
-            }
         }
 
         private void MenuItem_camSetting_Click(object sender, RoutedEventArgs e)

@@ -282,7 +282,7 @@
             <Label Content="NG数：" HorizontalAlignment="Left" Margin="9,135,0,0" Grid.Row="2" VerticalAlignment="Top" Foreground="White" FontSize="14"/>
             <Label Content="OK数：" HorizontalAlignment="Left" Margin="10,83,0,0" Grid.Row="2" Foreground="White" Height="26" VerticalAlignment="Top" FontSize="14"/>
             <Label x:Name="LabelTotalCount" Content="{Binding totalCountControl}" HorizontalAlignment="Left" Margin="82,33,0,0" Grid.Row="2" VerticalAlignment="Top" Foreground="White" Background="#FF3C4451" Width="136" Height="26" FontSize="14"/>
-            <CheckBox x:Name="simulationCheck" Content="仿真" HorizontalAlignment="Left" Margin="121,0,0,0" VerticalAlignment="Center" Foreground="White" IsChecked="False" Click="simulationCheck_Click"/>
+            <CheckBox x:Name="simulationCheck" Content="仿真" HorizontalAlignment="Left" Margin="121,0,0,0" VerticalAlignment="Center" Foreground="White" IsChecked="False" Click="simulationCheck_Click" Unchecked="simulationCheck_Click"/>
             <TextBox x:Name="simulationPath" HorizontalAlignment="Left" Margin="186,0,0,0" TextWrapping="Wrap" Width="191" Foreground="White" Background="#FF2A3440" TextChanged="simulationPath_TextChanged"/>
 
         </Grid>

@@ -323,10 +323,6 @@ namespace _3DLaserGlueInspection
                     #endregion
                     //Invoke(new Action(() => { form3DShow.ClearCloud(); }));
 
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        Clear3DPointControlEvent();
-                    });
                     
                     GC.Collect();
 
@@ -892,8 +888,7 @@ namespace _3DLaserGlueInspection
                     ShowMessage(GlobalVarAndFunc.LanguageTranslate("图像处理任务启动完成"));
 
                     //启动三维图
-                    taskPoint3D = Task.Run(() => { });
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("三维图像显示任务启动完成"));
+                    
 
                     //输出运行中信号
                     if (!Write(DO.Running, true)) return;
@@ -1229,6 +1224,49 @@ namespace _3DLaserGlueInspection
                             }
                             Thread.Sleep(1);
                         }
+
+
+                        //显示3d点云
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            Clear3DPointControlEvent();
+                        });
+
+                        List<Point3D> points = new List<Point3D>();
+                        int intervalCount = 5;
+                        foreach (var camKey in Point3DXs.Keys)
+                        {
+                            for (int i = 0; i < Point3DXs[camKey].Count; i++)
+                            {
+                                foreach (var imageKey in Point3DXs[camKey][i].Keys)
+                                {
+                                    for (int j = 0; j < Point3DXs[camKey][i][imageKey].Count; j+=intervalCount)
+                                    {
+                                        double x = Point3DXs[camKey][i][imageKey][j];
+                                        double y = Point3DYs[camKey][i][imageKey][j];
+                                        double z = Point3DZs[camKey][i][imageKey][j];
+
+                                        points.Add(new Point3D(x, y, z));
+                                        //Console.WriteLine($"point3d:({x:F6},{y:F6},{z:F6})");
+                                    }
+                                }
+                            }
+                        }
+                        taskPoint3D = Task.Run(() =>
+                        {
+                            Console.WriteLine($"points count:{points.Count}.");
+                            if(points.Count > 0)
+                            {
+                                Application.Current.Dispatcher.Invoke(() =>
+                                {
+                                    Disp3DPointControlEvent(points, Colors.Blue);
+                                });
+                            }
+                           
+                        });
+                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("三维图像显示任务启动完成"));
+                        
+                        //点云数据处理
 
                         if (!simulation)
                         {
