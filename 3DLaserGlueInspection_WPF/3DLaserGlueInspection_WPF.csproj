@@ -146,6 +146,7 @@
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
@@ -160,6 +161,9 @@
     <Compile Include="Converter\VisibilityToWidthConverter.cs" />
     <Compile Include="subForm\ImageControl2.xaml.cs">
       <DependentUpon>ImageControl2.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="subForm\User3DShowControl_V.xaml.cs">
+      <DependentUpon>User3DShowControl_V.xaml</DependentUpon>
     </Compile>
     <Compile Include="subForm\WindowCamera.xaml.cs">
       <DependentUpon>WindowCamera.xaml</DependentUpon>
@@ -189,11 +193,8 @@
     <Compile Include="tool\HFileIO.cs" />
     <Compile Include="tool\HMatrixTransform.cs" />
     <Compile Include="Model\MainModel.cs" />
-    <Compile Include="subForm\User3DShowControl.xaml.cs">
-      <DependentUpon>User3DShowControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="subForm\UserHWindowControl.xaml.cs">
-      <DependentUpon>UserHWindowControl.xaml</DependentUpon>
+    <Compile Include="subForm\User3DShowControl_H.xaml.cs">
+      <DependentUpon>User3DShowControl_H.xaml</DependentUpon>
     </Compile>
     <Compile Include="tool\CarSet.cs" />
     <Compile Include="Model\MainWindowModel.cs" />
@@ -225,11 +226,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="subForm\User3DShowControl.xaml">
+    <Page Include="subForm\User3DShowControl_H.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="subForm\UserHWindowControl.xaml">
+    <Page Include="subForm\User3DShowControl_V.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -131,7 +131,7 @@
             </Grid>
             <Grid x:Name="GridCheckImage" Grid.Column="2" Margin="10,0,0,0" Background="#FF373737">
                 <subForm:ImageControl2 x:Name="hWindowControl"  Margin="0,0,0,0" Visibility="Visible" />
-                <subForm:User3DShowControl x:Name="_3DShowControl" Visibility="Hidden" Background="Black" />
+                <subForm:User3DShowControl_V x:Name="_3DShowControl" Visibility="Hidden" Background="Black" />
             </Grid>
         </Grid>
 

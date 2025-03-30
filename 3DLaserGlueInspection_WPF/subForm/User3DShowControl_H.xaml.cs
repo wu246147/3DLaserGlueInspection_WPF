@@ -19,12 +19,12 @@ using HelixToolkit.Wpf;
 namespace _3DLaserGlueInspection.subForm
 {
     /// <summary>
-    /// User3DShowControl.xaml 的交互逻辑
+    /// User3DShowControl_H.xaml 的交互逻辑
     /// </summary>
-    public partial class User3DShowControl : UserControl
+    public partial class User3DShowControl_H : UserControl
     {
         //private RenderWindowControl renderWindowControl1;
-        public User3DShowControl()
+        public User3DShowControl_H()
         {
             InitializeComponent();
             //this.renderWindowControl1 = new RenderWindowControl();

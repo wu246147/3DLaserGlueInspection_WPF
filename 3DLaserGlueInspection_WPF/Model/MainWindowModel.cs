@@ -37,7 +37,9 @@ namespace _3DLaserGlueInspection
     public delegate void DispPolylineHWindowEventHandler(PointCollection points, System.Windows.Media.Color color, int StrokeThickness = 2);
     public delegate void DispPolygonHWindowEventHandler(PointCollection points, System.Windows.Media.Color color, string model, int StrokeThickness = 2);
 
-    public delegate void Disp3DPointEventHandler(List<System.Windows.Media.Media3D.Point3D> points, System.Windows.Media.Color Color);
+    public delegate void Disp3DPointEventHandler_H(List<System.Windows.Media.Media3D.Point3D> points, System.Windows.Media.Color Color);
+
+    public delegate void Disp3DPointEventHandler_V(List<double> Xs, List<double> Ys, List<double> Zs);
     public delegate void Clear3DPointEventHandler();
 
 
@@ -55,7 +57,7 @@ namespace _3DLaserGlueInspection
         public event DispPolylineHWindowEventHandler DispPolylinejHWindowControlEvent;
         public event DispPolygonHWindowEventHandler DispPolygonjHWindowControlEvent;
 
-        public event Disp3DPointEventHandler Disp3DPointControlEvent;
+        public event Disp3DPointEventHandler_V Disp3DPointControlEvent;
         public event Clear3DPointEventHandler Clear3DPointControlEvent;
 
 
@@ -197,21 +199,13 @@ namespace _3DLaserGlueInspection
                     if (robot.Open())
                     {
                         ShowMessage(GlobalVarAndFunc.LanguageTranslate("机器人连接成功"));
-                        //Application.Current.Dispatcher.Invoke(new Action(() =>
-                        //{
-                        //    //e灯颜色 = 灯颜色.绿;
-                        //    //label机器人.Refresh();
-                        //}));
+
                         mainModel.robotCommunicationLabelColorControl = labelColorEnum["green"];
                     }
                     else
                     {
                         ShowMessage(GlobalVarAndFunc.LanguageTranslate("机器人连接失败：") + robot.ErrMsg, LogType.ng);
-                        //Invoke(new Action(() =>
-                        //{
-                        //    e灯颜色 = 灯颜色.红;
-                        //    label机器人.Refresh();
-                        //}));
+           
                         mainModel.robotCommunicationLabelColorControl = labelColorEnum["red"];
 
                         return;
@@ -228,11 +222,6 @@ namespace _3DLaserGlueInspection
                 }
                 #endregion
 
-                //Invoke(new Action(() =>
-                //{
-                //    e灯颜色 = 灯颜色.绿;
-                //    label软件.Refresh();
-                //}));
                 mainModel.softwareRunLabelColorControl = labelColorEnum["green"];
                 while (!stop)
                 {
@@ -467,11 +456,6 @@ namespace _3DLaserGlueInspection
                         }
                     }
                     ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机连接完成"));
-                    //Invoke(new Action(() =>
-                    //{
-                    //    e灯颜色 = 灯颜色.绿;
-                    //    label相机.Refresh();
-                    //}));
                     mainModel.camCommunicationLabelColorControl = labelColorEnum["green"];
 
 
@@ -687,10 +671,13 @@ namespace _3DLaserGlueInspection
                     {
                         if (item.Value.Enable)
                         {
-                            //var cam = cams[item.Value.CamName];
-                            var hCamPar = Params.CamPar[camParamName][item.Key];
+                            /// 相机内参，用于将像素坐标转为图像坐标
+                            var hCamPar = Params.CamPar[camParamName][item.Key];       
+                            /// 用于将图像坐标转为激光坐标，应该是ImageToLight才对。
                             var LightInCam = Params.LightInCam[camParamName][item.Key];
+                            /// 用于将激光坐标转为相机坐标
                             var LightToCam = Params.LightToCam[camParamName][item.Key];
+                            /// 相机坐标转为法兰盘坐标
                             var CamToTool = Params.CamToTool[camParamName][item.Key];
                             tasks.Add(item.Key, Task.Run((Action)(() =>
                             {
@@ -824,7 +811,8 @@ namespace _3DLaserGlueInspection
                                                                     dictXLD.Add(imageKey, hXLDCont10mm);
                                                                 }
                                                                 if (resultData.面积>0)
-                                                                {                                                                    dictRegion.Add(imageKey, outMaxRegion);
+                                                                {                                                                    
+                                                                    dictRegion.Add(imageKey, outMaxRegion);
                                                                     dictRegionRectangle2.Add(imageKey, outRegionRectangle2);
                                                                     dictData.Add(imageKey, resultData);
                                                                     dictResult.Add(imageKey, bResult);
@@ -1232,8 +1220,13 @@ namespace _3DLaserGlueInspection
                             Clear3DPointControlEvent();
                         });
 
-                        List<Point3D> points = new List<Point3D>();
-                        int intervalCount = 5;
+                        //List<Point3D> points = new List<Point3D>();
+                        List<double> Xs = new List<double>();
+                        List<double> Ys = new List<double>();
+                        List<double> Zs = new List<double>();
+
+                        List<double[]> pointsSave = new List<double[]>();
+                        int intervalCount = 1;
                         foreach (var camKey in Point3DXs.Keys)
                         {
                             for (int i = 0; i < Point3DXs[camKey].Count; i++)
@@ -1246,20 +1239,30 @@ namespace _3DLaserGlueInspection
                                         double y = Point3DYs[camKey][i][imageKey][j];
                                         double z = Point3DZs[camKey][i][imageKey][j];
 
-                                        points.Add(new Point3D(x, y, z));
+                                        //points.Add(new Point3D(x, y, z));
                                         //Console.WriteLine($"point3d:({x:F6},{y:F6},{z:F6})");
+
+                                        Xs.Add(x); Ys.Add(y);   Zs.Add(z);
+                                        pointsSave.Add(new double[] { x, y, z });   
                                     }
                                 }
                             }
                         }
                         taskPoint3D = Task.Run(() =>
                         {
-                            Console.WriteLine($"points count:{points.Count}.");
-                            if(points.Count > 0)
+                            Console.WriteLine($"points count:{Xs.Count}.");
+                            if(Xs.Count > 0)
                             {
                                 Application.Current.Dispatcher.Invoke(() =>
                                 {
-                                    Disp3DPointControlEvent(points, Colors.Blue);
+                                    //保存测试点云数据
+                                    string fPath = "pointCloud.xml";
+                                    XmlSerializer xml = new XmlSerializer(pointsSave.GetType());
+                                    using (FileStream stream = new FileStream(fPath, FileMode.Create))
+                                    {
+                                        xml.Serialize(stream, pointsSave);
+                                    }
+                                    Disp3DPointControlEvent(Xs,Ys,Zs);
                                 });
                             }
                            

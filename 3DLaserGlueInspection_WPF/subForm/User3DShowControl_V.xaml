@@ -1,0 +1,15 @@
+﻿<UserControl x:Class="_3DLaserGlueInspection.subForm.User3DShowControl_V"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:_3DLaserGlueInspection.subForm"
+             xmlns:vtk="clr-namespace:Kitware.VTK;assembly=Kitware.VTK"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <WindowsFormsHost>
+            <vtk:RenderWindowControl x:Name="vtkRenderWindowControl"/>
+        </WindowsFormsHost>
+    </Grid>
+</UserControl>
