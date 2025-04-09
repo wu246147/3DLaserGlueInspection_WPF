@@ -404,8 +404,8 @@ namespace _3DLaserGlueInspection.subForm
         /// <param name="y">图像的y坐标</param>
         public void AddChildren(UIElement children, int imageX, int imageY, PointCollection points = null)
         {
+            //
             UpdataChildren(imageX, imageY, ref children, points);
-
 
             canvas.Children.Add(children);
             childrenList.Add(children);
@@ -544,7 +544,9 @@ namespace _3DLaserGlueInspection.subForm
                     ((Polygon)children).Points.Add(point);
                 }
             }
+            
         }
+
 
         /// <summary>
         /// 设置图片

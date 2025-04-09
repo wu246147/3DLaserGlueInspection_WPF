@@ -68,6 +68,10 @@ namespace _3DLaserGlueInspection
             model.Disp3DPointControlEvent += _3DShowControl.AddPointCloud;
             model.Clear3DPointControlEvent += _3DShowControl.ClearPointCloud;
 
+            model.RefreshPointsEvent += _3DShowControl.RefreshPoints;
+            model.RefreshOFFEvent += _3DShowControl.RefreshOFF;
+            model.RefreshOnEvent += _3DShowControl.RefreshOn;
+
         }
 
         private void Window_Closing(object sender, CancelEventArgs e)
@@ -265,20 +269,20 @@ namespace _3DLaserGlueInspection
                         if (int.TryParse(strings[0], out int segmentIndex) && int.TryParse(strings[1], out int segmentSubIndex))
                         {
                             
-                            if (model.轮廓.ContainsKey(camKey) && model.轮廓[camKey].Count > segmentIndex && model.轮廓[camKey][segmentIndex].ContainsKey(model.ImageKeys[camKey][segmentIndex][segmentSubIndex]))
+                            if (model.outLineDict.ContainsKey(camKey) && model.outLineDict[camKey].Count > segmentIndex && model.outLineDict[camKey][segmentIndex].ContainsKey(model.ImageKeys[camKey][segmentIndex][segmentSubIndex]))
                             {
-                                Mat hXLDCont10mm = model.轮廓[camKey][segmentIndex][model.ImageKeys[camKey][segmentIndex][segmentSubIndex]];
-                                if (model.胶区域.ContainsKey(camKey) && model.胶区域[camKey].Count > segmentIndex && model.胶区域[camKey][segmentIndex].ContainsKey(model.ImageKeys[camKey][segmentIndex][segmentSubIndex]))
+                                Mat hXLDCont10mm = model.outLineDict[camKey][segmentIndex][model.ImageKeys[camKey][segmentIndex][segmentSubIndex]];
+                                if (model.glueRegionDict.ContainsKey(camKey) && model.glueRegionDict[camKey].Count > segmentIndex && model.glueRegionDict[camKey][segmentIndex].ContainsKey(model.ImageKeys[camKey][segmentIndex][segmentSubIndex]))
                                 {
-                                    Mat hRegion = model.胶区域[camKey][segmentIndex][model.ImageKeys[camKey][segmentIndex][segmentSubIndex]];
-                                    Mat hRegionSmallestRectangle2 = model.胶外接[camKey][segmentIndex][model.ImageKeys[camKey][segmentIndex][segmentSubIndex]];
-                                    Data data = model.胶数据[camKey][segmentIndex][model.ImageKeys[camKey][segmentIndex][segmentSubIndex]];
-                                    BResult bResult = model.胶结果[camKey][segmentIndex][model.ImageKeys[camKey][segmentIndex][segmentSubIndex]];
-                                    GlobalVarAndFunc.ShowImageData((int)model.画布大小[camKey][segmentIndex].Width, (int)model.画布大小[camKey][segmentIndex].Height, hXLDCont10mm, hRegion, hRegionSmallestRectangle2, data, bResult,ref hWindowControl, ref showing,ref olockShow);
+                                    Mat hRegion = model.glueRegionDict[camKey][segmentIndex][model.ImageKeys[camKey][segmentIndex][segmentSubIndex]];
+                                    Mat hRegionSmallestRectangle2 = model.glueSmallRectRegionDict[camKey][segmentIndex][model.ImageKeys[camKey][segmentIndex][segmentSubIndex]];
+                                    Data data = model.glueDataDict[camKey][segmentIndex][model.ImageKeys[camKey][segmentIndex][segmentSubIndex]];
+                                    BResult bResult = model.glueResultDict[camKey][segmentIndex][model.ImageKeys[camKey][segmentIndex][segmentSubIndex]];
+                                    GlobalVarAndFunc.ShowImageData((int)model.displaySize[camKey][segmentIndex].Width, (int)model.displaySize[camKey][segmentIndex].Height, hXLDCont10mm, hRegion, hRegionSmallestRectangle2, data, bResult,ref hWindowControl, ref showing,ref olockShow);
                                 }
                                 else
                                 {
-                                    GlobalVarAndFunc.ShowImageData((int)model.画布大小[camKey][segmentIndex].Width, (int)model.画布大小[camKey][segmentIndex].Height, hXLDCont10mm,
+                                    GlobalVarAndFunc.ShowImageData((int)model.displaySize[camKey][segmentIndex].Width, (int)model.displaySize[camKey][segmentIndex].Height, hXLDCont10mm,
                                          ref hWindowControl, ref showing, ref olockShow);
                                 }
                                 return;

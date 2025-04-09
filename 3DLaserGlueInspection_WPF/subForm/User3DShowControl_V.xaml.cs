@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -14,6 +15,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
 
 namespace _3DLaserGlueInspection.subForm
 {
@@ -38,6 +40,10 @@ namespace _3DLaserGlueInspection.subForm
         double[] yCoords;
         double[] zCoords;
 
+        Task taskRefresh;
+        bool bRefresh = false;
+        public bool bShowing = false;
+        bool bClose = false;
 
         public void ClearPointCloud()
         {
@@ -60,9 +66,9 @@ namespace _3DLaserGlueInspection.subForm
         public void AddPointCloud(List<double> X, List<double> Y, List<double> Z)
         {
             InsertNextPoints(X.ToArray(), Y.ToArray(), Z.ToArray());
-            show_cloud(_points,_colors_rgb);
-            // 渲染
-            vtkRenderWindowControl.RenderWindow.Render();
+            //show_cloud(_points,_colors_rgb);
+            //// 渲染
+            //vtkRenderWindowControl.RenderWindow.Render();
 
         }
         public void show_cloud(vtkPoints points, vtkUnsignedCharArray colors_rgb, double r = 1.0, double g = 1.0, double b = 1.0, float size = 4f)
@@ -169,6 +175,71 @@ namespace _3DLaserGlueInspection.subForm
             {
                 return false;
             }
+        }
+
+
+        public void RefreshPoints()
+        {
+            if (!bClose)
+            {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    vtkRenderer render = vtkRenderWindowControl.RenderWindow.GetRenderers().GetFirstRenderer();
+                    lock (olock)
+                    {
+                        _points.Modified();
+                        _colors_rgb.Modified();
+                        render.ResetCamera();//视角不变，范围变化成设置值
+                        vtkRenderWindowControl.RenderWindow.Render();
+                    }
+                }));
+            }
+        }
+
+        public void RefreshOn(int time, bool autoSize)
+        {
+            if (!bRefresh)
+            {
+                bRefresh = true;
+                vtkRenderer render = vtkRenderWindowControl.RenderWindow.GetRenderers().GetFirstRenderer();
+                taskRefresh = Task.Run(() =>
+                {
+                    try
+                    {
+                        while (bRefresh && bShowing && !bClose)
+                        {
+                            Application.Current.Dispatcher.Invoke(() =>
+                            {
+                                lock (olock)
+                                {
+                                    if (bRefresh)
+                                    {
+                                        _points.Modified();
+                                        _colors_rgb.Modified();
+                                        if (autoSize) render.ResetCamera();//视角不变，范围变化成设置值
+                                        vtkRenderWindowControl.RenderWindow.Render();
+                                    }
+                                }
+                            });
+                            Thread.Sleep(time);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+
+                    }
+
+                });
+            }
+        }
+        public void RefreshOFF()
+        {
+            bRefresh = false;
+        }
+
+        private void UserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            bShowing = true;
         }
     }
 }
