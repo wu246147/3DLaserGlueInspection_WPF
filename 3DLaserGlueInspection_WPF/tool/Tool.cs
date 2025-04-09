@@ -209,7 +209,7 @@ namespace _3DLaserGlueInspection
                 showing = false;
             }
         }
-        public static void ShowImageData(int showWidth, int showHeight, Mat hXLDCont10mm, Mat hRegion, Mat hRegionSmallestRectangle2, Data data, bResult bResult,
+        public static void ShowImageData(int showWidth, int showHeight, Mat hXLDCont10mm, Mat hRegion, Mat hRegionSmallestRectangle2, Data data, BResult bResult,
              ref ImageControl2 imageControl, ref bool showing, ref object olockShow)
         {
             if (!showing)

@@ -1141,7 +1141,7 @@ namespace _3DLaserGlueInspection.subForm
             bool singleFrameExisOutline  = false;
             bool singleFrameExistGlue = false;
             Data resultData = new Data();
-            bResult bResult = new bResult();
+            BResult bResult = new BResult();
             Mat outMaxRegion = new Mat();
             Mat outRegionRectangle2 = new Mat();
             Mat hXLDCont10mm = new Mat();

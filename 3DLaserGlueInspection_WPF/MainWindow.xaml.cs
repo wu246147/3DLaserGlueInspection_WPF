@@ -273,7 +273,7 @@ namespace _3DLaserGlueInspection
                                     Mat hRegion = model.胶区域[camKey][segmentIndex][model.ImageKeys[camKey][segmentIndex][segmentSubIndex]];
                                     Mat hRegionSmallestRectangle2 = model.胶外接[camKey][segmentIndex][model.ImageKeys[camKey][segmentIndex][segmentSubIndex]];
                                     Data data = model.胶数据[camKey][segmentIndex][model.ImageKeys[camKey][segmentIndex][segmentSubIndex]];
-                                    bResult bResult = model.胶结果[camKey][segmentIndex][model.ImageKeys[camKey][segmentIndex][segmentSubIndex]];
+                                    BResult bResult = model.胶结果[camKey][segmentIndex][model.ImageKeys[camKey][segmentIndex][segmentSubIndex]];
                                     GlobalVarAndFunc.ShowImageData((int)model.画布大小[camKey][segmentIndex].Width, (int)model.画布大小[camKey][segmentIndex].Height, hXLDCont10mm, hRegion, hRegionSmallestRectangle2, data, bResult,ref hWindowControl, ref showing,ref olockShow);
                                 }
                                 else

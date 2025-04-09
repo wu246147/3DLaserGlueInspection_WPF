@@ -16,31 +16,58 @@ namespace _3DLaserGlueInspection
 {
     public class Vision
     {
-        private const string DllName = "RaivasAlgTransform.dll"; // Replace with the actual DLL 
+        private const string DllName = "dll\\RaivasAlgTransform.dll"; // Replace with the actual DLL 
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+        ///pose转旋转矩阵
         public static extern int poseToHomMat3d(int PoseType, double x, double y, double z, double rx, double ry, double rz, IntPtr transformMat);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+        ///坐标映射
+
         public static extern int affineTransPoint3d(IntPtr srcPoints, IntPtr transformMat, IntPtr transformPoints,bool isDebug = false);
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+        ///图像坐标转相机坐标
+
         public static extern int imagePointsToWorldPlane(double Focus, double Kappa, double CamSx, double CamSy, double CamCx, double CamCy,
         int PoseType, double PoseX, double PoseY, double PoseZ, double PoseRx, double PoseRy, double PoseRz,
         IntPtr srcPoints, IntPtr transformPoints);
 
-        private const string DllName2 = "RaivasAlgGB.dll"; // Replace with the actual DLL 
+        private const string DllName2 = "dll\\RaivasAlgGB.dll"; // Replace with the actual DLL 
         [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
+        ///激光提取函数
+
         public static extern int thinning(IntPtr inputMat, IntPtr outImage, IntPtr outPointMat);
         [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
+        ///单帧检测
+
         public static extern int singleFrameDet(IntPtr inputPointMat, out bool existGlue, out double centerX, out double centerY,
             out double phi, out double width, out double height, out double maxArea, IntPtr outMaxRegion, IntPtr outRegionRectangle2, bool isDebug = false);
 
         [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
+        ///离散滤波
+
         public static extern int trajectoryDiscreteFilter(IntPtr inputPointMat, double distThre, int segmentalThre, IntPtr pointsFilterMat, bool isDebug = false);
 
         [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
+        ///将多段线划分成指定点数的线段
+
         public static extern int dividePolyline(IntPtr polyline, int divideCout, IntPtr dividedPoints);
+
+        [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
+        ///3d点云切割成2d图片
+
+        public static extern int pointCloudCut(IntPtr pointCloud, IntPtr robotPose, double xSize, double ySize, double scale_size, double offset_z, IntPtr[] cutImgsPtr);
+
+        [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
+        ///激光提取函数，对3d数据进行处理
+
+        public static extern int thinning3d(IntPtr img, IntPtr thinn, IntPtr pointsMat);
 
 
         public static double scaleSize = 10;
+        //后面开放一下这几个参数
+        public static double xSize = 0.02;
+        public static double ySize = 0.02;
+        public static double offset_z = 0.235;
 
         /// <summary>
         /// 获取激光位置
@@ -207,10 +234,10 @@ namespace _3DLaserGlueInspection
         /// <param name="maxArea"></param>
         /// <param name="resultData"></param>
         /// <param name="bResult"></param>
-        public static void judgeGlueResult(ImageSet imageSet,double centerX,double centerY, double width, double height, double phi, double maxArea, out Data resultData, out bResult bResult)
+        public static void judgeGlueResult(ImageSet imageSet,double centerX,double centerY, double width, double height, double phi, double maxArea, out Data resultData, out BResult bResult)
         {
             resultData = new Data();
-            bResult = new bResult();
+            bResult = new BResult();
 
             resultData.row = centerY;
             resultData.column = centerX;
@@ -367,7 +394,7 @@ namespace _3DLaserGlueInspection
         /// <param name="hXLDCont10mm"></param>
         /// <param name="xy"></param>
         /// <param name="lightXY"></param>
-        public static void singleFrameDetTotal(CamParam camParam, CameraParameters hCamPar, PoseParameters LightInCam, Mat detImage, CutSet cutSet, ImageSet imageSet, ref bool singleFrameExistGlue, ref bool singleFrameExistOutline, ref Data resultData, ref bResult bResult, ref Mat outMaxRegion, ref Mat outRegionRectangle2, ref Mat hXLDCont10mm, Mat xy, Mat lightXY)
+        public static void singleFrameDetTotal(CamParam camParam, CameraParameters hCamPar, PoseParameters LightInCam, Mat detImage, CutSet cutSet, ImageSet imageSet, ref bool singleFrameExistGlue, ref bool singleFrameExistOutline, ref Data resultData, ref BResult bResult, ref Mat outMaxRegion, ref Mat outRegionRectangle2, ref Mat hXLDCont10mm, Mat xy, Mat lightXY)
         {
             Mat OutLine;
             Mat lightXYcut;
@@ -412,27 +439,29 @@ namespace _3DLaserGlueInspection
                 //如果存在
                 if (!OutLine.Empty())
                 {
-
-                    bool existGlue = false;
-                    double centerX = 0;
-                    double centerY = 0;
-                    double phi = 0;
-                    double width = 0;
-                    double height = 0;
-                    double maxArea = 0;
-                    Vision.singleFrameDet(OutLine.CvPtr, out existGlue, out centerX, out centerY, out phi, out width, out height, out maxArea,
-                        outMaxRegion.CvPtr, outRegionRectangle2.CvPtr, false);
-
-                    if (maxArea > 0)
-                    {
-                        singleFrameExistGlue = true;
-                        Vision.judgeGlueResult(imageSet, centerX,centerY, width, height, phi, maxArea, out resultData, out bResult);
-
-                    }
+                    singleFrameDetAndResult(OutLine,imageSet, ref singleFrameExistGlue, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2);
                 }
             }
         }
 
+        public static void singleFrameDetAndResult(Mat OutLine,ImageSet imageSet, ref bool singleFrameExistGlue, ref Data resultData, ref BResult bResult, ref Mat outMaxRegion, ref Mat outRegionRectangle2)
+        {
+            bool existGlue = false;
+            double centerX = 0;
+            double centerY = 0;
+            double phi = 0;
+            double width = 0;
+            double height = 0;
+            double maxArea = 0;
+            Vision.singleFrameDet(OutLine.CvPtr, out existGlue, out centerX, out centerY, out phi, out width, out height, out maxArea,
+                outMaxRegion.CvPtr, outRegionRectangle2.CvPtr, false);
+
+            if (maxArea > 0)
+            {
+                singleFrameExistGlue = true;
+                Vision.judgeGlueResult(imageSet, centerX, centerY, width, height, phi, maxArea, out resultData, out bResult);
+            }
+        }
     }
     //public struct Point3D
     //{
@@ -805,7 +834,7 @@ namespace _3DLaserGlueInspection
         public double 面积;
     }
     [Serializable]
-    public class bResult
+    public class BResult
     {
         public bool 胶高;
         public bool 胶宽;
