@@ -55,7 +55,13 @@ namespace _3DLaserGlueInspection
         [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
         ///3d点云切割成2d图片
 
-        public static extern int pointCloudCut(IntPtr pointCloud, IntPtr robotPose, double xSize, double ySize, double scale_size, double offset_z, IntPtr[] cutImgsPtr);
+        public static extern int pointCloudCutAll(IntPtr pointCloud, IntPtr robotPose, double xSize, double ySize, double zSize, double scale_size, double offset_z, IntPtr[] cutImgsPtr);
+
+        [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
+        ///3d点云切割成2d图片
+
+        public static extern int pointCloudCutSingle(IntPtr pointCloud, IntPtr robotPose,int poseID, double xSize, double ySize, double zSize, double scale_size, double offset_z, IntPtr cutImg);
+
 
         [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
         ///激光提取函数，对3d数据进行处理
@@ -65,9 +71,17 @@ namespace _3DLaserGlueInspection
 
         public static double scaleSize = 10;
         //后面开放一下这几个参数
-        public static double xSize = 0.02;
-        public static double ySize = 0.02;
-        public static double offset_z = 0.235;
+        //public static double xSize = 0.02;
+        //public static double ySize = 0.02;
+        //public static double offset_z = 0.235;
+        //public static double zSize = 0.002;
+
+        public static double xSize = 0.025;
+        public static double ySize = 0.04;
+        public static double zSize = 0.004;
+
+        public static double offset_z = -0.010;
+
 
         /// <summary>
         /// 获取激光位置
@@ -131,6 +145,8 @@ namespace _3DLaserGlueInspection
             Cv2.NamedWindow(windowName, WindowFlags.Normal);
             Cv2.ImShow(windowName, imgShow);
             Cv2.WaitKey(0);
+            Cv2.DestroyAllWindows();
+
         }
 
 
@@ -376,6 +392,18 @@ namespace _3DLaserGlueInspection
                 robotZ.Add(robotXY4.At<double>(i, 2));
             }
         }
+
+        public static void scalePoint(Mat lightXYcut,CutSet cutSet, out Mat XY_10um)
+        {
+            XY_10um = new Mat(lightXYcut.Size(), lightXYcut.Type());
+            //X
+            Cv2.Multiply(lightXYcut.Col(0), new Scalar(1000 * scaleSize), XY_10um.Col(0));
+            Cv2.Add(XY_10um.Col(0), new Scalar(cutSet.ShowWidth * scaleSize / 2), XY_10um.Col(0));
+            //Y
+            Cv2.Multiply(lightXYcut.Col(1), new Scalar(1000 * scaleSize * Math.Cos(5 / 180 * Math.PI)), XY_10um.Col(1));
+            Cv2.Add(XY_10um.Col(1), new Scalar(cutSet.ShowHeight * scaleSize / 2), XY_10um.Col(1));
+        }
+
         /// <summary>
         /// 单帧检测整体算法
         /// </summary>
@@ -415,13 +443,8 @@ namespace _3DLaserGlueInspection
                 singleFrameExistOutline = true;
                 //单帧检测(使用激光坐标系)
                 //轮廓只计算整数，所以数据单位放大至0.01mm，并把原点移至画布中心
-                Mat XY_10um = new Mat(lightXYcut.Size(), lightXYcut.Type());
-                //X
-                Cv2.Multiply(lightXYcut.Col(0), new Scalar(1000 * scaleSize), XY_10um.Col(0));
-                Cv2.Add(XY_10um.Col(0), new Scalar(cutSet.ShowWidth * scaleSize / 2), XY_10um.Col(0));
-                //Y
-                Cv2.Multiply(lightXYcut.Col(1), new Scalar(1000 * scaleSize * Math.Cos(5 / 180 * Math.PI)), XY_10um.Col(1));
-                Cv2.Add(XY_10um.Col(1), new Scalar(cutSet.ShowHeight * scaleSize / 2), XY_10um.Col(1));
+                Mat XY_10um;
+                scalePoint(lightXYcut, cutSet, out XY_10um);
                 //离散滤波
                 if (imageSet.离散去噪)
                 {
@@ -783,6 +806,7 @@ namespace _3DLaserGlueInspection
         public bool 轮廓检测 = false;
         public double minThreshold = 40;
         public bool 单帧检测 = false;
+        public bool _3DGlueDet = false;
         public double widthMin = 2, widthMax = 4;
         public double heightMin = 2, heightMax = 4;
         public double areaMin = 4, areaMax = 16;

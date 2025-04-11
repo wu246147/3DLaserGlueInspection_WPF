@@ -85,7 +85,14 @@
 
             </Grid>
             <Grid Grid.Column="1" Margin="5,5,5,5">
-                <local:ImageControl2 x:Name="hWindowModel" Grid.Column="0" Grid.Row="0" />
+                <ComboBox x:Name="showImageComboBox" FontSize="14"  BorderBrush="#FFDDDDDD" Background="#FF263851" SelectionChanged="showImageComboBox_SelectionChanged" Height="24" VerticalAlignment="Top">
+                    <ComboBoxItem Content="仿真图片"/>
+                    <ComboBoxItem Content="轮廓检测结果"/>
+                    <ComboBoxItem Content="3D点云结果"/>
+                    <ComboBoxItem Content="3D涂胶检测结果"/>
+                </ComboBox>
+                <local:ImageControl2 x:Name="hWindowModel" Grid.Column="0" Grid.Row="0" Margin="0,24,0,0" />
+                <local:User3DShowControl_V x:Name="_3DShowControl" Visibility="Hidden" Background="Black" Margin="0,24,0,0" />
             </Grid>
             <Grid Grid.Column="2" Margin="5,5,5,5" Background="#FF2A3440">
                 <TabControl Background="#00000000" Foreground="White" BorderBrush="#FF2A3440">
@@ -96,11 +103,8 @@
                             <Label  Content="最低阈值" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="10,32,0,0" VerticalAlignment="Top"/>
                             <TextBox x:Name="threNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="81,35,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="145" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
 
-                            <CheckBox  x:Name="singleFrameCheck" Content="单帧检测" HorizontalAlignment="Left" Margin="10,71,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
-
-                            <Button x:Name="showRangeButton" Content="显示范围"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="132,214,0,0" Click="showRangeButton_Click"  />
-                            <CheckBox  x:Name="useCroppintCheck" Content="启用裁剪" HorizontalAlignment="Left" Margin="10,218,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
-                            <Border BorderBrush="White" BorderThickness="1" Margin="5,93,5,0" Height="115" VerticalAlignment="Top">
+                            <CheckBox  x:Name="singleFrameCheck" Content="单帧检测" HorizontalAlignment="Left" Margin="10,71,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Visibility="Hidden"/>
+                            <Border BorderBrush="White" BorderThickness="1" Margin="5,97,5,0" Height="115" VerticalAlignment="Top">
                                 <Grid x:Name="toleranceRangeGrid" Margin="0" ShowGridLines="True">
                                     <Label  Content="胶宽" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,4,0,0"/>
                                     <TextBox x:Name="glueWidthMinNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="71,6,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
@@ -116,32 +120,40 @@
                                     <TextBox x:Name="glueAreaMaxNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="167,78,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
                                 </Grid>
                             </Border>
-                            <Border BorderBrush="White" BorderThickness="1" Margin="5,245,5,0" Height="82" VerticalAlignment="Top">
-                                <Grid Name="cropGrid" Margin="0" ShowGridLines="True">
-                                    <Label  Content="横向范围" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,4,0,0"/>
-                                    <TextBox x:Name="leafRangeMinNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="71,6,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-                                    <Label  Content="~" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,4,0,0"/>
-                                    <TextBox x:Name="leafRangeMaxNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="167,6,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-                                    <Label  Content="纵向范围" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,40,0,0"/>
-                                    <TextBox x:Name="topRangeMinNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="71,42,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-                                    <Label  Content="~" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,40,0,0"/>
-                                    <TextBox x:Name="topRangeMaxNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="167,42,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                            <Grid Margin="5,213,5,0" Height="119" VerticalAlignment="Top" Visibility="Hidden">
+                                <Border BorderBrush="White" BorderThickness="1" Margin="0,32,0,0" Height="87
+                                  " VerticalAlignment="Top">
+                                    <Grid Name="cropGrid" Margin="0" ShowGridLines="True">
+                                        <Label  Content="横向范围" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,4,0,0"/>
+                                        <TextBox x:Name="leafRangeMinNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="71,6,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                        <Label  Content="~" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,4,0,0"/>
+                                        <TextBox x:Name="leafRangeMaxNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="167,6,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                        <Label  Content="纵向范围" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,40,0,0"/>
+                                        <TextBox x:Name="topRangeMinNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="71,42,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                        <Label  Content="~" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,40,0,0"/>
+                                        <TextBox x:Name="topRangeMaxNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="167,42,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
 
-                                </Grid>
-                            </Border>
-                            <Button x:Name="runButton" Content="运行" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="13,463,0,0" Click="runButton_Click"/>
-                            <Label Name="runTimeLabel" Content="-- ms" FontSize="14" Foreground="White" Margin="0,461,22,0" VerticalAlignment="Top" HorizontalAlignment="Right"/>
-                            <CheckBox  x:Name="useDiscreteDenoisingCheck" Content="离散去噪" HorizontalAlignment="Left" Margin="10,337,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
-                            <Border BorderBrush="White" BorderThickness="1" Margin="5,364,5,0" Height="82" VerticalAlignment="Top">
+                                    </Grid>
+                                </Border>
+                                <CheckBox  x:Name="useCroppintCheck" Content="启用裁剪" HorizontalAlignment="Left" Margin="10,6,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
+                                <Button x:Name="showRangeButton" Content="显示范围"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="127,2,0,0" Click="showRangeButton_Click"  />
+                            </Grid>
+
+                            <Button x:Name="runOutLineButton" Content="单帧轮廓检测" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,346,0,0" Click="runOutLineButton_Click"/>
+                            <Label Name="runTimeLabel" Content="-- ms" FontSize="14" Foreground="White" Margin="0,344,25,0" VerticalAlignment="Top" HorizontalAlignment="Right"/>
+                            <CheckBox  x:Name="useDiscreteDenoisingCheck" Content="离散去噪" HorizontalAlignment="Left" Margin="10,221,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
+                            <Border BorderBrush="White" BorderThickness="1" Margin="5,243,5,0" Height="82" VerticalAlignment="Top">
                                 <Grid Name="discreteDenoisingGrid" Margin="0" ShowGridLines="True">
                                     <Label  Content="毫米分段距离" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,8,0,0"/>
                                     <TextBox x:Name="discreteDenoisingDistNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="112,10,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="130" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-                                    <Label  Content="" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,4,0,0"/>
                                     <Label  Content="毫米成段点数" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,44,0,0"/>
                                     <TextBox x:Name="discreteDenoisingCountNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="112,46,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="130" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
 
                                 </Grid>
                             </Border>
+                            <Button x:Name="get3DDataButton" Content="3D点云提取" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,387,0,0" Click="get3DDataButton_Click"/>
+                            <Button x:Name="runButton" Content="3D涂胶单帧检测" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,428,0,0" Click="runButton_Click"/>
+                            <CheckBox  x:Name="_3DCloudDetCheck" Content="3D涂胶检测" HorizontalAlignment="Left" Margin="5,70,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
 
                         </Grid>
                     </TabItem>

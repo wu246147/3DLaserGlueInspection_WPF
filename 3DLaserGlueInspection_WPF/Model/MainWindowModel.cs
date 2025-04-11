@@ -798,61 +798,50 @@ namespace _3DLaserGlueInspection
                                                         //激光轮廓提取
                                                         Mat xy = new Mat();
                                                         Vision.getLaserPosition(dictImage[imageKey], imageSet.minThreshold, out xy, item.Value.OffsetX, item.Value.OffsetY);
+                                                        //坐标转换
+                                                        Wpf_Replace_halcon.PoseParameters robotPose = new PoseParameters();
+                                                        HMatrixTransform.mathHPose(robotPoseValues[indexRobotPose - 1],
+                                                            robotPoseValues[indexRobotPose], out robotPose,
+                                                            (imageKey - robotPoseKeys[indexRobotPose - 1]) /
+                                                            (double)(robotPoseKeys[indexRobotPose] - robotPoseKeys[indexRobotPose - 1])
+                                                            );
+                                                        //三维数据添加机器人坐标
+                                                        dictRobotPose.Add(imageKey, robotPose);
 
                                                         if (xy.Rows > 0)
                                                         {
                                                             getOutlineResult = true;
-                                                            //坐标转换
-                                                            Wpf_Replace_halcon.PoseParameters robotPose = new PoseParameters();
-                                                            HMatrixTransform.mathHPose(robotPoseValues[indexRobotPose - 1],
-                                                                robotPoseValues[indexRobotPose], out robotPose,
-                                                                (imageKey - robotPoseKeys[indexRobotPose - 1]) /
-                                                                (double)(robotPoseKeys[indexRobotPose] - robotPoseKeys[indexRobotPose - 1])
-                                                                );
+                                                           
                                                             Mat lightXY = new Mat();
                                                             Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToTool,
                                                                 robotPose, out lightXY, out robotX, out robotY, out robotZ);
 
-                                                            //三维数据添加(机器人坐标)
-                                                            dictRobotPose.Add(imageKey, robotPose);
+                                                            //三维数据添加
                                                             dictX.Add(imageKey, robotX);
                                                             dictY.Add(imageKey, robotY);
                                                             dictZ.Add(imageKey, robotZ);
 
-                                                            //Task.Run(() =>
+                                                            //if (imageSet.单帧检测)
                                                             //{
-                                                            //if (robotX.Count > 0)
-                                                            //{
-                                                            //    Application.Current.Dispatcher.Invoke(() =>
+                                                            //    Mat detImage = dictImage[imageKey];
+                                                            //    //单帧检测
+                                                            //    Vision.singleFrameDetTotal(item.Value, hCamPar, LightInCam, detImage, cutSet, imageSet, ref singleFrameExistGlue, ref singleFrameExisOutline, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2, ref hXLDCont10mm, xy, lightXY);
+                                                            //    if (!bResult.Result)
                                                             //    {
-                                                            //        //显示点云
-                                                            //Disp3DPointControlEvent(robotX, robotY, robotZ);
-                                                            //    });
+                                                            //        totalResult = false;
+                                                            //    }
+                                                            //    if (hXLDCont10mm.Rows > 0)
+                                                            //    {
+                                                            //        dictXLD.Add(imageKey, hXLDCont10mm);
+                                                            //    }
+                                                            //    if (resultData.面积 > 0)
+                                                            //    {
+                                                            //        dictRegion.Add(imageKey, outMaxRegion);
+                                                            //        dictRegionRectangle2.Add(imageKey, outRegionRectangle2);
+                                                            //        dictData.Add(imageKey, resultData);
+                                                            //        dictResult.Add(imageKey, bResult);
+                                                            //    }
                                                             //}
-                                                            //});
-
-
-                                                            if (imageSet.单帧检测)
-                                                            {
-                                                                Mat detImage = dictImage[imageKey];
-                                                                //单帧检测
-                                                                Vision.singleFrameDetTotal(item.Value, hCamPar, LightInCam, detImage, cutSet, imageSet, ref singleFrameExistGlue, ref singleFrameExisOutline, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2, ref hXLDCont10mm, xy, lightXY);
-                                                                if (!bResult.Result)
-                                                                {
-                                                                    totalResult = false;
-                                                                }
-                                                                if (hXLDCont10mm.Rows > 0)
-                                                                {
-                                                                    dictXLD.Add(imageKey, hXLDCont10mm);
-                                                                }
-                                                                if (resultData.面积 > 0)
-                                                                {
-                                                                    dictRegion.Add(imageKey, outMaxRegion);
-                                                                    dictRegionRectangle2.Add(imageKey, outRegionRectangle2);
-                                                                    dictData.Add(imageKey, resultData);
-                                                                    dictResult.Add(imageKey, bResult);
-                                                                }
-                                                            }
                                                         }
                                                     }
 
@@ -880,17 +869,17 @@ namespace _3DLaserGlueInspection
                                                     }
                                                     if (imageSet.轮廓检测)
                                                     {
-                                                        if (imageSet.单帧检测)
-                                                        {
-                                                            // 已开放
-                                                            hWindowNumericalModelDiagramDispCross(rowss[indexTaskCut], colss[indexTaskCut], angless[indexTaskCut], indexImage, cutSet, bResult.Result ? Colors.Green : Colors.Red);
+                                                        //if (imageSet.单帧检测)
+                                                        //{
+                                                        //    // 已开放
+                                                        //    hWindowNumericalModelDiagramDispCross(rowss[indexTaskCut], colss[indexTaskCut], angless[indexTaskCut], indexImage, cutSet, bResult.Result ? Colors.Green : Colors.Red);
 
-                                                        }
-                                                        else
-                                                        {
+                                                        //}
+                                                        //else
+                                                        //{
                                                             // 已开放
                                                             hWindowNumericalModelDiagramDispCross(rowss[indexTaskCut], colss[indexTaskCut], angless[indexTaskCut], indexImage, cutSet, Colors.Yellow);
-                                                        }
+                                                        //}
                                                     }
 
                                                 }
@@ -1355,7 +1344,16 @@ namespace _3DLaserGlueInspection
 
 
                         //数据转换
+                        //pose 格式转换
                         string camKey = "Cam1";
+                        foreach (var item in camParam) //根据使用的第一个相机数据来作为参考，正常是用第一个相机
+                        {
+                            if (item.Value.Enable)
+                            {
+                                camKey = item.Key;
+                                break;
+                            }
+                        }
                         long[] imageKeyList = Point3DXs[camKey][indexImageCut].Keys.ToArray();
                         var cutSet = set.CutSets[indexImageCut].Clone();
 
@@ -1372,24 +1370,45 @@ namespace _3DLaserGlueInspection
                             poseList.At<Double>(id, 5) = poseKey.rz;
                             id++;
                         }
-                        id = 0;
-                        cloudList = Mat.Zeros(Point3DXs[camKey][indexImageCut].Values.Count * Point3DXs[camKey][indexImageCut].Values.ElementAt(0).Count, 3, MatType.CV_64FC1);
-                        foreach (var imageKey in Point3DXs[camKey][indexImageCut].Keys)
+                        //3d 点云格式转换
+                        int pointCount = 0;
+                        foreach (var item in camParam)
                         {
-                            for (int j = 0; j < Point3DXs[camKey][indexImageCut][imageKey].Count; j++)
+                            if (item.Value.Enable)
                             {
-                                double x = Point3DXs[camKey][indexImageCut][imageKey][j];
-                                double y = Point3DYs[camKey][indexImageCut][imageKey][j];
-                                double z = Point3DZs[camKey][indexImageCut][imageKey][j];
 
-                                cloudList.At<Double>(id, 0) = x;
-                                cloudList.At<Double>(id, 1) = y;
-                                cloudList.At<Double>(id, 2) = z;
+                                foreach (var imageKey in Point3DXs[item.Key][indexImageCut].Keys)
+                                {
+                                    pointCount += Point3DXs[item.Key][indexImageCut][imageKey].Count();
 
-                                id++;
+                                }
                             }
-
                         }
+                        cloudList = Mat.Zeros(pointCount, 3, MatType.CV_64FC1);
+                        id = 0;
+                        foreach (var item in camParam)
+                        {
+                            if (item.Value.Enable)
+                            {
+                                foreach (var imageKey in Point3DXs[item.Key][indexImageCut].Keys)
+                                {
+                                    for (int j = 0; j < Point3DXs[item.Key][indexImageCut][imageKey].Count; j++)
+                                    {
+                                        double x = Point3DXs[item.Key][indexImageCut][imageKey][j];
+                                        double y = Point3DYs[item.Key][indexImageCut][imageKey][j];
+                                        double z = Point3DZs[item.Key][indexImageCut][imageKey][j];
+
+                                        cloudList.At<Double>(id, 0) = x;
+                                        cloudList.At<Double>(id, 1) = y;
+                                        cloudList.At<Double>(id, 2) = z;
+
+                                        id++;
+                                    }
+
+                                }
+                            }
+                        }
+
                         //点云数据处理
                         taskPoint3D = Task.Run(() =>
                         {
@@ -1425,8 +1444,7 @@ namespace _3DLaserGlueInspection
                             if (poseList.Rows > 0 && cloudList.Rows > 0)
                             {
                                 //3d检测
-                                if (true)
-                                {
+                                
                                     Mat[] imgList = new Mat[poseList.Rows];
                                     var dictXLD = outLineDict[camKey][indexImageCut];
                                     var dictRegion = glueRegionDict[camKey][indexImageCut];
@@ -1440,8 +1458,14 @@ namespace _3DLaserGlueInspection
                                         imgList[i] = new Mat();
                                         imgsPtr[i] = imgList[i].CvPtr;
                                     }
-                                    Vision.pointCloudCut(cloudList.CvPtr, poseList.CvPtr, Vision.xSize, Vision.ySize, Vision.scaleSize * 1000, Vision.offset_z, imgsPtr);
+                                    Vision.pointCloudCutAll(cloudList.CvPtr, poseList.CvPtr, Vision.xSize, Vision.ySize, Vision.zSize, Vision.scaleSize * 1000, Vision.offset_z, imgsPtr);
                                     for (int indexImage = 0; indexImage < imgList.Length; indexImage++)
+                                    {
+                                    //3d检测参数，先以相机1为标准,后面再把参数统一
+                                    var imageSet = cutSet.imageSet[0][indexImage];
+
+
+                                    if (imageSet._3DGlueDet)
                                     {
                                         var imageKey = imageKeyList[indexImage];
                                         //需要判断图片是否为空，来判断是否有结果
@@ -1461,8 +1485,7 @@ namespace _3DLaserGlueInspection
                                                 Mat outMaxRegion = new Mat();
                                                 Mat outRegionRectangle2 = new Mat();
                                                 Mat hXLDCont10mm;
-                                                //3d检测参数，先以相机1为标准
-                                                var imageSet = cutSet.imageSet[0][indexImage];
+                                                
 
                                                 //离散滤波
                                                 if (imageSet.离散去噪)
@@ -1537,6 +1560,14 @@ namespace _3DLaserGlueInspection
                                                 }
 
                                             }
+                                            else
+                                            {
+                                                totalResult = false;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            totalResult = false;
                                         }
 
                                     }

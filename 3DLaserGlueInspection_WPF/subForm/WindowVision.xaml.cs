@@ -26,6 +26,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
 using _3DLaserGlueInspection;
 using System.Data.Common;
 using System.Diagnostics;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Rebar;
 namespace _3DLaserGlueInspection.subForm
 {
     /// <summary>
@@ -52,10 +53,25 @@ namespace _3DLaserGlueInspection.subForm
 
         SynchronizedList<long> robotPoseKeys = new SynchronizedList<long>();
         SynchronizedList<PoseParameters> robotPoseValues = new SynchronizedList<PoseParameters>();
-        //Dictionary<string, SynchronizedList<SynchronizedList<long>>> ImageKeys = new Dictionary<string, SynchronizedList<SynchronizedList<long>>>();//指示拍照位置
-        //Dictionary<string, SynchronizedList<Dictionary<long, HImage>>> Images = new Dictionary<string, SynchronizedList<Dictionary<long, HImage>>>();//相机-分段-时间-图片
         SynchronizedList<Dictionary<string, SynchronizedList<long>>> ImageKeys = new SynchronizedList<Dictionary<string, SynchronizedList<long>>>();//指示拍照位置
         SynchronizedList<Dictionary<string, Dictionary<long, Mat>>> Images = new SynchronizedList<Dictionary<string, Dictionary<long, Mat>>>();//分段-相机-时间-图片
+
+        Dictionary<string, SynchronizedList<Dictionary<long, Wpf_Replace_halcon.PoseParameters>>> Robot3DPoseDict = new Dictionary<string, SynchronizedList<Dictionary<long, Wpf_Replace_halcon.PoseParameters>>>();//相机-分段-时间-机器位姿
+        Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>> Point3DXsDict = new Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>>();//相机-分段-时间-图片数据
+        Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>> Point3DYsDict = new Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>>();
+        Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>> Point3DZsDict = new Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>>();
+
+
+        Mat hXLDCont10mm = new Mat();
+
+        Data resultData = new Data();
+        BResult bResult = new BResult();
+        Mat outMaxRegion = new Mat();
+        Mat outRegionRectangle2 = new Mat();
+        Mat hXLDCont10mm3D = new Mat();
+
+
+        List<double[]> pointsSave = new List<double[]>();
 
         public WindowVision()
         {
@@ -77,32 +93,38 @@ namespace _3DLaserGlueInspection.subForm
                 CreateRightClickMenu((System.Windows.Controls.ContextMenu)s, CopyThre);
             };
             singleFrameCheck.ContextMenu = new System.Windows.Controls.ContextMenu();
-            singleFrameCheck.ContextMenu.Opened  += (s, e) =>
+            singleFrameCheck.ContextMenu.Opened += (s, e) =>
             {
                 CreateRightClickMenu((System.Windows.Controls.ContextMenu)s, CopySingleFrame);
             };
+            _3DCloudDetCheck.ContextMenu = new System.Windows.Controls.ContextMenu();
+            _3DCloudDetCheck.ContextMenu.Opened += (s, e) =>
+            {
+                CreateRightClickMenu((System.Windows.Controls.ContextMenu)s, Copy3DGlueDet);
+            };
+
             toleranceRangeGrid.ContextMenu = new System.Windows.Controls.ContextMenu();
-            toleranceRangeGrid.ContextMenu.Opened  += (s, e) =>
+            toleranceRangeGrid.ContextMenu.Opened += (s, e) =>
             {
                 CreateRightClickMenu((System.Windows.Controls.ContextMenu)s, CopyToleranceRange);
             };
             useCroppintCheck.ContextMenu = new System.Windows.Controls.ContextMenu();
-            useCroppintCheck.ContextMenu.Opened  += (s, e) =>
+            useCroppintCheck.ContextMenu.Opened += (s, e) =>
             {
                 CreateRightClickMenu((System.Windows.Controls.ContextMenu)s, CopyUseCrop);
             };
             cropGrid.ContextMenu = new System.Windows.Controls.ContextMenu();
-            cropGrid.ContextMenu.Opened  += (s, e) =>
+            cropGrid.ContextMenu.Opened += (s, e) =>
             {
                 CreateRightClickMenu((System.Windows.Controls.ContextMenu)s, CopyCropRange);
             };
             useDiscreteDenoisingCheck.ContextMenu = new System.Windows.Controls.ContextMenu();
-            useDiscreteDenoisingCheck.ContextMenu.Opened  += (s, e) =>
+            useDiscreteDenoisingCheck.ContextMenu.Opened += (s, e) =>
             {
                 CreateRightClickMenu((System.Windows.Controls.ContextMenu)s, CopyDiscreteDenoising);
             };
             discreteDenoisingGrid.ContextMenu = new System.Windows.Controls.ContextMenu();
-            discreteDenoisingGrid.ContextMenu.Opened  += (s, e) =>
+            discreteDenoisingGrid.ContextMenu.Opened += (s, e) =>
             {
                 CreateRightClickMenu((System.Windows.Controls.ContextMenu)s, CopyDenoisingPara);
             };
@@ -288,7 +310,7 @@ namespace _3DLaserGlueInspection.subForm
             hWindowModel.finishCreatePolylineEventHandler -= finishCreatePolylineEven;
 
         }
-        private void CreateRightClickMenu(System.Windows.Controls.ContextMenu contextMenuStrip, Action<ImageSet,ImageSet> action)
+        private void CreateRightClickMenu(System.Windows.Controls.ContextMenu contextMenuStrip, Action<ImageSet, ImageSet> action)
         {
             if (contextMenuStrip.Items.Count > 0)
             {
@@ -352,6 +374,13 @@ namespace _3DLaserGlueInspection.subForm
 
             isAlter = true;
         }
+
+        private void Copy3DGlueDet(ImageSet srcImageSet, ImageSet dstImageSet)
+        {
+            srcImageSet._3DGlueDet = dstImageSet._3DGlueDet;
+
+            isAlter = true;
+        }
         private void CopyToleranceRange(ImageSet srcImageSet, ImageSet dstImageSet)
         {
             srcImageSet.widthMin = dstImageSet.widthMin;
@@ -399,6 +428,8 @@ namespace _3DLaserGlueInspection.subForm
                 carTypeComboBox.Items.Add(carNames[id]);
             }
             Params.Load();
+
+            showImageComboBox.SelectedIndex = 0;
         }
 
 
@@ -406,7 +437,7 @@ namespace _3DLaserGlueInspection.subForm
         {
             if (isAlter && set != null)
             {
-                DialogResult dialogResult =System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("是否保存") + " " + set.Name + " " + GlobalVarAndFunc.LanguageTranslate("参数？"), GlobalVarAndFunc.LanguageTranslate("提示"), System.Windows.Forms.MessageBoxButtons.YesNoCancel, System.Windows.Forms.MessageBoxIcon.Warning);
+                DialogResult dialogResult = System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("是否保存") + " " + set.Name + " " + GlobalVarAndFunc.LanguageTranslate("参数？"), GlobalVarAndFunc.LanguageTranslate("提示"), System.Windows.Forms.MessageBoxButtons.YesNoCancel, System.Windows.Forms.MessageBoxIcon.Warning);
                 if (dialogResult == System.Windows.Forms.DialogResult.Yes)
                 {
                     if (!set.Save())
@@ -430,7 +461,7 @@ namespace _3DLaserGlueInspection.subForm
 
         private void CopyToAllPicture(object sender, RoutedEventArgs e)
         {
-           
+
             //if (cutSetListBox.SelectedIndex >= 0 && selectCamListBox.SelectedIndex >= 0 && selectPictureListBox.SelectedIndex >= 0)
             //{
             //    var imageSets = set.CutSets[cutSetListBox.SelectedIndex].imageSet[selectCamListBox.SelectedIndex];
@@ -469,7 +500,7 @@ namespace _3DLaserGlueInspection.subForm
             saveOKImageCheck.Checked += UpDataSet;
             saveNGImageCheck.Unchecked += UpDataSet;
             saveOKImageCheck.Unchecked += UpDataSet;
-            
+
             saveImageDirTextBox.TextChanged += UpDataSet;
         }
         void UnLoadUpDataSet()
@@ -517,6 +548,8 @@ namespace _3DLaserGlueInspection.subForm
             threNumericUpDown.TextChanged += UpData;
             singleFrameCheck.Checked += UpData;
             singleFrameCheck.Unchecked += UpData;
+            _3DCloudDetCheck.Checked += UpData;
+            _3DCloudDetCheck.Unchecked += UpData;
 
             glueWidthMinNumericUpDown.TextChanged += UpData;
             glueWidthMaxNumericUpDown.TextChanged += UpData;
@@ -564,6 +597,8 @@ namespace _3DLaserGlueInspection.subForm
             threNumericUpDown.TextChanged -= UpData;
             singleFrameCheck.Checked -= UpData;
             singleFrameCheck.Unchecked -= UpData;
+            _3DCloudDetCheck.Checked -= UpData;
+            _3DCloudDetCheck.Unchecked -= UpData;
 
             glueWidthMinNumericUpDown.TextChanged -= UpData;
             glueWidthMaxNumericUpDown.TextChanged -= UpData;
@@ -621,6 +656,7 @@ namespace _3DLaserGlueInspection.subForm
             imageSet.轮廓检测 = (bool)outlineCheck.IsChecked;
             imageSet.minThreshold = Convert.ToDouble(threNumericUpDown.Text);
             imageSet.单帧检测 = (bool)singleFrameCheck.IsChecked;
+            imageSet._3DGlueDet = (bool)_3DCloudDetCheck.IsChecked;
             imageSet.widthMin = Convert.ToDouble(glueWidthMinNumericUpDown.Text);
             imageSet.widthMax = Convert.ToDouble(glueWidthMaxNumericUpDown.Text);
             imageSet.heightMin = Convert.ToDouble(glueHeightMinNumericUpDown.Text);
@@ -634,14 +670,14 @@ namespace _3DLaserGlueInspection.subForm
             imageSet.DownY = Convert.ToDouble(topRangeMaxNumericUpDown.Text);
             imageSet.离散去噪 = (bool)useDiscreteDenoisingCheck.IsChecked;
             imageSet.分段距离 = Convert.ToDouble(discreteDenoisingDistNumericUpDown.Text);
-            imageSet.成段点数 =  Convert.ToInt16(discreteDenoisingCountNumericUpDown.Text);
+            imageSet.成段点数 = Convert.ToInt16(discreteDenoisingCountNumericUpDown.Text);
         }
 
         void SelectedCamAndImage()
         {
             camKey = null;
-            bool 图片 = false;
-            bool 参数 = false;
+            bool existImage = false;
+            bool showPara = false;
             if (cutSetListBox.SelectedIndex >= 0 && selectCamListBox.SelectedIndex >= 0 && selectPictureListBox.SelectedIndex >= 0)
             {
                 try
@@ -653,10 +689,13 @@ namespace _3DLaserGlueInspection.subForm
                         hImage = Images[cutSetListBox.SelectedIndex][camKey][imageKey];
                         if (hImage != null)
                         {
-
-                            hWindowModel.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(hImage));
-                            图片 = true;
+                            //hWindowModel.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(hImage).Clone());
+                            showImageComboBox.SelectedIndex = -1;
+                            showImageComboBox.SelectedIndex = 0;
+                            existImage = true;
                         }
+
+                        //showImageComboBox_SelectionChanged(null, null);
                     }
                 }
                 catch (Exception ex)
@@ -670,6 +709,7 @@ namespace _3DLaserGlueInspection.subForm
                     outlineCheck.IsChecked = imageSet.轮廓检测;
                     threNumericUpDown.Text = imageSet.minThreshold.ToString();
                     singleFrameCheck.IsChecked = imageSet.单帧检测;
+                    _3DCloudDetCheck.IsChecked = imageSet._3DGlueDet;
                     glueWidthMinNumericUpDown.Text = imageSet.widthMin.ToString();
                     glueWidthMaxNumericUpDown.Text = imageSet.widthMax.ToString();
                     glueHeightMinNumericUpDown.Text = imageSet.heightMin.ToString();
@@ -687,7 +727,7 @@ namespace _3DLaserGlueInspection.subForm
                     LoadUpData();
                     imageSetGrid.IsEnabled = true;
                     this.imageSet = imageSet;
-                    参数 = true;
+                    showPara = true;
                 }
                 catch (Exception ex)
                 {
@@ -695,13 +735,12 @@ namespace _3DLaserGlueInspection.subForm
                 }
             }
 
-            if (!图片)
+            if (!existImage)
             {
                 hWindowModel.Clear();
-                //hWindowControl.DispClear();
                 hImage = null;
             }
-            if (!参数)
+            if (!showPara)
             {
                 imageSetGrid.IsEnabled = false;
                 imageSet = null;
@@ -897,7 +936,7 @@ namespace _3DLaserGlueInspection.subForm
         {
             FolderBrowserDialog folder = new FolderBrowserDialog();
             folder.SelectedPath = "D:\\image\\";
-            if (carTypeComboBox.SelectedIndex>=0 && set != null)
+            if (carTypeComboBox.SelectedIndex >= 0 && set != null)
             {
                 folder.SelectedPath = set.OtherSet.SaveImagePath + "\\" + carTypeComboBox.Items[carTypeComboBox.SelectedIndex].ToString();
             }
@@ -908,7 +947,7 @@ namespace _3DLaserGlueInspection.subForm
                 //dataScoreComboBox.Items.AddRange(strings);
                 for (int i = 0; i < dataSources.Length; i++)
                 {
-                    dataScoreComboBox.Items.Add(dataSources[i]);  
+                    dataScoreComboBox.Items.Add(dataSources[i]);
                 }
                 dataScoreComboBox.SelectedIndex = 0;
             }
@@ -916,9 +955,16 @@ namespace _3DLaserGlueInspection.subForm
 
         private void dataScoreComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            //数据清空
             robotPoseKeys.Clear();
             robotPoseValues.Clear();
             ImageKeys.Clear();
+
+            Robot3DPoseDict.Clear();
+            Point3DXsDict.Clear();
+            Point3DYsDict.Clear();
+            Point3DZsDict.Clear();
+
             foreach (var item in Images)
             {
                 foreach (var item2 in item.Values)
@@ -1032,13 +1078,20 @@ namespace _3DLaserGlueInspection.subForm
                                         Mat hImage = null;
                                         try
                                         {
-                                            hImage = new Mat(imagesPath[k],ImreadModes.Unchanged);
+                                            hImage = new Mat(imagesPath[k], ImreadModes.Unchanged);
                                         }
                                         catch (Exception ex)
                                         {
 
                                         }
-                                        imageDict.Add(imageKey, hImage);
+                                        if (hImage != null)
+                                        {
+                                            imageDict.Add(imageKey, hImage);
+                                        }
+                                        else
+                                        {
+                                            System.Windows.Forms.MessageBox.Show(imagesPath[k] + GlobalVarAndFunc.LanguageTranslate("文件不存在"));
+                                        }
                                     }
                                 }
                                 var keyList = new SynchronizedList<long>(imageDict.Keys.OrderBy(key => key).ToList());
@@ -1070,7 +1123,7 @@ namespace _3DLaserGlueInspection.subForm
                 dataScoreComboBox.SelectedIndex -= 1;
             }
             currentSourceIDLabel.Content = dataScoreComboBox.SelectedIndex.ToString();
-            
+
         }
 
         private void nextSourecButton_Click(object sender, RoutedEventArgs e)
@@ -1102,7 +1155,7 @@ namespace _3DLaserGlueInspection.subForm
                 double RightX = imageWidth * imageSet.RightX;
                 double TopY = imageHeight * imageSet.TopY;
                 double DownY = imageHeight * imageSet.DownY;
-                hWindowModel.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(hImage));
+                hWindowModel.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(hImage).Clone());
 
                 PointCollection points = new PointCollection();
                 points.Add(new System.Windows.Point(LeftX, TopY));
@@ -1114,7 +1167,7 @@ namespace _3DLaserGlueInspection.subForm
             }
         }
 
-        private void runButton_Click(object sender, RoutedEventArgs e)
+        private void runOutLineButton_Click(object sender, RoutedEventArgs e)
         {
             if (hImage == null)
             {
@@ -1138,48 +1191,37 @@ namespace _3DLaserGlueInspection.subForm
             }
             // 临时结果保存变量
             bool getOutlineResult = false;
-            bool singleFrameExisOutline  = false;
-            bool singleFrameExistGlue = false;
-            Data resultData = new Data();
-            BResult bResult = new BResult();
-            Mat outMaxRegion = new Mat();
-            Mat outRegionRectangle2 = new Mat();
-            Mat hXLDCont10mm = new Mat();
+            hXLDCont10mm = new Mat();
+
+            //清空3d界面
+            _3DShowControl.ClearPointCloud();
+
 
             //开始检测
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
             //for (int i = 0; i < 100; i++)
             //{
-                if (imageSet.轮廓检测)
+            if (imageSet.轮廓检测)
+            {
+                //激光轮廓提取
+                Mat xy = new Mat();
+                Vision.getLaserPosition(hImage, imageSet.minThreshold, out xy, camParam.OffsetX, camParam.OffsetY);
+                if (xy.Rows > 0)
                 {
-                    //激光轮廓提取
-                    Mat xy = new Mat();
-                    Vision.getLaserPosition(hImage, imageSet.minThreshold, out xy, camParam.OffsetX, camParam.OffsetY);
-                    if (xy.Rows > 0)
-                    {
-                        getOutlineResult = true;
-                        //坐标转换
-                        Wpf_Replace_halcon.PoseParameters robotPose = new PoseParameters();
-                        //HMatrixTransform.mathHPose(robotPoseValues[indexRobotPose - 1],
-                        //    robotPoseValues[indexRobotPose], out robotPose,
-                        //    (imageKey - robotPoseKeys[indexRobotPose - 1]) /
-                        //    (double)(robotPoseKeys[indexRobotPose] - robotPoseKeys[indexRobotPose - 1])
-                        //    );
-                        List<double> robotX, robotY, robotZ;
-                        Mat lightXY = new Mat();
-                        Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToTool,
-                            robotPose, out lightXY, out robotX, out robotY, out robotZ);
+                    getOutlineResult = true;
+                    //坐标转换
+                    Wpf_Replace_halcon.PoseParameters robotPose = new PoseParameters();
+                    List<double> robotX, robotY, robotZ;
+                    Mat lightXY = new Mat();
+                    Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToTool,
+                        robotPose, out lightXY, out robotX, out robotY, out robotZ);
 
 
-                        if (imageSet.单帧检测)
-                        {
-                            Mat detImage = hImage;
-                            //单帧检测
-                            Vision.singleFrameDetTotal(camParam, hCamPar, LightInCam, detImage, cutSet, imageSet, ref singleFrameExistGlue, ref singleFrameExisOutline, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2, ref hXLDCont10mm, xy, lightXY);
-                        }
-                    }
+                    Vision.scalePoint(lightXY, cutSet, out hXLDCont10mm);
+
                 }
+            }
             //}
             stopwatch.Stop();
             //结束检测
@@ -1189,17 +1231,15 @@ namespace _3DLaserGlueInspection.subForm
 
             if (imageSet.轮廓检测)
             {
-                if (imageSet.单帧检测)
+                if (getOutlineResult)
                 {
-                    // 已开放
-                    if (singleFrameExistGlue)
-                    {
-                        GlobalVarAndFunc.ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, hXLDCont10mm, outMaxRegion, outRegionRectangle2, resultData, bResult,ref hWindowModel, ref showing, ref olockShow);
-                    }
-                    else if (singleFrameExisOutline)
-                    {
-                        GlobalVarAndFunc.ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, hXLDCont10mm, ref hWindowModel, ref showing, ref olockShow);
-                    }
+                    //GlobalVarAndFunc.ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, hXLDCont10mm, ref hWindowModel, ref showing, ref olockShow);
+
+                    //showImageComboBox.SelectedIndex = 1;
+                    //showImageComboBox_SelectionChanged(null, null);
+                    showImageComboBox.SelectedIndex = -1;
+                    showImageComboBox.SelectedIndex = 1;
+
 
                 }
             }
@@ -1217,7 +1257,7 @@ namespace _3DLaserGlueInspection.subForm
                 {
                     try
                     {
-                        Mat hImage = new Mat(ofd.FileName,ImreadModes.Unchanged);
+                        Mat hImage = new Mat(ofd.FileName, ImreadModes.Unchanged);
                         set.image?.Dispose();
                         set.image = hImage;
                         isAlter = true;
@@ -1296,7 +1336,7 @@ namespace _3DLaserGlueInspection.subForm
                 {
                     if (!set.image.Empty())
                     {
-                        hWindowModel.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(set.image)); 
+                        hWindowModel.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(set.image));
                         //绘制轨迹
                         while (cutSetListBox.SelectedIndex >= set.XLDDatas.Count)
                         {
@@ -1430,7 +1470,7 @@ namespace _3DLaserGlueInspection.subForm
         private void imageCountNumericUpDown_TextChanged(object sender, TextChangedEventArgs e)
         {
             int ImageNum = Convert.ToInt16(imageCountNumericUpDown.Text);
-            if (selectPictureListBox!=null)
+            if (selectPictureListBox != null)
             {
                 while (selectPictureListBox.Items.Count < ImageNum)
                 {
@@ -1441,8 +1481,483 @@ namespace _3DLaserGlueInspection.subForm
                     selectPictureListBox.Items.RemoveAt(selectPictureListBox.Items.Count - 1);
                 }
             }
-           
+
         }
 
+        private void Show2DWindow()
+        {
+            hWindowModel.Visibility = Visibility.Visible;
+            _3DShowControl.Visibility = Visibility.Hidden;
+
+        }
+        private void Show3DWindow()
+        {
+            hWindowModel.Visibility = Visibility.Hidden;
+            _3DShowControl.Visibility = Visibility.Visible;
+
+        }
+
+        private void showImageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (showImageComboBox.SelectedIndex < 0)
+            {
+                return;
+            }
+
+            if (showImageComboBox.SelectedIndex != 2)
+            {
+                Show2DWindow();
+            }
+            else
+            {
+                Show3DWindow();
+            }
+            switch (showImageComboBox.SelectedIndex)
+            {
+                case 0:
+                    if (hImage != null)
+                    {
+
+                        hWindowModel.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(hImage).Clone());
+                    }
+                    break;
+                case 1:
+                    if (hXLDCont10mm != null && !hXLDCont10mm.Empty())
+                    {
+
+                        GlobalVarAndFunc.ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, hXLDCont10mm, ref hWindowModel, ref showing, ref olockShow);
+                    }
+                    else
+                    {
+                        hWindowModel.SetImageSource(null);
+                    }
+                    break;
+                case 3:
+                    if (hXLDCont10mm3D != null && !hXLDCont10mm3D.Empty())
+                    {
+                        if (!outMaxRegion.Empty() && !outRegionRectangle2.Empty())
+                        {
+                            GlobalVarAndFunc.ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, hXLDCont10mm3D, outMaxRegion, outRegionRectangle2, resultData, bResult, ref hWindowModel, ref showing, ref olockShow, (cutSet.ShowWidth - Vision.xSize * 1000) * Vision.scaleSize / 2, (cutSet.ShowHeight - Vision.ySize * 1000) * Vision.scaleSize / 2);
+                        }
+                        else
+                        {
+                            GlobalVarAndFunc.ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, hXLDCont10mm3D, ref hWindowModel, ref showing, ref olockShow, (cutSet.ShowWidth - Vision.xSize * 1000) * Vision.scaleSize / 2, (cutSet.ShowHeight - Vision.ySize * 1000) * Vision.scaleSize / 2);
+                        }
+                    }
+                    else 
+                    {
+                        hWindowModel.SetImageSource(null);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        Dictionary<string, Task> tasks = new Dictionary<string, Task>();//相机-处理任务
+
+        private void get3DDataButton_Click(object sender, RoutedEventArgs e)
+        {
+            _3DShowControl.ClearPointCloud();
+            Thread.Sleep(100);
+
+            //画面切换
+            showImageComboBox.SelectedIndex = -1;
+            showImageComboBox.SelectedIndex = 2;
+            //数据清空
+            List<string> camKeyList = new List<string> { "Cam1", "Cam2", "Cam3", "Cam4" };
+            tasks.Clear();
+            Robot3DPoseDict.Clear();
+            Point3DXsDict.Clear();
+            Point3DYsDict.Clear();
+            Point3DZsDict.Clear();
+
+            // 3D 每隔100毫秒再刷新一下结果
+            _3DShowControl.RefreshOn(100, true);
+
+            var cutSet = set.CutSets[cutSetListBox.SelectedIndex];
+
+            //相机循环
+            foreach (var camKey in camKeyList)
+            {
+                //判断是否启用相机
+                bool CamEnabled = camKey == "Cam1" ? cutSet.Cam1Enabled :
+                        camKey == "Cam2" ? cutSet.Cam2Enabled :
+                        camKey == "Cam3" ? cutSet.Cam3Enabled :
+                        cutSet.Cam4Enabled;
+
+                if (CamEnabled)
+                {
+                    //多线程循环
+                    tasks.Add(camKey, Task.Run((Action)(() =>
+                {
+                    string camKeyCopy = camKey.ToString();
+                    int indexRobotPose = 1;
+                    //int indexTaskCut = 0;//指示正在图像处理段数
+
+                    //数据初始化
+                    var dictRobotPoseList = new SynchronizedList<Dictionary<long, PoseParameters>>();
+                    Robot3DPoseDict.Add(camKeyCopy, dictRobotPoseList);
+
+                    var dictXList = new SynchronizedList<Dictionary<long, List<double>>>();
+                    Point3DXsDict.Add(camKeyCopy, dictXList);
+                    var dictYList = new SynchronizedList<Dictionary<long, List<double>>>();
+                    Point3DYsDict.Add(camKeyCopy, dictYList);
+                    var dictZList = new SynchronizedList<Dictionary<long, List<double>>>();
+                    Point3DZsDict.Add(camKeyCopy, dictZList);
+
+
+                    if (robotPoseKeys.Count() < 1)
+                    {
+                        return;
+                    }
+                    // 段循环
+                    pointsSave = new List<double[]>();
+
+                    for (int indexTaskCut = 0; indexTaskCut < Images.Count; indexTaskCut++)
+                    {
+                        var imageDict = Images[indexTaskCut][camKeyCopy];
+
+                        var dictRobotPose = new Dictionary<long, PoseParameters>();
+                        Robot3DPoseDict[camKeyCopy].Add(dictRobotPose);
+                        var dictX = new Dictionary<long, List<double>>();
+                        Point3DXsDict[camKeyCopy].Add(dictX);
+                        var dictY = new Dictionary<long, List<double>>();
+                        Point3DYsDict[camKeyCopy].Add(dictY);
+                        var dictZ = new Dictionary<long, List<double>>();
+                        Point3DZsDict[camKeyCopy].Add(dictZ);
+                        // 图片循环
+
+                        foreach (var camTimeKey in imageDict.Keys)
+                        {
+                            if (robotPoseKeys[indexRobotPose] < camTimeKey)//循环到的姿态晚于等于图片，处理
+                            {
+
+                                indexRobotPose++;
+                            }
+
+                            Mat hImage_tmp = imageDict[camTimeKey].Clone();
+                            if (hImage_tmp == null)
+                            {
+                                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("无图片"));
+                                return;
+                            }
+                            if (cutSet == null && imageSet == null)
+                            {
+                                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("无检测参数"));
+                                return;
+                            }
+                            if (CamParamName == null || camKeyCopy == null
+                            || !Params.Param.TryGetValue(CamParamName, out var camParams) || !camParams.TryGetValue(camKeyCopy, out var camParam)
+                            || !Params.CamPar.TryGetValue(CamParamName, out var hCamPars) || !hCamPars.TryGetValue(camKeyCopy, out var hCamPar)
+                            || !Params.LightInCam.TryGetValue(CamParamName, out var LightInCams) || !LightInCams.TryGetValue(camKeyCopy, out var LightInCam)
+                            || !Params.LightToCam.TryGetValue(CamParamName, out var LightToCams) || !LightToCams.TryGetValue(camKeyCopy, out var LightToCam)
+                            || !Params.CamToTool.TryGetValue(CamParamName, out var CamToTools) || !CamToTools.TryGetValue(camKeyCopy, out var CamToTool))
+                            {
+                                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("无相机参数"));
+                                return;
+                            }
+                            // 临时结果保存变量
+                            bool getOutlineResult = false;
+                            bool singleFrameExisOutline = false;
+                            bool singleFrameExistGlue = false;
+                            Data resultData = new Data();
+                            BResult bResult = new BResult();
+                            Mat outMaxRegion = new Mat();
+                            Mat outRegionRectangle2 = new Mat();
+                            Mat hXLDCont10mm = new Mat();
+
+
+                            //开始检测
+                            Stopwatch stopwatch = new Stopwatch();
+                            stopwatch.Start();
+                            //for (int i = 0; i < 100; i++)
+                            //{
+                            if (imageSet.轮廓检测)
+                            {
+                                //激光轮廓提取
+                                Mat xy = new Mat();
+                                Vision.getLaserPosition(hImage_tmp, imageSet.minThreshold, out xy, camParam.OffsetX, camParam.OffsetY);
+                                //坐标转换
+                                Wpf_Replace_halcon.PoseParameters robotPose = new PoseParameters();
+                                HMatrixTransform.mathHPose(robotPoseValues[indexRobotPose - 1],
+                                                                       robotPoseValues[indexRobotPose], out robotPose,
+                                                                       (camTimeKey - robotPoseKeys[indexRobotPose - 1]) /
+                                                                       (double)(robotPoseKeys[indexRobotPose] - robotPoseKeys[indexRobotPose - 1])
+                                                                       );
+                                //三维数据添加(机器人坐标)
+                                dictRobotPose.Add(camTimeKey, robotPose);
+
+                                if (xy.Rows > 0)
+                                {
+                                    getOutlineResult = true;
+                                   
+                                    List<double> robotX, robotY, robotZ;
+                                    Mat lightXY = new Mat();
+                                    Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToTool,
+                                    robotPose, out lightXY, out robotX, out robotY, out robotZ);
+
+                                    _3DShowControl.AddPointCloud(robotX, robotY, robotZ);
+
+                                    //三维数据添加
+                                    dictX.Add(camTimeKey, robotX);
+                                    dictY.Add(camTimeKey, robotY);
+                                    dictZ.Add(camTimeKey, robotZ);
+
+                                   
+                                }
+                            }
+                            //}
+                            stopwatch.Stop();
+                            //结束检测
+                            TimeSpan elapsedTime = stopwatch.Elapsed;
+                            double useTime = elapsedTime.TotalMilliseconds;
+                            //runTimeLabel.Content = $"{elapsedTime.TotalMilliseconds:F3} ms";
+
+                            if (imageSet.轮廓检测)
+                            {
+                                if (singleFrameExisOutline)
+                                {
+                                    GlobalVarAndFunc.ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, hXLDCont10mm, ref hWindowModel, ref showing, ref olockShow);
+                                    //
+                                }
+                            }
+                        }
+                    }
+
+
+                   
+                })));
+
+                    Thread.Sleep(10);
+                }
+            }
+
+            Task.Run((Action)(() =>
+            {
+                foreach (var item in tasks.Values)
+                {
+                    while (!item.IsCompleted)
+                    {
+                        Thread.Sleep(10);
+                    }
+                }
+                _3DShowControl.RefreshOFF();
+                _3DShowControl.RefreshPoints();
+
+                ////保存机器人每张图的位姿数据
+                //foreach (var camKey_tmp in Robot3DPoseDict.Keys)
+                //{
+                //    for (int i = 0; i < Robot3DPoseDict[camKey_tmp].Count; i++)
+                //    {
+                //        using (FileStream stream = new FileStream($"{camKey_tmp}_{(i + 1).ToString()}_robotPoseValues.xml", FileMode.Create))
+                //        {
+                //            //转化
+                //            List<double[]> pose = new List<double[]>();
+                //            foreach (var poseKey in Robot3DPoseDict[camKey_tmp][i].Values.ToArray())
+                //            {
+                //                pose.Add(new double[] { poseKey.x, poseKey.y, poseKey.z, poseKey.rx, poseKey.ry, poseKey.rz, poseKey.PoseType });
+                //            }
+                //            new XmlSerializer(pose.GetType()).Serialize(stream, pose);
+                //        }
+                //    }
+                //}
+                ////保存测试点云数据
+                //foreach (var camKey_tmp in Point3DXsDict.Keys)
+                //{
+                //    for(int i = 0; i < Point3DXsDict[camKey_tmp].Count; i++)
+                //    {
+                //        foreach (var imageKey in Point3DXsDict[camKey_tmp][i].Keys)
+                //        {
+                //            for (int j = 0; j < Point3DXsDict[camKey_tmp][i][imageKey].Count(); j++)
+                //            {
+                //                pointsSave.Add(new double[] { Point3DXsDict[camKey_tmp][i][imageKey][j], Point3DYsDict[camKey_tmp][i][imageKey][j], Point3DZsDict[camKey_tmp][i][imageKey][j] });
+                //            }
+                            
+                //        }
+
+                        
+                //    }
+                //}
+
+                //string fPath = "pointCloud.xml";
+                //XmlSerializer xml = new XmlSerializer(pointsSave.GetType());
+                //using (FileStream stream = new FileStream(fPath, FileMode.Create))
+                //{
+                //    xml.Serialize(stream, pointsSave);
+                //}
+
+            }));
+
+
+        }
+
+        private void runButton_Click(object sender, RoutedEventArgs e)
+        {
+            camKey = null;
+
+            if (cutSetListBox.SelectedIndex >= 0 && selectCamListBox.SelectedIndex >= 0 && selectPictureListBox.SelectedIndex >= 0)
+            {
+                try
+                {
+                    outMaxRegion = new Mat();
+                    outRegionRectangle2 = new Mat();
+                    hXLDCont10mm3D = new Mat();
+                    resultData = new Data();
+                    bResult = new BResult();
+
+
+                    camKey = $"Cam{selectCamListBox.SelectedIndex + 1}";
+                    if (ImageKeys.Count > cutSetListBox.SelectedIndex && ImageKeys[cutSetListBox.SelectedIndex].ContainsKey(camKey) && ImageKeys[cutSetListBox.SelectedIndex][camKey].Count > selectPictureListBox.SelectedIndex)
+                    {
+                        List<string> camKeyList = new List<string> { "Cam1", "Cam2", "Cam3", "Cam4" };
+
+                        string camKey_tmp = "Cam1";
+                        int indexImageCut = cutSetListBox.SelectedIndex;
+                        int indexImage = selectPictureListBox.SelectedIndex;
+                        var cutSet = set.CutSets[indexImageCut];
+                        List<bool> camEnableList = new List<bool> { cutSet.Cam1Enabled, cutSet.Cam2Enabled, cutSet.Cam3Enabled, cutSet.Cam4Enabled };
+                        //相机循环
+                        foreach (var item in camKeyList)
+                        {
+                            //判断是否启用相机
+                            bool CamEnabled = item == "Cam1" ? cutSet.Cam1Enabled :
+                                    item == "Cam2" ? cutSet.Cam2Enabled :
+                                    item == "Cam3" ? cutSet.Cam3Enabled :
+                                    cutSet.Cam4Enabled;
+
+                            if (CamEnabled)
+                            {
+                                camKey_tmp = item;
+                                break;
+                            }
+                        }
+                        long[] imageKeyList = Robot3DPoseDict[camKey_tmp][indexImageCut].Keys.ToArray();
+                        Mat cloudList = new Mat(), poseList = new Mat();
+                        poseList = Mat.Zeros(Robot3DPoseDict[camKey_tmp][indexImageCut].Values.Count, 6, MatType.CV_64FC1);
+                        int id = 0;
+                        foreach (var poseKey in Robot3DPoseDict[camKey_tmp][indexImageCut].Values)
+                        {
+                            poseList.At<Double>(id, 0) = poseKey.x;
+                            poseList.At<Double>(id, 1) = poseKey.y;
+                            poseList.At<Double>(id, 2) = poseKey.z;
+                            poseList.At<Double>(id, 3) = poseKey.rx;
+                            poseList.At<Double>(id, 4) = poseKey.ry;
+                            poseList.At<Double>(id, 5) = poseKey.rz;
+                            id++;
+                        }
+                        //3d 点云格式转换
+                        int pointCount = 0;
+                        int camId = 0;
+                        foreach (var item in camEnableList)
+                        {
+                            if (item)
+                            {
+
+                                foreach (var imageKey_tmp in Point3DXsDict[camKeyList[camId]][indexImageCut].Keys)
+                                {
+                                    pointCount += Point3DXsDict[camKeyList[camId]][indexImageCut][imageKey_tmp].Count();
+                                }
+                            }
+                            camId++;
+                        }
+                        cloudList = Mat.Zeros(pointCount, 3, MatType.CV_64FC1);
+                        id = 0;
+                        camId = 0;
+                        foreach (var item in camEnableList)
+                        {
+                            if (item)
+                            {
+                                foreach (var imageKey_tmp in Point3DXsDict[camKeyList[camId]][indexImageCut].Keys)
+                                {
+                                    for (int j = 0; j < Point3DXsDict[camKeyList[camId]][indexImageCut][imageKey_tmp].Count; j++)
+                                    {
+                                        double x = Point3DXsDict[camKeyList[camId]][indexImageCut][imageKey_tmp][j];
+                                        double y = Point3DYsDict[camKeyList[camId]][indexImageCut][imageKey_tmp][j];
+                                        double z = Point3DZsDict[camKeyList[camId]][indexImageCut][imageKey_tmp][j];
+
+                                        cloudList.At<Double>(id, 0) = x;
+                                        cloudList.At<Double>(id, 1) = y;
+                                        cloudList.At<Double>(id, 2) = z;
+
+                                        id++;
+                                    }
+
+                                }
+                            }
+                            camId++;
+                        }
+
+
+
+                        //Mat[] imgList = new Mat[poseList.Rows];
+                        //IntPtr[] imgsPtr = new IntPtr[imgList.Length];
+                        //for (int i = 0; i < imgList.Length; i++)
+                        //{
+                        //    imgList[i] = new Mat();
+                        //    imgsPtr[i] = imgList[i].CvPtr;
+                        //}
+                        Mat imgCut = new Mat();
+                        Vision.pointCloudCutSingle(cloudList.CvPtr, poseList.CvPtr,indexImage, Vision.xSize, Vision.ySize, Vision.zSize, Vision.scaleSize * 1000, Vision.offset_z, imgCut.CvPtr);
+
+                        
+                        var imageKey = imageKeyList[indexImage];
+                        //需要判断图片是否为空，来判断是否有结果
+                        if (!imgCut.Empty())
+                        {
+                            Mat thinn = new Mat();
+                            Mat points = new Mat();
+                            Vision.thinning3d(imgCut.CvPtr, thinn.CvPtr, points.CvPtr);
+
+                            //Cv2.NamedWindow("thinn", WindowFlags.Normal);
+                            //Cv2.ImShow("thinn", thinn);
+                            //Cv2.WaitKey(0);
+                            //Cv2.DestroyAllWindows();
+                            Console.WriteLine($"imgList[indexImage] count:{imgCut.Rows}");
+                            Console.WriteLine($"points count:{points.Rows}");
+
+                            //Vision.showMatPoint(imgList[indexImage], "origin");
+                            //Vision.showMatPoint(points, "thinn");
+
+                            //需要判断图片是否为空，来判断是否有结果
+                            if (!thinn.Empty())
+                            {
+                                //检测
+                                bool singleFrameExistGlue = false;
+
+
+                                //离散滤波
+                                if (imageSet.离散去噪)
+                                {
+                                    Vision.TrajectoryDiscreteFilter(points, out hXLDCont10mm3D, imageSet.分段距离 * Vision.scaleSize, imageSet.成段点数);
+                                }
+                                else
+                                {
+                                    hXLDCont10mm3D = points.Clone();
+                                }
+
+                                Vision.singleFrameDetAndResult(points, imageSet, ref singleFrameExistGlue, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2);
+
+
+                            }
+                        }
+
+                        //结果显示
+
+                        Dispatcher.Invoke(() =>
+                        {
+                            showImageComboBox.SelectedIndex = -1;
+                            showImageComboBox.SelectedIndex = 3;
+                        });
+
+                    }
+                }
+                catch (Exception ex)
+                { 
+
+                }
+            }
+
+        }
     }
 }

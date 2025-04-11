@@ -177,7 +177,7 @@ namespace _3DLaserGlueInspection
 
 
 
-        public static void ShowImageData(int showWidth, int showHeight, Mat hXLDCont10mm, ref ImageControl2 imageControl,ref bool showing, ref object olockShow)
+        public static void ShowImageData(int showWidth, int showHeight, Mat hXLDCont10mm, ref ImageControl2 imageControl,ref bool showing, ref object olockShow, double offsetX = 0, double offsetY = 0)
         {
             if (!showing)
             {
@@ -194,8 +194,8 @@ namespace _3DLaserGlueInspection
                         for (int i = 0; i < hXLDCont10mm.Rows; i++)
                         {
                             System.Windows.Point point = new System.Windows.Point();
-                            point.X = hXLDCont10mm.At<double>(i, 0);
-                            point.Y = hXLDCont10mm.At<double>(i, 1);
+                            point.X = hXLDCont10mm.At<double>(i, 0) + offsetX;
+                            point.Y = hXLDCont10mm.At<double>(i, 1) + offsetY;
                             points.Add(point);
                         }
                         //DispPolylinejHWindowControlEvent(points, Colors.Gray);
@@ -210,7 +210,7 @@ namespace _3DLaserGlueInspection
             }
         }
         public static void ShowImageData(int showWidth, int showHeight, Mat hXLDCont10mm, Mat hRegion, Mat hRegionSmallestRectangle2, Data data, BResult bResult,
-             ref ImageControl2 imageControl, ref bool showing, ref object olockShow)
+             ref ImageControl2 imageControl, ref bool showing, ref object olockShow, double offsetX = 0, double offsetY = 0)
         {
             if (!showing)
             {
@@ -233,8 +233,8 @@ namespace _3DLaserGlueInspection
                         for (int i = 0; i < hXLDCont10mm.Rows; i++)
                         {
                             System.Windows.Point point = new System.Windows.Point();
-                            point.X = hXLDCont10mm.At<double>(i, 0);
-                            point.Y = hXLDCont10mm.At<double>(i, 1);
+                            point.X = hXLDCont10mm.At<double>(i, 0) + offsetX;
+                            point.Y = hXLDCont10mm.At<double>(i, 1) + offsetY;
                             points.Add(point);
 
                             //Console.WriteLine($"point:{point}");
@@ -252,8 +252,8 @@ namespace _3DLaserGlueInspection
 
                             //Console.WriteLine($"point :({data.column},{data.row})");
                             //DispTextInImageHWindowControlEvent(text, Colors.Black, (int)data.column, (int)data.row);
-                            imageControl.AddTextBlock(text, Colors.White, (int)data.column + (int)(data.胶宽 / 2 * Vision.scaleSize),
-                                (int)data.row + (int)(data.胶高 / 2 * Vision.scaleSize));
+                            imageControl.AddTextBlock(text, Colors.White, (int)data.column + (int)(data.胶宽 / 2 * Vision.scaleSize + offsetX),
+                                (int)data.row + (int)(data.胶高 / 2 * Vision.scaleSize + offsetY));
 
                             //Console.WriteLine($"text result :");
                             //hWindowControl.DispTextInImage(text, data.row, data.column);
@@ -272,8 +272,8 @@ namespace _3DLaserGlueInspection
                             for (int i = 0; i < hRegion.Rows; i++)
                             {
                                 System.Windows.Point point = new System.Windows.Point();
-                                point.X = hRegion.At<double>(i, 0);
-                                point.Y = hRegion.At<double>(i, 1);
+                                point.X = hRegion.At<double>(i, 0)+ offsetX;
+                                point.Y = hRegion.At<double>(i, 1) + offsetY;
                                 regionPoints.Add(point);
                                 //Console.WriteLine($"point:{point}");
                             }
@@ -287,8 +287,8 @@ namespace _3DLaserGlueInspection
                             for (int i = 0; i < hRegionSmallestRectangle2.Rows; i++)
                             {
                                 System.Windows.Point point = new System.Windows.Point();
-                                point.X = hRegionSmallestRectangle2.At<double>(i, 0);
-                                point.Y = hRegionSmallestRectangle2.At<double>(i, 1);
+                                point.X = hRegionSmallestRectangle2.At<double>(i, 0)+ offsetX;
+                                point.Y = hRegionSmallestRectangle2.At<double>(i, 1) + offsetY;
                                 regionSmallestRectangle2Points.Add(point);
                                 //Console.WriteLine($"point:{point}");
                             }
