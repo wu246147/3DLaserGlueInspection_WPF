@@ -1,34 +1,21 @@
 ﻿
 //using HalconDotNet;
+using HelixToolkit.Wpf;
+using OpenCvSharp;
+using RAIVASCS.Common;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Controls;
-using System.Windows.Media;
 using System.Windows;
-using System.Xml.Serialization;
-using RAIVASCS.Common;
-using static _3DLaserGlueInspection.MainWindowModel;
-using static _3DLaserGlueInspection.MainModel;
-using System.Windows.Input;
-using System.Drawing;
-using System.Collections.ObjectModel;
-using OpenCvSharp;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using _3DLaserGlueInspection.subForm;
-using System.Windows.Media.Media3D;
+using System.Xml.Serialization;
 using Wpf_Replace_halcon;
-using System.Windows.Markup;
-using HelixToolkit.Wpf;
-using static HelixToolkit.Wpf.Viewport3DHelper;
-using System.Windows.Interop;
-using Newtonsoft.Json.Linq;
 
 namespace _3DLaserGlueInspection
 {
@@ -438,7 +425,7 @@ namespace _3DLaserGlueInspection
                             if (!cams.TryGetValue(item.Value.CamName, out Cam cam))
                             {
                                 cam = new Cam();
-                               
+
                                 cams.Add(item.Value.CamName, cam);
                             }
                             if (!simulation)
@@ -462,7 +449,7 @@ namespace _3DLaserGlueInspection
                                         return;
                                     }
                                 }
-                                if (cam.InitSet(item.Value,false))
+                                if (cam.InitSet(item.Value, false))
                                 {
                                     ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("初始化设置成功"));
                                 }
@@ -782,8 +769,6 @@ namespace _3DLaserGlueInspection
                                         {
                                             try
                                             {
-                                                //int indexImageCutProcessDict[item.Key]传递 = indexImageCutProcessDict[item.Key];//BeginInvoke用
-                                                //int indexImage传递 = indexImage;//BeginInvoke用
                                                 int camIndex = item.Key == "Cam1" ? 0 : item.Key == "Cam2" ? 1 : item.Key == "Cam3" ? 2 : 3;
                                                 if (set.CutSets.Count > indexImageCutProcessDict[item.Key] && set.CutSets[indexImageCutProcessDict[item.Key]].imageSet.Count > camIndex && set.CutSets[indexImageCutProcessDict[item.Key]].imageSet[camIndex].Count > indexImage)
                                                 {
@@ -821,55 +806,24 @@ namespace _3DLaserGlueInspection
                                                         if (xy.Rows > 0)
                                                         {
                                                             getOutlineResult = true;
-                                                           
+
                                                             Mat lightXY = new Mat();
                                                             Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToTool,
                                                                 robotPose, out lightXY, out robotX, out robotY, out robotZ);
+
+                                                            //Application.Current.Dispatcher.Invoke(() =>
+                                                            //{
+                                                            //    //显示点云
+                                                            //    Disp3DPointControlEvent(robotX, robotY, robotZ);
+                                                            //});
 
                                                             //三维数据添加
                                                             dictX.Add(imageKey, robotX);
                                                             dictY.Add(imageKey, robotY);
                                                             dictZ.Add(imageKey, robotZ);
 
-                                                            //if (imageSet.单帧检测)
-                                                            //{
-                                                            //    Mat detImage = dictImage[imageKey];
-                                                            //    //单帧检测
-                                                            //    Vision.singleFrameDetTotal(item.Value, hCamPar, LightInCam, detImage, cutSet, imageSet, ref singleFrameExistGlue, ref singleFrameExisOutline, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2, ref hXLDCont10mm, xy, lightXY);
-                                                            //    if (!bResult.Result)
-                                                            //    {
-                                                            //        totalResult = false;
-                                                            //    }
-                                                            //    if (hXLDCont10mm.Rows > 0)
-                                                            //    {
-                                                            //        dictXLD.Add(imageKey, hXLDCont10mm);
-                                                            //    }
-                                                            //    if (resultData.面积 > 0)
-                                                            //    {
-                                                            //        dictRegion.Add(imageKey, outMaxRegion);
-                                                            //        dictRegionRectangle2.Add(imageKey, outRegionRectangle2);
-                                                            //        dictData.Add(imageKey, resultData);
-                                                            //        dictResult.Add(imageKey, bResult);
-                                                            //    }
-                                                            //}
                                                         }
                                                     }
-
-                                                    //界面更新：
-                                                    //if (getOutlineResult)
-                                                    //{
-                                                    //    // 暂时屏蔽
-                                                    //    //form3DShow.InsertNextPoints(robotX.DArr, robotY.DArr, robotZ.DArr, ((robotZ - cutSet.ShowColorMin / 1000) / ((cutSet.ShowColorMax - cutSet.ShowColorMin) / 1000)).DArr);
-                                                    //    List<Point3D> points = new List<Point3D>();
-                                                    //    for (int i = 0; i < robotX.Count; i++)
-                                                    //    {
-                                                    //        points.Add(new Point3D(robotX[i], robotY[i], robotZ[i]));
-                                                    //    }
-                                                    //    //Application.Current.Dispatcher.Invoke(() =>
-                                                    //    //{
-                                                    //    //    Disp3DPointControlEvent(points, Colors.Blue);
-                                                    //    //});
-                                                    //}
                                                     if (singleFrameExistGlue)
                                                     {
                                                         Application.Current.Dispatcher.Invoke(() =>
@@ -887,8 +841,8 @@ namespace _3DLaserGlueInspection
                                                         //}
                                                         //else
                                                         //{
-                                                            // 已开放
-                                                            hWindowNumericalModelDiagramDispCross(rowss[indexImageCutProcessDict[item.Key]], colss[indexImageCutProcessDict[item.Key]], angless[indexImageCutProcessDict[item.Key]], indexImage, cutSet, Colors.Yellow);
+                                                        // 已开放
+                                                        hWindowNumericalModelDiagramDispCross(rowss[indexImageCutProcessDict[item.Key]], colss[indexImageCutProcessDict[item.Key]], angless[indexImageCutProcessDict[item.Key]], indexImage, cutSet, Colors.Yellow);
                                                         //}
                                                     }
 
@@ -914,87 +868,6 @@ namespace _3DLaserGlueInspection
                         }
                     }
                     ShowMessage(GlobalVarAndFunc.LanguageTranslate("图像处理任务启动完成"));
-
-                    //启动三维图
-                    taskShow3D = Task.Run(() =>
-                    {
-                        while (indexImageCut < 0)//等待采集开始，数据集合完成添加
-                        {
-                            Thread.Sleep(10);
-                            if (!bRobotRun) return;
-                            if (stop) return;
-                        }
-                        int indexTaskCut = 0;//指示正在图像处理段数
-                        int intervalShow3d = 3;
-                        List<int> indexImageList = new List<int> { 0, 0, 0, 0 };
-                        while (true)//分段循环
-                        {
-                            //int indexImage = 0;
-                            bool bRun = true;
-                            while (bRun)//段内循环
-                            {
-                                try
-                                {
-                                    int indexCam = 0;
-                                    //相机循环
-                                    foreach (var item in camParam)
-                                    {
-                                        var dictImageKey = ImageKeys[item.Key][indexTaskCut];
-                                        var dictX = Point3DXs[item.Key][indexTaskCut];
-                                        var dictY = Point3DYs[item.Key][indexTaskCut];
-                                        var dictZ = Point3DZs[item.Key][indexTaskCut];
-
-                                        bool bAdd = false;
-                                        long imageKey = 0;
-                                        if (dictX.Count > indexImageList[indexCam])//有新增点云数据
-                                        {
-                                            imageKey = dictImageKey[indexImageList[indexCam]];
-                                            bAdd = true;
-                                        }
-                                        else//没有新增图片
-                                        {
-                                            if (indexImageCut > indexTaskCut)//进入下一段条件
-                                            {
-                                                indexTaskCut++;
-                                                bRun = false;
-                                            }
-                                            else
-                                            {
-                                                if (!bRobotRun)//退出条件
-                                                {
-                                                    return;
-                                                }
-                                            }
-                                            Thread.Sleep(1);
-                                        }
-
-                                        if (bAdd)
-                                        {
-                                            if (dictX[imageKey].Count > 0 && indexImageList[indexCam] % intervalShow3d == 0)
-                                            {
-                                                Application.Current.Dispatcher.Invoke(() =>
-                                                {
-                                                    //显示点云
-                                                    Disp3DPointControlEvent(dictX[imageKey], dictY[imageKey], dictZ[imageKey]);
-                                                });
-                                            }
-                                            indexImageList[indexCam]++;
-                                        }
-                                        indexCam++;
-                                    }
-
-                                    if (!bTaskRun) return;
-                                    if (stop) return;
-                                }
-                                catch (Exception ex)
-                                {
-
-                                }
-                            }
-                            if (!bTaskRun) return;
-                            if (stop) return;
-                        }
-                    });
 
                     //输出运行中信号
                     if (!Write(DO.Running, true)) return;
@@ -1226,6 +1099,7 @@ namespace _3DLaserGlueInspection
                                                             try
                                                             {
                                                                 Mat image = new Mat(filePaths[i], ImreadModes.Unchanged);
+                                                             
                                                                 dictImage.Add(key, image);
                                                                 dictImageKey.Add(key);
                                                                 var dictImageKeyCount = dictImageKey.Count;
@@ -1379,16 +1253,17 @@ namespace _3DLaserGlueInspection
                         //    }
                         //}
 
-                        //还没处理好这里等待问题，目前单纯用这种方式，效果是很有问题的
-                        while (true)
-                        {
-                            for (int i = 0; i < 200; i++)
-                            {
-                                Thread.Sleep(10);
-                            }
-                            break;
-                        }
-                      
+                        // //还没处理好这里等待问题，目前单纯用这种方式，效果是很有问题的
+                        //while (true)
+                        //{
+                        //    for (int i = 0; i < 10; i++)
+                        //    {
+                        //        Thread.Sleep(10);
+                        //    }
+                        //    break;
+                        //}
+
+                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待数据转换完成"));
 
                         //数据转换
                         //pose 格式转换
@@ -1401,7 +1276,7 @@ namespace _3DLaserGlueInspection
                                 break;
                             }
                         }
-                        long[] imageKeyList = Point3DXs[camKey][indexImageCut].Keys.ToArray();
+                        long[] imageKeyList = Robot3DPose[camKey][indexImageCut].Keys.ToArray();
                         var cutSet = set.CutSets[indexImageCut].Clone();
 
                         Mat cloudList = new Mat(), poseList = new Mat();
@@ -1456,6 +1331,7 @@ namespace _3DLaserGlueInspection
                             }
                         }
 
+                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("开始点云数据处理"));
 
                         //点云数据处理
                         taskPoint3D = Task.Run(() =>
@@ -1492,23 +1368,27 @@ namespace _3DLaserGlueInspection
                             if (poseList.Rows > 0 && cloudList.Rows > 0)
                             {
                                 //3d检测
-                                
-                                    Mat[] imgList = new Mat[poseList.Rows];
-                                    var dictXLD = outLineDict[camKey][indexImageCut];
-                                    var dictRegion = glueRegionDict[camKey][indexImageCut];
-                                    var dictRegionRectangle2 = glueSmallRectRegionDict[camKey][indexImageCut];
-                                    var dictData = glueDataDict[camKey][indexImageCut];
-                                    var dictResult = glueResultDict[camKey][indexImageCut];
 
-                                    IntPtr[] imgsPtr = new IntPtr[imgList.Length];
-                                    for (int i = 0; i < imgList.Length; i++)
-                                    {
-                                        imgList[i] = new Mat();
-                                        imgsPtr[i] = imgList[i].CvPtr;
-                                    }
-                                    Vision.pointCloudCutAll(cloudList.CvPtr, poseList.CvPtr, Vision.xSize, Vision.ySize, Vision.zSize, Vision.scaleSize * 1000, Vision.offset_z, imgsPtr);
-                                    for (int indexImage = 0; indexImage < imgList.Length; indexImage++)
-                                    {
+                                Mat[] imgList = new Mat[poseList.Rows];
+                                var dictXLD = outLineDict[camKey][indexImageCut];
+                                var dictRegion = glueRegionDict[camKey][indexImageCut];
+                                var dictRegionRectangle2 = glueSmallRectRegionDict[camKey][indexImageCut];
+                                var dictData = glueDataDict[camKey][indexImageCut];
+                                var dictResult = glueResultDict[camKey][indexImageCut];
+
+                                IntPtr[] imgsPtr = new IntPtr[imgList.Length];
+                                for (int i = 0; i < imgList.Length; i++)
+                                {
+                                    imgList[i] = new Mat();
+                                    imgsPtr[i] = imgList[i].CvPtr;
+                                }
+                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("开始点云切片处理"));
+
+                                Vision.pointCloudCutAll(cloudList.CvPtr, poseList.CvPtr, Vision.xSize, Vision.ySize, Vision.zSize, Vision.scaleSize * 1000, Vision.offset_z, imgsPtr);
+                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("开始点云片图像处理"));
+
+                                for (int indexImage = 0; indexImage < imgList.Length; indexImage++)
+                                {
                                     //3d检测参数，先以相机1为标准,后面再把参数统一
                                     var imageSet = cutSet.imageSet[0][indexImage];
 
@@ -1533,7 +1413,7 @@ namespace _3DLaserGlueInspection
                                                 Mat outMaxRegion = new Mat();
                                                 Mat outRegionRectangle2 = new Mat();
                                                 Mat hXLDCont10mm;
-                                                
+
 
                                                 //离散滤波
                                                 if (imageSet.离散去噪)
@@ -1562,7 +1442,7 @@ namespace _3DLaserGlueInspection
                                                     }
 
                                                 }
-                                                if (resultData.面积 > 0)
+                                                if (resultData.glueArea > 0)
                                                 {
                                                     if (dictRegion.ContainsKey(imageKey))
                                                     {
@@ -1601,10 +1481,11 @@ namespace _3DLaserGlueInspection
                                                 //结果显示
                                                 if (singleFrameExistGlue)
                                                 {
-                                                    Application.Current.Dispatcher.Invoke(() =>
+                                                    //Application.Current.Dispatcher.Invoke(() =>
+                                                    Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                                                     {
-                                                        ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, hXLDCont10mm, outMaxRegion, outRegionRectangle2, resultData, bResult, (cutSet.ShowWidth - Vision.xSize * 1000) * Vision.scaleSize / 2, (cutSet.ShowHeight - Vision.ySize * 1000) * Vision.scaleSize / 2);
-                                                    });
+                                                        ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, hXLDCont10mm.Clone(), outMaxRegion.Clone(), outRegionRectangle2.Clone(), resultData.Clone(), bResult.Clone(), (cutSet.ShowWidth - Vision.xSize * 1000) * Vision.scaleSize / 2, (cutSet.ShowHeight - Vision.ySize * 1000) * Vision.scaleSize / 2);
+                                                    }));
                                                 }
 
                                             }
@@ -1693,12 +1574,13 @@ namespace _3DLaserGlueInspection
                     RefreshOFFEvent();
                     RefreshPointsEvent();
 
-                    //等待3d显示完毕
-                    while (!taskShow3D.IsCompleted)
-                    {
-                        Thread.Sleep(10);
-                        if (stop) return;
-                    }
+                    ////等待3d显示完毕
+                    //while (!taskShow3D.IsCompleted)
+                    //{
+                    //    Thread.Sleep(10);
+                    //    if (stop) return;
+                    //}
+
                     //等待3d处理完成
                     while (!taskPoint3D.IsCompleted)
                     {
@@ -2249,16 +2131,16 @@ namespace _3DLaserGlueInspection
 
                             DispPolygonjHWindowControlEvent(regionSmallestRectangle2Points, Colors.Blue, "margin");
 
-                            string text = GlobalVarAndFunc.LanguageTranslate("胶高：") + $"{data.胶高:0.00}\r\n"
-                               + GlobalVarAndFunc.LanguageTranslate("胶宽：") + $"{data.胶宽:0.00}\r\n"
-                               + GlobalVarAndFunc.LanguageTranslate("面积：") + $"{data.面积:0.00}";
-                            DispTextInImageHWindowControlEvent(text, Colors.White, (int)data.column + (int)(data.胶宽 / 2 * Vision.scaleSize + offsetX),
-                                (int)data.row + (int)(data.胶高 / 2 * Vision.scaleSize + offsetY));
+                            string text = GlobalVarAndFunc.LanguageTranslate("胶高：") + $"{data.glueHeight:0.00}\r\n"
+                               + GlobalVarAndFunc.LanguageTranslate("胶宽：") + $"{data.glueWidth:0.00}\r\n"
+                               + GlobalVarAndFunc.LanguageTranslate("面积：") + $"{data.glueArea:0.00}";
+                            DispTextInImageHWindowControlEvent(text, Colors.White, (int)data.column + (int)(data.glueWidth / 2 * Vision.scaleSize + offsetX),
+                                (int)data.row + (int)(data.glueHeight / 2 * Vision.scaleSize + offsetY));
 
                             //hWindowControl.DispTextInImage(text, data.row, data.column);
-                            string textWindow1 = GlobalVarAndFunc.LanguageTranslate("胶宽：") + (bResult.胶宽 ? "OK" : "NG");
-                            string textWindow2 = GlobalVarAndFunc.LanguageTranslate("胶高：") + (bResult.胶高 ? "OK" : "NG");
-                            string textWindow3 = GlobalVarAndFunc.LanguageTranslate("面积：") + (bResult.面积 ? "OK" : "NG");
+                            string textWindow1 = GlobalVarAndFunc.LanguageTranslate("胶宽：") + (bResult.glueWidth ? "OK" : "NG");
+                            string textWindow2 = GlobalVarAndFunc.LanguageTranslate("胶高：") + (bResult.glueHeight ? "OK" : "NG");
+                            string textWindow3 = GlobalVarAndFunc.LanguageTranslate("面积：") + (bResult.glueArea ? "OK" : "NG");
                             string textWindow = textWindow1 + "\r\n" + textWindow2 + "\r\n" + textWindow3;
                             DispTextInImageHWindowControlEvent(textWindow, Colors.White, 10, 10);
 

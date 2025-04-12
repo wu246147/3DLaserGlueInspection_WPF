@@ -257,20 +257,20 @@ namespace _3DLaserGlueInspection
                         if (!hRegion.Empty())
                         {
                             //Console.WriteLine($"text value :");
-                            string text = GlobalVarAndFunc.LanguageTranslate("胶高：") + $"{data.胶高:0.00}\r\n"
-                               + GlobalVarAndFunc.LanguageTranslate("胶宽：") + $"{data.胶宽:0.00}\r\n"
-                               + GlobalVarAndFunc.LanguageTranslate("面积：") + $"{data.面积:0.00}";
+                            string text = GlobalVarAndFunc.LanguageTranslate("胶高：") + $"{data.glueHeight:0.00}\r\n"
+                               + GlobalVarAndFunc.LanguageTranslate("胶宽：") + $"{data.glueWidth:0.00}\r\n"
+                               + GlobalVarAndFunc.LanguageTranslate("面积：") + $"{data.glueArea:0.00}";
 
                             //Console.WriteLine($"point :({data.column},{data.row})");
                             //DispTextInImageHWindowControlEvent(text, Colors.Black, (int)data.column, (int)data.row);
-                            imageControl.AddTextBlock(text, Colors.White, (int)data.column + (int)(data.胶宽 / 2 * Vision.scaleSize + offsetX),
-                                (int)data.row + (int)(data.胶高 / 2 * Vision.scaleSize + offsetY));
+                            imageControl.AddTextBlock(text, Colors.White, (int)data.column + (int)(data.glueWidth / 2 * Vision.scaleSize + offsetX),
+                                (int)data.row + (int)(data.glueHeight / 2 * Vision.scaleSize + offsetY));
 
                             //Console.WriteLine($"text result :");
                             //hWindowControl.DispTextInImage(text, data.row, data.column);
-                            string textWindow1 = GlobalVarAndFunc.LanguageTranslate("胶宽：") + (bResult.胶宽 ? "OK" : "NG");
-                            string textWindow2 = GlobalVarAndFunc.LanguageTranslate("胶高：") + (bResult.胶高 ? "OK" : "NG");
-                            string textWindow3 = GlobalVarAndFunc.LanguageTranslate("面积：") + (bResult.面积 ? "OK" : "NG");
+                            string textWindow1 = GlobalVarAndFunc.LanguageTranslate("胶宽：") + (bResult.glueWidth ? "OK" : "NG");
+                            string textWindow2 = GlobalVarAndFunc.LanguageTranslate("胶高：") + (bResult.glueHeight ? "OK" : "NG");
+                            string textWindow3 = GlobalVarAndFunc.LanguageTranslate("面积：") + (bResult.glueArea ? "OK" : "NG");
                             string textWindow = textWindow1 + "\r\n" + textWindow2 + "\r\n" + textWindow3;
                             //Console.WriteLine($"point :({10},{10})");
                             //DispTextInImageHWindowControlEvent(textWindow, Colors.Black, 10, 10);

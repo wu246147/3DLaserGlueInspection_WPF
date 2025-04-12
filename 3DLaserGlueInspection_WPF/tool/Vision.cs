@@ -153,7 +153,7 @@ namespace _3DLaserGlueInspection
         /// <summary>
         /// 输入像素坐标，输出物理坐标xy
         /// </summary>
-        public static void GetXY(CameraParameters hCamPar, PoseParameters hWorldPose, Mat srcPoints, out Mat transformPoints, bool 反转X = false, bool 反转Y = false)
+        public static void GetXY(CameraParameters hCamPar, PoseParameters hWorldPose, Mat srcPoints, out Mat transformPoints, bool flipX = false, bool flipY = false)
         {
             transformPoints = new Mat();
 
@@ -163,14 +163,14 @@ namespace _3DLaserGlueInspection
             imagePointsToWorldPlane(hCamPar.Focus, hCamPar.Kappa, hCamPar.Sx, hCamPar.Sy, hCamPar.Cx, hCamPar.Cy, hWorldPose.PoseType, hWorldPose.x, hWorldPose.y, hWorldPose.z,
                 hWorldPose.rx, hWorldPose.ry, hWorldPose.rz, srcPoints.CvPtr, transformPoints.CvPtr);
 
-            if (反转X)
+            if (flipX)
             {
                 for (int i = 0; i < transformPoints.Cols; i++)
                 {
                     transformPoints.At<double>(0, i) *= -1;
                 }
             }
-            if (反转Y)
+            if (flipY)
             {
                 for (int i = 0; i < transformPoints.Cols; i++)
                 {
@@ -258,22 +258,22 @@ namespace _3DLaserGlueInspection
             resultData.column = centerX;
 
             bool heng = Math.Abs(phi) <= Math.PI / 4;
-            resultData.胶高 = (heng ? height : width) / scaleSize;
-            resultData.胶宽 = (heng ? width : height) / scaleSize;
-            resultData.面积 = maxArea / (scaleSize* scaleSize);
-            if (resultData.胶高 >= imageSet.heightMin && resultData.胶高 <= imageSet.heightMax)
+            resultData.glueHeight = (heng ? height : width) / scaleSize;
+            resultData.glueWidth = (heng ? width : height) / scaleSize;
+            resultData.glueArea = maxArea / (scaleSize* scaleSize);
+            if (resultData.glueHeight >= imageSet.heightMin && resultData.glueHeight <= imageSet.heightMax)
             {
-                bResult.胶高 = true;
+                bResult.glueHeight = true;
             }
-            if (resultData.胶宽 >= imageSet.widthMin && resultData.胶宽 <= imageSet.widthMax)
+            if (resultData.glueWidth >= imageSet.widthMin && resultData.glueWidth <= imageSet.widthMax)
             {
-                bResult.胶宽 = true;
+                bResult.glueWidth = true;
             }
-            if (resultData.面积 >= imageSet.areaMin && resultData.面积 <= imageSet.areaMax)
+            if (resultData.glueArea >= imageSet.areaMin && resultData.glueArea <= imageSet.areaMax)
             {
-                bResult.面积 = true;
+                bResult.glueArea = true;
             }
-            if (bResult.胶高 && bResult.胶宽 && bResult.面积)
+            if (bResult.glueHeight && bResult.glueWidth && bResult.glueArea)
             {
                 bResult.Result = true;
             }
@@ -852,19 +852,43 @@ namespace _3DLaserGlueInspection
     public class Data
     {
         public double row, column;
-        public double 胶高;
-        public double 胶宽;
-        public double 面积;
+        public double glueHeight;
+        public double glueWidth;
+        public double glueArea;
+
+        // 深复制
+        public Data Clone()
+        {
+            return new Data 
+            { 
+                row = this.row,
+                column = this.column,
+                glueHeight = this.glueHeight,
+                glueWidth = this.glueWidth,
+                glueArea = this.glueArea,
+            };
+        }
     }
     [Serializable]
     public class BResult
     {
-        public bool 胶高;
-        public bool 胶宽;
-        public bool 面积;
+        public bool glueHeight;
+        public bool glueWidth;
+        public bool glueArea;
         /// <summary>
         /// 总结果
         /// </summary>
         public bool Result;
+
+        public BResult Clone()
+        {
+            return new BResult
+            {
+                glueHeight = this.glueHeight,
+                glueWidth = this.glueWidth,
+                glueArea = this.glueArea,
+                Result = this.Result,
+            };
+        }
     }
 }
