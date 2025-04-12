@@ -132,12 +132,19 @@ namespace _3DLaserGlueInspection.subForm
             {
                 return;
             }
-            hWindowModel.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(imgMat));
-            if ((bool)cacheImgCheck.IsChecked)
-            {
-                MImages.Add(img.Clone());
-                System.Windows.Application.Current.Dispatcher.Invoke(new Action(() => { imageCountLabel.Content = MImages.Count.ToString(); }));
-            }
+            
+            Dispatcher.Invoke(new Action(() => { 
+                hWindowModel.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(imgMat));
+                if ((bool)cacheImgCheck.IsChecked)
+                {
+                    MImages.Add(img.Clone());
+                    imageCountLabel.Content = MImages.Count.ToString();
+                }
+
+            }));
+
+            
+           
         }
 
         public WindowCamera()
@@ -270,31 +277,41 @@ namespace _3DLaserGlueInspection.subForm
             //var camParam = Params.param[comboBoxParamName.Text][camKey];
 
             _isAlter = true;
-            camParam.Enable = (bool)checkBoxEnableCam.IsChecked;
-            camParam.CamName = CamNameComboBox.SelectedValue.ToString();
-            camParam.Exposure = Convert.ToInt32(exportTimeNumericUpDown.Text);
-            camParam.SizeWidth = Convert.ToInt32(currentWidthNumericUpDown.Text);
-            camParam.SizeHeight = Convert.ToInt32(currentHeightNumericUpDown.Text);
-            camParam.WidthMax = Convert.ToInt32(widthMaxNumericUpDown.Text);
-            camParam.HeightMax = Convert.ToInt32(heightMaxNumericUpDown.Text);
-            camParam.OffsetX = Convert.ToInt32(currentOffsetXNumericUpDown.Text);
-            camParam.OffsetY = Convert.ToInt32(currentOffsetYNumericUpDown.Text);
-            camParam.Hz = (float)Convert.ToDouble(currentFPSNumericUpDown.Text);
-            camParam.HzEnable = (bool)useFPSCheck.IsChecked;
-            camParam.ReverseX = (bool)verticalMirror.IsChecked;
-            camParam.ReverseY = (bool)horizontalMirror.IsChecked;
-            camParam.ImageFormat = saveImgTypeComboBox.SelectedValue.ToString();
+            if (CamNameComboBox.SelectedIndex >= 0)
+            {             
+                camParam.Enable = (bool)checkBoxEnableCam.IsChecked;
+                camParam.CamName = CamNameComboBox.Items[CamNameComboBox.SelectedIndex].ToString();
+                camParam.Exposure = Convert.ToInt32(exportTimeNumericUpDown.Text);
+                camParam.SizeWidth = Convert.ToInt32(currentWidthNumericUpDown.Text);
+                camParam.SizeHeight = Convert.ToInt32(currentHeightNumericUpDown.Text);
+                camParam.WidthMax = Convert.ToInt32(widthMaxNumericUpDown.Text);
+                camParam.HeightMax = Convert.ToInt32(heightMaxNumericUpDown.Text);
+                camParam.OffsetX = Convert.ToInt32(currentOffsetXNumericUpDown.Text);
+                camParam.OffsetY = Convert.ToInt32(currentOffsetYNumericUpDown.Text);
+                camParam.Hz = (float)Convert.ToDouble(currentFPSNumericUpDown.Text);
+                camParam.HzEnable = (bool)useFPSCheck.IsChecked;
+                camParam.ReverseX = (bool)verticalMirror.IsChecked;
+                camParam.ReverseY = (bool)horizontalMirror.IsChecked;
+                camParam.ImageFormat = saveImgTypeComboBox.SelectedValue.ToString();
+            }
         }
         private void scanCamButton_Click(object sender, RoutedEventArgs e)
         {
             if (cam.Find(out string[] names, out string[] SNs, out string[] ManufacturerNames, out MV_CC_DEVICE_INFO[] DeviceList))
             {
                 CamNameComboBox.Items.Clear();
+
                 ShowMessage(GlobalVarAndFunc.LanguageTranslate("找到") + DeviceList.Length + GlobalVarAndFunc.LanguageTranslate("个相机"));
                 for (int i = 0; i < SNs.Length; i++)
                 {
                     CamNameComboBox.Items.Add((SNs[i]).ToString());
                 }
+
+                if (!CamNameComboBox.Items.Contains(camParam.CamName))
+                {
+                    CamNameComboBox.SelectedValue = camParam.CamName;
+                }
+
             }
             else
             {
@@ -310,7 +327,7 @@ namespace _3DLaserGlueInspection.subForm
             {
                 ButtonsEnable(true);
                 ShowMessage($"{cam.Name}({cam.SN})" + GlobalVarAndFunc.LanguageTranslate("相机打开成功"));
-                if (cam.InitSet(camParam))
+                if (cam.InitSet(camParam, true))
                 {
                     ShowMessage($"{cam.Name}({cam.SN})" + GlobalVarAndFunc.LanguageTranslate("相机初始化成功"));
                 }
@@ -331,7 +348,10 @@ namespace _3DLaserGlueInspection.subForm
             if (cam.OneShot(out Mat hImage))
             {
                 sw.Stop();
-                hWindowModel.ClearChildren();
+                Dispatcher.Invoke(new Action(() =>
+                {
+                    hWindowModel.ClearChildren();
+                }));
                 ShowImage(hImage);
                 ShowMessage(GlobalVarAndFunc.LanguageTranslate("单帧采集时间") + "：" + sw.ElapsedMilliseconds.ToString() + "ms");
             }
@@ -353,19 +373,18 @@ namespace _3DLaserGlueInspection.subForm
 
         private void closeCamButton_Click(object sender, RoutedEventArgs e)
         {
+            cam.Close();
+            ButtonsEnable(false);
+            ShowMessage($"{cam.Name}({cam.SN})" + GlobalVarAndFunc.LanguageTranslate("相机关闭"));
+        }
+
+        private void stopCheckButton_Click(object sender, RoutedEventArgs e)
+        {
             cam.StopGrabbing();
             stopWatch.Stop();
             ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机采集停止,采集时间：") + stopWatch.ElapsedMilliseconds.ToString());
             singleCheckButton.IsEnabled = true;
             continuousCheckButton.IsEnabled = true;
-
-        }
-
-        private void stopCheckButton_Click(object sender, RoutedEventArgs e)
-        {
-            cam.Close();
-            ButtonsEnable(false);
-            ShowMessage($"{cam.Name}({cam.SN})" + GlobalVarAndFunc.LanguageTranslate("相机关闭"));
         }
 
         private void getExportTimeButton_Click(object sender, RoutedEventArgs e)

@@ -70,7 +70,7 @@ namespace _3DLaserGlueInspection
 
 
         public static double scaleSize = 10;
-        //后面开放一下这几个参数
+        ////后面开放一下这几个参数
         //public static double xSize = 0.02;
         //public static double ySize = 0.02;
         //public static double offset_z = 0.235;
@@ -79,7 +79,6 @@ namespace _3DLaserGlueInspection
         public static double xSize = 0.025;
         public static double ySize = 0.04;
         public static double zSize = 0.004;
-
         public static double offset_z = -0.010;
 
 

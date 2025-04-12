@@ -241,5 +241,10 @@ namespace _3DLaserGlueInspection.subForm
         {
             bShowing = true;
         }
+
+        private void UserControl_ToolTipClosing(object sender, ToolTipEventArgs e)
+        {
+
+        }
     }
 }

@@ -15,6 +15,8 @@ using System.Xml.Serialization;
 //using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
 using Wpf_Replace_halcon;
 using _3DLaserGlueInspection.subForm;
+using static OpenCvSharp.FileStorage;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
 
 namespace _3DLaserGlueInspection
 {
@@ -635,71 +637,177 @@ namespace _3DLaserGlueInspection
             }
             return false;
         }
+    
     }
 
-    public class FanucRobot /*: IRobot*/
+    public class FanucRobot : IRobot, ISignal
     {
         public string ErrMsg => _errMsg;
         string _errMsg;
         public bool IsOpen => _isOpen;
         bool _isOpen = false;
 
-        string ip = string.Empty;
-        int port = 60008;
+        RobotParam param = new RobotParam();
+        Dictionary<string, IoAddress> ioDict = new Dictionary<string, IoAddress>();
+        public RobotParam Param { get => param; set => param = value; }
+        public Dictionary<string, IoAddress> IoDict { get => ioDict; set => ioDict = value; }
+
         HslCommunication.Robot.FANUC.FanucInterfaceNet robot = new HslCommunication.Robot.FANUC.FanucInterfaceNet();
         public FanucRobot() { }
 
+        public void ShowForm()
+        {
+            new WindowRobot(this).ShowDialog();
+        }
+
         public bool ReadPose(out PoseParameters hPose)
         {
-            var read = robot.ReadFanucData();
-            if (read.IsSuccess)
+            OperateResult<float[]> xyzwpr = robot.ReadFloat("D751", 9);
+            if (xyzwpr.IsSuccess)
             {
-                double x = read.Content.CurrentPose.Xyzwpr[0] / 1000;
-                double y = read.Content.CurrentPose.Xyzwpr[1] / 1000;
-                double z = read.Content.CurrentPose.Xyzwpr[2] / 1000;
-                double rx = read.Content.CurrentPose.Xyzwpr[3];
-                double ry = read.Content.CurrentPose.Xyzwpr[4];
-                double rz = read.Content.CurrentPose.Xyzwpr[5];
-                //hPose = new PoseParameters(x, y, z, rx, ry, rz, "Rp+T", "abg", "point");
+                double x = xyzwpr.Content[0] / 1000;
+                double y = xyzwpr.Content[1] / 1000;
+                double z = xyzwpr.Content[2] / 1000;
+                double rx = xyzwpr.Content[3];
+                double ry = xyzwpr.Content[4];
+                double rz = xyzwpr.Content[5];
+                //hPose = new HPose(x, y, z, rx, ry, rz, "Rp+T", "abg", "point");
 
                 hPose = new PoseParameters();
-                hPose.x = x; hPose.y = y; hPose.z = z;
-                hPose.rx = rx; hPose.ry = ry; hPose.rz = rz;
-                hPose.PoseType = 2;
 
+                hPose.x = x; 
+                hPose.y = y; 
+                hPose.z = z;
+                hPose.rx = rx; 
+                hPose.ry = ry; 
+                hPose.rz = rz;
+                hPose.PoseType = 2;
             }
             else
             {
                 hPose = null;
             }
-            _errMsg = read.Message;
-            return read.IsSuccess;
+            _errMsg = xyzwpr.Message;
+            return xyzwpr.IsSuccess;
         }
 
         public bool Load()
         {
-            ip = "192.168.255.1";
-            port = 60008;
-            return true;
+            bool result = true;
+            string basePath = AppDomain.CurrentDomain.BaseDirectory + "Data\\";
+            try
+            {
+                string paramPath = basePath + "FanucParam.xml";
+                if (File.Exists(paramPath))
+                {
+                    XmlSerializer xml = new XmlSerializer(param.GetType());
+                    using (FileStream stream = new FileStream(paramPath, FileMode.OpenOrCreate))
+                    {
+                        RobotParam _ = (RobotParam)xml.Deserialize(stream);
+                        if (_ != null)
+                        {
+                            param = _;
+                        }
+                        else
+                        {
+                            _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("文件格式异常");
+                            result = false;
+                        }
+                    }
+                }
+                else
+                {
+                    _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("文件不存在");
+                    result = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                result = false;
+                _errMsg = ex.ToString();
+            }
+
+            try
+            {
+                string paramPath = basePath + "FanucIoParam.xml";
+                if (File.Exists(paramPath))
+                {
+                    List<IoAddress> ios = new List<IoAddress>();
+                    XmlSerializer xml = new XmlSerializer(ios.GetType());
+                    using (FileStream stream = new FileStream(paramPath, FileMode.OpenOrCreate))
+                    {
+                        ios = (List<IoAddress>)xml.Deserialize(stream);
+                    }
+                    if (ios == null)
+                    {
+                        result = false;
+                        _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("文件格式异常");
+                    }
+                    else
+                    {
+                        ioDict = ios.ToDictionary(n => { return n.IoName; });
+                    }
+                }
+                else
+                {
+                    result = false;
+                    _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("文件不存在");
+                }
+            }
+            catch (Exception ex)
+            {
+                result = false;
+                _errMsg = ex.ToString();
+            }
+            return result;
         }
 
         public bool Save()
         {
-            return true;
+            bool result = true;
+            try
+            {
+                string basePath = AppDomain.CurrentDomain.BaseDirectory + "Data\\";
+                if (!Directory.Exists(basePath))
+                {
+                    Directory.CreateDirectory(basePath);
+                }
+
+                string OpcParamPath = basePath + "FanucParam.xml";
+                XmlSerializer xml = new XmlSerializer(param.GetType());
+                using (FileStream stream = new FileStream(OpcParamPath, FileMode.Create))
+                {
+                    xml.Serialize(stream, param);
+                }
+
+                List<IoAddress> ios = ioDict.Values.ToList();
+                string ioParamPath = basePath + "FanucIoParam.xml";
+                XmlSerializer ioXml = new XmlSerializer(ios.GetType());
+                using (FileStream stream = new FileStream(ioParamPath, FileMode.Create))
+                {
+                    ioXml.Serialize(stream, ios);
+                }
+            }
+            catch (Exception ex)
+            {
+                result = false;
+                _errMsg = ex.ToString();
+            }
+            return result;
         }
 
         public bool Open()
         {
-            robot.IpAddress = ip;
-            robot.Port = port;
-            robot.CommunicationPipe = new HslCommunication.Core.Pipe.PipeTcpNet(ip, port)
-            {
-                ConnectTimeOut = 2000,    // 连接超时时间，单位毫秒
-                ReceiveTimeOut = 5000,    // 接收设备数据反馈的超时时间
-                SleepTime = 0,
-                SocketKeepAliveTime = -1,
-                IsPersistentConnection = true,
-            };
+            robot.IpAddress = param.IpAddress;
+            robot.Port = param.Port;
+            robot.ConnectTimeOut = 5000;     // 连接超时，单位毫秒
+            robot.ReceiveTimeOut = 3000;     // 接收超时，单位毫秒
+            //robot.Station = 1;
+            //robot.AddressStartWithZero = true;
+            //robot.IsCheckMessageId = true;
+            //robot.IsStringReverse = false;
+            //robot.DataFormat = HslCommunication.Core.DataFormat.ABCD;
+
             var result = robot.ConnectServer();
             if (result.IsSuccess)
             {
@@ -718,6 +826,148 @@ namespace _3DLaserGlueInspection
             robot.ConnectClose();
             _isOpen = false;
             return true;
+        }
+
+        public bool Read(DI eDI, out string value)
+        {
+            _errMsg = GlobalVarAndFunc.LanguageTranslate("不支持字符串");
+            value = "";
+            return false;
+        }
+
+        public bool Read(DO eDO, out string value)
+        {
+            _errMsg = GlobalVarAndFunc.LanguageTranslate("不支持字符串");
+            value = "";
+            return false;
+        }
+
+        public bool Read(DI eDI, out bool value)
+        {
+            return Read(eDI.ToString(), out value);
+        }
+        public bool Read(DO eDO, out bool value)
+        {
+            return Read(eDO.ToString(), out value);
+        }
+        private bool Read(string ioName, out bool value)
+        {
+            if (ioDict.ContainsKey(ioName))
+            {
+                string ioAddress = ioDict[ioName].Address.Trim();
+                if (!string.IsNullOrEmpty(ioAddress))
+                {
+                    if (ioAddress[0] == 'R')
+                    {
+                        var operateResult = robot.ReadUInt16(ioAddress);
+                        value = operateResult.Content > 0;
+                        _errMsg = operateResult.Message;
+                        return operateResult.IsSuccess;
+                    }
+                    else
+                    {
+                        var operateResult = robot.ReadBool(ioAddress);
+                        value = operateResult.Content;
+                        _errMsg = operateResult.Message;
+                        return operateResult.IsSuccess;
+                    }
+                }
+                else
+                {
+                    value = false;
+                    return true;
+                }
+            }
+            else
+            {
+                _errMsg = ioName + GlobalVarAndFunc.LanguageTranslate("地址未分配");
+            }
+            value = false;
+            return false;
+        }
+
+        public bool Read(DI eDI, out ushort value)
+        {
+            return Read(eDI.ToString(), out value);
+        }
+        public bool Read(DO eDO, out ushort value)
+        {
+            return Read(eDO.ToString(), out value);
+        }
+        private bool Read(string ioName, out ushort value)
+        {
+            if (ioDict.ContainsKey(ioName))
+            {
+                string ioAddress = ioDict[ioName].Address.Trim();
+                if (!string.IsNullOrEmpty(ioAddress))
+                {
+                    var operateResult = robot.ReadUInt16(ioAddress);
+                    value = operateResult.Content;
+                    _errMsg = operateResult.Message;
+                    return operateResult.IsSuccess;
+                }
+                else
+                {
+                    value = 0;
+                    return true;
+                }
+            }
+            else
+            {
+                _errMsg = ioName + GlobalVarAndFunc.LanguageTranslate("地址未分配");
+            }
+            value = 0;
+            return false;
+        }
+
+        object iolock = new object();
+        public bool Write(DO eDO, object value)
+        {
+            if (ioDict.ContainsKey(eDO.ToString()))
+            {
+                string ioAddress = ioDict[eDO.ToString()].Address.Trim();
+                if (!string.IsNullOrEmpty(ioAddress))
+                {
+                    lock (iolock)
+                    {
+                        if (value is bool)
+                        {
+                            if (ioAddress[0] == 'R')
+                            {
+                                var operateResult = robot.Write(ioAddress, (bool)value ? 1 : 0);
+                                _errMsg = operateResult.Message;
+                                return operateResult.IsSuccess;
+                            }
+                            else
+                            {
+                                var operateResult = robot.Write(ioAddress, (bool)value);
+                                _errMsg = operateResult.Message;
+                                return operateResult.IsSuccess;
+                            }
+                        }
+                        else if (value is ushort)
+                        {
+                            var operateResult = robot.Write(ioAddress, (ushort)value);
+                            _errMsg = operateResult.Message;
+                            return operateResult.IsSuccess;
+                        }
+                        else
+                        {
+                            _errMsg = GlobalVarAndFunc.LanguageTranslate("写入格式不支持");
+                            return false;
+                        }
+                    }
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                _errMsg = eDO.ToString() + GlobalVarAndFunc.LanguageTranslate("地址未分配");
+            }
+            return false;
         }
     }
 }

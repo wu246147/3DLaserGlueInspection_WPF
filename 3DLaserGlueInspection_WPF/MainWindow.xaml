@@ -1,30 +1,35 @@
 ﻿<Window
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
-        xmlns:cvt="clr-namespace:RAIVASCS.Converter"
-
-
-        xmlns:local="clr-namespace:_3DLaserGlueInspection"
-        xmlns:subForm="clr-namespace:_3DLaserGlueInspection.subForm" 
-        x:Class="_3DLaserGlueInspection.MainWindow"
-    
-        mc:Ignorable="d"
-        Title="MainWindow" Height="1040.4" Width="1918" WindowStyle="None"  WindowStartupLocation="CenterScreen" Loaded="Window_Loaded" 
-        MinHeight="800"
-        MinWidth="1600"
-        Icon="/Icon/LOGO2.ico" Closing="Window_Closing" Background="{x:Null}" WindowState="Maximized">
+    x:Class="_3DLaserGlueInspection.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:cvt="clr-namespace:RAIVASCS.Converter"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:_3DLaserGlueInspection"
+    xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:subForm="clr-namespace:_3DLaserGlueInspection.subForm"
+    Title="MainWindow"
+    Width="1108"
+    Height="1040.4"
+    MinWidth="1280     "
+    MinHeight="800"
+    Background="{x:Null}"
+    Closing="Window_Closing"
+    Icon="/Icon/LOGO2.ico"
+    Loaded="Window_Loaded"
+    WindowStartupLocation="CenterScreen"
+    WindowState="Maximized"
+    WindowStyle="None"
+    mc:Ignorable="d">
 
     <Window.Resources>
 
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="Assets/Styles/DefaultStyle.xaml"/>
+                <ResourceDictionary Source="Assets/Styles/DefaultStyle.xaml" />
             </ResourceDictionary.MergedDictionaries>
-            <cvt:FloatToPercentConverter x:Key="PercentConverter"/>
-            <cvt:VisibilityToWidthConverter x:Key="VisibilityToWidthConverter"/>
+            <cvt:FloatToPercentConverter x:Key="PercentConverter" />
+            <cvt:VisibilityToWidthConverter x:Key="VisibilityToWidthConverter" />
 
         </ResourceDictionary>
 
@@ -34,185 +39,508 @@
 
 
     <Window.MaxWidth>
-        <StaticResource ResourceKey="{x:Static SystemParameters.MaximizedPrimaryScreenWidthKey}"/>
+        <StaticResource ResourceKey="{x:Static SystemParameters.MaximizedPrimaryScreenWidthKey}" />
     </Window.MaxWidth>
     <Window.MaxHeight>
-        <StaticResource ResourceKey="{x:Static SystemParameters.MaximizedPrimaryScreenHeightKey}"/>
+        <StaticResource ResourceKey="{x:Static SystemParameters.MaximizedPrimaryScreenHeightKey}" />
     </Window.MaxHeight>
 
 
 
     <Grid Background="#FF242B35" RenderTransformOrigin="0.499,0.53">
-        <!--Title bar-->
+        <!--  Title bar  -->
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="747*"/>
+            <ColumnDefinition Width="747*" />
         </Grid.ColumnDefinitions>
-        <Grid x:Name="TopMian" Background="#FF242B35" Height="60" VerticalAlignment="Top" MouseLeftButtonDown="TopMain_MouseLeftBtnDown" >
+        <Grid
+            x:Name="TopMian"
+            Height="60"
+            VerticalAlignment="Top"
+            Background="#FF242B35"
+            MouseLeftButtonDown="TopMain_MouseLeftBtnDown">
 
-            <StackPanel Orientation="Horizontal" Margin="0,0,178,0">
-                <Image Margin="10,0,0,0" RenderTransformOrigin="-0.09,-0.057" Source="/Icon/LOGO.png"  VerticalAlignment="Center" Height="22" Width="120" HorizontalAlignment="Left" />
-                <Label x:Name="Lable_Title" Width="309" Height="60"
-                    Foreground="#FF1679D0" Background="#FF242B35" VerticalContentAlignment="Center"
-                    HorizontalContentAlignment="Left" FontSize="22" BorderBrush="{x:Null}" VerticalAlignment="Center" Margin="0,-5,0,0" Content="AI 3D视觉涂胶检测系统" />
+            <StackPanel Margin="0,0,178,0" Orientation="Horizontal">
+                <Image
+                    Width="120"
+                    Height="22"
+                    Margin="10,0,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    RenderTransformOrigin="-0.09,-0.057"
+                    Source="/Icon/LOGO.png" />
+                <Label
+                    x:Name="Lable_Title"
+                    Width="309"
+                    Height="60"
+                    Margin="0,-5,0,0"
+                    VerticalAlignment="Center"
+                    HorizontalContentAlignment="Left"
+                    VerticalContentAlignment="Center"
+                    Background="#FF242B35"
+                    BorderBrush="{x:Null}"
+                    Content="AI 3D视觉涂胶检测系统"
+                    FontSize="22"
+                    Foreground="#FF1679D0" />
 
             </StackPanel>
             <!--</Viewbox>-->
 
             <!--<Viewbox HorizontalAlignment="Right">-->
-            <StackPanel Orientation="Horizontal" Margin="0,12,9,12" HorizontalAlignment="Right" Width="120" VerticalAlignment="Top">
+            <StackPanel
+                Width="120"
+                Margin="0,12,9,12"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Orientation="Horizontal">
 
-                <Button Style="{StaticResource WindowControlButtonStyle}" Content="&#xE65A;" Click="btnMin_Click"/>
-                <Button Style="{StaticResource WindowControlButtonStyle}" Content="&#xE653;" Click="btnMax_Click"/>
-                <Button Style="{StaticResource WindowControlButtonStyle}" Content="&#xECA0;" Click="btnClose_Click"/>
+                <Button
+                    Click="btnMin_Click"
+                    Content="&#xE65A;"
+                    Style="{StaticResource WindowControlButtonStyle}" />
+                <Button
+                    Click="btnMax_Click"
+                    Content="&#xE653;"
+                    Style="{StaticResource WindowControlButtonStyle}" />
+                <Button
+                    Click="btnClose_Click"
+                    Content="&#xECA0;"
+                    Style="{StaticResource WindowControlButtonStyle}" />
 
             </StackPanel>
 
         </Grid>
-        <!--Menu bar-->
+        <!--  Menu bar  -->
 
-        <!--Info bar-->
-        <Grid Height="46" Margin="10,121,426,0" VerticalAlignment="Top" Background="#FF2A3440">
+        <!--  Info bar  -->
+        <Grid
+            Height="46"
+            Margin="10,121,330,0"
+            VerticalAlignment="Top"
+            Background="#FF2A3440">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <Label Content="产品型号：" Margin="20,0,0,0" Foreground="#FFFDFEFF" RenderTransformOrigin="0.025,1.242" HorizontalAlignment="Left" FontSize="14"/>
-            <Label Content="名称：" Margin="20,0,0,0" Foreground="#FFFDFEFF" Grid.Column="1" HorizontalAlignment="Left" FontSize="14"/>
-            <Label Content="VIN：" Margin="20,0,0,0" Foreground="#FFFDFEFF" Grid.Column="2" HorizontalAlignment="Left" FontSize="14"/>
-            <Label Content="时间：" Margin="20,0,0,0" Foreground="#FFFDFEFF" Grid.Column="3" HorizontalAlignment="Left" FontSize="14"/>
-            <Label Content="检测结果:" Margin="20,0,0,0" Foreground="#FFFDFEFF" Grid.Column="4" HorizontalAlignment="Left" FontSize="14"/>
+            <Label
+                Margin="20,0,0,0"
+                HorizontalAlignment="Left"
+                Content="产品型号："
+                FontSize="14"
+                Foreground="#FFFDFEFF"
+                RenderTransformOrigin="0.025,1.242" />
+            <Label
+                Grid.Column="1"
+                Margin="20,0,0,0"
+                HorizontalAlignment="Left"
+                Content="名称："
+                FontSize="14"
+                Foreground="#FFFDFEFF" />
+            <Label
+                Grid.Column="2"
+                Margin="20,0,0,0"
+                HorizontalAlignment="Left"
+                Content="VIN："
+                FontSize="14"
+                Foreground="#FFFDFEFF" />
+            <Label
+                Grid.Column="3"
+                Margin="20,0,0,0"
+                HorizontalAlignment="Left"
+                Content="时间："
+                FontSize="14"
+                Foreground="#FFFDFEFF" />
+            <Label
+                Grid.Column="4"
+                Margin="20,0,0,0"
+                HorizontalAlignment="Left"
+                Content="检测结果:"
+                FontSize="14"
+                Foreground="#FFFDFEFF" />
 
-            <Label x:Name="LabelProductID" Content="{Binding productIDControl}" Margin="84,0,0,0" Foreground="#FFFDFEFF" HorizontalAlignment="Left" FontSize="14"/>
-            <Label x:Name="LabelName" Content="{Binding nameControl}" Margin="66,0,0,0" Foreground="#FFFDFEFF" Grid.Column="1" HorizontalAlignment="Left" FontSize="14"/>
-            <Label x:Name="LabelVIN" Content="{Binding VINControl}" Foreground="#FFFDFEFF" Grid.Column="2" HorizontalAlignment="Left" Margin="63,0,0,0" FontSize="14"/>
-            <Label x:Name="LabelTime" Content="{Binding timeControl}" Foreground="#FFFDFEFF" Grid.Column="3" HorizontalAlignment="Left" Margin="68,0,0,0" FontSize="14"/>
-            <Label x:Name="LabelResult" Content="{Binding resultControl}" Margin="91,-15,0,0" Foreground="{Binding resultColorControl}" FontSize="48" Background="Transparent" FontWeight="Bold" Grid.Column="4" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+            <Label
+                x:Name="LabelProductID"
+                Margin="84,0,0,0"
+                HorizontalAlignment="Left"
+                Content="{Binding productIDControl}"
+                FontSize="14"
+                Foreground="#FFFDFEFF" />
+            <Label
+                x:Name="LabelName"
+                Grid.Column="1"
+                Margin="66,0,0,0"
+                HorizontalAlignment="Left"
+                Content="{Binding nameControl}"
+                FontSize="14"
+                Foreground="#FFFDFEFF" />
+            <Label
+                x:Name="LabelVIN"
+                Grid.Column="2"
+                Margin="63,0,0,0"
+                HorizontalAlignment="Left"
+                Content="{Binding VINControl}"
+                FontSize="14"
+                Foreground="#FFFDFEFF" />
+            <Label
+                x:Name="LabelTime"
+                Grid.Column="3"
+                Margin="68,0,0,0"
+                HorizontalAlignment="Left"
+                Content="{Binding timeControl}"
+                FontSize="14"
+                Foreground="#FFFDFEFF" />
+            <Label
+                x:Name="LabelResult"
+                Grid.Column="4"
+                Margin="91,-15,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Background="Transparent"
+                Content="{Binding resultControl}"
+                FontSize="48"
+                FontWeight="Bold"
+                Foreground="{Binding resultColorControl}" />
         </Grid>
 
 
-        <!--View bar-->
-        <Grid Margin="10,178,426,245" Background="#FF2A3440">
+        <!--  View bar  -->
+        <Grid Margin="10,178,330,245" Background="#FF2A3440">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="157"/>
-                <ColumnDefinition Width="583*"/>
-                <ColumnDefinition Width="584*"/>
+                <ColumnDefinition Width="120" />
+                <ColumnDefinition Width="583*" />
+                <ColumnDefinition Width="584*" />
             </Grid.ColumnDefinitions>
-            <Grid HorizontalAlignment="Left" Width="244" Grid.ColumnSpan="2"/>
-            <Grid HorizontalAlignment="Left" Width="812" Margin="154,0,0,0" Grid.ColumnSpan="2" Grid.Column="1"/>
-            <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left"  Margin="37,67,0,0" VerticalAlignment="Top" CornerRadius="25" Height="25" Width="25" Background="Blue">
+            <Grid
+                Grid.ColumnSpan="2"
+                Width="244"
+                HorizontalAlignment="Left" />
+            <Grid
+                Grid.Column="1"
+                Grid.ColumnSpan="2"
+                Width="812"
+                Margin="154,0,0,0"
+                HorizontalAlignment="Left" />
+            <Border
+                Width="25"
+                Height="25"
+                Margin="25,67,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Background="Blue"
+                BorderBrush="Black"
+                BorderThickness="1"
+                CornerRadius="25">
                 <Border.Effect>
-                    <BlurEffect Radius="5"/>
+                    <BlurEffect Radius="5" />
                 </Border.Effect>
             </Border>
-            <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left"  Margin="37,307,0,0" VerticalAlignment="Top" CornerRadius="25" Height="25" Width="25" Background="Gray">
+            <Border
+                Width="25"
+                Height="25"
+                Margin="25,307,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Background="Gray"
+                BorderBrush="Black"
+                BorderThickness="1"
+                CornerRadius="25">
                 <Border.Effect>
-                    <BlurEffect Radius="5"/>
+                    <BlurEffect Radius="5" />
                 </Border.Effect>
             </Border>
-            <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left"  Margin="37,226,0,0" VerticalAlignment="Top" CornerRadius="25" Height="25" Width="25" Background="Red">
+            <Border
+                Width="25"
+                Height="25"
+                Margin="25,226,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Background="Red"
+                BorderBrush="Black"
+                BorderThickness="1"
+                CornerRadius="25">
                 <Border.Effect>
-                    <BlurEffect Radius="5"/>
+                    <BlurEffect Radius="5" />
                 </Border.Effect>
             </Border>
-            <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left"  Margin="37,145,0,0" VerticalAlignment="Top" CornerRadius="25" Height="25" Width="25" Background="LightGreen">
+            <Border
+                Width="25"
+                Height="25"
+                Margin="25,145,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Background="LightGreen"
+                BorderBrush="Black"
+                BorderThickness="1"
+                CornerRadius="25">
                 <Border.Effect>
-                    <BlurEffect Radius="5"/>
+                    <BlurEffect Radius="5" />
                 </Border.Effect>
             </Border>
-            <Label Content="待检" HorizontalAlignment="Left" Margin="78,63,0,0" VerticalAlignment="Top" Foreground="White" FontSize="14"/>
-            <Label Content="不检" HorizontalAlignment="Left" Margin="78,303,0,0" VerticalAlignment="Top" Foreground="White" FontSize="14"/>
-            <Label Content="异常" HorizontalAlignment="Left" Margin="78,224,0,0" VerticalAlignment="Top" Foreground="White" FontSize="14"/>
-            <Label Content="正常" HorizontalAlignment="Left" Margin="78,141,0,0" VerticalAlignment="Top" Foreground="White" FontSize="14"/>
-            <Grid x:Name="GridTotalResultImage" Grid.Column="1" Background="#FF373737" Margin="0,0,10,0">
+            <Label
+                Margin="58,63,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Content="待检"
+                FontSize="14"
+                Foreground="White" />
+            <Label
+                Margin="58,303,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Content="不检"
+                FontSize="14"
+                Foreground="White" />
+            <Label
+                Margin="58,224,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Content="异常"
+                FontSize="14"
+                Foreground="White" />
+            <Label
+                Margin="58,141,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Content="正常"
+                FontSize="14"
+                Foreground="White" />
+            <Grid
+                x:Name="GridTotalResultImage"
+                Grid.Column="1"
+                Margin="0,0,10,0"
+                Background="#FF373737">
                 <subForm:ImageControl2 x:Name="hWindowModel" Margin="0,0,0,0" />
             </Grid>
-            <Grid x:Name="GridCheckImage" Grid.Column="2" Margin="10,0,0,0" Background="#FF373737">
-                <subForm:ImageControl2 x:Name="hWindowControl"  Margin="0,0,0,0" Visibility="Visible" />
-                <subForm:User3DShowControl_V x:Name="_3DShowControl" Visibility="Hidden" Background="Black" />
+            <Grid
+                x:Name="GridCheckImage"
+                Grid.Column="2"
+                Margin="10,0,0,0"
+                Background="#FF373737">
+                <subForm:ImageControl2
+                    x:Name="hWindowControl"
+                    Margin="0,0,0,0"
+                    Visibility="Visible" />
+                <subForm:User3DShowControl_V
+                    x:Name="_3DShowControl"
+                    Background="Black"
+                    Visibility="Hidden" />
             </Grid>
         </Grid>
 
-        <!--State bar-->
-        <Grid Margin="10,0,426,10" Background="#FF242B35" Height="219" VerticalAlignment="Bottom">
+        <!--  State bar  -->
+        <Grid
+            Height="219"
+            Margin="10,0,319,10"
+            VerticalAlignment="Bottom"
+            Background="#FF242B35">
             <Grid.RowDefinitions>
-                <RowDefinition Height="151*"/>
+                <RowDefinition Height="151*" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="280"/>
-                <ColumnDefinition Width="325"/>
-                <ColumnDefinition Width="877*"/>
+                <ColumnDefinition Width="230                                   " />
+                <ColumnDefinition Width="325" />
+                <ColumnDefinition Width="877*" />
             </Grid.ColumnDefinitions>
 
-            <!--Control bar -->
-            <Grid Background="#FF2A3440" Margin="0,0,10,0">
+            <!--  Control bar  -->
+            <Grid Margin="0,0,10,0" Background="#FF2A3440">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="35"/>
-                    <RowDefinition/>
+                    <RowDefinition Height="35" />
+                    <RowDefinition />
                 </Grid.RowDefinitions>
-                <Border BorderBrush="Gray" BorderThickness="0,0,0,2"/>
-                <Label Content="控制按键" HorizontalAlignment="Left" Margin="35,0,0,0" Foreground="White" FontSize="14"/>
+                <Border BorderBrush="Gray" BorderThickness="0,0,0,2" />
+                <Label
+                    Margin="35,0,0,0"
+                    HorizontalAlignment="Left"
+                    Content="控制按键"
+                    FontSize="14"
+                    Foreground="White" />
                 <!--<TextBlock Text="{Binding buttonRunTagControl}" FontSize="22"
                     VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Assets/Fonts/#iconfont" Foreground="#0078DC" Margin="5,0,0,0" Width="25" Height="26"/>-->
-                <TextBlock Text="&#xE67E;" FontSize="22"
-                    VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Assets/Fonts/#iconfont" Foreground="#0078DC" Margin="5,0,0,0" Width="25" Height="26"/>
-                <Button x:Name="ButtonRun" Grid.Row="1" Content="{Binding buttonRunContentControl}" Tag="{Binding buttonRunTagControl}" FontFamily="Assets/Fonts/#iconfont" Template="{StaticResource IconTextButtonTemplate}" 
-                                Width="150" HorizontalAlignment="Center" Margin="0,64,0,63" Click="ButtonRun_Click"/>
+                <TextBlock
+                    Width="25"
+                    Height="26"
+                    Margin="5,0,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    FontFamily="Assets/Fonts/#iconfont"
+                    FontSize="22"
+                    Foreground="#0078DC"
+                    Text="&#xE67E;" />
+                <Button
+                    x:Name="ButtonRun"
+                    Grid.Row="1"
+                    Width="150"
+                    Margin="0,64,0,63"
+                    HorizontalAlignment="Center"
+                    Click="ButtonRun_Click"
+                    Content="{Binding buttonRunContentControl}"
+                    FontFamily="Assets/Fonts/#iconfont"
+                    Tag="{Binding buttonRunTagControl}"
+                    Template="{StaticResource IconTextButtonTemplate}" />
 
             </Grid>
 
-            <!--Communication bar -->
-            <Grid Grid.Column="1" Background="#FF2A3440" Margin="10,0,11,0">
+            <!--  Communication bar  -->
+            <Grid
+                Grid.Column="1"
+                Margin="10,0,11,0"
+                Background="#FF2A3440">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="30*"/>
-                    <RowDefinition Height="158*"/>
+                    <RowDefinition Height="30*" />
+                    <RowDefinition Height="158*" />
                 </Grid.RowDefinitions>
-                <Border BorderBrush="Gray" BorderThickness="0,0,0,2"/>
-                <TextBlock Text="&#xE651;" FontSize="22"
-                    VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Assets/Fonts/#iconfont" Foreground="#0078DC" Margin="5,0,0,0" Width="25" Height="26"/>
+                <Border BorderBrush="Gray" BorderThickness="0,0,0,2" />
+                <TextBlock
+                    Width="25"
+                    Height="26"
+                    Margin="5,0,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    FontFamily="Assets/Fonts/#iconfont"
+                    FontSize="22"
+                    Foreground="#0078DC"
+                    Text="&#xE651;" />
 
-                <Border x:Name="BorderCam" BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left"  Margin="37,40,0,0" VerticalAlignment="Top" CornerRadius="50" Height="50" Width="50" Background="{Binding camCommunicationLabelColorControl}" Grid.Row="1">
+                <Border
+                    x:Name="BorderCam"
+                    Grid.Row="1"
+                    Width="50"
+                    Height="50"
+                    Margin="37,40,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Background="{Binding camCommunicationLabelColorControl}"
+                    BorderBrush="Black"
+                    BorderThickness="1"
+                    CornerRadius="50">
                     <Border.Effect>
-                        <BlurEffect Radius="10"/>
+                        <BlurEffect Radius="10" />
                     </Border.Effect>
                 </Border>
-                <Border x:Name="BorderSoftware" BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left"  Margin="221,40,0,0" VerticalAlignment="Top"  CornerRadius="50" Height="50" Width="50" Background="{Binding softwareRunLabelColorControl}" Grid.Row="1">
+                <Border
+                    x:Name="BorderSoftware"
+                    Grid.Row="1"
+                    Width="50"
+                    Height="50"
+                    Margin="221,40,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Background="{Binding softwareRunLabelColorControl}"
+                    BorderBrush="Black"
+                    BorderThickness="1"
+                    CornerRadius="50">
                     <Border.Effect>
-                        <BlurEffect Radius="10"/>
+                        <BlurEffect Radius="10" />
                     </Border.Effect>
                 </Border>
-                <Border x:Name="BorderRobot" BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Center" Margin="0,40,0,0" VerticalAlignment="Top"  CornerRadius="50" Height="50" Width="50" Background="{Binding robotCommunicationLabelColorControl}" Grid.Row="1">
+                <Border
+                    x:Name="BorderRobot"
+                    Grid.Row="1"
+                    Width="50"
+                    Height="50"
+                    Margin="0,40,0,0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    Background="{Binding robotCommunicationLabelColorControl}"
+                    BorderBrush="Black"
+                    BorderThickness="1"
+                    CornerRadius="50">
                     <Border.Effect>
-                        <BlurEffect Radius="10"/>
+                        <BlurEffect Radius="10" />
                     </Border.Effect>
                 </Border>
-                <Label Content="控通讯监" HorizontalAlignment="Left" Margin="35,2,0,0" VerticalAlignment="Top" Foreground="White" FontSize="14"/>
-                <Label Content="机器人" HorizontalAlignment="Center" Margin="0,122,0,0" Grid.Row="1" VerticalAlignment="Top" Foreground="White" FontSize="14"/>
-                <Label Content="软件运行" HorizontalAlignment="Left" Margin="213,122,0,0" Grid.Row="1" VerticalAlignment="Top" Foreground="White" FontSize="14"/>
-                <Label Content="相机" HorizontalAlignment="Left" Margin="43,122,0,0" Grid.Row="1" VerticalAlignment="Top" Foreground="White" FontSize="14"/>
+                <Label
+                    Margin="35,2,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Content="控通讯监"
+                    FontSize="14"
+                    Foreground="White" />
+                <Label
+                    Grid.Row="1"
+                    Margin="0,122,0,0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    Content="机器人"
+                    FontSize="14"
+                    Foreground="White" />
+                <Label
+                    Grid.Row="1"
+                    Margin="213,122,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Content="软件运行"
+                    FontSize="14"
+                    Foreground="White" />
+                <Label
+                    Grid.Row="1"
+                    Margin="43,122,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Content="相机"
+                    FontSize="14"
+                    Foreground="White" />
             </Grid>
 
-            <!--Log bar -->
-            <Grid Grid.Column="2" Background="#FF2A3440" Margin="5,0,10,0">
+            <!--  Log bar  -->
+            <Grid
+                Grid.Column="2"
+                Margin="5,0,10,0"
+                Background="#FF2A3440">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="30*"/>
-                    <RowDefinition Height="154*"/>
+                    <RowDefinition Height="30*" />
+                    <RowDefinition Height="154*" />
                 </Grid.RowDefinitions>
-                <Border BorderBrush="Gray" BorderThickness="0,0,0,2"/>
-                <TextBlock Text="&#xE654;" FontSize="22"
-                    VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Assets/Fonts/#iconfont" Foreground="#0078DC" Margin="5,0,0,0" Width="25" Height="26"/>
+                <Border BorderBrush="Gray" BorderThickness="0,0,0,2" />
+                <TextBlock
+                    Width="25"
+                    Height="26"
+                    Margin="5,0,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    FontFamily="Assets/Fonts/#iconfont"
+                    FontSize="22"
+                    Foreground="#0078DC"
+                    Text="&#xE654;" />
 
-                <Label Content="日志信息" HorizontalAlignment="Left" Margin="35,2,0,0" VerticalAlignment="Top" Foreground="White" FontSize="14"/>
-                <DataGrid x:Name="DataGridLog" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column" AlternationCount="2"
-                  GridLinesVisibility="None" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Hidden" Background="Transparent" BorderThickness="0" 
-                  ItemsSource="{Binding LogRecords}" ColumnHeaderStyle="{StaticResource DataGridColumnHeaderStyle}" 
-                  CellStyle="{StaticResource DataGridCellStyle}" RowStyle="{StaticResource LogDataGridRowStyle}">
+                <Label
+                    Margin="35,2,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Content="日志信息"
+                    FontSize="14"
+                    Foreground="White" />
+                <DataGrid
+                    x:Name="DataGridLog"
+                    Grid.Row="1"
+                    AlternationCount="2"
+                    AutoGenerateColumns="False"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    CanUserAddRows="False"
+                    CellStyle="{StaticResource DataGridCellStyle}"
+                    ColumnHeaderStyle="{StaticResource DataGridColumnHeaderStyle}"
+                    GridLinesVisibility="None"
+                    HeadersVisibility="Column"
+                    HorizontalScrollBarVisibility="Hidden"
+                    IsReadOnly="True"
+                    ItemsSource="{Binding LogRecords}"
+                    RowStyle="{StaticResource LogDataGridRowStyle}"
+                    VerticalScrollBarVisibility="Auto">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="时间" Binding="{Binding LogTime, StringFormat=\{0:yyyy-MM-dd HH:mm:ss\}}" Width="200" Foreground="White"/>
+                        <DataGridTextColumn
+                            Width="100"
+                            Binding="{Binding LogTime, StringFormat=\{0:yyyy-MM-dd HH:mm:ss\}}"
+                            Foreground="White"
+                            Header="时间" />
                         <!--<DataGridTextColumn Header="信息" Binding="{Binding LogInfo}" Width="*" Foreground="White"/>-->
-                        <DataGridTemplateColumn CellTemplate="{StaticResource TextDataTemplate}"  Header="信息" Width="*"/>
+                        <DataGridTemplateColumn
+                            Width="*"
+                            CellTemplate="{StaticResource TextDataTemplate}"
+                            Header="信息" />
 
                     </DataGrid.Columns>
                 </DataGrid>
@@ -221,53 +549,163 @@
 
         </Grid>
 
-        <!--Result bar-->
-        <Grid Margin="0,121,10,10" Background="#FF2A3440" HorizontalAlignment="Right" Width="404">
+        <!--  Result bar  -->
+        <Grid
+            Width="304"
+            Margin="0,121,10,10"
+            HorizontalAlignment="Right"
+            Background="#FF2A3440">
             <Grid.RowDefinitions>
-                <RowDefinition Height="37"/>
-                <RowDefinition/>
-                <RowDefinition Height="187.4"/>
+                <RowDefinition Height="37" />
+                <RowDefinition />
+                <RowDefinition Height="187.4" />
             </Grid.RowDefinitions>
-            <lvc:PieChart x:Name="PieChartResult"  Grid.Row="2" InnerRadius="55                           " Height="163" VerticalAlignment="Top" Margin="218,14,-6,0">
+            <lvc:PieChart
+                x:Name="PieChartResult"
+                Grid.Row="2"
+                Height="163"
+                Margin="196,14,0,0"
+                VerticalAlignment="Top"
+                InnerRadius="30                           ">
                 <lvc:PieChart.Series>
-                    <lvc:PieSeries Values="456" Fill="LightGreen" DataLabels="True" Title="OK" Stroke="White" FontSize="14"/>
-                    <lvc:PieSeries Values="36" Fill="Red" DataLabels="True" Title="NG" Stroke="White" FontSize="14"/>
+                    <lvc:PieSeries
+                        Title="OK"
+                        DataLabels="True"
+                        Fill="LightGreen"
+                        FontSize="14"
+                        Stroke="White"
+                        Values="456" />
+                    <lvc:PieSeries
+                        Title="NG"
+                        DataLabels="True"
+                        Fill="Red"
+                        FontSize="14"
+                        Stroke="White"
+                        Values="36" />
                 </lvc:PieChart.Series>
             </lvc:PieChart>
-            <Border Grid.Row="1" BorderBrush="Gray" BorderThickness="0,0,0,2"/>
+            <Border
+                Grid.Row="1"
+                BorderBrush="Gray"
+                BorderThickness="0,0,0,2" />
 
-            <Border BorderBrush="Gray" BorderThickness="0,0,0,2"/>
+            <Border BorderBrush="Gray" BorderThickness="0,0,0,2" />
 
-            <TextBlock Text="&#xE600;" FontSize="22"
-                    VerticalAlignment="Center" HorizontalAlignment="Left" FontFamily="Assets/Fonts/#iconfont" Foreground="#0078DC" Margin="5,0,0,0" Width="25" Height="26"/>
+            <TextBlock
+                Width="25"
+                Height="26"
+                Margin="5,0,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                FontFamily="Assets/Fonts/#iconfont"
+                FontSize="22"
+                Foreground="#0078DC"
+                Text="&#xE600;" />
 
-            <Label Content="检测列表" HorizontalAlignment="Left" Margin="35,0,0,0" Foreground="White" Height="38" FontSize="14"/>
-            <TabControl x:Name="resultTabControl" Grid.Row="1" Background="#00000000" Foreground="White" BorderBrush="#FF2A3440" SelectionChanged="TabControl_SelectionChanged">
-                <TabItem Template="{StaticResource TabItemTemplate}" Header="图片列表" Foreground="White" Background="#FF2A3440" FontSize="14">
+            <Label
+                Height="38"
+                Margin="35,0,0,0"
+                HorizontalAlignment="Left"
+                Content="检测列表"
+                FontSize="14"
+                Foreground="White" />
+            <TabControl
+                x:Name="resultTabControl"
+                Grid.Row="1"
+                Background="#00000000"
+                BorderBrush="#FF2A3440"
+                Foreground="White"
+                SelectionChanged="TabControl_SelectionChanged">
+                <TabItem
+                    Background="#FF2A3440"
+                    FontSize="14"
+                    Foreground="White"
+                    Header="图片列表"
+                    Template="{StaticResource TabItemTemplate}">
                     <Grid Background="#FF2A3440">
-                        <DataGrid x:Name="_2DResultDataGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column" AlternationCount="2"
-              GridLinesVisibility="None" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Hidden" Background="Transparent" BorderThickness="0" 
-              ItemsSource="{Binding ImageResultRecords}" ColumnHeaderStyle="{StaticResource DataGridColumnHeaderStyle}" 
-              CellStyle="{StaticResource DataGridCellStyle}" RowStyle="{StaticResource LogDataGridRowStyle}" SelectedCellsChanged="_2DResultDataGrid_SelectedCellsChanged" SelectionMode="Single" >
+                        <DataGrid
+                            x:Name="_2DResultDataGrid"
+                            AlternationCount="2"
+                            AutoGenerateColumns="False"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            CanUserAddRows="False"
+                            CellStyle="{StaticResource DataGridCellStyle}"
+                            ColumnHeaderStyle="{StaticResource DataGridColumnHeaderStyle}"
+                            GridLinesVisibility="None"
+                            HeadersVisibility="Column"
+                            HorizontalScrollBarVisibility="Hidden"
+                            IsReadOnly="True"
+                            ItemsSource="{Binding ImageResultRecords}"
+                            RowStyle="{StaticResource LogDataGridRowStyle}"
+                            SelectedCellsChanged="_2DResultDataGrid_SelectedCellsChanged"
+                            SelectionMode="Single"
+                            VerticalScrollBarVisibility="Auto">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="相机1" Binding="{Binding Cam1}" Width="*" Foreground="White"/>
-                                <DataGridTextColumn Header="相机2" Binding="{Binding Cam2}" Width="*" Foreground="White"/>
-                                <DataGridTextColumn Header="相机3" Binding="{Binding Cam3}" Width="*" Foreground="White"/>
-                                <DataGridTextColumn Header="相机4" Binding="{Binding Cam4}" Width="*" Foreground="White"/>
+                                <DataGridTextColumn
+                                    Width="*"
+                                    Binding="{Binding Cam1}"
+                                    Foreground="White"
+                                    Header="相机1" />
+                                <DataGridTextColumn
+                                    Width="*"
+                                    Binding="{Binding Cam2}"
+                                    Foreground="White"
+                                    Header="相机2" />
+                                <DataGridTextColumn
+                                    Width="*"
+                                    Binding="{Binding Cam3}"
+                                    Foreground="White"
+                                    Header="相机3" />
+                                <DataGridTextColumn
+                                    Width="*"
+                                    Binding="{Binding Cam4}"
+                                    Foreground="White"
+                                    Header="相机4" />
                             </DataGrid.Columns>
                         </DataGrid>
                     </Grid>
                 </TabItem>
-                <TabItem Template="{StaticResource TabItemTemplate}" Header="产品列表" Foreground="White" Background="#FF2A3440" FontSize="14">
+                <TabItem
+                    Background="#FF2A3440"
+                    FontSize="14"
+                    Foreground="White"
+                    Header="产品列表"
+                    Template="{StaticResource TabItemTemplate}">
                     <Grid Background="#FF2A3440">
-                        <DataGrid x:Name="DataGridCarList" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column" AlternationCount="2"
-                          GridLinesVisibility="None" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Hidden" Background="Transparent" BorderThickness="0" 
-                          ItemsSource="{Binding CarResultRecords}" ColumnHeaderStyle="{StaticResource DataGridColumnHeaderStyle}" 
-                          CellStyle="{StaticResource DataGridCellStyle}" RowStyle="{StaticResource LogDataGridRowStyle}">
+                        <DataGrid
+                            x:Name="DataGridCarList"
+                            Grid.Row="1"
+                            AlternationCount="2"
+                            AutoGenerateColumns="False"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            CanUserAddRows="False"
+                            CellStyle="{StaticResource DataGridCellStyle}"
+                            ColumnHeaderStyle="{StaticResource DataGridColumnHeaderStyle}"
+                            GridLinesVisibility="None"
+                            HeadersVisibility="Column"
+                            HorizontalScrollBarVisibility="Hidden"
+                            IsReadOnly="True"
+                            ItemsSource="{Binding CarResultRecords}"
+                            RowStyle="{StaticResource LogDataGridRowStyle}"
+                            VerticalScrollBarVisibility="Auto">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="时间" Binding="{Binding CarDetTime, StringFormat=\{0:yyyy-MM-dd HH:mm:ss\}}" Width="200" Foreground="White"/>
-                                <DataGridTextColumn Header="产品号" Binding="{Binding CarID}" Width="*" Foreground="White"/>
-                                <DataGridTextColumn Header="结果" Binding="{Binding CarResult}" Width="*" Foreground="White"/>
+                                <DataGridTextColumn
+                                    Width="150"
+                                    Binding="{Binding CarDetTime, StringFormat=\{0:yyyy-MM-dd HH:mm:ss\}}"
+                                    Foreground="White"
+                                    Header="时间" />
+                                <DataGridTextColumn
+                                    Width="*"
+                                    Binding="{Binding CarID}"
+                                    Foreground="White"
+                                    Header="产品号" />
+                                <DataGridTextColumn
+                                    Width="*"
+                                    Binding="{Binding CarResult}"
+                                    Foreground="White"
+                                    Header="结果" />
 
                             </DataGrid.Columns>
                         </DataGrid>
@@ -275,33 +713,172 @@
                 </TabItem>
             </TabControl>
 
-            <Label  Grid.Row="2" x:Name="LabelResultPercentage" Content="{Binding passRateControl}" Margin="261,0,37,0" Foreground="White" FontSize="24" FontWeight="Bold" RenderTransformOrigin="0.351,0.272" Height="47"/>
-            <Label Content="产量：" HorizontalAlignment="Left" Margin="10,33,0,0" Grid.Row="2" VerticalAlignment="Top" Foreground="White" Height="26" FontSize="14"/>
-            <Label x:Name="LabelNGCount" Content="{Binding NGCountControl}" HorizontalAlignment="Left" Margin="82,137,0,0" Grid.Row="2" VerticalAlignment="Top" Foreground="White" Background="#FF3C4451" Width="136" Height="25" FontSize="14"/>
-            <Label x:Name="LabelOKCount" Content="{Binding OKCountControl}" HorizontalAlignment="Left" Margin="82,83,0,0" Grid.Row="2" Foreground="White" Background="#FF3C4451" Width="136" Height="26" VerticalAlignment="Top" FontSize="14"/>
-            <Label Content="NG数：" HorizontalAlignment="Left" Margin="9,135,0,0" Grid.Row="2" VerticalAlignment="Top" Foreground="White" FontSize="14"/>
-            <Label Content="OK数：" HorizontalAlignment="Left" Margin="10,83,0,0" Grid.Row="2" Foreground="White" Height="26" VerticalAlignment="Top" FontSize="14"/>
-            <Label x:Name="LabelTotalCount" Content="{Binding totalCountControl}" HorizontalAlignment="Left" Margin="82,33,0,0" Grid.Row="2" VerticalAlignment="Top" Foreground="White" Background="#FF3C4451" Width="136" Height="26" FontSize="14"/>
-            <CheckBox x:Name="simulationCheck" Content="仿真" HorizontalAlignment="Left" Margin="121,0,0,0" VerticalAlignment="Center" Foreground="White" IsChecked="False" Click="simulationCheck_Click" Unchecked="simulationCheck_Click"/>
-            <TextBox x:Name="simulationPath" HorizontalAlignment="Left" Margin="186,0,0,0" TextWrapping="Wrap" Width="191" Foreground="White" Background="#FF2A3440" TextChanged="simulationPath_TextChanged"/>
+            <Label
+                x:Name="LabelResultPercentage"
+                Grid.Row="2"
+                Height="47"
+                Margin="261,0,37,0"
+                Content="{Binding passRateControl}"
+                FontSize="24"
+                FontWeight="Bold"
+                Foreground="White"
+                RenderTransformOrigin="0.351,0.272" />
+            <Label
+                Grid.Row="2"
+                Height="26"
+                Margin="10,33,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Content="产量："
+                FontSize="14"
+                Foreground="White" />
+            <Label
+                x:Name="LabelNGCount"
+                Grid.Row="2"
+                Width="109"
+                Height="25"
+                Margin="82,137,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Background="#FF3C4451"
+                Content="{Binding NGCountControl}"
+                FontSize="14"
+                Foreground="White" />
+            <Label
+                x:Name="LabelOKCount"
+                Grid.Row="2"
+                Width="109"
+                Height="26"
+                Margin="82,83,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Background="#FF3C4451"
+                Content="{Binding OKCountControl}"
+                FontSize="14"
+                Foreground="White" />
+            <Label
+                Grid.Row="2"
+                Margin="9,135,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Content="NG数："
+                FontSize="14"
+                Foreground="White" />
+            <Label
+                Grid.Row="2"
+                Height="26"
+                Margin="10,83,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Content="OK数："
+                FontSize="14"
+                Foreground="White" />
+            <Label
+                x:Name="LabelTotalCount"
+                Grid.Row="2"
+                Width="109"
+                Height="26"
+                Margin="82,33,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Background="#FF3C4451"
+                Content="{Binding totalCountControl}"
+                FontSize="14"
+                Foreground="White" />
+            <CheckBox
+                x:Name="simulationCheck"
+                Margin="121,0,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Click="simulationCheck_Click"
+                Content="仿真"
+                Foreground="White"
+                IsChecked="False"
+                Unchecked="simulationCheck_Click" />
+            <TextBox
+                x:Name="simulationPath"
+                Width="108"
+                Margin="186,0,0,0"
+                HorizontalAlignment="Left"
+                Background="#FF2A3440"
+                Foreground="White"
+                TextChanged="simulationPath_TextChanged"
+                TextWrapping="Wrap" />
 
         </Grid>
-        <Grid Margin="0,65,0,0" Background="#FF3C4451" Height="48" VerticalAlignment="Top">
-            <Menu Margin="25,0,0,0" Background="#FF3C4451" Foreground="#FFFDFEFF" HorizontalAlignment="Left">
-                <MenuItem x:Name="menuItem_custom" Header="用户" Height="30">
-                    <MenuItem x:Name="MenuItem_changePasswordSetting" Header="修改密码" BorderThickness="0" BorderBrush="#00000000" Foreground="Black" Click="MenuItem_changePasswordSetting_Click"/>
+        <Grid
+            Height="48"
+            Margin="0,65,0,0"
+            VerticalAlignment="Top"
+            Background="#FF3C4451">
+            <Menu
+                Margin="25,0,0,0"
+                HorizontalAlignment="Left"
+                Background="#FF3C4451"
+                Foreground="#FFFDFEFF">
+                <MenuItem
+                    x:Name="menuItem_custom"
+                    Height="30"
+                    Header="用户">
+                    <MenuItem
+                        x:Name="MenuItem_changePasswordSetting"
+                        BorderBrush="#00000000"
+                        BorderThickness="0"
+                        Click="MenuItem_changePasswordSetting_Click"
+                        Foreground="Black"
+                        Header="修改密码" />
                 </MenuItem>
-                <MenuItem x:Name="MenuItem_signalSetting" Header="信号设置" >
-                    <MenuItem x:Name="MenuItem_signalDistributionSetting" Header="信号分配" BorderThickness="0" BorderBrush="#00000000" Foreground="Black" Visibility="Hidden"/>
-                    <MenuItem x:Name="MenuItem_computerSetting" Header="上位机设置" BorderThickness="0" BorderBrush="#00000000" Foreground="Black"  Visibility="Hidden"/>
-                    <MenuItem x:Name="MenuItem_robotSetting" Header="机器人设置" BorderThickness="0" BorderBrush="#00000000" Foreground="Black" Click="MenuItem_robotSetting_signalSetting_Click"/>
+                <MenuItem x:Name="MenuItem_signalSetting" Header="信号设置">
+                    <MenuItem
+                        x:Name="MenuItem_signalDistributionSetting"
+                        BorderBrush="#00000000"
+                        BorderThickness="0"
+                        Foreground="Black"
+                        Header="信号分配"
+                        Visibility="Hidden" />
+                    <MenuItem
+                        x:Name="MenuItem_computerSetting"
+                        BorderBrush="#00000000"
+                        BorderThickness="0"
+                        Foreground="Black"
+                        Header="上位机设置"
+                        Visibility="Hidden" />
+                    <MenuItem
+                        x:Name="MenuItem_robotSetting"
+                        BorderBrush="#00000000"
+                        BorderThickness="0"
+                        Click="MenuItem_robotSetting_signalSetting_Click"
+                        Foreground="Black"
+                        Header="机器人设置" />
                 </MenuItem>
-                <MenuItem x:Name="MenuItem_camSetting" Header="相机设置" Click="MenuItem_camSetting_Click"/>
-                <MenuItem x:Name="MenuItem_productSetting" Header="产品设置" Click="MenuItem_productSetting_Click"/>
-                <MenuItem x:Name="MenuItem_paraSetting" Header="参数设置" Click="MenuItem_paraSetting_Click"/>
-                <MenuItem x:Name="MenuItem_languageSetting" Header="语言" BorderBrush="#FF3C4451">
-                    <MenuItem x:Name="MenuItem_chineseLanguage" Header="中文" BorderThickness="0" BorderBrush="#00000000" Foreground="Black"/>
-                    <MenuItem x:Name="MenuItem_englishLanguage" Header="英文" BorderThickness="0" BorderBrush="#00000000" Foreground="Black"/>
+                <MenuItem
+                    x:Name="MenuItem_camSetting"
+                    Click="MenuItem_camSetting_Click"
+                    Header="相机设置" />
+                <MenuItem
+                    x:Name="MenuItem_productSetting"
+                    Click="MenuItem_productSetting_Click"
+                    Header="产品设置" />
+                <MenuItem
+                    x:Name="MenuItem_paraSetting"
+                    Click="MenuItem_paraSetting_Click"
+                    Header="参数设置" />
+                <MenuItem
+                    x:Name="MenuItem_languageSetting"
+                    BorderBrush="#FF3C4451"
+                    Header="语言">
+                    <MenuItem
+                        x:Name="MenuItem_chineseLanguage"
+                        BorderBrush="#00000000"
+                        BorderThickness="0"
+                        Foreground="Black"
+                        Header="中文" />
+                    <MenuItem
+                        x:Name="MenuItem_englishLanguage"
+                        BorderBrush="#00000000"
+                        BorderThickness="0"
+                        Foreground="Black"
+                        Header="英文" />
                 </MenuItem>
             </Menu>
         </Grid>

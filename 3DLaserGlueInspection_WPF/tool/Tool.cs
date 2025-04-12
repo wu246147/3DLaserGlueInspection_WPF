@@ -160,18 +160,29 @@ namespace _3DLaserGlueInspection
 
 
         public static BitmapImage ConvertMatToBitmapImage(Mat mat)
-        {
-            // 方法1：编码为JPEG流 
-            Cv2.ImEncode(".jpg", mat, out byte[] jpegData);
-
+        {            
             var bitmapImage = new BitmapImage();
-            using (var stream = new MemoryStream(jpegData))
+            try
             {
-                bitmapImage.BeginInit();
-                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
-                bitmapImage.StreamSource = stream;
-                bitmapImage.EndInit();
+                if (!mat.Empty())
+                {
+                    // 方法1：编码为JPEG流 
+                    Cv2.ImEncode(".jpg", mat, out byte[] jpegData);
+
+                    using (var stream = new MemoryStream(jpegData))
+                    {
+                        bitmapImage.BeginInit();
+                        bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                        bitmapImage.StreamSource = stream;
+                        bitmapImage.EndInit();
+                    }
+                }
             }
+            catch (Exception ex)
+            {
+                
+            }
+           
             return bitmapImage;
         }
 

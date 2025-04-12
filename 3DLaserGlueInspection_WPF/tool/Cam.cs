@@ -17,6 +17,7 @@ using static System.Net.Mime.MediaTypeNames;
 using System.Security.Cryptography;
 using OpenCvSharp;
 using Wpf_Replace_halcon;
+using System.Windows.Ink;
 
 namespace _3DLaserGlueInspection
 {
@@ -825,7 +826,7 @@ namespace _3DLaserGlueInspection
         /// </summary>
         /// <param name="param"></param>
         /// <returns></returns>
-        public bool InitSet(CamParam param)
+        public bool InitSet(CamParam param,bool isDebug)
         {
             try
             {
@@ -911,6 +912,324 @@ namespace _3DLaserGlueInspection
                 if (!SetImageNodeNum(10))
                 {
                     return false;
+                }
+
+                if (isDebug)
+                {
+                    if (_manufacturerName == "Hikrobot")
+                    {
+                        //触发模式
+                        if (!SetTriggerMode(TriggerMode.Off))
+                        {
+                            return false;
+                        }
+
+                        if (!SetLine2Mode(LineMode.Strobe))
+                        {
+                            return false;
+                        }
+                        if (!SetLine1Inverter(false))
+                        {
+                            return false;
+                        }
+                        if (!SetLine2Inverter(false))
+                        {
+                            return false;
+                        }
+                        if (!SetLine1StrobeEnable(false))
+                        {
+                            return false;
+                        }
+                        if (!SetLine2StrobeEnable(false))
+                        {
+                            return false;
+                        }
+                    }
+                    else if (_manufacturerName == "ChinaVision")
+                    {
+                        //触发模式
+                        if (!SetTriggerMode(TriggerMode.Off))
+                        {
+                            return false;
+                        }
+
+                        if (!SetEnumValue("Out0Mod", (uint)0x8))//IO模式
+                        {
+                            return false;
+                        }
+                        if (!SetEnumValue("Out1Mod", (uint)0x8))//IO模式
+                        {
+                            return false;
+                        }
+                        if (!SetLine1Inverter(false))
+                        {
+                            return false;
+                        }
+                        if (!SetLine2Inverter(true))
+                        {
+                            return false;
+                        }
+                    }
+                }
+                else
+                {
+                    if (_manufacturerName == "Hikrobot")
+                    {
+                        if (!SetLine2Mode(LineMode.Strobe))
+                        {
+                            return false;
+                        }
+                        if (!SetLine1Inverter(false))
+                        {
+                            return false;
+                        }
+                        if (!SetLine2Inverter(false))
+                        {
+                            return false;
+                        }
+                        if (!SetLine1Source(LineSource.ExposureStartActive))
+                        {
+                            return false;
+                        }
+                        if (!SetLine1StrobeEnable(true))
+                        {
+                            return false;
+                        }
+
+                        if (param.Key == "Cam1")
+                        {
+                            if (!SetLine2Source(LineSource.ExposureStartActive))
+                            {
+                                return false;
+                            }
+                            if (!SetLine2StrobeEnable(true))
+                            {
+                                return false;
+                            }
+                            //触发模式
+                            if (!SetTriggerMode(TriggerMode.Off))
+                            {
+                                return false;
+                            }
+                        }
+                        else if (param.Key == "Cam3")
+                        {
+                            if (!SetLine2StrobeEnable(false))
+                            {
+                                return false;
+                            }
+                            //触发模式
+                            if (!SetTriggerMode(TriggerMode.On))
+                            {
+                                return false;
+                            }
+                            //触发源:软触发 7,line0 0
+                            if (!SetEnumValue("TriggerSource", 0))//line0
+                            {
+                                return false;
+                            }
+                            //触发数量
+                            if (!SetIntValue("AcquisitionBurstFrameCount", 1))
+                            {
+                                return false;
+                            }
+
+                            //触发极性:上升沿 0,下降沿 1,高电平 2,低电平 3
+                            if (!SetEnumValue("TriggerActivation", 0))
+                            {
+                                return false;
+                            }
+                            //触发延迟（us）
+                            if (!SetIntValue("TriggerDelay", 0))
+                            {
+                                return false;
+                            }
+                        }
+                        else
+                        {
+                            if (!SetLine2StrobeEnable(false))
+                            {
+                                return false;
+                            }
+                            //触发模式
+                            if (!SetTriggerMode(TriggerMode.On))
+                            {
+                                return false;
+                            }
+                            //触发源:软触发 7,line0 0
+                            if (!SetEnumValue("TriggerSource", 0))//line0
+                            {
+                                return false;
+                            }
+                            //触发数量
+                            if (!SetIntValue("AcquisitionBurstFrameCount", 1))
+                            {
+                                return false;
+                            }
+
+                            //触发极性:上升沿 0,下降沿 1,高电平 2,低电平 3
+                            if (!SetEnumValue("TriggerActivation", 0))
+                            {
+                                return false;
+                            }
+                            //触发延迟（us）
+                            int time = (int)(1 / param.Hz * 1000 * 1000 / 2);
+                            if (!SetIntValue("TriggerDelay", time))
+                            {
+                                return false;
+                            }
+                        }
+                        if (!SetLine2StrobeEnable(false))
+                        {
+                            return false;
+                        }
+                    }
+                    else if (_manufacturerName == "ChinaVision")
+                    {
+                        #region TriggerControl
+                        //触发模式
+                        if (!SetTriggerMode(TriggerMode.On))
+                        {
+                            return false;
+                        }
+                        //触发间隔
+                        if (!SetIntValue("TriggerInterval", 0))
+                        {
+                            return false;
+                        }
+                        if (!SetEnumValue("StrobeMode", (uint)1))//半自动
+                        {
+                            return false;
+                        }
+                        if (!SetEnumValue("StrobeEnable", (uint)1))//输出使能
+                        {
+                            return false;
+                        }
+                        if (!SetIntValue("StrobeDelay", 0))//输出延时
+                        {
+                            return false;
+                        }
+                        if (!SetIntValue("StrobeWidth", (long)param.Exposure))//输出宽度
+                        {
+                            return false;
+                        }
+
+                        if (param.Key == "Cam1")
+                        {
+                            //触发源:软触发 1,线路1 2
+                            if (!SetEnumValue("TriggerSource", 1))//软触发
+                            {
+                                return false;
+                            }
+                            //触发数量
+                            if (!SetIntValue("TriggerCount", uint.MaxValue))
+                            {
+                                return false;
+                            }
+
+                            //触发极性:上升沿 0x80000000,下降沿 0x00000000,上升或下降沿 0x00000001,HighLevel 0x80000002,LowLevel 0x00000002
+                            if (!SetEnumValue("TriggerActivation", 0x00000000))
+                            {
+                                return false;
+                            }
+                            //ExtTrigJitterTime
+                            if (!SetIntValue("ExtTrigJitterTime", 0))
+                            {
+                                return false;
+                            }
+                            //TriggerStartDelay
+                            if (!SetIntValue("TriggerStartDelay", 0))
+                            {
+                                return false;
+                            }
+                            //触发延迟（us）
+                            if (!SetIntValue("TriggerDelay", 0))
+                            {
+                                return false;
+                            }
+                        }
+                        else
+                        {
+                            //触发源:软触发 1,线路1 2
+                            if (!SetEnumValue("TriggerSource", 2))//Line1
+                            {
+                                return false;
+                            }
+                            //触发数量
+                            if (!SetIntValue("TriggerCount", 1))
+                            {
+                                return false;
+                            }
+
+                            //触发极性:上升沿 0x80000000,下降沿 0x00000000,上升或下降沿 0x00000001,HighLevel 0x80000002,LowLevel 0x00000002
+                            if (!SetEnumValue("TriggerActivation", 0x00000000))
+                            {
+                                return false;
+                            }
+                            //ExtTrigJitterTime
+                            if (!SetIntValue("ExtTrigJitterTime", 0))
+                            {
+                                return false;
+                            }
+
+                            if (param.Key == "Cam3")
+                            {
+                                //TriggerStartDelay
+                                if (!SetIntValue("TriggerStartDelay", 0))
+                                {
+                                    return false;
+                                }
+                            }
+                            else
+                            {
+                                //TriggerStartDelay
+                                int time = (int)(1 / param.Hz * 1000 * 1000 / 2);
+                                if (!SetIntValue("TriggerStartDelay", time))
+                                {
+                                    return false;
+                                }
+                            }
+                            //触发延迟（us）
+                            if (!SetIntValue("TriggerDelay", 0))
+                            {
+                                return false;
+                            }
+                        }
+                        #endregion
+
+                        #region 数字IO控制
+                        //输入
+                        if (!SetEnumValue("In0Mod", (uint)0x1))//触发模式
+                        {
+                            return false;
+                        }
+
+                        //输出
+                        if (!SetEnumValue("Out0Mod", (uint)0x9))//闪光灯模式
+                        {
+                            return false;
+                        }
+
+                        if (param.Key == "Cam1")
+                        {
+                            if (!SetEnumValue("Out1Mod", (uint)0x9))//闪光灯模式
+                            {
+                                return false;
+                            }
+                        }
+                        else
+                        { 
+                            if (!SetEnumValue("Out1Mod", (uint)0x8))//IO模式
+                            {
+                                return false;
+                            }
+                            if (!SetIntValue("GPOut1", 1))//板子默认0是关
+                            {
+                                return false;
+                            }
+                        }
+                        #endregion
+                    }
                 }
             }
             catch (Exception ex)
@@ -1465,6 +1784,20 @@ namespace _3DLaserGlueInspection
         #endregion
 
         #region 参数获取与设置封装功能函数
+        public bool TriggerSoftwareExecute()
+        {
+            int nRet = MV_CC_TriggerSoftwareExecute_NET();
+            if (MvCamera.MV_OK == nRet)
+            {
+                return true;
+            }
+            else
+            {
+                _errMsg = GlobalVarAndFunc.LanguageTranslate("软触发失败：") + Convert.ToString(nRet, 16);
+                return false;
+            }
+        }
+
         private bool SetBoolValue(string strKey, bool value)
         {
             int nRet = MV_CC_SetBoolValue_NET(strKey, value);

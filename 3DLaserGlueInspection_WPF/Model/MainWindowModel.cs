@@ -91,7 +91,8 @@ namespace _3DLaserGlueInspection
         CamParams Params = new CamParams();
         Dictionary<string, Cam> cams = new Dictionary<string, Cam>();
         //Vision vision = new Vision();
-        JAKARobot robot = new JAKARobot();
+        //JAKARobot robot = new JAKARobot();
+        FanucRobot robot = new FanucRobot();
         Mmf mmf = new Mmf();
         ISignal io;
         Dictionary<string, Setting> sets = new Dictionary<string, Setting>();
@@ -124,6 +125,8 @@ namespace _3DLaserGlueInspection
         Task taskShow3D = null;
 
         int indexImageCut = -1;//指示正在图像采集段数
+
+        public Dictionary<string, int> indexImageCutProcessDict = new Dictionary<string, int>(); // 表示正在图像处理的段数
         bool totalResult = true;
 
         public bool simulation = false;
@@ -319,6 +322,7 @@ namespace _3DLaserGlueInspection
                     glueSmallRectRegionDict.Clear();
                     glueDataDict.Clear();
                     glueResultDict.Clear();
+                    indexImageCutProcessDict.Clear();
                     displaySize.Clear();
                     tasks.Clear();
                     #endregion
@@ -428,11 +432,13 @@ namespace _3DLaserGlueInspection
                     //连相机
                     foreach (var item in camParam)
                     {
+                        item.Value.Key = item.Key;
                         if (item.Value.Enable)
                         {
                             if (!cams.TryGetValue(item.Value.CamName, out Cam cam))
                             {
                                 cam = new Cam();
+                               
                                 cams.Add(item.Value.CamName, cam);
                             }
                             if (!simulation)
@@ -456,7 +462,7 @@ namespace _3DLaserGlueInspection
                                         return;
                                     }
                                 }
-                                if (cam.InitSet(item.Value))
+                                if (cam.InitSet(item.Value,false))
                                 {
                                     ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("初始化设置成功"));
                                 }
@@ -515,6 +521,8 @@ namespace _3DLaserGlueInspection
                                                 glueDataDict.Add(item.Key, dictData);
                                                 var dictResult = new SynchronizedList<Dictionary<long, BResult>>();
                                                 glueResultDict.Add(item.Key, dictResult);
+
+                                                indexImageCutProcessDict.Add(item.Key, 0);
 
                                                 displaySize.Add(item.Key, new SynchronizedList<System.Windows.Size>());
                                             }
@@ -708,20 +716,22 @@ namespace _3DLaserGlueInspection
                                     if (stop) return;
                                 }
                                 int indexRobotPose = 1;
-                                int indexTaskCut = 0;//指示正在图像处理段数
+                                //int indexImageCutProcessDict[item.Key] = 0;//指示正在图像处理段数
+
+                                indexImageCutProcessDict[item.Key] = 0;
                                 while (true)//分段循环
                                 {
-                                    var dictImageKey = ImageKeys[item.Key][indexTaskCut];
-                                    var dictImage = Images[item.Key][indexTaskCut];
-                                    var dictRobotPose = Robot3DPose[item.Key][indexTaskCut];
-                                    var dictX = Point3DXs[item.Key][indexTaskCut];
-                                    var dictY = Point3DYs[item.Key][indexTaskCut];
-                                    var dictZ = Point3DZs[item.Key][indexTaskCut];
-                                    var dictXLD = outLineDict[item.Key][indexTaskCut];
-                                    var dictRegion = glueRegionDict[item.Key][indexTaskCut];
-                                    var dictRegionRectangle2 = glueSmallRectRegionDict[item.Key][indexTaskCut];
-                                    var dictData = glueDataDict[item.Key][indexTaskCut];
-                                    var dictResult = glueResultDict[item.Key][indexTaskCut];
+                                    var dictImageKey = ImageKeys[item.Key][indexImageCutProcessDict[item.Key]];
+                                    var dictImage = Images[item.Key][indexImageCutProcessDict[item.Key]];
+                                    var dictRobotPose = Robot3DPose[item.Key][indexImageCutProcessDict[item.Key]];
+                                    var dictX = Point3DXs[item.Key][indexImageCutProcessDict[item.Key]];
+                                    var dictY = Point3DYs[item.Key][indexImageCutProcessDict[item.Key]];
+                                    var dictZ = Point3DZs[item.Key][indexImageCutProcessDict[item.Key]];
+                                    var dictXLD = outLineDict[item.Key][indexImageCutProcessDict[item.Key]];
+                                    var dictRegion = glueRegionDict[item.Key][indexImageCutProcessDict[item.Key]];
+                                    var dictRegionRectangle2 = glueSmallRectRegionDict[item.Key][indexImageCutProcessDict[item.Key]];
+                                    var dictData = glueDataDict[item.Key][indexImageCutProcessDict[item.Key]];
+                                    var dictResult = glueResultDict[item.Key][indexImageCutProcessDict[item.Key]];
 
                                     int indexImage = 0;
                                     bool bRun = true;
@@ -753,9 +763,9 @@ namespace _3DLaserGlueInspection
                                         }
                                         else//没有新增图片
                                         {
-                                            if (indexImageCut > indexTaskCut)//进入下一段条件
+                                            if (indexImageCut > indexImageCutProcessDict[item.Key])//进入下一段条件
                                             {
-                                                indexTaskCut++;
+                                                indexImageCutProcessDict[item.Key]++;
                                                 bRun = false;
                                             }
                                             else
@@ -772,13 +782,13 @@ namespace _3DLaserGlueInspection
                                         {
                                             try
                                             {
-                                                //int indexTaskCut传递 = indexTaskCut;//BeginInvoke用
+                                                //int indexImageCutProcessDict[item.Key]传递 = indexImageCutProcessDict[item.Key];//BeginInvoke用
                                                 //int indexImage传递 = indexImage;//BeginInvoke用
                                                 int camIndex = item.Key == "Cam1" ? 0 : item.Key == "Cam2" ? 1 : item.Key == "Cam3" ? 2 : 3;
-                                                if (set.CutSets.Count > indexTaskCut && set.CutSets[indexTaskCut].imageSet.Count > camIndex && set.CutSets[indexTaskCut].imageSet[camIndex].Count > indexImage)
+                                                if (set.CutSets.Count > indexImageCutProcessDict[item.Key] && set.CutSets[indexImageCutProcessDict[item.Key]].imageSet.Count > camIndex && set.CutSets[indexImageCutProcessDict[item.Key]].imageSet[camIndex].Count > indexImage)
                                                 {
-                                                    var cutSet = set.CutSets[indexTaskCut];
-                                                    var imageSet = set.CutSets[indexTaskCut].imageSet[camIndex][indexImage];
+                                                    var cutSet = set.CutSets[indexImageCutProcessDict[item.Key]];
+                                                    var imageSet = set.CutSets[indexImageCutProcessDict[item.Key]].imageSet[camIndex][indexImage];
                                                     // 临时结果保存变量
                                                     bool getOutlineResult = false;
                                                     bool singleFrameExisOutline = false;
@@ -872,13 +882,13 @@ namespace _3DLaserGlueInspection
                                                         //if (imageSet.单帧检测)
                                                         //{
                                                         //    // 已开放
-                                                        //    hWindowNumericalModelDiagramDispCross(rowss[indexTaskCut], colss[indexTaskCut], angless[indexTaskCut], indexImage, cutSet, bResult.Result ? Colors.Green : Colors.Red);
+                                                        //    hWindowNumericalModelDiagramDispCross(rowss[indexImageCutProcessDict[item.Key]], colss[indexImageCutProcessDict[item.Key]], angless[indexImageCutProcessDict[item.Key]], indexImage, cutSet, bResult.Result ? Colors.Green : Colors.Red);
 
                                                         //}
                                                         //else
                                                         //{
                                                             // 已开放
-                                                            hWindowNumericalModelDiagramDispCross(rowss[indexTaskCut], colss[indexTaskCut], angless[indexTaskCut], indexImage, cutSet, Colors.Yellow);
+                                                            hWindowNumericalModelDiagramDispCross(rowss[indexImageCutProcessDict[item.Key]], colss[indexImageCutProcessDict[item.Key]], angless[indexImageCutProcessDict[item.Key]], indexImage, cutSet, Colors.Yellow);
                                                         //}
                                                     }
 
@@ -1177,6 +1187,21 @@ namespace _3DLaserGlueInspection
                                         }));
                                         if (flag)
                                         {
+                                            ShowMessage(item.Key);
+                                            //相机1要软触发启动
+                                            if (item.Key == "Cam1")
+                                            {
+                                                bool rt = cam.TriggerSoftwareExecute();
+                                                if (rt)
+                                                {
+                                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("软触发成功"));
+                                                }
+                                                else
+                                                {
+                                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("软触发失败"));
+                                                }
+
+                                            }
                                             ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("开始连续采集成功"));
                                         }
                                         else
@@ -1343,6 +1368,28 @@ namespace _3DLaserGlueInspection
                         }
 
 
+                        // //等待图像处理当前检测段完成
+                        //ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待图像处理当前检测段完成"));
+                        //foreach (var item in indexImageCutProcessDict)
+                        //{
+                        //    while (indexImageCutProcessDict[item.Key] == indexImageCut)
+                        //    {
+                        //        Thread.Sleep(10);
+                        //        if (stop) return;
+                        //    }
+                        //}
+
+                        //还没处理好这里等待问题，目前单纯用这种方式，效果是很有问题的
+                        while (true)
+                        {
+                            for (int i = 0; i < 200; i++)
+                            {
+                                Thread.Sleep(10);
+                            }
+                            break;
+                        }
+                      
+
                         //数据转换
                         //pose 格式转换
                         string camKey = "Cam1";
@@ -1408,6 +1455,7 @@ namespace _3DLaserGlueInspection
                                 }
                             }
                         }
+
 
                         //点云数据处理
                         taskPoint3D = Task.Run(() =>
@@ -1630,6 +1678,8 @@ namespace _3DLaserGlueInspection
                         if (stop) return;
                     }
                     ShowMessage(GlobalVarAndFunc.LanguageTranslate("机器人处理完成"));
+
+
                     //等待图像处理完成
                     ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待图像处理完成"));
                     foreach (var item in tasks.Values)
