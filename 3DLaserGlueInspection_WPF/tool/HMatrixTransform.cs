@@ -45,9 +45,9 @@ namespace Wpf_Replace_halcon
             distCoeffs = Mat.Zeros(new Size(5, 1), MatType.CV_64F);
 
             internalReferenceMatrix.At<double>(0, 0) = cameraParameters.Focus / cameraParameters.Sx;
-            internalReferenceMatrix.At<double>(0, 2) = cameraParameters.Cx / cameraParameters.Sx;
+            internalReferenceMatrix.At<double>(0, 2) = cameraParameters.Cx;
             internalReferenceMatrix.At<double>(1, 1) = cameraParameters.Focus / cameraParameters.Sy;
-            internalReferenceMatrix.At<double>(1, 2) = cameraParameters.Cy / cameraParameters.Sy;
+            internalReferenceMatrix.At<double>(1, 2) = cameraParameters.Cy;
 
             distCoeffs.At<double>(0, 0) = -cameraParameters.Kappa;
             return 0;

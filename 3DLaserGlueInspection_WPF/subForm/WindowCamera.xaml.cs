@@ -539,7 +539,7 @@ namespace _3DLaserGlueInspection.subForm
             if (cam.GetOffsetY(out long value2))
             {
                 long 参数值 = (bool)horizontalMirror.IsChecked ? (long)(Convert.ToInt64(heightMaxNumericUpDown.Text)
-                    - Convert.ToInt64(currentHeightNumericUpDown.Text) - value) : value;
+                    - Convert.ToInt64(currentHeightNumericUpDown.Text) - value2) : value2;
                 currentOffsetYNumericUpDown.Text = Convert.ToString(参数值);
                 ShowMessage(GlobalVarAndFunc.LanguageTranslate("垂直偏移参数值：") + 参数值.ToString() + GlobalVarAndFunc.LanguageTranslate("，相机值：") + value2.ToString());
             }
@@ -564,7 +564,7 @@ namespace _3DLaserGlueInspection.subForm
             }
             long 参数值offsetY = Convert.ToInt32(currentOffsetYNumericUpDown.Text);
             long 相机值offsetY = (bool)horizontalMirror.IsChecked ? (long)(Convert.ToInt32(heightMaxNumericUpDown.Text) - Convert.ToInt32(currentHeightNumericUpDown.Text) -
-                参数值offsetX) : 参数值offsetX;
+                参数值offsetY) : 参数值offsetY;
             if (cam.SetOffsetY(相机值offsetY))
             {
                 ShowMessage(GlobalVarAndFunc.LanguageTranslate("设置垂直偏移参数值：") + 参数值offsetY.ToString() + GlobalVarAndFunc.LanguageTranslate("，相机值：") + 相机值offsetY.ToString());

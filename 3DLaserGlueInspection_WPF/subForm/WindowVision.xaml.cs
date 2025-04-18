@@ -634,13 +634,13 @@ namespace _3DLaserGlueInspection.subForm
                     cutSet.Cam3Enabled = (bool)enableCam3Check.IsChecked;
                     cutSet.Cam4Enabled = (bool)enableCam4Check.IsChecked;
 
-                    cutSet.ShowWidth = Convert.ToInt16(showWidthNumericUpDown.Text);
-                    cutSet.ShowHeight = Convert.ToInt16(showHeightNumericUpDown.Text);
+                    cutSet.ShowWidth = Convert.ToInt32(showWidthNumericUpDown.Text);
+                    cutSet.ShowHeight = Convert.ToInt32(showHeightNumericUpDown.Text);
                     cutSet.ShowColorMax = Convert.ToDouble(colorLimitMaxNumericUpDown.Text);
                     cutSet.ShowColorMin = Convert.ToDouble(colorLimitMinNumericUpDown.Text);
-                    cutSet.Size = Convert.ToInt16(identificationSizeNumericUpDown.Text);
-                    cutSet.StartImageIndex = Convert.ToInt16(startImageIndexNumericUpDown.Text);
-                    cutSet.EndImageIndex = Convert.ToInt16(endImageIndexNumericUpDown.Text);
+                    cutSet.Size = Convert.ToInt32(identificationSizeNumericUpDown.Text);
+                    cutSet.StartImageIndex = Convert.ToInt32(startImageIndexNumericUpDown.Text);
+                    cutSet.EndImageIndex = Convert.ToInt32(endImageIndexNumericUpDown.Text);
 
                     if (selectCamListBox.SelectedIndex >= 0 && selectPictureListBox.SelectedIndex >= 0)
                     {
@@ -670,7 +670,7 @@ namespace _3DLaserGlueInspection.subForm
             imageSet.DownY = Convert.ToDouble(topRangeMaxNumericUpDown.Text);
             imageSet.离散去噪 = (bool)useDiscreteDenoisingCheck.IsChecked;
             imageSet.分段距离 = Convert.ToDouble(discreteDenoisingDistNumericUpDown.Text);
-            imageSet.成段点数 = Convert.ToInt16(discreteDenoisingCountNumericUpDown.Text);
+            imageSet.成段点数 = Convert.ToInt32(discreteDenoisingCountNumericUpDown.Text);
         }
 
         void SelectedCamAndImage()
@@ -853,7 +853,7 @@ namespace _3DLaserGlueInspection.subForm
                 if (cutSet != null)
                 {
                     isAlter = true;
-                    cutSet.ImageNum = Convert.ToInt16(imageCountNumericUpDown.Text);
+                    cutSet.ImageNum = Convert.ToInt32(imageCountNumericUpDown.Text);
                     for (int i = 0; i < 4; i++)
                     {
                         while (cutSet.imageSet.Count <= i)
@@ -1252,7 +1252,7 @@ namespace _3DLaserGlueInspection.subForm
                 OpenFileDialog ofd = new OpenFileDialog();
                 ofd.Multiselect = true;
                 ofd.Title = GlobalVarAndFunc.LanguageTranslate("请选择文件");
-                ofd.Filter = GlobalVarAndFunc.LanguageTranslate("图片|*.bmp;*.jpg;*.jpeg;*.png|所有文件|*.*");
+                ofd.Filter = GlobalVarAndFunc.LanguageTranslate("图片|*.bmp;*.jpg;*.jpeg;*.png;*.tif|所有文件|*.*");
                 if (System.Windows.Forms.DialogResult.OK == ofd.ShowDialog())
                 {
                     try
@@ -1469,7 +1469,7 @@ namespace _3DLaserGlueInspection.subForm
 
         private void imageCountNumericUpDown_TextChanged(object sender, TextChangedEventArgs e)
         {
-            int ImageNum = Convert.ToInt16(imageCountNumericUpDown.Text);
+            int ImageNum = Convert.ToInt32(imageCountNumericUpDown.Text);
             if (selectPictureListBox != null)
             {
                 while (selectPictureListBox.Items.Count < ImageNum)
@@ -1765,7 +1765,7 @@ namespace _3DLaserGlueInspection.subForm
                 ////保存测试点云数据
                 //foreach (var camKey_tmp in Point3DXsDict.Keys)
                 //{
-                //    for(int i = 0; i < Point3DXsDict[camKey_tmp].Count; i++)
+                //    for (int i = 0; i < Point3DXsDict[camKey_tmp].Count; i++)
                 //    {
                 //        foreach (var imageKey in Point3DXsDict[camKey_tmp][i].Keys)
                 //        {
@@ -1773,10 +1773,10 @@ namespace _3DLaserGlueInspection.subForm
                 //            {
                 //                pointsSave.Add(new double[] { Point3DXsDict[camKey_tmp][i][imageKey][j], Point3DYsDict[camKey_tmp][i][imageKey][j], Point3DZsDict[camKey_tmp][i][imageKey][j] });
                 //            }
-                            
+
                 //        }
 
-                        
+
                 //    }
                 //}
 

@@ -292,24 +292,27 @@ namespace _3DLaserGlueInspection
             rows = new List<double>();
             cols = new List<double>();
             angles = new List<double>();
-
-            Mat inputPointMat = new Mat();
-            Mat dividedPoints = new Mat();
-            inputPointMat = Mat.Zeros(XLDData.ControlRows.Length, 2, MatType.CV_64FC1);
-            for (int i = 0; i < XLDData.ControlRows.Length; i++)
+            if (XLDData.ControlRows.Length >= 2)
             {
-                inputPointMat.At<double>(i, 0) = XLDData.ControlCols[i];
-                inputPointMat.At<double>(i, 1) = XLDData.ControlRows[i];
+                Mat inputPointMat = new Mat();
+                Mat dividedPoints = new Mat();
+                inputPointMat = Mat.Zeros(XLDData.ControlRows.Length, 2, MatType.CV_64FC1);
+                for (int i = 0; i < XLDData.ControlRows.Length; i++)
+                {
+                    inputPointMat.At<double>(i, 0) = XLDData.ControlCols[i];
+                    inputPointMat.At<double>(i, 1) = XLDData.ControlRows[i];
 
-            }
+                }
 
-            dividePolyline(inputPointMat.CvPtr, divideCount, dividedPoints.CvPtr);
-            for (int i = 0; i < divideCount; i++)
-            {
-                cols.Add(dividedPoints.At<double>(i, 0));
-                rows.Add(dividedPoints.At<double>(i, 1));
-                angles.Add(dividedPoints.At<double>(i, 2));
+                dividePolyline(inputPointMat.CvPtr, divideCount, dividedPoints.CvPtr);
+                for (int i = 0; i < divideCount; i++)
+                {
+                    cols.Add(dividedPoints.At<double>(i, 0));
+                    rows.Add(dividedPoints.At<double>(i, 1));
+                    angles.Add(dividedPoints.At<double>(i, 2));
+                }
             }
+            
 
         }
         public static void printPoint(Mat Points,string Name)

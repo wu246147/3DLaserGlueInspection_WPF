@@ -835,14 +835,14 @@
                         BorderThickness="0"
                         Foreground="Black"
                         Header="信号分配"
-                        Visibility="Hidden" />
+                        Visibility="Collapsed" />
                     <MenuItem
                         x:Name="MenuItem_computerSetting"
                         BorderBrush="#00000000"
                         BorderThickness="0"
                         Foreground="Black"
                         Header="上位机设置"
-                        Visibility="Hidden" />
+                        Visibility="Collapsed" />
                     <MenuItem
                         x:Name="MenuItem_robotSetting"
                         BorderBrush="#00000000"

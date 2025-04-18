@@ -405,13 +405,22 @@ namespace _3DLaserGlueInspection
                     List<double>[] angless = new List<double>[set.XLDDatas.Count];
                     for (int i = 0; i < set.XLDDatas.Count; i++)
                     {
-                        int setCount = set.CutSets[i].EndImageIndex - set.CutSets[i].StartImageIndex + 1;
-                        if (setCount < 1) setCount = 1;
-                        Vision.XLDDataDivide(set.XLDDatas[i], setCount, out rowss[i], out colss[i], out angless[i]);
-
-                        for (int j = 0; j < setCount; j++)
+                        if (set.CutSets[i].EndImageIndex > set.CutSets[i].StartImageIndex)
                         {
-                            hWindowNumericalModelDiagramDispCross(rowss[i][j], colss[i][j], set.CutSets[i].Size, angless[i][j], Colors.Blue);
+                            int setCount = set.CutSets[i].EndImageIndex - set.CutSets[i].StartImageIndex + 1;
+                            if (setCount < 1) setCount = 1;
+                            Vision.XLDDataDivide(set.XLDDatas[i], setCount, out rowss[i], out colss[i], out angless[i]);
+
+                            for (int j = 0; j < setCount; j++)
+                            {
+                                hWindowNumericalModelDiagramDispCross(rowss[i][j], colss[i][j], set.CutSets[i].Size, angless[i][j], Colors.Blue);
+                            }
+                        }
+                        else
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("显示的起点图像序号和结束图像序号没有设置好。"));
+
+                            return;
                         }
                     }
                     if (stop) return;
