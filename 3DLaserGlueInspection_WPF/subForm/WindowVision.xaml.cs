@@ -1898,9 +1898,18 @@ namespace _3DLaserGlueInspection.subForm
                         //    imgsPtr[i] = imgList[i].CvPtr;
                         //}
                         Mat imgCut = new Mat();
-                        Vision.pointCloudCutSingle(cloudList.CvPtr, poseList.CvPtr,indexImage, Vision.xSize, Vision.ySize, Vision.zSize, Vision.scaleSize * 1000, Vision.offset_z, imgCut.CvPtr);
+                        Vision.pointCloudCutSingle(cloudList.CvPtr, poseList.CvPtr, indexImage, Vision.xSize, Vision.ySize, Vision.zSize, Vision.scaleSize * 1000, Vision.offset_z, imgCut.CvPtr);
 
-                        
+                        //Mat[] imgList = new Mat[poseList.Rows];
+                        //IntPtr[] imgsPtr = new IntPtr[imgList.Length];
+                        //for (int i = 0; i < imgList.Length; i++)
+                        //{
+                        //    imgList[i] = new Mat();
+                        //    imgsPtr[i] = imgList[i].CvPtr;
+                        //}
+                        //Vision.pointCloudCutAll(cloudList.CvPtr, poseList.CvPtr, Vision.xSize, Vision.ySize, Vision.zSize, Vision.scaleSize * 1000, Vision.offset_z, imgsPtr);
+                        //Mat imgCut = imgList[indexImage];
+
                         var imageKey = imageKeyList[indexImage];
                         //需要判断图片是否为空，来判断是否有结果
                         if (!imgCut.Empty())

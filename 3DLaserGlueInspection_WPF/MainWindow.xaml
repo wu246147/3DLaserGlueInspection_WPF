@@ -15,7 +15,7 @@
     MinHeight="800"
     Background="{x:Null}"
     Closing="Window_Closing"
-    Icon="/Icon/LOGO2.ico"
+    Icon="/Icon/3Dicon.png"
     Loaded="Window_Loaded"
     WindowStartupLocation="CenterScreen"
     WindowState="Maximized"
@@ -35,7 +35,6 @@
 
 
     </Window.Resources>
-
 
 
     <Window.MaxWidth>
@@ -61,26 +60,22 @@
 
             <StackPanel Margin="0,0,178,0" Orientation="Horizontal">
                 <Image
-                    Width="120"
-                    Height="22"
-                    Margin="10,0,0,0"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Center"
+                    Width="102"
+                    Height="48"
                     RenderTransformOrigin="-0.09,-0.057"
-                    Source="/Icon/LOGO.png" />
+                    Source="/Icon/LOGO.png" 
+                     />
                 <Label
                     x:Name="Lable_Title"
                     Width="309"
-                    Height="60"
-                    Margin="0,-5,0,0"
-                    VerticalAlignment="Center"
+                    Height="42"
                     HorizontalContentAlignment="Left"
                     VerticalContentAlignment="Center"
                     Background="#FF242B35"
                     BorderBrush="{x:Null}"
                     Content="AI 3D视觉涂胶检测系统"
                     FontSize="22"
-                    Foreground="#FF1679D0" />
+                    Foreground="#FF1679D0" Margin="0,-2,0,0" />
 
             </StackPanel>
             <!--</Viewbox>-->
