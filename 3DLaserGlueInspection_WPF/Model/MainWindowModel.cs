@@ -710,6 +710,7 @@ namespace _3DLaserGlueInspection
                             var LightToCam = Params.LightToCam[camParamName][item.Key];
                             /// 相机坐标转为法兰盘坐标
                             var CamToTool = Params.CamToTool[camParamName][item.Key];
+
                             tasks.Add(item.Key, Task.Run((Action)(() =>
                             {
                                 while (indexImageCut < 0)//等待采集开始，数据集合完成添加
@@ -950,42 +951,26 @@ namespace _3DLaserGlueInspection
 
                                                         if (imageSet._3DGlueDet)
                                                         {
-                                                            //    // 已开放
-                                                            //Console.WriteLine("indexImage:{0}", indexImage);
+                                                            // 已开放
                                                             int indexCross = indexImage - cutSet.StartImageIndex;
                                                             if (indexCross >= 0 && indexCross < angless[indexImageCutProcessDict[item.Key]].Count)
                                                             {
-                                                                //Console.WriteLine("indexCross:{0}", indexCross);
                                                                 hWindowNumericalModelDiagramDispCross(rowss[indexImageCutProcessDict[item.Key]][indexCross],
                                                                     colss[indexImageCutProcessDict[item.Key]][indexCross],
                                                                     angless[indexImageCutProcessDict[item.Key]][indexCross], cutSet.Size, bResult.Result ? Colors.Green : Colors.Red);
                                                             }
-                                                            //hWindowNumericalModelDiagramDispCross(rowss[indexImageCutProcessDict[item.Key]], colss[indexImageCutProcessDict[item.Key]], angless[indexImageCutProcessDict[item.Key]], indexImage, cutSet, bResult.Result ? Colors.Green : Colors.Red);
-
-                                                            //}
-                                                            //else
-                                                            //{
-                                                            //// 已开放
-                                                            // 运行速度过慢，影响检测
-
-                                                            //hWindowNumericalModelDiagramDispCross(rowss[indexImageCutProcessDict[item.Key]], colss[indexImageCutProcessDict[item.Key]], angless[indexImageCutProcessDict[item.Key]], indexImage, cutSet, Colors.Yellow);
-
-                                                            //后面需要显示检测结果，再添加不同的颜色显示。
-
-                                                            //}
                                                         }
 
                                                     }
 
-                                                    if (singleFrameExistGlue)
-                                                    {
-
-
-                                                        Application.Current.Dispatcher.Invoke(() =>
-                                                        {
-                                                            ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, hXLDCont10mm, outMaxRegion, outRegionRectangle2, resultData, bResult);
-                                                        });
-                                                    }
+                                                    // 没必要显示每帧的检测结果，而且这样做导致影响检测速度
+                                                    //if (singleFrameExistGlue)
+                                                    //{
+                                                    //    Application.Current.Dispatcher.Invoke(() =>
+                                                    //    {
+                                                    //        ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, hXLDCont10mm, outMaxRegion, outRegionRectangle2, resultData, bResult);
+                                                    //    });
+                                                    //}
                                                     dictResult.Add(imageKey, bResult);
                                                     dictData.Add(imageKey, resultData);
                                                 }
@@ -1335,7 +1320,12 @@ namespace _3DLaserGlueInspection
                                                     if (!bTriggering) { break; }
                                                     Thread.Sleep(1);
                                                 }
+
+                                                ShowMessage(item.Key + GlobalVarAndFunc.LanguageTranslate("仿真图片遍历完"));
+
                                             });
+
+
                                         }
                                     }
                                 }
@@ -2197,7 +2187,8 @@ namespace _3DLaserGlueInspection
             }
             Application.Current.Dispatcher.Invoke(() =>
             {
-                while (mainModel.LogRecords.Count > 1000)
+                while (mainModel.LogRecords.Count > 10000)
+                    //while (mainModel.LogRecords.Count > 0)
                 {
                     mainModel.LogRecords.RemoveAt(mainModel.LogRecords.Count - 1);
                 }
