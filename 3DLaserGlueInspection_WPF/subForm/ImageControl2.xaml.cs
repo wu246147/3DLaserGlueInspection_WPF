@@ -412,6 +412,19 @@ namespace _3DLaserGlueInspection.subForm
             childrenImageXList.Add(imageX);
             childrenImageYList.Add(imageY);
             childrenImagePointsList.Add(points);
+
+            //限制最大个数，不能超过3000个
+            if (canvas.Children.Count > 3000)
+            {
+                canvas.Children.RemoveAt(0);
+                childrenList.RemoveAt(0);
+                childrenImageXList.RemoveAt(0);
+                childrenImageYList.RemoveAt(0);
+                childrenImagePointsList.RemoveAt(0);
+
+            }
+
+
         }
 
         /// <summary>
@@ -429,6 +442,33 @@ namespace _3DLaserGlueInspection.subForm
             AddChildren(textBlock, imageX, imageY);
 
         }
+
+        /// <summary>
+        /// 添加线段图案
+        /// </summary>
+        /// <param name="points"></param>
+        /// <param name="color"></param>
+        /// <param name="StrokeThickness"></param>
+        public void AddCircle(Point point,int radio, Color color, int StrokeThickness = 2)
+        {
+            canvas.BeginInit();
+
+            System.Windows.Shapes.Ellipse ellipse = new System.Windows.Shapes.Ellipse
+            {
+                
+                Width = 2 * radio,
+                Height = 2 * radio,
+                Fill = Brushes.Transparent,
+                Stroke = new SolidColorBrush(color),
+                StrokeThickness = StrokeThickness
+            };
+            
+            AddChildren(ellipse, 0, 0);
+            canvas.EndInit();
+
+        }
+
+
         /// <summary>
         /// 添加线段图案
         /// </summary>
@@ -437,7 +477,7 @@ namespace _3DLaserGlueInspection.subForm
         /// <param name="StrokeThickness"></param>
         public void AddPolyline(PointCollection points, Color color, int StrokeThickness = 2)
         {
-
+            canvas.BeginInit();
             Polyline polyline = new Polyline
             {
                 Points = new PointCollection(),
@@ -452,6 +492,7 @@ namespace _3DLaserGlueInspection.subForm
                 polyline.Points.Add(point);
             }
             AddChildren(polyline, 0, 0, points);
+            canvas.EndInit();
 
         }
 

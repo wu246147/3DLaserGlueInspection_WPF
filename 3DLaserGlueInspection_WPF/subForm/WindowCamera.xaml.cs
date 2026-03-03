@@ -275,24 +275,29 @@ namespace _3DLaserGlueInspection.subForm
         {
             //string camKey = radioButtonCam1.Checked ? "Cam1" : radioButtonCam2.Checked ? "Cam2" : radioButtonCam3.Checked ? "Cam3" : "Cam4";
             //var camParam = Params.param[comboBoxParamName.Text][camKey];
-
             _isAlter = true;
             if (CamNameComboBox.SelectedIndex >= 0)
-            {             
-                camParam.Enable = (bool)checkBoxEnableCam.IsChecked;
-                camParam.CamName = CamNameComboBox.Items[CamNameComboBox.SelectedIndex].ToString();
-                camParam.Exposure = Convert.ToInt32(exportTimeNumericUpDown.Text);
-                camParam.SizeWidth = Convert.ToInt32(currentWidthNumericUpDown.Text);
-                camParam.SizeHeight = Convert.ToInt32(currentHeightNumericUpDown.Text);
-                camParam.WidthMax = Convert.ToInt32(widthMaxNumericUpDown.Text);
-                camParam.HeightMax = Convert.ToInt32(heightMaxNumericUpDown.Text);
-                camParam.OffsetX = Convert.ToInt32(currentOffsetXNumericUpDown.Text);
-                camParam.OffsetY = Convert.ToInt32(currentOffsetYNumericUpDown.Text);
-                camParam.Hz = (float)Convert.ToDouble(currentFPSNumericUpDown.Text);
-                camParam.HzEnable = (bool)useFPSCheck.IsChecked;
-                camParam.ReverseX = (bool)verticalMirror.IsChecked;
-                camParam.ReverseY = (bool)horizontalMirror.IsChecked;
-                camParam.ImageFormat = saveImgTypeComboBox.SelectedValue.ToString();
+            {
+                try
+                {
+                    camParam.Enable = (bool)checkBoxEnableCam.IsChecked;
+                    camParam.CamName = CamNameComboBox.Items[CamNameComboBox.SelectedIndex].ToString();
+                    camParam.Exposure = Convert.ToInt32(exportTimeNumericUpDown.Text);
+                    camParam.SizeWidth = Convert.ToInt32(currentWidthNumericUpDown.Text);
+                    camParam.SizeHeight = Convert.ToInt32(currentHeightNumericUpDown.Text);
+                    camParam.WidthMax = Convert.ToInt32(widthMaxNumericUpDown.Text);
+                    camParam.HeightMax = Convert.ToInt32(heightMaxNumericUpDown.Text);
+                    camParam.OffsetX = Convert.ToInt32(currentOffsetXNumericUpDown.Text);
+                    camParam.OffsetY = Convert.ToInt32(currentOffsetYNumericUpDown.Text);
+                    camParam.Hz = (float)Convert.ToDouble(currentFPSNumericUpDown.Text);
+                    camParam.HzEnable = (bool)useFPSCheck.IsChecked;
+                    camParam.ReverseX = (bool)verticalMirror.IsChecked;
+                    camParam.ReverseY = (bool)horizontalMirror.IsChecked;
+                    camParam.ImageFormat = saveImgTypeComboBox.SelectedValue.ToString();
+                }
+                catch
+                { 
+                }
             }
         }
         private void scanCamButton_Click(object sender, RoutedEventArgs e)

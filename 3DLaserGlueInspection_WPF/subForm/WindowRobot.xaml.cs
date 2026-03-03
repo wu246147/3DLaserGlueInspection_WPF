@@ -50,7 +50,7 @@ namespace _3DLaserGlueInspection.subForm
         private void UpData(object sender, EventArgs e)
         {
             param.IpAddress = IpNumericUpDown.Text;
-            param.Port = Convert.ToInt16(PortNumericUpDown.Text);
+            param.Port = Convert.ToInt32(PortNumericUpDown.Text);
             isAlter = true;
         }
         private void UpDataDi(object sender, EventArgs e)

@@ -107,9 +107,47 @@ namespace Wpf_Replace_halcon
             outputPoseParameters.y = inputPoseParameters1.y + (inputPoseParameters2.y - inputPoseParameters1.y) * s;
             outputPoseParameters.z = inputPoseParameters1.z + (inputPoseParameters2.z - inputPoseParameters1.z) * s;
 
-            outputPoseParameters.rx = inputPoseParameters1.rx + (inputPoseParameters2.rx - inputPoseParameters1.rx) * s;
-            outputPoseParameters.ry = inputPoseParameters1.ry + (inputPoseParameters2.ry - inputPoseParameters1.ry) * s;
-            outputPoseParameters.rz = inputPoseParameters1.rz + (inputPoseParameters2.rz - inputPoseParameters1.rz) * s;
+            if (inputPoseParameters1.rx > 0 && inputPoseParameters2.rx < 0)
+            {
+                outputPoseParameters.rx = inputPoseParameters1.rx + (inputPoseParameters2.rx + 360 - inputPoseParameters1.rx) * s;
+            }
+            else if (inputPoseParameters1.rx < 0 && inputPoseParameters2.rx > 0)
+            {
+                outputPoseParameters.rx = inputPoseParameters1.rx + (inputPoseParameters2.rx - 360 - inputPoseParameters1.rx) * s;
+            }
+            else
+            {
+                outputPoseParameters.rx = inputPoseParameters1.rx + (inputPoseParameters2.rx - inputPoseParameters1.rx) * s;
+            }
+
+
+            if (inputPoseParameters1.ry > 0 && inputPoseParameters2.ry < 0)
+            {
+                outputPoseParameters.ry = inputPoseParameters1.ry + (inputPoseParameters2.ry + 360 - inputPoseParameters1.ry) * s;
+            }
+            else if (inputPoseParameters1.ry < 0 && inputPoseParameters2.ry > 0)
+            {
+                outputPoseParameters.ry = inputPoseParameters1.ry + (inputPoseParameters2.ry - 360 - inputPoseParameters1.ry) * s;
+            }
+            else
+            {
+                outputPoseParameters.ry = inputPoseParameters1.ry + (inputPoseParameters2.ry - inputPoseParameters1.ry) * s;
+            }
+
+
+            if (inputPoseParameters1.rz > 0 && inputPoseParameters2.rz < 0)
+            {
+                outputPoseParameters.rz = inputPoseParameters1.rz + (inputPoseParameters2.rz + 360 - inputPoseParameters1.rz) * s;
+            }
+            else if (inputPoseParameters1.rz < 0 && inputPoseParameters2.rz > 0)
+            {
+                outputPoseParameters.rz = inputPoseParameters1.rz + (inputPoseParameters2.rz - 360 - inputPoseParameters1.rz) * s;
+            }
+            else
+            {
+                outputPoseParameters.rz = inputPoseParameters1.rz + (inputPoseParameters2.rz - inputPoseParameters1.rz) * s;
+            }
+
 
             return 0;
         }
