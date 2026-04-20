@@ -637,6 +637,7 @@
                             RowStyle="{StaticResource LogDataGridRowStyle}"
                             SelectedCellsChanged="_2DResultDataGrid_SelectedCellsChanged"
                             SelectionMode="Single"
+                            SelectionUnit ="Cell"
                             VerticalScrollBarVisibility="Auto">
                             <DataGrid.Columns>
                                 <DataGridTextColumn

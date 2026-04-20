@@ -472,6 +472,12 @@ namespace _3DLaserGlueInspection
             }
         }
 
+        /// <summary>
+        /// 用于显示和矫正计算，要结合激光和相机的夹角，进行
+        /// </summary>
+        /// <param name="lightXYcut"></param>
+        /// <param name="cutSet"></param>
+        /// <param name="XY_10um"></param>
         public static void scalePoint(Mat lightXYcut,CutSet cutSet, out Mat XY_10um)
         {
             XY_10um = new Mat(lightXYcut.Size(), lightXYcut.Type());

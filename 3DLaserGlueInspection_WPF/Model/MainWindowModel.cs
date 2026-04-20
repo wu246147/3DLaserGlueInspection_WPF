@@ -949,6 +949,55 @@ namespace _3DLaserGlueInspection
                                                             totalResult = false;
                                                         }
 
+                                                        //结果统计
+                                                        if (hXLDCont10mm.Rows > 0)
+                                                        {
+                                                            if (dictXLD.ContainsKey(imageKey))
+                                                            {
+                                                                dictXLD[imageKey] = hXLDCont10mm;
+                                                            }
+                                                            else
+                                                            {
+                                                                dictXLD.Add(imageKey, hXLDCont10mm);
+                                                            }
+
+                                                        }
+                                                        if (resultData.glueArea > 0)
+                                                        {
+                                                            if (dictRegion.ContainsKey(imageKey))
+                                                            {
+                                                                dictRegion[imageKey] = outMaxRegion;
+                                                            }
+                                                            else
+                                                            {
+                                                                dictRegion.Add(imageKey, outMaxRegion);
+                                                            }
+                                                            if (dictRegionRectangle2.ContainsKey(imageKey))
+                                                            {
+                                                                dictRegionRectangle2[imageKey] = outRegionRectangle2;
+                                                            }
+                                                            else
+                                                            {
+                                                                dictRegionRectangle2.Add(imageKey, outRegionRectangle2);
+                                                            }
+                                                            if (dictData.ContainsKey(imageKey))
+                                                            {
+                                                                dictData[imageKey] = resultData;
+                                                            }
+                                                            else
+                                                            {
+                                                                dictData.Add(imageKey, resultData);
+                                                            }
+                                                            if (dictResult.ContainsKey(imageKey))
+                                                            {
+                                                                dictResult[imageKey] = bResult;
+                                                            }
+                                                            else
+                                                            {
+                                                                dictResult.Add(imageKey, bResult);
+                                                            }
+                                                        }
+
                                                         if (imageSet._3DGlueDet)
                                                         {
                                                             // 已开放

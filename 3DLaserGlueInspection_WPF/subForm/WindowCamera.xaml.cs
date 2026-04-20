@@ -350,14 +350,14 @@ namespace _3DLaserGlueInspection.subForm
         private void singleCheckButton_Click(object sender, RoutedEventArgs e)
         {
             Stopwatch sw = Stopwatch.StartNew();
-            if (cam.OneShot(out Mat hImage))
+            if (cam.OneShot(out img))
             {
                 sw.Stop();
                 Dispatcher.Invoke(new Action(() =>
                 {
                     hWindowModel.ClearChildren();
                 }));
-                ShowImage(hImage);
+                ShowImage(img);
                 ShowMessage(GlobalVarAndFunc.LanguageTranslate("单帧采集时间") + "：" + sw.ElapsedMilliseconds.ToString() + "ms");
             }
             else

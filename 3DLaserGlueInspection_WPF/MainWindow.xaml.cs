@@ -271,10 +271,13 @@ namespace _3DLaserGlueInspection
                     
                     if (strings.Length > 1)
                     {
-                        if (int.TryParse(strings[0], out int segmentIndex) && int.TryParse(strings[1], out int segmentSubIndex))
+                        if (int.TryParse(strings[0], out int segmentIndex) 
+                            && int.TryParse(strings[1], out int segmentSubIndex))
                         {
                             
-                            if (model.outLineDict.ContainsKey(camKey) && model.outLineDict[camKey].Count > segmentIndex && model.outLineDict[camKey][segmentIndex].ContainsKey(model.ImageKeys[camKey][segmentIndex][segmentSubIndex]))
+                            if (model.outLineDict.ContainsKey(camKey) && 
+                                model.outLineDict[camKey].Count > segmentIndex &&
+                                model.outLineDict[camKey][segmentIndex].ContainsKey(model.ImageKeys[camKey][segmentIndex][segmentSubIndex]))
                             {
                                 Mat hXLDCont10mm = model.outLineDict[camKey][segmentIndex][model.ImageKeys[camKey][segmentIndex][segmentSubIndex]];
                                 if (model.glueRegionDict.ContainsKey(camKey) && model.glueRegionDict[camKey].Count > segmentIndex && model.glueRegionDict[camKey][segmentIndex].ContainsKey(model.ImageKeys[camKey][segmentIndex][segmentSubIndex]))
@@ -283,7 +286,13 @@ namespace _3DLaserGlueInspection
                                     Mat hRegionSmallestRectangle2 = model.glueSmallRectRegionDict[camKey][segmentIndex][model.ImageKeys[camKey][segmentIndex][segmentSubIndex]];
                                     Data data = model.glueDataDict[camKey][segmentIndex][model.ImageKeys[camKey][segmentIndex][segmentSubIndex]];
                                     BResult bResult = model.glueResultDict[camKey][segmentIndex][model.ImageKeys[camKey][segmentIndex][segmentSubIndex]];
-                                    GlobalVarAndFunc.ShowImageData((int)model.displaySize[camKey][segmentIndex].Width, (int)model.displaySize[camKey][segmentIndex].Height, hXLDCont10mm, hRegion, hRegionSmallestRectangle2, data, bResult,ref hWindowControl, ref showing,ref olockShow);
+                                    GlobalVarAndFunc.ShowImageData((int)model.displaySize[camKey][segmentIndex].Width, 
+                                        (int)model.displaySize[camKey][segmentIndex].Height,
+                                        hXLDCont10mm, 
+                                        hRegion, 
+                                        hRegionSmallestRectangle2, 
+                                        data, bResult,ref hWindowControl, 
+                                        ref showing,ref olockShow);
                                 }
                                 else
                                 {
