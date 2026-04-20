@@ -102,6 +102,9 @@ namespace _3DLaserGlueInspection
         Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>> Point3DXs = new Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>>();//相机-分段-时间-图片数据
         Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>> Point3DYs = new Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>>();
         Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>> Point3DZs = new Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>>();
+
+        Dictionary<string, SynchronizedList<Dictionary<long, double>>> glueVols = new Dictionary<string, SynchronizedList<Dictionary<long, double>>>(); //体积结果 //相机-分段-时间-体积结果
+
         public Dictionary<string, SynchronizedList<Dictionary<long, Mat>>> outLineDict = new Dictionary<string, SynchronizedList<Dictionary<long, Mat>>>();
         public Dictionary<string, SynchronizedList<Dictionary<long, Mat>>> glueRegionDict = new Dictionary<string, SynchronizedList<Dictionary<long, Mat>>>();
         public Dictionary<string, SynchronizedList<Dictionary<long, Mat>>> glueSmallRectRegionDict = new Dictionary<string, SynchronizedList<Dictionary<long, Mat>>>();
@@ -310,6 +313,7 @@ namespace _3DLaserGlueInspection
                     Point3DXs.Clear();
                     Point3DYs.Clear();
                     Point3DZs.Clear();
+                    glueVols.Clear();
                     outLineDict.Clear();
                     glueRegionDict.Clear();
                     glueSmallRectRegionDict.Clear();
@@ -514,6 +518,10 @@ namespace _3DLaserGlueInspection
                                                 var dictZ = new SynchronizedList<Dictionary<long, List<double>>>();
                                                 Point3DZs.Add(item.Key, dictZ);
                                                 var dictXLD = new SynchronizedList<Dictionary<long, Mat>>();
+
+                                                var dictV = new SynchronizedList<Dictionary<long, double>>();
+                                                glueVols.Add(item.Key, dictV);
+
                                                 outLineDict.Add(item.Key, dictXLD);
                                                 var dictRegion = new SynchronizedList<Dictionary<long, Mat>>();
                                                 glueRegionDict.Add(item.Key, dictRegion);
@@ -731,6 +739,7 @@ namespace _3DLaserGlueInspection
                                     var dictX = Point3DXs[item.Key][indexImageCutProcessDict[item.Key]];
                                     var dictY = Point3DYs[item.Key][indexImageCutProcessDict[item.Key]];
                                     var dictZ = Point3DZs[item.Key][indexImageCutProcessDict[item.Key]];
+                                    var dictV = glueVols[item.Key][indexImageCutProcessDict[item.Key]];
                                     var dictXLD = outLineDict[item.Key][indexImageCutProcessDict[item.Key]];
                                     var dictRegion = glueRegionDict[item.Key][indexImageCutProcessDict[item.Key]];
                                     var dictRegionRectangle2 = glueSmallRectRegionDict[item.Key][indexImageCutProcessDict[item.Key]];
@@ -806,6 +815,8 @@ namespace _3DLaserGlueInspection
                                                     robotY = new List<double>();
                                                     robotZ = new List<double>();
                                                     Mat lightXY = new Mat();
+                                                    double PoseD = 0;
+                                                    double V = 0;
 
                                                     if (imageSet.轮廓检测)
                                                     {
@@ -844,6 +855,19 @@ namespace _3DLaserGlueInspection
                                                             (imageKey - robotPoseKeys[indexRobotPose - 1]) /
                                                             (double)(robotPoseKeys[indexRobotPose] - robotPoseKeys[indexRobotPose - 1])
                                                             );
+                                                        // 计算机器人移动距离
+                                                        if (dictRobotPose.Count > 0)
+                                                        {
+                                                            var last = dictRobotPose.Last();
+                                                            var lastRobotPose = last.Value;
+
+                                                            PoseD = Math.Sqrt(Math.Pow((robotPose.x - lastRobotPose.x),2)+ 
+                                                                Math.Pow((robotPose.y - lastRobotPose.y), 2) + 
+                                                                Math.Pow((robotPose.z - lastRobotPose.z), 2)) ;
+                                                        }
+                                                        // 计算机器人与相机的夹角
+
+
                                                         //三维数据添加机器人坐标
                                                         dictRobotPose.Add(imageKey, robotPose);
 
@@ -869,7 +893,6 @@ namespace _3DLaserGlueInspection
                                                             int indexCross = indexImage - cutSet.StartImageIndex;
                                                             if (indexCross >= 0 && indexCross < angless[indexImageCutProcessDict[item.Key]].Count)
                                                             {
-
                                                                 //间隔显示，减少显示时间
                                                                 if (indexCross % displayIntervalID == 0)
                                                                 {
@@ -932,6 +955,9 @@ namespace _3DLaserGlueInspection
 
                                                                     Vision.singleFrameDetAndResult(hXLDContPorcess, imageSet, ref singleFrameExistGlue, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2);
 
+                                                                    //计算涂胶体积
+                                                                    V = resultData.glueArea * PoseD;
+
 
                                                                 }
                                                                 else
@@ -964,6 +990,18 @@ namespace _3DLaserGlueInspection
                                                         }
                                                         if (resultData.glueArea > 0)
                                                         {
+                                                            //体积结果
+
+                                                            if (dictV.ContainsKey(imageKey))
+                                                            {
+                                                                dictV[imageKey] = V;
+                                                            }
+                                                            else
+                                                            {
+                                                                dictV.Add(imageKey, V);
+                                                            }
+                                                            //胶区域结果
+
                                                             if (dictRegion.ContainsKey(imageKey))
                                                             {
                                                                 dictRegion[imageKey] = outMaxRegion;
@@ -972,6 +1010,8 @@ namespace _3DLaserGlueInspection
                                                             {
                                                                 dictRegion.Add(imageKey, outMaxRegion);
                                                             }
+                                                            //胶最小外接矩形结果
+
                                                             if (dictRegionRectangle2.ContainsKey(imageKey))
                                                             {
                                                                 dictRegionRectangle2[imageKey] = outRegionRectangle2;
@@ -980,6 +1020,8 @@ namespace _3DLaserGlueInspection
                                                             {
                                                                 dictRegionRectangle2.Add(imageKey, outRegionRectangle2);
                                                             }
+                                                            //胶检测数据结果
+
                                                             if (dictData.ContainsKey(imageKey))
                                                             {
                                                                 dictData[imageKey] = resultData;
@@ -988,6 +1030,8 @@ namespace _3DLaserGlueInspection
                                                             {
                                                                 dictData.Add(imageKey, resultData);
                                                             }
+                                                            //胶检测结果
+
                                                             if (dictResult.ContainsKey(imageKey))
                                                             {
                                                                 dictResult[imageKey] = bResult;
@@ -1130,6 +1174,11 @@ namespace _3DLaserGlueInspection
                                 Point3DYs[item.Key].Add(dictY);
                                 var dictZ = new Dictionary<long, List<double>>();
                                 Point3DZs[item.Key].Add(dictZ);
+
+                                var dictV = new Dictionary<long, double>();
+                                glueVols[item.Key].Add(dictV);
+
+
                                 var dictXLD = new Dictionary<long, Mat>();
                                 outLineDict[item.Key].Add(dictXLD);
                                 var dictRegion = new Dictionary<long, Mat>();
