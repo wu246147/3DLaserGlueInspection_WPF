@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_3DLaserGlueInspection.subForm"
         mc:Ignorable="d"
-        Title="检测工具参数设置" Height="731" Width="1286" Loaded="WindowVision_Loaded" Closing="WindowVision_Closing">
+        Title="检测工具参数设置" Height="820
+        " Width="1286" Loaded="WindowVision_Loaded" Closing="WindowVision_Closing">
 
     <Window.Resources>
 
@@ -69,6 +70,9 @@
                                 <TextBox x:Name="colorLimitMinNumericUpDown" FontSize="14"  HorizontalAlignment="Center" Margin="0,80,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="70" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
                             </Grid>
                         </Border>
+                        <CheckBox  x:Name="isUseAngleOptCheck" Content="是否使用&#xA;角度优化" HorizontalAlignment="Left" Margin="0,387,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
+                        <Label  Content="处理放大&#xA;倍数" FontSize="14" Foreground="White" Margin="0,428,0,0" VerticalAlignment="Top" HorizontalAlignment="Center" Width="72"/>
+                        <TextBox x:Name="scaleSizeNumericUpDown" FontSize="14"  HorizontalAlignment="Center" Margin="0,480,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="70" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
 
 
 
@@ -78,7 +82,7 @@
                     <ListBox Name="selectCamListBox"  Margin="5,5,5,5" SelectionChanged="selectCamListBox_SelectionChanged"/>
                 </GroupBox>
                 <GroupBox Grid.Column="2" Header="选用图片" Margin="5,166,5,10" Foreground="White">
-                    <ListBox Name="selectPictureListBox" Margin="5,5,5,5" SelectionChanged="selectPictureListBox_SelectionChanged"/>
+                    <ListBox x:Name="selectPictureListBox" Margin="5,5,5,5" SelectionChanged="selectPictureListBox_SelectionChanged"/>
                 </GroupBox>
                 <Button x:Name="addButton" Content="添加"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" Width="51" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="5,0,0,10" Height="25" VerticalAlignment="Bottom" Click="addButton_Click"  />
                 <Button x:Name="deleteButton" Content="删除"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" Width="49" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="68,0,0,10" Height="25" VerticalAlignment="Bottom" Click="deleteButton_Click"  />
@@ -138,8 +142,8 @@
                                 <Button x:Name="showRangeButton" Content="显示范围"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="127,5,0,0" Click="showRangeButton_Click"  />
                             </Grid>
 
-                            <Button x:Name="runOutLineButton" Content="单帧轮廓检测" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,463,0,0" Click="runOutLineButton_Click"/>
-                            <Label Name="runTimeLabel" Content="-- ms" FontSize="14" Foreground="White" Margin="0,461,25,0" VerticalAlignment="Top" HorizontalAlignment="Right"/>
+                            <Button x:Name="runOutLineButton" Content="单帧轮廓检测" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,522,0,0" Click="runOutLineButton_Click"/>
+                            <Label Name="runTimeLabel" Content="-- ms" FontSize="14" Foreground="White" Margin="0,520,25,0" VerticalAlignment="Top" HorizontalAlignment="Right"/>
                             <CheckBox  x:Name="useDiscreteDenoisingCheck" Content="离散去噪" HorizontalAlignment="Left" Margin="10,350,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
                             <Border BorderBrush="White" BorderThickness="1" Margin="5,373,5,0" Height="82" VerticalAlignment="Top">
                                 <Grid Name="discreteDenoisingGrid" Margin="0" ShowGridLines="True">
@@ -150,11 +154,13 @@
 
                                 </Grid>
                             </Border>
-                            <Button x:Name="get3DDataButton" Content="3D点云提取" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,504,0,0" Click="get3DDataButton_Click"/>
-                            <Button x:Name="runButton" Content="3D涂胶单帧检测" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,545,0,0" Click="runButton_Click2"/>
+                            <Button x:Name="get3DDataButton" Content="3D点云提取" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,563,0,0" Click="get3DDataButton_Click"/>
+                            <Button x:Name="runButton" Content="3D涂胶单帧检测" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,604,0,0" Click="runButton_Click2"/>
                             <CheckBox  x:Name="_3DCloudDetCheck" Content="3D涂胶检测" HorizontalAlignment="Left" Margin="5,70,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
 
-                            <CheckBox  x:Name="saveCloudPointCheck" Content="保存点云图" HorizontalAlignment="Left" Margin="150,508,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Checked="saveCloudPointCheck_Checked" Unchecked="saveCloudPointCheck_Checked" />
+                            <CheckBox  x:Name="saveCloudPointCheck" Content="保存点云图" HorizontalAlignment="Left" Margin="150,567,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Checked="saveCloudPointCheck_Checked" Unchecked="saveCloudPointCheck_Checked" />
+                            <Label  Content="相机与移动&#xD;&#xA;方向夹角°" FontSize="14" Foreground="White" Margin="0,457,81,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="183" Height="55"/>
+                            <TextBox x:Name="robotAndCamAngleNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="118,469,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="130" InputMethod.IsInputMethodEnabled="False" IsEnabled="False" />
 
                         </Grid>
                     </TabItem>

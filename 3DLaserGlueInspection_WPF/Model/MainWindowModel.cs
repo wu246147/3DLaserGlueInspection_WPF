@@ -86,7 +86,7 @@ namespace _3DLaserGlueInspection
         FanucRobot robot = new FanucRobot();
         Mmf mmf = new Mmf();
         ISignal io;
-        Dictionary<string, Setting> sets = new Dictionary<string, Setting>();
+        public Dictionary<string, Setting> sets = new Dictionary<string, Setting>();
 
         object olockDataGridViewImageList = new object();
         Stopwatch watch = new Stopwatch();
@@ -503,38 +503,54 @@ namespace _3DLaserGlueInspection
                                         {
                                             if (Params.CamToTool.ContainsKey(camParamName) && Params.CamToTool[camParamName].ContainsKey(item.Key))
                                             {
-                                                var dictImageKey = new SynchronizedList<SynchronizedList<long>>();
-                                                ImageKeys.Add(item.Key, dictImageKey);
-                                                var dictImage = new SynchronizedList<Dictionary<long, Mat>>();
-                                                Images.Add(item.Key, dictImage);
+                                                if (Params.Cam1InCam.ContainsKey(camParamName) && Params.Cam1InCam[camParamName].ContainsKey(item.Key))
+                                                {
+                                                    if (Params.CamToCam1.ContainsKey(camParamName) && Params.CamToCam1[camParamName].ContainsKey(item.Key))
+                                                    {
+                                                        var dictImageKey = new SynchronizedList<SynchronizedList<long>>();
+                                                        ImageKeys.Add(item.Key, dictImageKey);
+                                                        var dictImage = new SynchronizedList<Dictionary<long, Mat>>();
+                                                        Images.Add(item.Key, dictImage);
 
-                                                var dictRobotPose = new SynchronizedList<Dictionary<long, PoseParameters>>();
-                                                Robot3DPose.Add(item.Key, dictRobotPose);
+                                                        var dictRobotPose = new SynchronizedList<Dictionary<long, PoseParameters>>();
+                                                        Robot3DPose.Add(item.Key, dictRobotPose);
 
-                                                var dictX = new SynchronizedList<Dictionary<long, List<double>>>();
-                                                Point3DXs.Add(item.Key, dictX);
-                                                var dictY = new SynchronizedList<Dictionary<long, List<double>>>();
-                                                Point3DYs.Add(item.Key, dictY);
-                                                var dictZ = new SynchronizedList<Dictionary<long, List<double>>>();
-                                                Point3DZs.Add(item.Key, dictZ);
-                                                var dictXLD = new SynchronizedList<Dictionary<long, Mat>>();
+                                                        var dictX = new SynchronizedList<Dictionary<long, List<double>>>();
+                                                        Point3DXs.Add(item.Key, dictX);
+                                                        var dictY = new SynchronizedList<Dictionary<long, List<double>>>();
+                                                        Point3DYs.Add(item.Key, dictY);
+                                                        var dictZ = new SynchronizedList<Dictionary<long, List<double>>>();
+                                                        Point3DZs.Add(item.Key, dictZ);
+                                                        var dictXLD = new SynchronizedList<Dictionary<long, Mat>>();
 
-                                                var dictV = new SynchronizedList<Dictionary<long, double>>();
-                                                glueVols.Add(item.Key, dictV);
+                                                        var dictV = new SynchronizedList<Dictionary<long, double>>();
+                                                        glueVols.Add(item.Key, dictV);
 
-                                                outLineDict.Add(item.Key, dictXLD);
-                                                var dictRegion = new SynchronizedList<Dictionary<long, Mat>>();
-                                                glueRegionDict.Add(item.Key, dictRegion);
-                                                var dictRegionRectangle2 = new SynchronizedList<Dictionary<long, Mat>>();
-                                                glueSmallRectRegionDict.Add(item.Key, dictRegionRectangle2);
-                                                var dictData = new SynchronizedList<Dictionary<long, Data>>();
-                                                glueDataDict.Add(item.Key, dictData);
-                                                var dictResult = new SynchronizedList<Dictionary<long, BResult>>();
-                                                glueResultDict.Add(item.Key, dictResult);
+                                                        outLineDict.Add(item.Key, dictXLD);
+                                                        var dictRegion = new SynchronizedList<Dictionary<long, Mat>>();
+                                                        glueRegionDict.Add(item.Key, dictRegion);
+                                                        var dictRegionRectangle2 = new SynchronizedList<Dictionary<long, Mat>>();
+                                                        glueSmallRectRegionDict.Add(item.Key, dictRegionRectangle2);
+                                                        var dictData = new SynchronizedList<Dictionary<long, Data>>();
+                                                        glueDataDict.Add(item.Key, dictData);
+                                                        var dictResult = new SynchronizedList<Dictionary<long, BResult>>();
+                                                        glueResultDict.Add(item.Key, dictResult);
 
-                                                indexImageCutProcessDict.Add(item.Key, 0);
+                                                        indexImageCutProcessDict.Add(item.Key, 0);
 
-                                                displaySize.Add(item.Key, new SynchronizedList<System.Windows.Size>());
+                                                        displaySize.Add(item.Key, new SynchronizedList<System.Windows.Size>());
+                                                    }
+                                                    else
+                                                    {
+                                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("多相机转换(CamToCam1)不存在"), LogType.ng);
+                                                        return;
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("多相机转换(Cam1InCam)不存在"), LogType.ng);
+                                                    return;
+                                                }
                                             }
                                             else
                                             {
@@ -716,8 +732,12 @@ namespace _3DLaserGlueInspection
                             var LightInCam = Params.LightInCam[camParamName][item.Key];
                             /// 用于将激光坐标转为相机坐标
                             var LightToCam = Params.LightToCam[camParamName][item.Key];
+                            /// 相机转相机1坐标
+                            var CamToCam1 = Params.CamToCam1[camParamName][item.Key];
                             /// 相机坐标转为法兰盘坐标
-                            var CamToTool = Params.CamToTool[camParamName][item.Key];
+                            var Cam1ToTool = Params.CamToTool[camParamName][item.Key];
+
+                            var CamToTool = Cam1ToTool * CamToCam1;
 
                             tasks.Add(item.Key, Task.Run((Action)(() =>
                             {
@@ -818,6 +838,9 @@ namespace _3DLaserGlueInspection
                                                     double PoseD = 0;
                                                     double V = 0;
 
+                                                    double robotAndCamAngle = int.MaxValue;
+
+
                                                     if (imageSet.轮廓检测)
                                                     {
                                                         //激光轮廓提取
@@ -865,13 +888,43 @@ namespace _3DLaserGlueInspection
                                                                 Math.Pow((robotPose.y - lastRobotPose.y), 2) + 
                                                                 Math.Pow((robotPose.z - lastRobotPose.z), 2)) ;
                                                         }
-                                                        // 计算机器人与相机的夹角
 
+                                                        // 计算机器人与相机的夹角,必须要机器人有移动
+                                                        if (dictRobotPose.Count > 0&& PoseD>0) 
+                                                        {
+                                                            //计算CamToTool的矩阵
+
+                                                            //打包前后机器人pose
+                                                            var last = dictRobotPose.Last();
+                                                            var lastRobotPose = last.Value;
+
+                                                            Mat robotPoseMat = new Mat();
+                                                            robotPoseMat =  Mat.Zeros(2, 7, MatType.CV_64FC1);
+                                                            robotPoseMat.At<double>(0, 0) = lastRobotPose.x;
+                                                            robotPoseMat.At<double>(0, 1) = lastRobotPose.y;
+                                                            robotPoseMat.At<double>(0, 2) = lastRobotPose.z;
+                                                            robotPoseMat.At<double>(0, 3) = lastRobotPose.rx;
+                                                            robotPoseMat.At<double>(0, 4) = lastRobotPose.ry;
+                                                            robotPoseMat.At<double>(0, 5) = lastRobotPose.rz;
+                                                            robotPoseMat.At<double>(0, 6) = lastRobotPose.PoseType;
+
+                                                            robotPoseMat.At<double>(1, 0) = robotPose.x;
+                                                            robotPoseMat.At<double>(1, 1) = robotPose.y;
+                                                            robotPoseMat.At<double>(1, 2) = robotPose.z;
+                                                            robotPoseMat.At<double>(1, 3) = robotPose.rx;
+                                                            robotPoseMat.At<double>(1, 4) = robotPose.ry;
+                                                            robotPoseMat.At<double>(1, 5) = robotPose.rz;
+                                                            robotPoseMat.At<double>(1, 6) = robotPose.PoseType;
+
+                                                            Vision.robotAndCamVectorAngle(robotPoseMat.CvPtr, CamToTool.CvPtr,2,0,out robotAndCamAngle);
+                                                        }
+                                                            
 
                                                         //三维数据添加机器人坐标
                                                         dictRobotPose.Add(imageKey, robotPose);
 
-                                                        if (xy.Rows > 0)
+                                                        //需要保证检测到有点，并且机器人已经处于移动状态
+                                                        if (xy.Rows > 0 && dictRobotPose.Count > 0 && PoseD > 0)
                                                         {
                                                             getOutlineResult = true;
 
@@ -886,6 +939,8 @@ namespace _3DLaserGlueInspection
                                                             //}
                                                             //if (xy.Height > 0)
                                                             //{
+
+
                                                             Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToTool,
                                                             robotPose, out lightXY, out robotX, out robotY, out robotZ);
 
@@ -936,7 +991,22 @@ namespace _3DLaserGlueInspection
                                                             {
 
                                                                 singleFrameExistOutline = true;
-                                                                Vision.scalePoint(lightXY, cutSet, out hXLDCont10mm);
+                                                                Vision.scalePoint(lightXY, cutSet, 90 - LightInCam.rx, out hXLDCont10mm);
+                                                                if (cutSet.isUseAngleOpt)
+                                                                {
+                                                                    //对x方向进行矫正
+                                                                    double scaleX = 1;
+                                                                    scaleX = Math.Cos(robotAndCamAngle / 180 * Math.PI);
+                                                                    Mat correctionPoints = new Mat();
+                                                                    correctionPoints = hXLDCont10mm.Clone();
+
+                                                                    for (int id = 0; id < correctionPoints.Rows; id++)
+                                                                    {
+                                                                        correctionPoints.At<double>(id, 0) = correctionPoints.At<double>(id, 0) * scaleX;
+                                                                    }
+
+                                                                    hXLDCont10mm = correctionPoints.Clone();
+                                                                }
 
                                                                 //如果存在
                                                                 if (!hXLDCont10mm.Empty())
@@ -946,14 +1016,14 @@ namespace _3DLaserGlueInspection
                                                                     //离散滤波
                                                                     if (imageSet.离散去噪)
                                                                     {
-                                                                        Vision.TrajectoryDiscreteFilter(hXLDCont10mm, out hXLDContPorcess, imageSet.分段距离 * Vision.scaleSize, imageSet.成段点数);
+                                                                        Vision.TrajectoryDiscreteFilter(hXLDCont10mm, out hXLDContPorcess, imageSet.分段距离 * cutSet.scaleSize, imageSet.成段点数);
                                                                     }
                                                                     else
                                                                     {
                                                                         hXLDContPorcess = hXLDCont10mm.Clone();
                                                                     }
 
-                                                                    Vision.singleFrameDetAndResult(hXLDContPorcess, imageSet, ref singleFrameExistGlue, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2);
+                                                                    Vision.singleFrameDetAndResult(hXLDContPorcess, imageSet,cutSet, ref singleFrameExistGlue, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2);
 
                                                                     //计算涂胶体积
                                                                     V = resultData.glueArea * PoseD;
@@ -1021,7 +1091,6 @@ namespace _3DLaserGlueInspection
                                                                 dictRegionRectangle2.Add(imageKey, outRegionRectangle2);
                                                             }
                                                             //胶检测数据结果
-
                                                             if (dictData.ContainsKey(imageKey))
                                                             {
                                                                 dictData[imageKey] = resultData;
@@ -2298,7 +2367,7 @@ namespace _3DLaserGlueInspection
 
         object olockShow = new object();
         bool showing = false;
-        void ShowImageData(int showWidth, int showHeight, Mat hXLDCont10mm)
+        void ShowImageData(int showWidth, int showHeight, CutSet cutSet, Mat hXLDCont10mm)
         {
             if (!showing)
             {
@@ -2308,7 +2377,7 @@ namespace _3DLaserGlueInspection
                     lock (olockShow)
                     {
                         Mat mat = new Mat();
-                        mat = Mat.Zeros((int)(showHeight * Vision.scaleSize), (int)(showWidth * Vision.scaleSize), MatType.CV_8UC3);
+                        mat = Mat.Zeros((int)(showHeight * cutSet.scaleSize), (int)(showWidth * cutSet.scaleSize), MatType.CV_8UC3);
 
                         DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//扩画布
 
@@ -2333,7 +2402,7 @@ namespace _3DLaserGlueInspection
             }
         }
 
-        void ShowImageData(int showWidth, int showHeight, Mat hXLDCont10mm, Mat hRegion, Mat hRegionSmallestRectangle2, Data data, BResult bResult, double offsetX = 0, double offsetY = 0)
+        void ShowImageData(int showWidth, int showHeight, Mat hXLDCont10mm, Mat hRegion, Mat hRegionSmallestRectangle2, Data data, BResult bResult,CutSet cutSet, double offsetX = 0, double offsetY = 0)
         {
             if (!showing)
             {
@@ -2343,7 +2412,7 @@ namespace _3DLaserGlueInspection
                     lock (olockShow)
                     {
                         Mat mat = new Mat();
-                        mat = Mat.Zeros((int)(showHeight * Vision.scaleSize), (int)(showWidth * Vision.scaleSize), MatType.CV_8UC3);
+                        mat = Mat.Zeros((int)(showHeight * cutSet.scaleSize), (int)(showWidth * cutSet.scaleSize), MatType.CV_8UC3);
 
                         DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//扩画布
 
@@ -2382,8 +2451,8 @@ namespace _3DLaserGlueInspection
                             string text = GlobalVarAndFunc.LanguageTranslate("胶高：") + $"{data.glueHeight:0.00}\r\n"
                                + GlobalVarAndFunc.LanguageTranslate("胶宽：") + $"{data.glueWidth:0.00}\r\n"
                                + GlobalVarAndFunc.LanguageTranslate("面积：") + $"{data.glueArea:0.00}";
-                            DispTextInImageHWindowControlEvent(text, Colors.White, (int)data.column + (int)(data.glueWidth / 2 * Vision.scaleSize + offsetX),
-                                (int)data.row + (int)(data.glueHeight / 2 * Vision.scaleSize + offsetY));
+                            DispTextInImageHWindowControlEvent(text, Colors.White, (int)data.column + (int)(data.glueWidth / 2 * cutSet.scaleSize + offsetX),
+                                (int)data.row + (int)(data.glueHeight / 2 * cutSet.scaleSize + offsetY));
 
                             //hWindowControl.DispTextInImage(text, data.row, data.column);
                             string textWindow1 = GlobalVarAndFunc.LanguageTranslate("胶宽：") + (bResult.glueWidth ? "OK" : "NG");

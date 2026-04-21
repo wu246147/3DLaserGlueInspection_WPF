@@ -2445,15 +2445,19 @@ namespace _3DLaserGlueInspection
         public string ErrMsg => _errMsg;
         string _errMsg = string.Empty;
         //保存的参数
-        public Dictionary<string, Dictionary<string, CamParam>> Param = new Dictionary<string, Dictionary<string, CamParam>>();
-        public Dictionary<string, Dictionary<string, CameraParameters>> CamPar = new Dictionary<string, Dictionary<string, CameraParameters>>();
-        public Dictionary<string, Dictionary<string, PoseParameters>> LightInCam = new Dictionary<string, Dictionary<string, PoseParameters>>();
+        public Dictionary<string, Dictionary<string, CamParam>> Param = new Dictionary<string, Dictionary<string, CamParam>>();     //相机调试参数
+        public Dictionary<string, Dictionary<string, CameraParameters>> CamPar = new Dictionary<string, Dictionary<string, CameraParameters>>();    //相机内参
+        public Dictionary<string, Dictionary<string, PoseParameters>> LightInCam = new Dictionary<string, Dictionary<string, PoseParameters>>();    //光平面内参
         //public Dictionary<string, Dictionary<string, PoseParameters>> SensorInCam = new Dictionary<string, Dictionary<string, PoseParameters>>();
-        public Dictionary<string, Dictionary<string, PoseParameters>> ToolInCam = new Dictionary<string, Dictionary<string, PoseParameters>>();
+        public Dictionary<string, Dictionary<string, PoseParameters>> ToolInCam = new Dictionary<string, Dictionary<string, PoseParameters>>();    //相机外参（手眼标定，其实都是相机1的）
+        public Dictionary<string, Dictionary<string, PoseParameters>> Cam1InCam = new Dictionary<string, Dictionary<string, PoseParameters>>();    //转相机1坐标系的外参
+
         //计算的参数
-        public Dictionary<string, Dictionary<string, Mat>> LightToCam = new Dictionary<string, Dictionary<string, Mat>>();
+        public Dictionary<string, Dictionary<string, Mat>> LightToCam = new Dictionary<string, Dictionary<string, Mat>>();    //光平面旋转矩阵
         //public Dictionary<string, Dictionary<string, Mat>> CamToSensor = new Dictionary<string, Dictionary<string, Mat>>();
-        public Dictionary<string, Dictionary<string, Mat>> CamToTool = new Dictionary<string, Dictionary<string, Mat>>();
+        public Dictionary<string, Dictionary<string, Mat>> CamToTool = new Dictionary<string, Dictionary<string, Mat>>();    //手眼标定的旋转矩阵（其实都是相机1的，要右乘CamToCam1才是自己的）
+        public Dictionary<string, Dictionary<string, Mat>> CamToCam1 = new Dictionary<string, Dictionary<string, Mat>>();    //转相机1的旋转矩阵
+
         ////保存的参数
         //public Dictionary<string, Mat> SensorToTool = new Dictionary<string, Mat>();
 
@@ -2464,11 +2468,12 @@ namespace _3DLaserGlueInspection
             Param.Clear();
             CamPar.Clear();
             LightInCam.Clear();
-            //SensorInCam.Clear();
             ToolInCam.Clear();
             LightToCam.Clear();
-            //CamToSensor.Clear();
             CamToTool.Clear();
+            Cam1InCam.Clear();
+            CamToCam1.Clear();
+
             string camSetPath = basePath + "\\CamSet";
             if (Directory.Exists(camSetPath))
             {
@@ -2484,6 +2489,9 @@ namespace _3DLaserGlueInspection
                     LightToCam.Add(name, new Dictionary<string, Mat>());
                     //CamToSensor.Add(name, new Dictionary<string, Mat>());
                     CamToTool.Add(name, new Dictionary<string, Mat>());
+
+                    Cam1InCam.Add(name, new Dictionary<string, PoseParameters>());
+                    CamToCam1.Add(name, new Dictionary<string, Mat>());
 
                     string[] camPaths = Directory.GetDirectories(path);
                     foreach (string camPath in camPaths)
@@ -2680,62 +2688,6 @@ namespace _3DLaserGlueInspection
                         }
 
                         bool result4 = true;
-                        //try
-                        //{
-                        //    string paramPath = camPath + "\\SensorInCam.dat";
-                        //    if (File.Exists(paramPath))
-                        //    {
-                        //        var hWorldPose = new PoseParameters();
-                        //        hWorldPose.ReadPose(paramPath);
-                        //        if (SensorInCam[name].ContainsKey(camKey))
-                        //        {
-                        //            SensorInCam[name][camKey] = hWorldPose;
-                        //        }
-                        //        else
-                        //        {
-                        //            SensorInCam[name].Add(camKey, hWorldPose);
-                        //        }
-                        //    }
-                        //    else
-                        //    {
-                        //        result4 = false;
-                        //        _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("文件不存在");
-                        //    }
-                        //}
-                        //catch (Exception ex)
-                        //{
-                        //    result4 = false;
-                        //    _errMsg = ex.ToString();
-                        //}
-                        //if (!result4)
-                        //{
-                        //    result4 = true;
-                        //    try
-                        //    {
-                        //        string paramPath = camPath + "\\SensorInCam_bak.dat";
-                        //        if (File.Exists(paramPath))
-                        //        {
-                        //            var hWorldPose = new PoseParameters();
-                        //            hWorldPose.ReadPose(paramPath);
-                        //            if (SensorInCam[name].ContainsKey(camKey))
-                        //            {
-                        //                SensorInCam[name][camKey] = hWorldPose;
-                        //            }
-                        //            else
-                        //            {
-                        //                SensorInCam[name].Add(camKey, hWorldPose);
-                        //            }
-                        //        }
-                        //        else
-                        //        {
-                        //            result4 = false;
-                        //        }
-                        //    }
-                        //    catch (Exception ex)
-                        //    {
-                        //        result4 = false;
-                        //    }
-                        //}
 
                         bool result5 = true;
                         try
@@ -2799,7 +2751,73 @@ namespace _3DLaserGlueInspection
                             }
                         }
 
+
+                        bool result7 = true;
+                        try
+                        {
+                            string paramPath = camPath + "\\Cam1InCam.dat";
+                            if (File.Exists(paramPath))
+                            {
+                                var hWorldPose = new PoseParameters();
+                                //hWorldPose.ReadPose(paramPath);
+                                hWorldPose = HFileIO.ReadPosePara(paramPath);
+
+                                if (Cam1InCam[name].ContainsKey(camKey))
+                                {
+                                    Cam1InCam[name][camKey] = hWorldPose;
+                                }
+                                else
+                                {
+                                    Cam1InCam[name].Add(camKey, hWorldPose);
+                                }
+                            }
+                            else
+                            {
+                                result7 = false;
+                                _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("文件不存在");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            result7 = false;
+                            _errMsg = ex.ToString();
+                        }
+                        if (!result7)
+                        {
+                            result7 = true;
+                            try
+                            {
+                                string paramPath = camPath + "\\Cam1InCam_bak.dat";
+                                if (File.Exists(paramPath))
+                                {
+                                    var hWorldPose = new PoseParameters();
+                                    //hWorldPose.ReadPose(paramPath);
+                                    hWorldPose = HFileIO.ReadPosePara(paramPath);
+
+                                    if (Cam1InCam[name].ContainsKey(camKey))
+                                    {
+                                        Cam1InCam[name][camKey] = hWorldPose;
+                                    }
+                                    else
+                                    {
+                                        Cam1InCam[name].Add(camKey, hWorldPose);
+                                    }
+                                }
+                                else
+                                {
+                                    result7 = false;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                result7 = false;
+                            }
+                        }
+
+
+
                         bool result6 = true;
+                        // pose转mat
                         try
                         {
 
@@ -2821,17 +2839,6 @@ namespace _3DLaserGlueInspection
                                     LightToCam[name].Add(camKey, H);
                                 }
                             }
-                            //if (SensorInCam[name].ContainsKey(camKey))
-                            //{
-                            //    if (CamToSensor[name].ContainsKey(camKey))
-                            //    {
-                            //        CamToSensor[name][camKey] = SensorInCam[name][camKey].PoseInvert().PoseToHomMat3d();
-                            //    }
-                            //    else
-                            //    {
-                            //        CamToSensor[name].Add(camKey, SensorInCam[name][camKey].PoseInvert().PoseToHomMat3d());
-                            //    }
-                            //}
                             if (ToolInCam[name].ContainsKey(camKey))
                             {
                                 if (CamToTool[name].ContainsKey(camKey))
@@ -2854,6 +2861,24 @@ namespace _3DLaserGlueInspection
                                     //CamToTool[name].Add(camKey, H.Inv());
                                 }
                             }
+
+                            if (Cam1InCam[name].ContainsKey(camKey))
+                            {
+                                if (CamToCam1[name].ContainsKey(camKey))
+                                {
+                                    Mat H = new Mat();
+                                    Vision.poseToHomMat3d(Cam1InCam[name][camKey].PoseType, Cam1InCam[name][camKey].x, Cam1InCam[name][camKey].y, Cam1InCam[name][camKey].z,
+                                        Cam1InCam[name][camKey].rx, Cam1InCam[name][camKey].ry, Cam1InCam[name][camKey].rz, H.CvPtr);
+                                    CamToCam1[name][camKey] = H;
+                                }
+                                else
+                                {
+                                    Mat H = new Mat();
+                                    Vision.poseToHomMat3d(Cam1InCam[name][camKey].PoseType, Cam1InCam[name][camKey].x, Cam1InCam[name][camKey].y, Cam1InCam[name][camKey].z,
+                                        Cam1InCam[name][camKey].rx, Cam1InCam[name][camKey].ry, Cam1InCam[name][camKey].rz, H.CvPtr);
+                                    CamToCam1[name].Add(camKey, H);
+                                }
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -2862,79 +2887,13 @@ namespace _3DLaserGlueInspection
                         }
 
 
-                        if (!result || !result2 || !result3 || !result4 || !result5 || !result6)
+                       
+
+                        if (!result || !result2 || !result3 || !result4 || !result5 || !result6 || !result7)
                         {
                             results = false;
                         }
                     }
-
-                    //bool resultTool = true;
-                    //try
-                    //{
-                    //    string paramPath = path + "\\SensorToTool";
-                    //    if (File.Exists(paramPath))
-                    //    {
-                    //        using (FileStream stream = new FileStream(paramPath, FileMode.Open))
-                    //        {
-                    //            var hHomMat3D = Mat.Deserialize(stream);
-                    //            if (SensorToTool.ContainsKey(name))
-                    //            {
-                    //                SensorToTool[name] = hHomMat3D;
-                    //            }
-                    //            else
-                    //            {
-                    //                SensorToTool.Add(name, hHomMat3D);
-                    //            }
-                    //        }
-                    //    }
-                    //    else
-                    //    {
-                    //        resultTool = false;
-                    //        _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("文件不存在");
-                    //    }
-                    //}
-                    //catch (Exception ex)
-                    //{
-                    //    resultTool = false;
-                    //    _errMsg = ex.ToString();
-                    //}
-                    //if (!resultTool)
-                    //{
-                    //    resultTool = true;
-                    //    try
-                    //    {
-                    //        string paramPath = path + "\\SensorToTool_bak";
-                    //        if (File.Exists(paramPath))
-                    //        {
-                    //            using (FileStream stream = new FileStream(paramPath, FileMode.Open))
-                    //            {
-                    //                var hHomMat3D = Mat.Deserialize(stream);
-                    //                if (SensorToTool.ContainsKey(name))
-                    //                {
-                    //                    SensorToTool[name] = hHomMat3D;
-                    //                }
-                    //                else
-                    //                {
-                    //                    SensorToTool.Add(name, hHomMat3D);
-                    //                }
-                    //                File.Copy(paramPath, path + "\\SensorToTool", true);
-                    //            }
-                    //        }
-                    //        else
-                    //        {
-                    //            resultTool = false;
-                    //        }
-                    //    }
-                    //    catch (Exception ex)
-                    //    {
-                    //        resultTool = false;
-                    //    }
-                    //}
-
-                    //if (!resultTool)
-                    //{
-                    //    results = false;
-                    //}
                 }
             }
             else
@@ -3012,21 +2971,21 @@ namespace _3DLaserGlueInspection
                     }
                 }
 
-                //foreach (var name in SensorInCam.Keys)
-                //{
-                //    foreach (var key in SensorInCam[name].Keys)
-                //    {
-                //        string path = $"{basePath}\\CamSet\\{name}\\{key}";
-                //        if (!Directory.Exists(path))
-                //        {
-                //            Directory.CreateDirectory(path);
-                //        }
+                foreach (var name in Cam1InCam.Keys)
+                {
+                    foreach (var key in Cam1InCam[name].Keys)
+                    {
+                        string path = $"{basePath}\\CamSet\\{name}\\{key}";
+                        if (!Directory.Exists(path))
+                        {
+                            Directory.CreateDirectory(path);
+                        }
+                        string paramPath = $"{path}\\Cam1InCam.dat";
+                        HFileIO.WritePosePara(paramPath, Cam1InCam[name][key]);
+                        File.Copy(paramPath, path + "\\Cam1InCam_bak.dat", true);
+                    }
+                }
 
-                //        string paramPath = $"{path}\\SensorInCam.dat";
-                //        SensorInCam[name][key].WritePose(paramPath);
-                //        File.Copy(paramPath, path + "\\SensorInCam_bak.dat", true);
-                //    }
-                //}
 
                 foreach (var name in ToolInCam.Keys)
                 {
@@ -3045,21 +3004,6 @@ namespace _3DLaserGlueInspection
                     }
                 }
 
-                //foreach (var name in SensorToTool.Keys)
-                //{
-                //    string path = $"{basePath}\\CamSet\\{name}";
-                //    if (!Directory.Exists(path))
-                //    {
-                //        Directory.CreateDirectory(path);
-                //    }
-
-                //    string paramPath = $"{path}\\SensorToTool";
-                //    using (FileStream stream = new FileStream(paramPath, FileMode.Create))
-                //    {
-                //        SensorToTool[name].Serialize(stream);
-                //    }
-                //    File.Copy(paramPath, path + "\\SensorToTool_bak", true);
-                //}
             }
             catch (Exception ex)
             {
@@ -3139,22 +3083,7 @@ namespace _3DLaserGlueInspection
                     LightInCam.Add(target, pairs);
                 }
             }
-            //if (SensorInCam.ContainsKey(source) && SensorInCam[source] != null)
-            //{
-            //    Dictionary<string, PoseParameters> pairs = new Dictionary<string, PoseParameters>();
-            //    foreach (var key in SensorInCam[source].Keys)
-            //    {
-            //        pairs.Add(key, SensorInCam[source][key].Clone());
-            //    }
-            //    if (SensorInCam.ContainsKey(target))
-            //    {
-            //        SensorInCam[target] = pairs;
-            //    }
-            //    else
-            //    {
-            //        SensorInCam.Add(target, pairs);
-            //    }
-            //}
+
             if (ToolInCam.ContainsKey(source) && ToolInCam[source] != null)
             {
                 Dictionary<string, PoseParameters> pairs = new Dictionary<string, PoseParameters>();
@@ -3187,22 +3116,6 @@ namespace _3DLaserGlueInspection
                     LightToCam.Add(target, pairs);
                 }
             }
-            //if (CamToSensor.ContainsKey(source) && CamToSensor[source] != null)
-            //{
-            //    Dictionary<string, Mat> pairs = new Dictionary<string, Mat>();
-            //    foreach (var key in CamToSensor[source].Keys)
-            //    {
-            //        pairs.Add(key, CamToSensor[source][key].Clone());
-            //    }
-            //    if (CamToSensor.ContainsKey(target))
-            //    {
-            //        CamToSensor[target] = pairs;
-            //    }
-            //    else
-            //    {
-            //        CamToSensor.Add(target, pairs);
-            //    }
-            //}
             if (CamToTool.ContainsKey(source) && CamToTool[source] != null)
             {
                 Dictionary<string, Mat> pairs = new Dictionary<string, Mat>();
@@ -3219,17 +3132,42 @@ namespace _3DLaserGlueInspection
                     CamToTool.Add(target, pairs);
                 }
             }
-            //if (SensorToTool.ContainsKey(source) && SensorToTool[source] != null)
-            //{
-            //    if (SensorToTool.ContainsKey(target))
-            //    {
-            //        SensorToTool[target] = SensorToTool[source].Clone();
-            //    }
-            //    else
-            //    {
-            //        SensorToTool.Add(target, SensorToTool[source].Clone());
-            //    }
-            //}
+
+
+
+            if (Cam1InCam.ContainsKey(source) && Cam1InCam[source] != null)
+            {
+                Dictionary<string, PoseParameters> pairs = new Dictionary<string, PoseParameters>();
+                foreach (var key in Cam1InCam[source].Keys)
+                {
+                    pairs.Add(key, Cam1InCam[source][key].Clone());
+                }
+                if (Cam1InCam.ContainsKey(target))
+                {
+                    Cam1InCam[target] = pairs;
+                }
+                else
+                {
+                    Cam1InCam.Add(target, pairs);
+                }
+            }
+
+            if (CamToCam1.ContainsKey(source) && CamToCam1[source] != null)
+            {
+                Dictionary<string, Mat> pairs = new Dictionary<string, Mat>();
+                foreach (var key in CamToCam1[source].Keys)
+                {
+                    pairs.Add(key, CamToCam1[source][key].Clone());
+                }
+                if (CamToCam1.ContainsKey(target))
+                {
+                    CamToCam1[target] = pairs;
+                }
+                else
+                {
+                    CamToCam1.Add(target, pairs);
+                }
+            }
         }
     }
 

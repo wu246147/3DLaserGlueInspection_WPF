@@ -41,12 +41,12 @@ namespace _3DLaserGlueInspection
 
         [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
         ///激光提取函数,亚像素
-        public static extern int thinningD(IntPtr inputMat, IntPtr outImage, IntPtr outPointMat);
+        public static extern int thinningD(IntPtr inputMat, IntPtr outImage, IntPtr outPointMat, int min_width = 1);
         [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
         ///单帧检测
 
         public static extern int singleFrameDet(IntPtr inputPointMat, out bool existGlue, out double centerX, out double centerY,
-            out double phi, out double width, out double height, out double maxArea, IntPtr outMaxRegion, IntPtr outRegionRectangle2, bool isDebug = false);
+            out double phi, out double width, out double height, out double maxArea, IntPtr outMaxRegion, IntPtr outRegionRectangle2, bool angleProcess = true, bool isDebug = false);
 
         [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
         ///离散滤波
@@ -74,8 +74,21 @@ namespace _3DLaserGlueInspection
 
         public static extern int thinning3d(IntPtr img, IntPtr thinn, IntPtr pointsMat);
 
+        [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
+        // 机器人移动方向与相机方向夹角
+        ///
+        /// \brief robotAndCamVectorAngle 根据机器人移动轨迹和相机的位姿来计算机器人移动向量和相机取像向量的夹角
+        /// \param robotPoses 机器人移动前后两个点（2，7），包括x，y，z rx ry rz rt
+        /// \param Cam2Tool 相机到法兰盘的旋转矩阵
+        /// \param axisType 所计算是哪个相机轴的夹角，0为x，1为y，2为z。正常就是z。
+        /// \param planeType 所计算的夹角是基于哪个平面（这个平面是世界坐标的平面），0为xy平面，1为xz平面，2为yz平面。这个需要根据检测产品在机器人坐标系的哪个平面下进行判断,正常是xy平面。
+        /// \param angle    返回的夹角。
+        /// \return
+        ///
+        public static extern int robotAndCamVectorAngle(IntPtr robotPose, IntPtr Cam2Tool, int axisType, int planeType, out double angle);
 
-        public static double scaleSize = 10; //表示计算过程中的点云放缩因子，1时单位为1mm，10时单位为100um，100时单位为10um
+
+        //public static double scaleSize = 10; //表示计算过程中的点云放缩因子，1时单位为1mm，10时单位为100um，100时单位为10um
         
         ////后面开放一下这几个参数 这个是用多个相机进行点云合成，然后再用点云投影成平面时，才需要用到的参数，分别指xyz的范围。目前不用多个相机融合，因此不用到
         //public static double xSize = 0.02;
@@ -102,8 +115,18 @@ namespace _3DLaserGlueInspection
             Mat outImage = new Mat();
             outlinePoints = new Mat();
 
-            thinningD(Image.CvPtr, outImage.CvPtr, outlinePoints.CvPtr);
+            thinningD(Image.CvPtr, outImage.CvPtr, outlinePoints.CvPtr,2);
 
+            //临时添加
+            Vision.printPoint(outlinePoints, "outlinePoints");
+            //Console.WriteLine($"outlinePoints:\r\n");
+
+            //for (int i = 0; i < outlinePoints.Rows; i++)
+            //{
+            //    Console.WriteLine($"x:{outlinePoints.At<double>(i, 0)}");
+            //    Console.WriteLine($"y:{outlinePoints.At<double>(i, 1)},\r\n");
+
+            //}
             //thinningD(Image.CvPtr, outImage.CvPtr, outlinePoints.CvPtr);
             //Console.WriteLine($"Image type:{Image.Type()}.");
             //Console.WriteLine($"outImage type:{outImage.Type()}.");
@@ -292,7 +315,7 @@ namespace _3DLaserGlueInspection
         /// <param name="maxArea"></param>
         /// <param name="resultData"></param>
         /// <param name="bResult"></param>
-        public static void judgeGlueResult(ImageSet imageSet,double centerX,double centerY, double width, double height, double phi, double maxArea, out Data resultData, out BResult bResult)
+        public static void judgeGlueResult(ImageSet imageSet,int scaleSize,double centerX,double centerY, double width, double height, double phi, double maxArea, out Data resultData, out BResult bResult)
         {
             resultData = new Data();
             bResult = new BResult();
@@ -392,7 +415,7 @@ namespace _3DLaserGlueInspection
         {
             //转激光坐标系
             GetXY(hCamPar, LightInCam, imagePoint, out lightXY);
-            //printPoint(imagePoint, "imagePoint");
+            printPoint(lightXY, "lightXY");
 
             //printPoint(lightXY, "lightXY");
             Mat lightXY4 = new Mat();
@@ -478,15 +501,18 @@ namespace _3DLaserGlueInspection
         /// <param name="lightXYcut"></param>
         /// <param name="cutSet"></param>
         /// <param name="XY_10um"></param>
-        public static void scalePoint(Mat lightXYcut,CutSet cutSet, out Mat XY_10um)
+        public static void scalePoint(Mat lightXYcut,CutSet cutSet,double lightAngle, out Mat XY_10um)
         {
+
+
             XY_10um = new Mat(lightXYcut.Size(), lightXYcut.Type());
             //X
-            Cv2.Multiply(lightXYcut.Col(0), new Scalar(1000 * scaleSize), XY_10um.Col(0));
-            Cv2.Add(XY_10um.Col(0), new Scalar(cutSet.ShowWidth * scaleSize / 2), XY_10um.Col(0));
+            Cv2.Multiply(lightXYcut.Col(0), new Scalar(1000 * cutSet.scaleSize), XY_10um.Col(0));
+            Cv2.Add(XY_10um.Col(0), new Scalar(cutSet.ShowWidth * cutSet.scaleSize / 2), XY_10um.Col(0));
             //Y
-            Cv2.Multiply(lightXYcut.Col(1), new Scalar(1000 * scaleSize * Math.Cos(5 / 180 * Math.PI)), XY_10um.Col(1));
-            Cv2.Add(XY_10um.Col(1), new Scalar(cutSet.ShowHeight * scaleSize / 2), XY_10um.Col(1));
+
+            Cv2.Multiply(lightXYcut.Col(1), new Scalar(1000 * cutSet.scaleSize * Math.Cos(lightAngle / 180 * Math.PI)), XY_10um.Col(1));
+            Cv2.Add(XY_10um.Col(1), new Scalar(cutSet.ShowHeight * cutSet.scaleSize / 2), XY_10um.Col(1));
         }
 
         /// <summary>
@@ -507,7 +533,7 @@ namespace _3DLaserGlueInspection
         /// <param name="hXLDCont10mm"></param>
         /// <param name="xy"></param>
         /// <param name="lightXY"></param>
-        public static void singleFrameDetTotal(CamParam camParam, CameraParameters hCamPar, PoseParameters LightInCam, Mat detImage, CutSet cutSet, ImageSet imageSet, ref bool singleFrameExistGlue, ref bool singleFrameExistOutline, ref Data resultData, ref BResult bResult, ref Mat outMaxRegion, ref Mat outRegionRectangle2, ref Mat hXLDCont10mm, Mat xy, Mat lightXY)
+        public static void singleFrameDetTotal(CamParam camParam, CameraParameters hCamPar, PoseParameters LightInCam, Mat detImage, CutSet cutSet, ImageSet imageSet, ref bool singleFrameExistGlue, ref bool singleFrameExistOutline, ref Data resultData, ref BResult bResult, ref Mat outMaxRegion, ref Mat outRegionRectangle2, ref Mat hXLDCont10mm, Mat xy, Mat lightXY,double robotAndCamAngle)
         {
             Mat OutLine;
             Mat lightXYcut;
@@ -529,11 +555,28 @@ namespace _3DLaserGlueInspection
                 //单帧检测(使用激光坐标系)
                 //轮廓只计算整数，所以数据单位放大至0.01mm，并把原点移至画布中心
                 Mat XY_10um;
-                scalePoint(lightXYcut, cutSet, out XY_10um);
+                scalePoint(lightXYcut, cutSet, 90 - LightInCam.rx, out XY_10um);
+
+                if (cutSet.isUseAngleOpt)
+                {
+                    //对x方向进行矫正
+                    double scaleX = 1;
+                    scaleX = Math.Cos(robotAndCamAngle / 180 * Math.PI);
+                    Mat correctionPoints = new Mat();
+                    correctionPoints = hXLDCont10mm.Clone();
+
+                    for (int id = 0; id < correctionPoints.Rows; id++)
+                    {
+                        correctionPoints.At<double>(id, 0) = correctionPoints.At<double>(id, 0) * scaleX;
+                    }
+
+                    hXLDCont10mm = correctionPoints.Clone();
+                }
+
                 //离散滤波
                 if (imageSet.离散去噪)
                 {
-                    Vision.TrajectoryDiscreteFilter(XY_10um, out hXLDCont10mm, imageSet.分段距离 * scaleSize, imageSet.成段点数);
+                    Vision.TrajectoryDiscreteFilter(XY_10um, out hXLDCont10mm, imageSet.分段距离 * cutSet.scaleSize, imageSet.成段点数);
                     OutLine = hXLDCont10mm.Clone();
                 }
                 else
@@ -547,12 +590,12 @@ namespace _3DLaserGlueInspection
                 //如果存在
                 if (!OutLine.Empty())
                 {
-                    singleFrameDetAndResult(OutLine,imageSet, ref singleFrameExistGlue, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2);
+                    singleFrameDetAndResult(OutLine,imageSet,cutSet, ref singleFrameExistGlue, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2);
                 }
             }
         }
 
-        public static void singleFrameDetAndResult(Mat OutLine,ImageSet imageSet, ref bool singleFrameExistGlue, ref Data resultData, ref BResult bResult, ref Mat outMaxRegion, ref Mat outRegionRectangle2)
+        public static void singleFrameDetAndResult(Mat OutLine,ImageSet imageSet,CutSet cutSet, ref bool singleFrameExistGlue, ref Data resultData, ref BResult bResult, ref Mat outMaxRegion, ref Mat outRegionRectangle2)
         {
             bool existGlue = false;
             double centerX = 0;
@@ -568,7 +611,7 @@ namespace _3DLaserGlueInspection
 
 
             Vision.singleFrameDet(OutLine.CvPtr, out existGlue, out centerX, out centerY, out phi, out width, out height, out maxArea,
-                outMaxRegion.CvPtr, outRegionRectangle2.CvPtr, false);
+                outMaxRegion.CvPtr, outRegionRectangle2.CvPtr, cutSet.isUseAngleOpt, false);
 
 
             //stopwatch.Stop();
@@ -585,7 +628,7 @@ namespace _3DLaserGlueInspection
                 //stopwatch.Start();
 
                 singleFrameExistGlue = true;
-                Vision.judgeGlueResult(imageSet, centerX, centerY, width, height, phi, maxArea, out resultData, out bResult);
+                Vision.judgeGlueResult(imageSet, cutSet.scaleSize, centerX, centerY, width, height, phi, maxArea, out resultData, out bResult);
 
                 ////结束检测
                 //elapsedTime = stopwatch.Elapsed;
@@ -885,6 +928,12 @@ namespace _3DLaserGlueInspection
         //记录开始轨迹开始和结束id
         public int StartImageIndex = 0;
         public int EndImageIndex = 0;
+
+        // 是否使用角度优化
+        public bool isUseAngleOpt = true;
+        // 放大处理倍数
+        public int scaleSize = 5;
+
 
         /// <summary>
         /// 各相机-图片参数

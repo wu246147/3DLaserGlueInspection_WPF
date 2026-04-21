@@ -188,7 +188,7 @@ namespace _3DLaserGlueInspection
 
 
 
-        public static void ShowImageData(int showWidth, int showHeight, Mat hXLDCont10mm, ref ImageControl2 imageControl,ref bool showing, ref object olockShow, double offsetX = 0, double offsetY = 0)
+        public static void ShowImageData(int showWidth, int showHeight, CutSet cutSet, Mat hXLDCont10mm, ref ImageControl2 imageControl,ref bool showing, ref object olockShow, double offsetX = 0, double offsetY = 0)
         {
             if (!showing)
             {
@@ -198,7 +198,7 @@ namespace _3DLaserGlueInspection
                     lock (olockShow)
                     {
                         Mat mat = new Mat();
-                        mat = Mat.Zeros((int)(showHeight * Vision.scaleSize), (int)(showWidth * Vision.scaleSize), MatType.CV_8UC3);
+                        mat = Mat.Zeros((int)(showHeight * cutSet.scaleSize), (int)(showWidth * cutSet.scaleSize), MatType.CV_8UC3);
                         imageControl.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));
                         //DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//扩画布
                         PointCollection points = new PointCollection();
@@ -220,7 +220,7 @@ namespace _3DLaserGlueInspection
                 showing = false;
             }
         }
-        public static void ShowImageData(int showWidth, int showHeight, Mat hXLDCont10mm, Mat hRegion, Mat hRegionSmallestRectangle2, Data data, BResult bResult,
+        public static void ShowImageData(int showWidth, int showHeight, CutSet cutSet, Mat hXLDCont10mm, Mat hRegion, Mat hRegionSmallestRectangle2, Data data, BResult bResult,
              ref ImageControl2 imageControl, ref bool showing, ref object olockShow, double offsetX = 0, double offsetY = 0)
         {
             if (!showing)
@@ -231,7 +231,7 @@ namespace _3DLaserGlueInspection
                     lock (olockShow)
                     {
                         Mat mat = new Mat();
-                        mat = Mat.Zeros((int)(showHeight * Vision.scaleSize), (int)(showWidth * Vision.scaleSize), MatType.CV_8UC3);
+                        mat = Mat.Zeros((int)(showHeight * cutSet.scaleSize), (int)(showWidth * cutSet.scaleSize), MatType.CV_8UC3);
 
                         //DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//扩画布
                         imageControl.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));
@@ -263,8 +263,8 @@ namespace _3DLaserGlueInspection
 
                             //Console.WriteLine($"point :({data.column},{data.row})");
                             //DispTextInImageHWindowControlEvent(text, Colors.Black, (int)data.column, (int)data.row);
-                            imageControl.AddTextBlock(text, Colors.White, (int)data.column + (int)(data.glueWidth / 2 * Vision.scaleSize + offsetX),
-                                (int)data.row + (int)(data.glueHeight / 2 * Vision.scaleSize + offsetY));
+                            imageControl.AddTextBlock(text, Colors.White, (int)data.column + (int)(data.glueWidth / 2 * cutSet.scaleSize + offsetX),
+                                (int)data.row + (int)(data.glueHeight / 2 * cutSet.scaleSize + offsetY));
 
                             //Console.WriteLine($"text result :");
                             //hWindowControl.DispTextInImage(text, data.row, data.column);

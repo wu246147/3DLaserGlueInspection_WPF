@@ -103,7 +103,7 @@ namespace Wpf_Replace_halcon
         {
             outputPoseParameters = new PoseParameters();
 
-            outputPoseParameters.x = inputPoseParameters1.x + (inputPoseParameters2.x - inputPoseParameters1.x)*s;
+            outputPoseParameters.x = inputPoseParameters1.x + (inputPoseParameters2.x - inputPoseParameters1.x) * s;
             outputPoseParameters.y = inputPoseParameters1.y + (inputPoseParameters2.y - inputPoseParameters1.y) * s;
             outputPoseParameters.z = inputPoseParameters1.z + (inputPoseParameters2.z - inputPoseParameters1.z) * s;
 

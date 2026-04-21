@@ -268,17 +268,25 @@ namespace _3DLaserGlueInspection
                         default:
                             break;
                     }
-                    
+
+
+
+
                     if (strings.Length > 1)
                     {
                         if (int.TryParse(strings[0], out int segmentIndex) 
                             && int.TryParse(strings[1], out int segmentSubIndex))
                         {
                             
+
+
                             if (model.outLineDict.ContainsKey(camKey) && 
                                 model.outLineDict[camKey].Count > segmentIndex &&
                                 model.outLineDict[camKey][segmentIndex].ContainsKey(model.ImageKeys[camKey][segmentIndex][segmentSubIndex]))
                             {
+                                var cutSet = model.sets[camKey].CutSets[segmentIndex];
+
+
                                 Mat hXLDCont10mm = model.outLineDict[camKey][segmentIndex][model.ImageKeys[camKey][segmentIndex][segmentSubIndex]];
                                 if (model.glueRegionDict.ContainsKey(camKey) && model.glueRegionDict[camKey].Count > segmentIndex && model.glueRegionDict[camKey][segmentIndex].ContainsKey(model.ImageKeys[camKey][segmentIndex][segmentSubIndex]))
                                 {
@@ -286,8 +294,12 @@ namespace _3DLaserGlueInspection
                                     Mat hRegionSmallestRectangle2 = model.glueSmallRectRegionDict[camKey][segmentIndex][model.ImageKeys[camKey][segmentIndex][segmentSubIndex]];
                                     Data data = model.glueDataDict[camKey][segmentIndex][model.ImageKeys[camKey][segmentIndex][segmentSubIndex]];
                                     BResult bResult = model.glueResultDict[camKey][segmentIndex][model.ImageKeys[camKey][segmentIndex][segmentSubIndex]];
+
+
+
+
                                     GlobalVarAndFunc.ShowImageData((int)model.displaySize[camKey][segmentIndex].Width, 
-                                        (int)model.displaySize[camKey][segmentIndex].Height,
+                                        (int)model.displaySize[camKey][segmentIndex].Height, cutSet,
                                         hXLDCont10mm, 
                                         hRegion, 
                                         hRegionSmallestRectangle2, 
@@ -296,7 +308,7 @@ namespace _3DLaserGlueInspection
                                 }
                                 else
                                 {
-                                    GlobalVarAndFunc.ShowImageData((int)model.displaySize[camKey][segmentIndex].Width, (int)model.displaySize[camKey][segmentIndex].Height, hXLDCont10mm,
+                                    GlobalVarAndFunc.ShowImageData((int)model.displaySize[camKey][segmentIndex].Width, (int)model.displaySize[camKey][segmentIndex].Height, cutSet, hXLDCont10mm,
                                          ref hWindowControl, ref showing, ref olockShow);
                                 }
                                 return;
