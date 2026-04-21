@@ -330,6 +330,11 @@ namespace _3DLaserGlueInspection.subForm
         {
             if ("" == CamNameComboBox.SelectedValue.ToString() ? cam.Open() : cam.OpenBySN(CamNameComboBox.SelectedValue.ToString()))
             {
+                //关闭光源
+                Line1EnableCheck.IsChecked = false;
+                Line2EnableCheck.IsChecked = false;
+                
+                //控件启用
                 ButtonsEnable(true);
                 ShowMessage($"{cam.Name}({cam.SN})" + GlobalVarAndFunc.LanguageTranslate("相机打开成功"));
                 if (cam.InitSet(camParam, true))
@@ -378,7 +383,13 @@ namespace _3DLaserGlueInspection.subForm
 
         private void closeCamButton_Click(object sender, RoutedEventArgs e)
         {
+            //关闭光源
+            Line1EnableCheck.IsChecked = false;
+            Line2EnableCheck.IsChecked = false;
+
+            //关闭相机
             cam.Close();
+            //控件复原
             ButtonsEnable(false);
             ShowMessage($"{cam.Name}({cam.SN})" + GlobalVarAndFunc.LanguageTranslate("相机关闭"));
         }
