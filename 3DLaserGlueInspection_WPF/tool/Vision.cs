@@ -117,8 +117,8 @@ namespace _3DLaserGlueInspection
 
             thinningD(Image.CvPtr, outImage.CvPtr, outlinePoints.CvPtr,2);
 
-            //临时添加
-            Vision.printPoint(outlinePoints, "outlinePoints");
+            ////临时添加
+            //Vision.printPoint(outlinePoints, "outlinePoints");
             //Console.WriteLine($"outlinePoints:\r\n");
 
             //for (int i = 0; i < outlinePoints.Rows; i++)
@@ -415,7 +415,7 @@ namespace _3DLaserGlueInspection
         {
             //转激光坐标系
             GetXY(hCamPar, LightInCam, imagePoint, out lightXY);
-            printPoint(lightXY, "lightXY");
+            //printPoint(lightXY, "lightXY");
 
             //printPoint(lightXY, "lightXY");
             Mat lightXY4 = new Mat();

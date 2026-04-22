@@ -737,7 +737,7 @@ namespace _3DLaserGlueInspection
                             /// 相机坐标转为法兰盘坐标
                             var Cam1ToTool = Params.CamToTool[camParamName][item.Key];
 
-                            var CamToTool = Cam1ToTool * CamToCam1;
+                            Mat CamToTool = Cam1ToTool * CamToCam1;
 
                             tasks.Add(item.Key, Task.Run((Action)(() =>
                             {

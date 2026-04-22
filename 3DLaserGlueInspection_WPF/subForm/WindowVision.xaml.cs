@@ -796,7 +796,7 @@ namespace _3DLaserGlueInspection.subForm
                         //如果两次的机器人位姿都不为空，则计算机器人移动与相机的夹角
                         if (currentRobotPose != null && lastRobotPose != null)
                         {
-                            
+
                             robotPoseMat = Mat.Zeros(2, 7, MatType.CV_64FC1);
                             robotPoseMat.At<double>(0, 0) = lastRobotPose.x;
                             robotPoseMat.At<double>(0, 1) = lastRobotPose.y;
@@ -816,7 +816,7 @@ namespace _3DLaserGlueInspection.subForm
 
                         }
 
-                       
+
 
                         //showImageComboBox_SelectionChanged(null, null);
 
@@ -852,7 +852,7 @@ namespace _3DLaserGlueInspection.subForm
                 {
                     //System.Windows.Forms.MessageBox.Show(ex.ToString());
                 }
-                showImageEnd:
+            showImageEnd:
                 //参数更新
                 try
                 {
@@ -885,8 +885,8 @@ namespace _3DLaserGlueInspection.subForm
                 {
                     System.Windows.Forms.MessageBox.Show(ex.ToString());
                 }
-            
-                
+
+
                 //机器人姿态更新
 
 
@@ -1763,7 +1763,7 @@ namespace _3DLaserGlueInspection.subForm
 
                             //GlobalVarAndFunc.ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, hXLDCont10mm3D, outMaxRegion, outRegionRectangle2, resultData, bResult, ref hWindowModel, ref showing, ref olockShow, 0, (cutSet.ShowHeight - Vision.ySize * 1000) * Vision.scaleSize / 2);
 
-                            GlobalVarAndFunc.ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight,cutSet, hXLDCont10mm3D, outMaxRegion, outRegionRectangle2, resultData, bResult, ref hWindowModel, ref showing, ref olockShow, 0, 0);
+                            GlobalVarAndFunc.ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, cutSet, hXLDCont10mm3D, outMaxRegion, outRegionRectangle2, resultData, bResult, ref hWindowModel, ref showing, ref olockShow, 0, 0);
 
                         }
                         else
@@ -1891,7 +1891,11 @@ namespace _3DLaserGlueInspection.subForm
                                 return;
                             }
 
-                            var CamToTool = Cam1ToTool * CamToCam1;
+                            ////临时测试
+                            //Mat CamToTool = Mat.Eye(4,4, MatType.CV_64FC1);
+                            //Mat CamToTool = CamToCam1;
+                            Mat CamToTool = Cam1ToTool * CamToCam1;
+
                             // 临时结果保存变量
                             bool getOutlineResult = false;
                             bool singleFrameExisOutline = false;
@@ -1911,199 +1915,192 @@ namespace _3DLaserGlueInspection.subForm
                             Stopwatch stopwatch = new Stopwatch();
                             stopwatch.Start();
                             //for (int i = 0; i < 100; i++)
-                            //{
-                            if (imageSet.轮廓检测)
                             {
-                                ////激光轮廓提取
-                                //Mat xy = new Mat();
-                                //Vision.getLaserPosition(hImage_tmp, imageSet.minThreshold, out xy, camParam.OffsetX, camParam.OffsetY);
-                                Mat xy = new Mat();
-                                Mat imgCut = new Mat();
-                                int LeftX = 0;
-                                int TopY = 0;
-                                if (imageSet.启用裁剪)
+                                if (imageSet.轮廓检测)
                                 {
-                                    //Vision.cutLight(xy, camParam, hImage, imageSet, out xyCut);
-                                    int imageWidth, imageHeight;
-                                    imageWidth = hImage_tmp.Cols;
-                                    imageHeight = hImage_tmp.Rows;
-
-                                    LeftX = (int)(imageWidth * imageSet.LeftX);
-                                    TopY = (int)(imageHeight * imageSet.TopY);
-                                    int cutWidth = (int)((imageSet.RightX - imageSet.LeftX) * imageWidth);
-                                    int cutHeight = (int)((imageSet.DownY - imageSet.TopY) * imageHeight);
-
-                                    imgCut = new Mat(hImage_tmp, new OpenCvSharp.Rect(LeftX, TopY, cutWidth, cutHeight));
-
-                                    ////临时保存图片数据
-                                    //string saveImagePath = "./cutImage/" + (camTimeKey).ToString() + ".png";
-                                    //Cv2.ImWrite(saveImagePath, imgCut);
-                                }
-                                else
-                                {
-                                    imgCut = hImage_tmp.Clone();
-                                }
-                                Vision.getLaserPosition(imgCut, imageSet.minThreshold, out xy, camParam.OffsetX + LeftX, camParam.OffsetY + TopY);
-
-                                //坐标转换
-                                Wpf_Replace_halcon.PoseParameters robotPose = new PoseParameters();
-                                HMatrixTransform.mathHPose(robotPoseValues[indexRobotPose - 1],
-                                                                       robotPoseValues[indexRobotPose], out robotPose,
-                                                                       (camTimeKey - robotPoseKeys[indexRobotPose - 1]) /
-                                                                       (double)(robotPoseKeys[indexRobotPose] - robotPoseKeys[indexRobotPose - 1])
-                                                                       );
-                                //三维数据添加(机器人坐标)
-                                dictRobotPose.Add(camTimeKey, robotPose);
-
-                                // 计算机器人移动距离
-                                if (dictRobotPose.Count > 0)
-                                {
-                                    var last = dictRobotPose.Last();
-                                    var lastRobotPose = last.Value;
-
-                                    PoseD = Math.Sqrt(Math.Pow((robotPose.x - lastRobotPose.x), 2) +
-                                        Math.Pow((robotPose.y - lastRobotPose.y), 2) +
-                                        Math.Pow((robotPose.z - lastRobotPose.z), 2));
-                                }
-                                // 计算机器人与相机的夹角,必须要机器人有移动
-                                if (dictRobotPose.Count > 0 && PoseD > 0)
-                                {
-                                    //计算CamToTool的矩阵
-
-                                    //打包前后机器人pose
-                                    var last = dictRobotPose.Last();
-                                    var lastRobotPose = last.Value;
-
-                                    Mat robotPoseMat = new Mat();
-                                    robotPoseMat = Mat.Zeros(2, 7, MatType.CV_64FC1);
-                                    robotPoseMat.At<double>(0, 0) = lastRobotPose.x;
-                                    robotPoseMat.At<double>(0, 1) = lastRobotPose.y;
-                                    robotPoseMat.At<double>(0, 2) = lastRobotPose.z;
-                                    robotPoseMat.At<double>(0, 3) = lastRobotPose.rx;
-                                    robotPoseMat.At<double>(0, 4) = lastRobotPose.ry;
-                                    robotPoseMat.At<double>(0, 5) = lastRobotPose.rz;
-                                    robotPoseMat.At<double>(0, 6) = lastRobotPose.PoseType;
-
-                                    robotPoseMat.At<double>(1, 0) = robotPose.x;
-                                    robotPoseMat.At<double>(1, 1) = robotPose.y;
-                                    robotPoseMat.At<double>(1, 2) = robotPose.z;
-                                    robotPoseMat.At<double>(1, 3) = robotPose.rx;
-                                    robotPoseMat.At<double>(1, 4) = robotPose.ry;
-                                    robotPoseMat.At<double>(1, 5) = robotPose.rz;
-                                    robotPoseMat.At<double>(1, 6) = robotPose.PoseType;
-
-                                    Vision.robotAndCamVectorAngle(robotPoseMat.CvPtr, CamToTool.CvPtr, 2, 0, out robotAndCamAngle);
-                                }
-                                _3DShowControl.AddPoint(robotPose.x, robotPose.y, robotPose.z, 4);
-
-                                Mat lightXY = new Mat();
-                                bool singleFrameExistOutline = false;
-
-                                if (xy.Rows > 0)
-                                {
-                                    getOutlineResult = true;
-
-                                    List<double> robotX, robotY, robotZ, colorScale;
-
-                                    Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToTool,
-                                 robotPose, out lightXY, out robotX, out robotY, out robotZ);
-
-                                    int displayIntervalID = 2;
-
-                                    if (indexImage % displayIntervalID == 0)
+                                    Mat xy = new Mat();
+                                    Mat imgCut = new Mat();
+                                    int LeftX = 0;
+                                    int TopY = 0;
+                                    if (imageSet.启用裁剪)
                                     {
-                                        colorScale = new List<double>();
-                                        //计算显示颜色
-                                        for (int i = 0; i < robotZ.Count; i++)
-                                        {
-                                            double color = ((robotZ[i] - cutSet.ShowColorMin / 1000) / ((cutSet.ShowColorMax - cutSet.ShowColorMin) / 1000));
+                                        //Vision.cutLight(xy, camParam, hImage, imageSet, out xyCut);
+                                        int imageWidth, imageHeight;
+                                        imageWidth = hImage_tmp.Cols;
+                                        imageHeight = hImage_tmp.Rows;
 
-                                            colorScale.Add(color);
+                                        LeftX = (int)(imageWidth * imageSet.LeftX);
+                                        TopY = (int)(imageHeight * imageSet.TopY);
+                                        int cutWidth = (int)((imageSet.RightX - imageSet.LeftX) * imageWidth);
+                                        int cutHeight = (int)((imageSet.DownY - imageSet.TopY) * imageHeight);
+
+                                        imgCut = new Mat(hImage_tmp, new OpenCvSharp.Rect(LeftX, TopY, cutWidth, cutHeight));
+
+                                    }
+                                    else
+                                    {
+                                        imgCut = hImage_tmp.Clone();
+                                    }
+                                    Vision.getLaserPosition(imgCut, imageSet.minThreshold, out xy, camParam.OffsetX + LeftX, camParam.OffsetY + TopY);
+
+                                    //坐标转换
+                                    Wpf_Replace_halcon.PoseParameters robotPose = new PoseParameters();
+                                    HMatrixTransform.mathHPose(robotPoseValues[indexRobotPose - 1],
+                                                                           robotPoseValues[indexRobotPose], out robotPose,
+                                                                           (camTimeKey - robotPoseKeys[indexRobotPose - 1]) /
+                                                                           (double)(robotPoseKeys[indexRobotPose] - robotPoseKeys[indexRobotPose - 1])
+                                                                           );
+                                    //三维数据添加(机器人坐标)
+                                    dictRobotPose.Add(camTimeKey, robotPose);
+
+                                    // 计算机器人移动距离
+                                    if (dictRobotPose.Count > 0)
+                                    {
+                                        var last = dictRobotPose.Last();
+                                        var lastRobotPose = last.Value;
+
+                                        PoseD = Math.Sqrt(Math.Pow((robotPose.x - lastRobotPose.x), 2) +
+                                            Math.Pow((robotPose.y - lastRobotPose.y), 2) +
+                                            Math.Pow((robotPose.z - lastRobotPose.z), 2));
+                                    }
+                                    // 计算机器人与相机的夹角,必须要机器人有移动
+                                    if (dictRobotPose.Count > 0 && PoseD > 0)
+                                    {
+                                        //计算CamToTool的矩阵
+
+                                        //打包前后机器人pose
+                                        var last = dictRobotPose.Last();
+                                        var lastRobotPose = last.Value;
+
+                                        Mat robotPoseMat = new Mat();
+                                        robotPoseMat = Mat.Zeros(2, 7, MatType.CV_64FC1);
+                                        robotPoseMat.At<double>(0, 0) = lastRobotPose.x;
+                                        robotPoseMat.At<double>(0, 1) = lastRobotPose.y;
+                                        robotPoseMat.At<double>(0, 2) = lastRobotPose.z;
+                                        robotPoseMat.At<double>(0, 3) = lastRobotPose.rx;
+                                        robotPoseMat.At<double>(0, 4) = lastRobotPose.ry;
+                                        robotPoseMat.At<double>(0, 5) = lastRobotPose.rz;
+                                        robotPoseMat.At<double>(0, 6) = lastRobotPose.PoseType;
+
+                                        robotPoseMat.At<double>(1, 0) = robotPose.x;
+                                        robotPoseMat.At<double>(1, 1) = robotPose.y;
+                                        robotPoseMat.At<double>(1, 2) = robotPose.z;
+                                        robotPoseMat.At<double>(1, 3) = robotPose.rx;
+                                        robotPoseMat.At<double>(1, 4) = robotPose.ry;
+                                        robotPoseMat.At<double>(1, 5) = robotPose.rz;
+                                        robotPoseMat.At<double>(1, 6) = robotPose.PoseType;
+
+                                        Vision.robotAndCamVectorAngle(robotPoseMat.CvPtr, CamToTool.CvPtr, 2, 0, out robotAndCamAngle);
+                                    }
+                                    ////临时测试
+                                    _3DShowControl.AddPoint(robotPose.x, robotPose.y, robotPose.z, 4);
+
+                                    Mat lightXY = new Mat();
+                                    bool singleFrameExistOutline = false;
+
+                                    if (xy.Rows > 0)
+                                    {
+                                        getOutlineResult = true;
+
+                                        List<double> robotX, robotY, robotZ, colorScale;
+
+                                        ////临时测试
+                                        //robotPose.x = 0;
+                                        //robotPose.y = 0;
+                                        //robotPose.z = 0;
+                                        //robotPose.rx = 0;
+                                        //robotPose.ry = 0;
+                                        //robotPose.rz = 0;
+                                        //robotPose.PoseType = 0;
+
+                                        Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToTool,
+                                     robotPose, out lightXY, out robotX, out robotY, out robotZ);
+
+                                        int displayIntervalID = 2;
+
+                                        if (indexImage % displayIntervalID == 0)
+                                        {
+                                            colorScale = new List<double>();
+                                            //计算显示颜色
+                                            for (int i = 0; i < robotZ.Count; i++)
+                                            {
+                                                double color = ((robotZ[i] - cutSet.ShowColorMin / 1000) / ((cutSet.ShowColorMax - cutSet.ShowColorMin) / 1000));
+
+                                                colorScale.Add(color);
+                                            }
+
+
+                                            _3DShowControl.AddPointCloud(robotX, robotY, robotZ, colorScale);
                                         }
 
 
-                                        _3DShowControl.AddPointCloud(robotX, robotY, robotZ, colorScale);
+                                        //三维数据添加
+                                        dictX.Add(camTimeKey, robotX);
+                                        dictY.Add(camTimeKey, robotY);
+                                        dictZ.Add(camTimeKey, robotZ);
+                                        //}
+                                    }
+
+                                    //单帧检测速度测试
+                                    if (getOutlineResult)
+                                    {
+                                        if (lightXY.Rows > 0)
+                                        {
+                                            singleFrameExistOutline = true;
+                                            //单帧检测(使用激光坐标系)
+                                            Vision.scalePoint(lightXY, cutSet, 90 - LightInCam.rx, out hXLDCont10mm);
+
+                                            if (cutSet.isUseAngleOpt)
+                                            {
+                                                //对x方向进行矫正
+                                                double scaleX = 1;
+                                                scaleX = Math.Cos(robotAndCamAngle / 180 * Math.PI);
+                                                Mat correctionPoints = new Mat();
+                                                correctionPoints = hXLDCont10mm.Clone();
+
+                                                for (int id = 0; id < correctionPoints.Rows; id++)
+                                                {
+                                                    correctionPoints.At<double>(id, 0) = correctionPoints.At<double>(id, 0) * scaleX;
+                                                }
+
+                                                hXLDCont10mm = correctionPoints.Clone();
+                                            }
+
+
+                                            //如果存在
+                                            if (!hXLDCont10mm.Empty())
+                                            {
+                                                //Vision.singleFrameDetAndResult(hXLDCont10mm, imageSet, ref singleFrameExistGlue, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2);
+
+                                                //离散滤波
+                                                if (imageSet.离散去噪)
+                                                {
+                                                    Vision.TrajectoryDiscreteFilter(hXLDCont10mm, out hXLDCont10mm3D, imageSet.分段距离 * cutSet.scaleSize, imageSet.成段点数);
+                                                }
+                                                else
+                                                {
+                                                    hXLDCont10mm3D = hXLDCont10mm.Clone();
+                                                }
+
+                                                //临时测试
+                                                Vision.singleFrameDetAndResult(hXLDCont10mm3D, imageSet, cutSet, ref singleFrameExistGlue, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2);
+                                                //计算涂胶体积
+                                                V = resultData.glueArea * PoseD;
+                                            }
+                                        }
                                     }
 
 
-                                    //三维数据添加
-                                    dictX.Add(camTimeKey, robotX);
-                                    dictY.Add(camTimeKey, robotY);
-                                    dictZ.Add(camTimeKey, robotZ);
-                                    //}
                                 }
 
-                                //单帧检测速度测试
-                                if (getOutlineResult)
-                                {
-                                    if (lightXY.Rows > 0)
-                                    {
-                                        singleFrameExistOutline = true;
-                                        //单帧检测(使用激光坐标系)
-                                        Vision.scalePoint(lightXY, cutSet, 90 - LightInCam.rx, out hXLDCont10mm);
-
-                                        if (cutSet.isUseAngleOpt)
-                                        {
-                                            //对x方向进行矫正
-                                            double scaleX = 1;
-                                            scaleX = Math.Cos(robotAndCamAngle / 180 * Math.PI);
-                                            Mat correctionPoints = new Mat();
-                                            correctionPoints = hXLDCont10mm.Clone();
-
-                                            for (int id = 0; id < correctionPoints.Rows; id++)
-                                            {
-                                                correctionPoints.At<double>(id, 0) = correctionPoints.At<double>(id, 0) * scaleX;
-                                            }
-
-                                            hXLDCont10mm = correctionPoints.Clone();
-                                        }
-                                       
-
-                                        //如果存在
-                                        if (!hXLDCont10mm.Empty())
-                                        {
-                                            //Vision.singleFrameDetAndResult(hXLDCont10mm, imageSet, ref singleFrameExistGlue, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2);
-
-                                            //离散滤波
-                                            if (imageSet.离散去噪)
-                                            {
-                                                Vision.TrajectoryDiscreteFilter(hXLDCont10mm, out hXLDCont10mm3D, imageSet.分段距离 * cutSet.scaleSize, imageSet.成段点数);
-                                            }
-                                            else
-                                            {
-                                                hXLDCont10mm3D = hXLDCont10mm.Clone();
-                                            }
-
-                                            Vision.singleFrameDetAndResult(hXLDCont10mm3D, imageSet, cutSet, ref singleFrameExistGlue, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2);
-
-
-                                            //计算涂胶体积
-                                            V = resultData.glueArea * PoseD;
-                                        }
-                                    }
-                                }
 
 
                             }
-
-
-
-                            //}
                             stopwatch.Stop();
                             //结束检测
                             TimeSpan elapsedTime = stopwatch.Elapsed;
                             double useTime = elapsedTime.TotalMilliseconds;
-                            //runTimeLabel.Content = $"{elapsedTime.TotalMilliseconds:F3} ms";
 
-                            // 没必要显示每帧的检测结果，而且这样做导致影响检测速度,并且这里涉及跨线程问题
-                            //if (imageSet.轮廓检测)
-                            //{
-                            //    if (singleFrameExistGlue)
-                            //    {
-                            //        GlobalVarAndFunc.ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, hXLDCont10mm, ref hWindowModel, ref showing, ref olockShow);
-                            //        //
-                            //    }
-                            //}
 
 
                         }
@@ -2389,7 +2386,7 @@ namespace _3DLaserGlueInspection.subForm
                 System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("位移距离为0"));
                 return;
             }
-            
+
 
             if (CamParamName == null || camKey == null
                 || !Params.Param.TryGetValue(CamParamName, out var camParams) || !camParams.TryGetValue(camKey, out var camParam)
@@ -2414,7 +2411,7 @@ namespace _3DLaserGlueInspection.subForm
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            //for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < 1000; i++)
             {
                 if (imageSet.轮廓检测)
                 {
