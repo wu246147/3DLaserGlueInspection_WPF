@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_3DLaserGlueInspection.subForm"
         mc:Ignorable="d"
-        Title="检测工具参数设置" Height="820
+        Title="检测工具参数设置" Height="1000
+        
         " Width="1286" Loaded="WindowVision_Loaded" Closing="WindowVision_Closing">
 
     <Window.Resources>
@@ -108,8 +109,8 @@
                             <TextBox x:Name="threNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="81,35,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="145" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
 
                             <CheckBox  x:Name="singleFrameCheck" Content="单帧检测" HorizontalAlignment="Left" Margin="10,71,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Visibility="Hidden"/>
-                            <Border BorderBrush="White" BorderThickness="1" Margin="5,97,5,0" Height="115" VerticalAlignment="Top">
-                                <Grid x:Name="toleranceRangeGrid" Margin="0" ShowGridLines="True">
+                            <Border BorderBrush="White" BorderThickness="1" Margin="5,133,5,0" Height="115" VerticalAlignment="Top">
+                                <Grid x:Name="toleranceRangeGrid" ShowGridLines="True">
                                     <Label  Content="胶宽" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,4,0,0"/>
                                     <TextBox x:Name="glueWidthMinNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="71,6,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
                                     <Label  Content="~" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,4,0,0"/>
@@ -124,9 +125,9 @@
                                     <TextBox x:Name="glueAreaMaxNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="167,78,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
                                 </Grid>
                             </Border>
-                            <Grid Margin="5,213,5,0" Height="119" VerticalAlignment="Top" Visibility="Visible">
-                                <Border BorderBrush="White" BorderThickness="1" Height="83" VerticalAlignment="Top" Margin="0,36,0,0">
-                                    <Grid Name="cropGrid" ShowGridLines="True" Height="85" VerticalAlignment="Center">
+                            <Grid Margin="5,254,5,0" Height="119" VerticalAlignment="Top" Visibility="Visible">
+                                <Border BorderBrush="White" BorderThickness="1" Height="83" VerticalAlignment="Top" Margin="0,33,0,0">
+                                    <Grid Name="cropGrid" ShowGridLines="True" Height="85" VerticalAlignment="Top" Margin="0,-1,0,0">
                                         <Label  Content="横向范围" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,9,0,0"/>
                                         <TextBox x:Name="leafRangeMinNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="71,11,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
                                         <Label  Content="~" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,9,0,0"/>
@@ -138,15 +139,15 @@
 
                                     </Grid>
                                 </Border>
-                                <CheckBox  x:Name="useCroppintCheck" Content="启用裁剪" HorizontalAlignment="Left" Margin="10,9,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
-                                <Button x:Name="showRangeButton" Content="显示范围"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="127,5,0,0" Click="showRangeButton_Click"  />
+                                <CheckBox  x:Name="useCroppintCheck" Content="启用裁剪" HorizontalAlignment="Left" Margin="10,8,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
+                                <Button x:Name="showRangeButton" Content="显示范围"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="127,4,0,0" Click="showRangeButton_Click"  />
                             </Grid>
 
-                            <Button x:Name="runOutLineButton" Content="单帧轮廓检测" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,522,0,0" Click="runOutLineButton_Click"/>
-                            <Label Name="runTimeLabel" Content="-- ms" FontSize="14" Foreground="White" Margin="0,520,25,0" VerticalAlignment="Top" HorizontalAlignment="Right"/>
-                            <CheckBox  x:Name="useDiscreteDenoisingCheck" Content="离散去噪" HorizontalAlignment="Left" Margin="10,350,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
-                            <Border BorderBrush="White" BorderThickness="1" Margin="5,373,5,0" Height="82" VerticalAlignment="Top">
-                                <Grid Name="discreteDenoisingGrid" Margin="0" ShowGridLines="True">
+                            <Button x:Name="runOutLineButton" Content="单帧轮廓检测" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,558,0,0" Click="runOutLineButton_Click"/>
+                            <Label Name="runTimeLabel" Content="-- ms" FontSize="14" Foreground="White" Margin="0,556,25,0" VerticalAlignment="Top" HorizontalAlignment="Right"/>
+                            <CheckBox  x:Name="useDiscreteDenoisingCheck" Content="离散去噪" HorizontalAlignment="Left" Margin="10,379,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
+                            <Border BorderBrush="White" BorderThickness="1" Margin="5,403,5,0" Height="82" VerticalAlignment="Top">
+                                <Grid x:Name="discreteDenoisingGrid" ShowGridLines="True">
                                     <Label  Content="毫米分段距离" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,8,0,0"/>
                                     <TextBox x:Name="discreteDenoisingDistNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="112,10,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="130" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
                                     <Label  Content="毫米成段点数" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,44,0,0"/>
@@ -154,13 +155,29 @@
 
                                 </Grid>
                             </Border>
-                            <Button x:Name="get3DDataButton" Content="3D点云提取" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,563,0,0" Click="get3DDataButton_Click"/>
-                            <Button x:Name="runButton" Content="3D涂胶单帧检测" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,604,0,0" Click="runButton_Click2"/>
-                            <CheckBox  x:Name="_3DCloudDetCheck" Content="3D涂胶检测" HorizontalAlignment="Left" Margin="5,70,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
+                            <Button x:Name="get3DDataButton" Content="3D点云提取" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,599,0,0" Click="get3DDataButton_Click"/>
+                            <Button x:Name="runButton" Content="3D涂胶单帧检测" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,640,0,0" Click="runButton_Click2"/>
+                            <CheckBox  x:Name="_3DCloudDetCheck" Content="3D涂胶检测" HorizontalAlignment="Left" Margin="5,108,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
 
-                            <CheckBox  x:Name="saveCloudPointCheck" Content="保存点云图" HorizontalAlignment="Left" Margin="150,567,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Checked="saveCloudPointCheck_Checked" Unchecked="saveCloudPointCheck_Checked" />
-                            <Label  Content="相机与移动&#xD;&#xA;方向夹角°" FontSize="14" Foreground="White" Margin="0,457,81,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="183" Height="55"/>
-                            <TextBox x:Name="robotAndCamAngleNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="118,469,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="130" InputMethod.IsInputMethodEnabled="False" IsEnabled="False" />
+                            <CheckBox  x:Name="saveCloudPointCheck" Content="保存点云图" HorizontalAlignment="Left" Margin="150,603,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Checked="saveCloudPointCheck_Checked" Unchecked="saveCloudPointCheck_Checked" />
+                            <Label  Content="相机与移动&#xD;&#xA;方向夹角°" FontSize="14" Foreground="White" Margin="0,493,81,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="183" Height="55"/>
+                            <TextBox x:Name="robotAndCamAngleNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="118,505,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="130" InputMethod.IsInputMethodEnabled="False" IsEnabled="False" />
+
+                            <Border BorderBrush="White" BorderThickness="1" Height="190" Margin="5,680,5,0" VerticalAlignment="Top">
+                                <Grid ShowGridLines="True" >
+                                    <Button x:Name="correctionButton" Content="尺寸矫正" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,150,0,0" Click="correctionButton_Click"/>
+                                    <Label Content="矫正系数x" FontSize="14" Foreground="White" Margin="0,10,170,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="82"/>
+                                    <Label Content="矫正系数y" FontSize="14" Foreground="White" Margin="0,45,170,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="82"/>
+                                    <Label Content="实际胶宽" FontSize="14" Foreground="White" HorizontalAlignment="Left" Width="82"/>
+                                    <Label Content="实际胶高" FontSize="14" Foreground="White" Margin="0,115,170,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="82"/>
+                                    <TextBox x:Name="correctionScaleSizeXNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="112,10,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="130" InputMethod.IsInputMethodEnabled="False" IsEnabled="False" />
+                                    <TextBox x:Name="correctionScaleSizeYNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="112,45,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="130" InputMethod.IsInputMethodEnabled="False" IsEnabled="False" />
+                                    <TextBox x:Name="actualGlueWidthNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="112,80,0,0" TextWrapping="Wrap" Text="0" Width="130" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" VerticalAlignment="Top" />
+                                    <TextBox x:Name="actualGlueHeightNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="112,115,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="130" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                </Grid>
+                            </Border>
+                            <Label  Content="最低宽度" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="10,68,0,0" VerticalAlignment="Top"/>
+                            <TextBox x:Name="laserMinWidthNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="81,71,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="145" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
 
                         </Grid>
                     </TabItem>

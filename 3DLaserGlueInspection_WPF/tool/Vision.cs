@@ -41,7 +41,7 @@ namespace _3DLaserGlueInspection
 
         [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
         ///激光提取函数,亚像素
-        public static extern int thinningD(IntPtr inputMat, IntPtr outImage, IntPtr outPointMat, int min_width = 1);
+        public static extern int thinningD(IntPtr inputMat, IntPtr outImage, IntPtr outPointMat, int min_thre, int min_width = 1);
         [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
         ///单帧检测
 
@@ -110,12 +110,12 @@ namespace _3DLaserGlueInspection
         /// <param name="outlinePoints"></param>
         /// <param name="offsetX"></param>
         /// <param name="offsetY"></param>
-        public static void getLaserPosition(Mat Image, double minThreshold, out Mat outlinePoints, int offsetX = 0, int offsetY = 0)
+        public static void getLaserPosition(Mat Image, double minThreshold,int laserMinWidth, out Mat outlinePoints, int offsetX = 0, int offsetY = 0)
         {
             Mat outImage = new Mat();
             outlinePoints = new Mat();
 
-            thinningD(Image.CvPtr, outImage.CvPtr, outlinePoints.CvPtr,2);
+            thinningD(Image.CvPtr, outImage.CvPtr, outlinePoints.CvPtr, (int)minThreshold, laserMinWidth);
 
             ////临时添加
             //Vision.printPoint(outlinePoints, "outlinePoints");
@@ -572,7 +572,23 @@ namespace _3DLaserGlueInspection
 
                     hXLDCont10mm = correctionPoints.Clone();
                 }
+                {
+                    //对两个方向进行矫正
+                    double scaleX = cutSet.correctionScaleSizeX;
+                    double scaleY = cutSet.correctionScaleSizeY;
 
+                    Mat correctionPoints = new Mat();
+                    correctionPoints = hXLDCont10mm.Clone();
+
+                    for (int id = 0; id < correctionPoints.Rows; id++)
+                    {
+                        correctionPoints.At<double>(id, 0) = correctionPoints.At<double>(id, 0) * scaleX;
+                        correctionPoints.At<double>(id, 1) = correctionPoints.At<double>(id, 1) * scaleY;
+
+                    }
+
+                    hXLDCont10mm = correctionPoints.Clone();
+                }
                 //离散滤波
                 if (imageSet.离散去噪)
                 {
@@ -934,6 +950,10 @@ namespace _3DLaserGlueInspection
         // 放大处理倍数
         public int scaleSize = 5;
 
+        // 矫正缩放系数
+        public double correctionScaleSizeX = 1;
+        public double correctionScaleSizeY = 1;
+
 
         /// <summary>
         /// 各相机-图片参数
@@ -967,6 +987,7 @@ namespace _3DLaserGlueInspection
         //图像启用情况
         public bool 轮廓检测 = false;
         public double minThreshold = 40;
+        public int laserMinWidth = 2;
         public bool 单帧检测 = false;
         public bool _3DGlueDet = false;
         public double widthMin = 2, widthMax = 4;

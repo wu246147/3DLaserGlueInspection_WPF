@@ -99,6 +99,14 @@ namespace _3DLaserGlueInspection.subForm
             {
                 CreateRightClickMenu((System.Windows.Controls.ContextMenu)s, CopyThre);
             };
+
+            laserMinWidthNumericUpDown.ContextMenu = new System.Windows.Controls.ContextMenu();
+            laserMinWidthNumericUpDown.ContextMenu.Opened += (s, e) =>
+            {
+                CreateRightClickMenu((System.Windows.Controls.ContextMenu)s, CopyThre);
+            };
+
+
             singleFrameCheck.ContextMenu = new System.Windows.Controls.ContextMenu();
             singleFrameCheck.ContextMenu.Opened += (s, e) =>
             {
@@ -373,8 +381,11 @@ namespace _3DLaserGlueInspection.subForm
         private void CopyThre(ImageSet srcImageSet, ImageSet dstImageSet)
         {
             srcImageSet.minThreshold = dstImageSet.minThreshold;
+            srcImageSet.laserMinWidth = dstImageSet.laserMinWidth;
             isAlter = true;
         }
+
+
         private void CopySingleFrame(ImageSet srcImageSet, ImageSet dstImageSet)
         {
             srcImageSet.单帧检测 = dstImageSet.单帧检测;
@@ -553,6 +564,8 @@ namespace _3DLaserGlueInspection.subForm
             outlineCheck.Unchecked += UpData;
 
             threNumericUpDown.TextChanged += UpData;
+            laserMinWidthNumericUpDown.TextChanged += UpData;
+
             singleFrameCheck.Checked += UpData;
             singleFrameCheck.Unchecked += UpData;
             _3DCloudDetCheck.Checked += UpData;
@@ -608,6 +621,8 @@ namespace _3DLaserGlueInspection.subForm
             outlineCheck.Unchecked -= UpData;
 
             threNumericUpDown.TextChanged -= UpData;
+            laserMinWidthNumericUpDown.TextChanged += UpData;
+
             singleFrameCheck.Checked -= UpData;
             singleFrameCheck.Unchecked -= UpData;
             _3DCloudDetCheck.Checked -= UpData;
@@ -653,6 +668,7 @@ namespace _3DLaserGlueInspection.subForm
 
                     cutSet.isUseAngleOpt = (bool)isUseAngleOptCheck.IsChecked;
 
+
                     try
                     {
                         cutSet.ShowWidth = Convert.ToInt32(showWidthNumericUpDown.Text);
@@ -664,6 +680,8 @@ namespace _3DLaserGlueInspection.subForm
                         cutSet.EndImageIndex = Convert.ToInt32(endImageIndexNumericUpDown.Text);
 
                         cutSet.scaleSize = Convert.ToInt32(scaleSizeNumericUpDown.Text);
+
+
                     }
                     catch (Exception)
                     {
@@ -686,6 +704,8 @@ namespace _3DLaserGlueInspection.subForm
             {
                 imageSet.轮廓检测 = (bool)outlineCheck.IsChecked;
                 imageSet.minThreshold = Convert.ToDouble(threNumericUpDown.Text);
+                imageSet.laserMinWidth = Convert.ToInt32(laserMinWidthNumericUpDown.Text);
+
                 imageSet.单帧检测 = (bool)singleFrameCheck.IsChecked;
                 imageSet._3DGlueDet = (bool)_3DCloudDetCheck.IsChecked;
                 imageSet.widthMin = Convert.ToDouble(glueWidthMinNumericUpDown.Text);
@@ -860,6 +880,7 @@ namespace _3DLaserGlueInspection.subForm
                     UnLoadUpData();
                     outlineCheck.IsChecked = imageSet.轮廓检测;
                     threNumericUpDown.Text = imageSet.minThreshold.ToString();
+                    laserMinWidthNumericUpDown.Text = imageSet.laserMinWidth.ToString();
                     singleFrameCheck.IsChecked = imageSet.单帧检测;
                     _3DCloudDetCheck.IsChecked = imageSet._3DGlueDet;
                     glueWidthMinNumericUpDown.Text = imageSet.widthMin.ToString();
@@ -993,6 +1014,9 @@ namespace _3DLaserGlueInspection.subForm
                     startImageIndexNumericUpDown.Text = cutSet.StartImageIndex.ToString();
                     endImageIndexNumericUpDown.Text = cutSet.EndImageIndex.ToString();
                     scaleSizeNumericUpDown.Text = cutSet.scaleSize.ToString();
+
+                    correctionScaleSizeXNumericUpDown.Text = cutSet.correctionScaleSizeX.ToString();
+                    correctionScaleSizeYNumericUpDown.Text = cutSet.correctionScaleSizeY.ToString();
 
                     //SelectedCamAndImage();
 
@@ -1397,7 +1421,7 @@ namespace _3DLaserGlueInspection.subForm
                 {
                     imgCut = hImage.Clone();
                 }
-                Vision.getLaserPosition(imgCut, imageSet.minThreshold, out xy, camParam.OffsetX + LeftX, camParam.OffsetY + TopY);
+                Vision.getLaserPosition(imgCut, imageSet.minThreshold,imageSet.laserMinWidth, out xy, camParam.OffsetX + LeftX, camParam.OffsetY + TopY);
 
 
                 if (xy.Rows > 0)
@@ -1941,7 +1965,7 @@ namespace _3DLaserGlueInspection.subForm
                                     {
                                         imgCut = hImage_tmp.Clone();
                                     }
-                                    Vision.getLaserPosition(imgCut, imageSet.minThreshold, out xy, camParam.OffsetX + LeftX, camParam.OffsetY + TopY);
+                                    Vision.getLaserPosition(imgCut, imageSet.minThreshold, imageSet.laserMinWidth, out xy, camParam.OffsetX + LeftX, camParam.OffsetY + TopY);
 
                                     //坐标转换
                                     Wpf_Replace_halcon.PoseParameters robotPose = new PoseParameters();
@@ -2065,7 +2089,23 @@ namespace _3DLaserGlueInspection.subForm
 
                                                 hXLDCont10mm = correctionPoints.Clone();
                                             }
+                                            {
+                                                //对两个方向进行矫正
+                                                double scaleX = cutSet.correctionScaleSizeX;
+                                                double scaleY = cutSet.correctionScaleSizeY;
 
+                                                Mat correctionPoints = new Mat();
+                                                correctionPoints = hXLDCont10mm.Clone();
+
+                                                for (int id = 0; id < correctionPoints.Rows; id++)
+                                                {
+                                                    correctionPoints.At<double>(id, 0) = correctionPoints.At<double>(id, 0) * scaleX;
+                                                    correctionPoints.At<double>(id, 1) = correctionPoints.At<double>(id, 1) * scaleY;
+
+                                                }
+
+                                                hXLDCont10mm = correctionPoints.Clone();
+                                            }
 
                                             //如果存在
                                             if (!hXLDCont10mm.Empty())
@@ -2450,7 +2490,7 @@ namespace _3DLaserGlueInspection.subForm
 
                     //临时修改，让相机拍照偏移值为0，测试用
                     //Vision.getLaserPosition(imgCut, imageSet.minThreshold, out xy,  LeftX,  TopY);
-                    Vision.getLaserPosition(imgCut, imageSet.minThreshold, out xy, camParam.OffsetX + LeftX, camParam.OffsetY + TopY);
+                    Vision.getLaserPosition(imgCut, imageSet.minThreshold, imageSet.laserMinWidth, out xy, camParam.OffsetX + LeftX, camParam.OffsetY + TopY);
 
 
                     ////临时添加
@@ -2498,6 +2538,7 @@ namespace _3DLaserGlueInspection.subForm
 
                             if (cutSet.isUseAngleOpt)
                             {
+                                //涂胶角度优化
                                 //对x方向进行矫正
                                 double scaleX = 1;
                                 scaleX = Math.Cos(robotAndCamAngle / 180 * Math.PI);
@@ -2507,6 +2548,25 @@ namespace _3DLaserGlueInspection.subForm
                                 for (int id = 0; id < correctionPoints.Rows; id++)
                                 {
                                     correctionPoints.At<double>(id, 0) = correctionPoints.At<double>(id, 0) * scaleX;
+                                }
+
+                                hXLDCont10mm = correctionPoints.Clone();
+                            }
+
+
+                            {
+                                //对两个方向进行矫正
+                                double scaleX = cutSet.correctionScaleSizeX;
+                                double scaleY = cutSet.correctionScaleSizeY;
+
+                                Mat correctionPoints = new Mat();
+                                correctionPoints = hXLDCont10mm.Clone();
+
+                                for (int id = 0; id < correctionPoints.Rows; id++)
+                                {
+                                    correctionPoints.At<double>(id, 0) = correctionPoints.At<double>(id, 0) * scaleX;
+                                    correctionPoints.At<double>(id, 1) = correctionPoints.At<double>(id, 1) * scaleY;
+
                                 }
 
                                 hXLDCont10mm = correctionPoints.Clone();
@@ -2569,5 +2629,40 @@ namespace _3DLaserGlueInspection.subForm
 
         }
 
+        private void correctionButton_Click(object sender, RoutedEventArgs e)
+        {
+            double actualGlueSizeX = 0;
+            double actualGlueSizeY = 0;
+            try
+            {
+                actualGlueSizeX = Convert.ToDouble(actualGlueWidthNumericUpDown.Text);
+                actualGlueSizeY = Convert.ToDouble(actualGlueHeightNumericUpDown.Text);
+            }
+            catch(Exception ex)
+            {
+                System.Windows.Forms.MessageBox.Show($"输入数据格式错误：{ex.Message}！");
+                return;
+            }
+            if(actualGlueSizeX ==0 ||  actualGlueSizeY ==0)
+            {
+                System.Windows.Forms.MessageBox.Show($"输入实际数据不能为0！");
+                return;
+            }
+            if (resultData.glueWidth == 0 || resultData.glueHeight == 0)
+            {
+                System.Windows.Forms.MessageBox.Show($"检测结果不能为0！");
+                return;
+            }
+
+            cutSet.correctionScaleSizeX = actualGlueSizeX / (resultData.glueWidth / cutSet.correctionScaleSizeX);
+            cutSet.correctionScaleSizeY = actualGlueSizeY / (resultData.glueHeight / cutSet.correctionScaleSizeY);
+
+
+            correctionScaleSizeXNumericUpDown.Text = cutSet.correctionScaleSizeX.ToString();
+            correctionScaleSizeYNumericUpDown.Text = cutSet.correctionScaleSizeY.ToString();
+
+            System.Windows.Forms.MessageBox.Show($"矫正成功。");
+
+        }
     }
 }

@@ -869,7 +869,7 @@ namespace _3DLaserGlueInspection
                                                             imgCut = dictImage[imageKey].Clone();
                                                         }
 
-                                                        Vision.getLaserPosition(imgCut, imageSet.minThreshold, out xy, item.Value.OffsetX + LeftX, item.Value.OffsetY + TopY);
+                                                        Vision.getLaserPosition(imgCut, imageSet.minThreshold, imageSet.laserMinWidth, out xy, item.Value.OffsetX + LeftX, item.Value.OffsetY + TopY);
 
                                                         //坐标转换
                                                         Wpf_Replace_halcon.PoseParameters robotPose = new PoseParameters();
@@ -1007,7 +1007,23 @@ namespace _3DLaserGlueInspection
 
                                                                     hXLDCont10mm = correctionPoints.Clone();
                                                                 }
+                                                                {
+                                                                    //对两个方向进行矫正
+                                                                    double scaleX = cutSet.correctionScaleSizeX;
+                                                                    double scaleY = cutSet.correctionScaleSizeY;
 
+                                                                    Mat correctionPoints = new Mat();
+                                                                    correctionPoints = hXLDCont10mm.Clone();
+
+                                                                    for (int id = 0; id < correctionPoints.Rows; id++)
+                                                                    {
+                                                                        correctionPoints.At<double>(id, 0) = correctionPoints.At<double>(id, 0) * scaleX;
+                                                                        correctionPoints.At<double>(id, 1) = correctionPoints.At<double>(id, 1) * scaleY;
+
+                                                                    }
+
+                                                                    hXLDCont10mm = correctionPoints.Clone();
+                                                                }
                                                                 //如果存在
                                                                 if (!hXLDCont10mm.Empty())
                                                                 {
