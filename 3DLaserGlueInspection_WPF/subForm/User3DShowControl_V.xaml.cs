@@ -1,3 +1,4 @@
+using HelixToolkit.Wpf;
 using Kitware.VTK;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.Media3D;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
@@ -35,6 +37,7 @@ namespace _3DLaserGlueInspection.subForm
         object olock = new object();
         vtkPoints _points = vtkPoints.New();
         vtkUnsignedCharArray _colors_rgb = vtkUnsignedCharArray.New();
+        vtkAxesActor axes = vtkAxesActor.New();
 
         double[] xCoords;
         double[] yCoords;
@@ -45,6 +48,23 @@ namespace _3DLaserGlueInspection.subForm
         public bool bShowing = false;
         bool bClose = false;
         int interCount = 1;
+
+
+        /// <summary>
+        /// 移除坐标轴
+        /// </summary>
+        public void RemoveCoord(vtkAxesActor axes)
+        {
+            if (axes != null)
+            {
+                vtkRenderWindow renderWindow = vtkRenderWindowControl.RenderWindow;
+                vtkRenderer renderer = renderWindow.GetRenderers().GetFirstRenderer();
+
+                renderer.RemoveActor(axes);
+                renderer.GetRenderWindow().Render();
+            }
+        }
+
 
         public void ClearPointCloud()
         {
@@ -60,6 +80,7 @@ namespace _3DLaserGlueInspection.subForm
             }
             points.Dispose();
             colors.Dispose();
+            RemoveCoord(axes);
             // 渲染
             vtkRenderWindowControl.RenderWindow.Render();
         }
@@ -68,6 +89,28 @@ namespace _3DLaserGlueInspection.subForm
             InsertNextPoint(X, Y, Z, colorSalce);
 
         }
+
+        /// <summary>
+        /// 显示坐标系，pose必须是zyx
+        /// </summary>
+        /// <param name="X"></param>
+        /// <param name="Y"></param>
+        /// <param name="Z"></param>
+        /// <param name="RX"></param>
+        /// <param name="RY"></param>
+        /// <param name="RZ"></param>
+        public void AddCoord(double X, double Y, double Z, double RX, double RY, double RZ,double scale)
+        {
+            double[] pos = { X, Y, Z };       // 位置
+            double[] ori = { RX, RY, RZ };            // 绕Z轴旋转45度
+
+            show_coord(axes, pos, ori, scale);
+            // 渲染
+            vtkRenderWindowControl.RenderWindow.Render();
+
+        }
+
+
         public void AddPointCloud(List<double> X, List<double> Y, List<double> Z, List<double> colorSalce)
         {
             InsertNextPoints(X.ToArray(), Y.ToArray(), Z.ToArray(), colorSalce.ToArray());
@@ -76,6 +119,8 @@ namespace _3DLaserGlueInspection.subForm
             //vtkRenderWindowControl.RenderWindow.Render();
 
         }
+
+
         public void show_cloud(vtkPoints points, vtkUnsignedCharArray colors_rgb, double r = 1.0, double g = 1.0, double b = 1.0, float size = 4f)
         {
             vtkPolyData polydata = vtkPolyData.New();
@@ -112,16 +157,79 @@ namespace _3DLaserGlueInspection.subForm
             }
 
             render.AddActor(actor);
-            //render.AddActor(scalarBar);
-            render.SetViewport(0.0, 0.0, 1, 1);//显示范围
-            render.ResetCamera();
-
             render.SetBackground(0.2, 0.3, 0.4);
 
-            //视角相关
-            render.GetActiveCamera().SetViewUp(0, 1, 0);
+
+            /// 改为z方向的俯视图
+
+            // 1. 获取点云的包围盒 [xmin,xmax, ymin,ymax, zmin,zmax]
+            double[] bounds = actor.GetBounds();
+
+            // 2. 计算中心点
+            double cx = (bounds[0] + bounds[1]) / 2.0;
+            double cy = (bounds[2] + bounds[3]) / 2.0;
+            double cz = (bounds[4] + bounds[5]) / 2.0;
+
+            // 3. 计算合适的相机高度（比点云范围稍高一些）
+            double rangeX = bounds[1] - bounds[0];
+            double rangeY = bounds[3] - bounds[2];
+            double maxRange = Math.Max(rangeX, rangeY);
+            double cameraHeight = maxRange * 1.5; // 留一些边距
+
+            // 4. 设置相机参数
+            vtkCamera camera = render.GetActiveCamera();
+
+            // 相机位置：在中心点正上方
+            camera.SetPosition(cx, cy, cz + cameraHeight);
+
+            // 焦点：点云中心
+            camera.SetFocalPoint(cx, cy, cz);
+
+            // ViewUp：Y 轴正方向为"上"
+            camera.SetViewUp(0, 1, 0);
+
+            // 平行投影（俯视图通常用正交投影，效果更像工程图纸）
+            camera.ParallelProjectionOn();
+            camera.SetParallelScale(maxRange / 2.0);
+
+            // 5. 裁剪范围
+            render.ResetCameraClippingRange();
+
+            // 6. 渲染
+            render.GetRenderWindow().Render();
+
 
         }
+
+        public void show_coord(vtkAxesActor coord, double[] position,
+         double[] orientation,
+         double scale = 1.0)
+        {
+            coord.SetTotalLength(scale, scale, scale);
+            coord.SetShaftTypeToCylinder();
+            coord.SetCylinderRadius(0.2 * scale);
+            coord.SetAxisLabels(1);
+
+            //// 设置位姿
+            //coord.SetPosition(position[0], position[1], position[2]);
+            //coord.SetOrientation(orientation[0], orientation[1], orientation[2]);
+
+
+            var t = vtkTransform.New();
+            t.Translate(position[0], position[1], position[2]);
+            t.RotateZ(orientation[2]);
+            t.RotateY(orientation[1]);
+            t.RotateX(orientation[0]);
+            coord.SetUserTransform(t);
+
+
+            vtkRenderer render = vtkRenderWindowControl.RenderWindow.GetRenderers().GetFirstRenderer();
+
+            render.AddActor(coord);
+            render.GetRenderWindow().Render();
+
+        }
+
 
 
         private void InsertNextColor(double colorSalce)

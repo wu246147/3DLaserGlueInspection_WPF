@@ -22,6 +22,13 @@ namespace _3DLaserGlueInspection
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
         ///pose转旋转矩阵
         public static extern int poseToHomMat3d(int PoseType, double x, double y, double z, double rx, double ry, double rz, IntPtr transformMat);
+
+
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+        ///旋转矩阵转pose
+        public static extern int HomMat3dToPose(int PoseType, out double x, out double y, out double z, out double rx, out double ry, out double rz, IntPtr transformMat);
+
+
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
         ///坐标映射
 

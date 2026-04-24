@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:_3DLaserGlueInspection.subForm"
         mc:Ignorable="d"
-        Title="检测工具参数设置" Height="1000
+        Title="检测工具参数设置" Height="1080
         
         " Width="1286" Loaded="WindowVision_Loaded" Closing="WindowVision_Closing">
 
@@ -95,6 +95,7 @@
                     <ComboBoxItem Content="轮廓检测结果"/>
                     <ComboBoxItem Content="3D点云结果"/>
                     <ComboBoxItem Content="3D涂胶检测结果"/>
+                    <ComboBoxItem Content="当前检测位姿"/>
                 </ComboBox>
                 <local:ImageControl2 x:Name="hWindowModel" Grid.Column="0" Grid.Row="0" Margin="0,24,0,0" />
                 <local:User3DShowControl_V x:Name="_3DShowControl" Visibility="Hidden" Background="Black" Margin="0,24,0,0" />

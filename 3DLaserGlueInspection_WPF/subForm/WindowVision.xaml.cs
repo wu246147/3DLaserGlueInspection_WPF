@@ -836,11 +836,6 @@ namespace _3DLaserGlueInspection.subForm
 
                         }
 
-
-
-                        //showImageComboBox_SelectionChanged(null, null);
-
-
                         //夹角计算
                         if (CamParamName == null || camKey == null
                            || !Params.CamToTool.TryGetValue(CamParamName, out var CamToTools) || !CamToTools.TryGetValue(camKey, out Mat Cam1ToTool)
@@ -850,15 +845,7 @@ namespace _3DLaserGlueInspection.subForm
                             return;
                         }
 
-                        ////临时测试
-                        //Vision.printPoint(Cam1ToTool, "Cam1ToTool");
-                        //Vision.printPoint(CamToCam1, "CamToCam1");
-
                         Mat CamToTool = Cam1ToTool * CamToCam1;
-
-                        ////临时测试
-                        //Vision.printPoint(robotPoseMat, "robotPoseMat");
-                        //Vision.printPoint(CamToTool, "CamToTool");
 
                         // 角度计算
                         Vision.robotAndCamVectorAngle(robotPoseMat.CvPtr, CamToTool.CvPtr, 2, 0, out robotAndCamAngle);
@@ -873,6 +860,8 @@ namespace _3DLaserGlueInspection.subForm
                     //System.Windows.Forms.MessageBox.Show(ex.ToString());
                 }
             showImageEnd:
+
+
                 //参数更新
                 try
                 {
@@ -1028,6 +1017,27 @@ namespace _3DLaserGlueInspection.subForm
             }
             cutSet = null;
             camUsedGroupBox.IsEnabled = publicParaGridBox.IsEnabled = false;
+
+            ////更新机器人姿态
+
+            //Robot3DPoseDict.Clear();
+            //List<string> camKeyList = new List<string> { "Cam1", "Cam2", "Cam3", "Cam4" };
+
+            ////数据初始化
+            //foreach (var camKey in camKeyList)
+            //{
+            //    var dictRobotPoseList = new SynchronizedList<Dictionary<long, PoseParameters>>();
+            //    Robot3DPoseDict.Add(camKey, dictRobotPoseList);
+            //    for (int indexTaskCut = 0; indexTaskCut < Images.Count; indexTaskCut++)
+            //    {
+            //        var dictRobotPose = new Dictionary<long, PoseParameters>();
+            //        Robot3DPoseDict[camKey].Add(dictRobotPose);
+
+            //    }
+            //}
+
+
+
         }
 
         void numericUpDownImageNumUpData(object sender, EventArgs e)
@@ -1110,6 +1120,7 @@ namespace _3DLaserGlueInspection.subForm
         private void selectCamListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             SelectedCamAndImage();
+
         }
 
         private void selectPictureListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1421,7 +1432,7 @@ namespace _3DLaserGlueInspection.subForm
                 {
                     imgCut = hImage.Clone();
                 }
-                Vision.getLaserPosition(imgCut, imageSet.minThreshold,imageSet.laserMinWidth, out xy, camParam.OffsetX + LeftX, camParam.OffsetY + TopY);
+                Vision.getLaserPosition(imgCut, imageSet.minThreshold, imageSet.laserMinWidth, out xy, camParam.OffsetX + LeftX, camParam.OffsetY + TopY);
 
 
                 if (xy.Rows > 0)
@@ -1750,7 +1761,7 @@ namespace _3DLaserGlueInspection.subForm
                 return;
             }
 
-            if (showImageComboBox.SelectedIndex != 2)
+            if (showImageComboBox.SelectedIndex != 2 && showImageComboBox.SelectedIndex != 4)
             {
                 Show2DWindow();
             }
@@ -1783,18 +1794,11 @@ namespace _3DLaserGlueInspection.subForm
                     {
                         if (!outMaxRegion.Empty() && !outRegionRectangle2.Empty())
                         {
-                            //GlobalVarAndFunc.ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, hXLDCont10mm3D, outMaxRegion, outRegionRectangle2, resultData, bResult, ref hWindowModel, ref showing, ref olockShow, (cutSet.ShowWidth - Vision.xSize * 1000) * Vision.scaleSize / 2, (cutSet.ShowHeight - Vision.ySize * 1000) * Vision.scaleSize / 2);
-
-                            //GlobalVarAndFunc.ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, hXLDCont10mm3D, outMaxRegion, outRegionRectangle2, resultData, bResult, ref hWindowModel, ref showing, ref olockShow, 0, (cutSet.ShowHeight - Vision.ySize * 1000) * Vision.scaleSize / 2);
-
                             GlobalVarAndFunc.ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, cutSet, hXLDCont10mm3D, outMaxRegion, outRegionRectangle2, resultData, bResult, ref hWindowModel, ref showing, ref olockShow, 0, 0);
 
                         }
                         else
                         {
-                            //GlobalVarAndFunc.ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, hXLDCont10mm3D, ref hWindowModel, ref showing, ref olockShow, (cutSet.ShowWidth - Vision.xSize * 1000) * Vision.scaleSize / 2, (cutSet.ShowHeight - Vision.ySize * 1000) * Vision.scaleSize / 2);
-                            //GlobalVarAndFunc.ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, hXLDCont10mm3D, ref hWindowModel, ref showing, ref olockShow, 0, (cutSet.ShowHeight - Vision.ySize * 1000) * Vision.scaleSize / 2);
-
                             GlobalVarAndFunc.ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, cutSet, hXLDCont10mm3D, ref hWindowModel, ref showing, ref olockShow, 0, 0);
                         }
                     }
@@ -1803,6 +1807,157 @@ namespace _3DLaserGlueInspection.subForm
                         hWindowModel.SetImageSource(null);
                     }
                     break;
+
+                case 2:
+                    _3DShowControl.ClearPointCloud();
+                    Thread.Sleep(100);
+                    if (Point3DXsDict.Count > 0)
+                    {
+                        _3DShowControl.RefreshOn(100, true);
+
+                        //显示机器人轨迹
+                        foreach (var camKey in Robot3DPoseDict.Keys) //相机
+                        {
+                            var dictRobotPoses = Robot3DPoseDict[camKey];
+
+                            foreach (var dictRobotPose in dictRobotPoses) //分段
+                            {
+                                foreach (var dictRobotPoseKey in dictRobotPose.Keys)
+                                {
+                                    var dictRobotPoseVal = dictRobotPose[dictRobotPoseKey];
+                                    _3DShowControl.AddPoint(dictRobotPoseVal.x, dictRobotPoseVal.y, dictRobotPoseVal.z, 4);
+                                }
+                            }
+                        }
+
+                        //显示检测点云
+                        foreach (var camKey in Point3DXsDict.Keys) //相机
+                        {
+                            var dictRobotX = Point3DXsDict[camKey];
+                            var dictRobotY = Point3DYsDict[camKey];
+                            var dictRobotZ = Point3DZsDict[camKey];
+
+
+                            for (int i = 0; i < dictRobotX.Count; i++)
+                            {
+                                List<double> colorScale;
+
+                                foreach (var dictRobotPointKey in dictRobotX[i].Keys)
+                                {
+                                    var x = dictRobotX[i][dictRobotPointKey];
+                                    var y = dictRobotY[i][dictRobotPointKey];
+                                    var z = dictRobotZ[i][dictRobotPointKey];
+
+                                    colorScale = new List<double>();
+                                    //计算显示颜色
+                                    for (int j = 0; j < z.Count; j++)
+                                    {
+                                        double color = ((z[j] - cutSet.ShowColorMin / 1000) / ((cutSet.ShowColorMax - cutSet.ShowColorMin) / 1000));
+
+                                        colorScale.Add(color);
+                                    }
+                                    _3DShowControl.AddPointCloud(x, y, z, colorScale);
+                                }
+                            }
+                        }
+
+
+                        _3DShowControl.RefreshOFF();
+                        _3DShowControl.RefreshPoints();
+
+                    }
+
+
+
+                    break;
+
+                case 4:
+
+                    _3DShowControl.ClearPointCloud();
+                    Thread.Sleep(100);
+                    if (robotPoseValues.Count > 0)
+                    {
+                        _3DShowControl.RefreshOn(100, true);
+
+                        //显示机器人轨迹
+                        //foreach (var camKey in Robot3DPoseDict.Keys) //相机
+                        //{
+                        //    var dictRobotPoses = Robot3DPoseDict[camKey];
+
+                        //    foreach (var dictRobotPose in dictRobotPoses) //分段
+                        //    {
+                        //        foreach (var dictRobotPoseKey in dictRobotPose.Keys)
+                        //        {
+                        //            var dictRobotPoseVal = dictRobotPose[dictRobotPoseKey];
+                        //            _3DShowControl.AddPoint(dictRobotPoseVal.x, dictRobotPoseVal.y, dictRobotPoseVal.z, 4);
+                        //        }
+                        //    }
+                        //}
+                        for (int i = 0; i < robotPoseValues.Count; i++)
+                        {
+                            var dictRobotPoseVal = robotPoseValues[i];
+                            _3DShowControl.AddPoint(dictRobotPoseVal.x, dictRobotPoseVal.y, dictRobotPoseVal.z, 4);
+                        }
+
+
+                        //显示相机位姿
+                        if (cutSetListBox.SelectedIndex >= 0 && selectCamListBox.SelectedIndex >= 0 && selectPictureListBox.SelectedIndex >= 0 && robotPoseKeys.Count > 0)
+                        {
+                            int indexRobotPose = 1;
+
+                            if (CamParamName == null || camKey == null
+                            || !Params.Param.TryGetValue(CamParamName, out var camParams) || !camParams.TryGetValue(camKey, out var camParam)
+                            || !Params.CamPar.TryGetValue(CamParamName, out var hCamPars) || !hCamPars.TryGetValue(camKey, out var hCamPar)
+                            || !Params.LightInCam.TryGetValue(CamParamName, out var LightInCams) || !LightInCams.TryGetValue(camKey, out var LightInCam)
+                            || !Params.LightToCam.TryGetValue(CamParamName, out var LightToCams) || !LightToCams.TryGetValue(camKey, out var LightToCam)
+                            || !Params.CamToTool.TryGetValue(CamParamName, out var CamToTools) || !CamToTools.TryGetValue(camKey, out var Cam1ToTool)
+                            || !Params.CamToCam1.TryGetValue(CamParamName, out var CamToCam1s) || !CamToCam1s.TryGetValue(camKey, out var CamToCam1))
+                            {
+                                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("无相机参数"));
+                                goto showCamPoseFinish;
+                            }
+
+                            //获取机器人位姿
+                            long imageKey = ImageKeys[cutSetListBox.SelectedIndex][camKey][selectPictureListBox.SelectedIndex];
+
+                            while (robotPoseKeys[indexRobotPose] < imageKey)//循环到的姿态晚于等于图片，处理
+                            {
+
+                                indexRobotPose++;
+                            }
+                            Wpf_Replace_halcon.PoseParameters robotPose = new PoseParameters();
+                            HMatrixTransform.mathHPose(robotPoseValues[indexRobotPose - 1],
+                                                                   robotPoseValues[indexRobotPose], out robotPose,
+                                                                   (imageKey - robotPoseKeys[indexRobotPose - 1]) /
+                                                                   (double)(robotPoseKeys[indexRobotPose] - robotPoseKeys[indexRobotPose - 1])
+                                                                   );
+
+                            Mat ToolToBase = new Mat();
+                            Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
+                            //计算相机位姿
+
+                            Mat CamToBase =  ToolToBase * Cam1ToTool * CamToCam1;
+
+                            double camInBaseX, camInBaseY, camInBaseZ, camInBaseRX, camInBaseRY, camInBaseRZ;
+
+                            Vision.HomMat3dToPose(2, out camInBaseX, out camInBaseY, out camInBaseZ, out camInBaseRX, out camInBaseRY, out camInBaseRZ, CamToBase.CvPtr);
+
+                            //显示相机 暂时先显示点
+                            //_3DShowControl.AddPoint(CamToBase.At<double>(0,3), CamToBase.At<double>(1, 3), CamToBase.At<double>(2, 3), 2);
+                            _3DShowControl.AddCoord(camInBaseX, camInBaseY, camInBaseZ, camInBaseRX, camInBaseRY, camInBaseRZ, 0.1);
+
+                        }
+
+                    showCamPoseFinish:
+                        _3DShowControl.RefreshOFF();
+                        _3DShowControl.RefreshPoints();
+
+                    }
+
+
+                    break;
+
+
                 default:
                     break;
             }
@@ -2638,12 +2793,12 @@ namespace _3DLaserGlueInspection.subForm
                 actualGlueSizeX = Convert.ToDouble(actualGlueWidthNumericUpDown.Text);
                 actualGlueSizeY = Convert.ToDouble(actualGlueHeightNumericUpDown.Text);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 System.Windows.Forms.MessageBox.Show($"输入数据格式错误：{ex.Message}！");
                 return;
             }
-            if(actualGlueSizeX ==0 ||  actualGlueSizeY ==0)
+            if (actualGlueSizeX == 0 || actualGlueSizeY == 0)
             {
                 System.Windows.Forms.MessageBox.Show($"输入实际数据不能为0！");
                 return;
