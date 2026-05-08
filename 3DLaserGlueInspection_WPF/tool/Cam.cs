@@ -2847,18 +2847,18 @@ namespace _3DLaserGlueInspection
                                     Mat H = new Mat();
                                     Vision.poseToHomMat3d(ToolInCam[name][camKey].PoseType, ToolInCam[name][camKey].x, ToolInCam[name][camKey].y, ToolInCam[name][camKey].z,
                                         ToolInCam[name][camKey].rx, ToolInCam[name][camKey].ry, ToolInCam[name][camKey].rz, H.CvPtr);
-                                    CamToTool[name][camKey] = H;
-
-                                    //CamToTool[name][camKey] = H.Inv();
+                                    //CamToTool[name][camKey] = H;
+                                    //这里必须要求逆才行，因为标定的是相机坐标系下的法兰盘位姿，不是法兰盘坐标系下的相机位姿
+                                    CamToTool[name][camKey] = H.Inv();
                                 }
                                 else
                                 {
                                     Mat H = new Mat();
                                     Vision.poseToHomMat3d(ToolInCam[name][camKey].PoseType, ToolInCam[name][camKey].x, ToolInCam[name][camKey].y, ToolInCam[name][camKey].z,
                                         ToolInCam[name][camKey].rx, ToolInCam[name][camKey].ry, ToolInCam[name][camKey].rz, H.CvPtr);
-                                    CamToTool[name].Add(camKey, H);
+                                    //CamToTool[name].Add(camKey, H);
 
-                                    //CamToTool[name].Add(camKey, H.Inv());
+                                    CamToTool[name].Add(camKey, H.Inv());
                                 }
                             }
 
