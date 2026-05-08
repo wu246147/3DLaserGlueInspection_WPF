@@ -1,4 +1,4 @@
-ï»¿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -13,17 +13,18 @@ namespace Wpf_Replace_halcon
     {
         public CameraParameters Clone() { return (CameraParameters)this.MemberwiseClone(); }
 
-        public string CameraModel { get; set; } = "area_scan_division";  // å¦‚"area_scan_division"
-        public double Focus { get; set; } = 0.008;        // ç„¦è·ï¼ˆå•ä½ï¼šç±³ï¼‰
-        public double Kappa { get; set; } = 0;          // å¾„å‘ç•¸å˜ç³»æ•° (å•ä½ï¼šm^-2)
-        public double Sx { get; set; } = 5.2e-06;            // ä¼ æ„Ÿå™¨ä¸Šä¸¤ä¸ªç›¸é‚»å•å…ƒä¹‹é—´çš„æ°´å¹³è·ç¦»ï¼ˆm/åƒç´ ï¼‰
-        public double Sy { get; set; } = 5.2e-06;          // ä¼ æ„Ÿå™¨ä¸Šä¸¤ä¸ªç›¸é‚»å•å…ƒä¹‹é—´çš„å‚ç›´è·ç¦»ï¼ˆm/åƒç´ ï¼‰
-        public double Cx { get; set; } = 640;          // ä¸»ç‚¹Xåæ ‡ï¼ˆåƒç´ ï¼‰
-        public double Cy { get; set; } = 512;    // ä¸»ç‚¹Yåæ ‡ï¼ˆåƒç´ ï¼‰
-        public int ImageWidth { get; set; } = 1280;     // å›¾åƒå®½åº¦ 
-        public int ImageHeight { get; set; } = 1024;    // å›¾åƒé«˜åº¦ 
+        public string CameraModel { get; set; } = "area_scan_division";  // Èç"area_scan_division"
+        public double Focus { get; set; } = 0.008;        // ½¹¾à£¨µ¥Î»£ºÃ×£©
+        public double Kappa { get; set; } = 0;          // ¾¶Ïò»û±äÏµÊı (µ¥Î»£ºm^-2)
+        public double Sx { get; set; } = 5.2e-06;            // ´«¸ĞÆ÷ÉÏÁ½¸öÏàÁÚµ¥ÔªÖ®¼äµÄË®Æ½¾àÀë£¨m/ÏñËØ£©
+        public double Sy { get; set; } = 5.2e-06;          // ´«¸ĞÆ÷ÉÏÁ½¸öÏàÁÚµ¥ÔªÖ®¼äµÄ´¹Ö±¾àÀë£¨m/ÏñËØ£©
+        public double Cx { get; set; } = 640;          // Ö÷µãX×ø±ê£¨ÏñËØ£©
+        public double Cy { get; set; } = 512;    // Ö÷µãY×ø±ê£¨ÏñËØ£©
+        public int ImageWidth { get; set; } = 1280;     // Í¼Ïñ¿í¶È 
+        public int ImageHeight { get; set; } = 1024;    // Í¼Ïñ¸ß¶È 
     }
 
+    [Serializable]
     public class PoseParameters
     {
         public PoseParameters Clone() { return (PoseParameters)this.MemberwiseClone(); }
@@ -102,6 +103,7 @@ namespace Wpf_Replace_halcon
         static public int mathHPose(PoseParameters inputPoseParameters1, PoseParameters inputPoseParameters2, out PoseParameters outputPoseParameters, double s)
         {
             outputPoseParameters = new PoseParameters();
+            outputPoseParameters.PoseType = inputPoseParameters1.PoseType;
 
             outputPoseParameters.x = inputPoseParameters1.x + (inputPoseParameters2.x - inputPoseParameters1.x) * s;
             outputPoseParameters.y = inputPoseParameters1.y + (inputPoseParameters2.y - inputPoseParameters1.y) * s;
@@ -153,10 +155,10 @@ namespace Wpf_Replace_halcon
         }
 
         ///// <summary>
-        ///// ä½å§¿è½¬è½¬æ¢çŸ©é˜µ
+        ///// Î»×Ë×ª×ª»»¾ØÕó
         ///// </summary>
-        ///// <param name="poseParameters">ä½å§¿å‚æ•°</param>
-        ///// <param name="mat">è¿”å›4*3çš„å¤–å‚çŸ©é˜µ</param>
+        ///// <param name="poseParameters">Î»×Ë²ÎÊı</param>
+        ///// <param name="mat">·µ»Ø4*3µÄÍâ²Î¾ØÕó</param>
         ///// <returns></returns>
         //static public int poseToHomMat3d(PoseParameters poseParameters, out Mat mat)
         //{
@@ -218,7 +220,7 @@ namespace Wpf_Replace_halcon
 
         //    //Point3f[] points = { new Point3f(1, 2, 3), new Point3f(4, 5, 6) };
 
-        //    //// æ‰§è¡Œå˜æ¢ 
+        //    //// Ö´ĞĞ±ä»» 
         //    //Mat pointsMat2 = new Mat(2, 3, MatType.CV_32FC1);
 
         //    transformXs = new double[xs.Length];

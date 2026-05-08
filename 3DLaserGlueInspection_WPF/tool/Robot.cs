@@ -1,4 +1,4 @@
-Ôªø//using HalconDotNet;
+//using HalconDotNet;
 using HslCommunication;
 using HslCommunication.Core;
 using HslCommunication.ModBus;
@@ -17,6 +17,9 @@ using Wpf_Replace_halcon;
 using _3DLaserGlueInspection.subForm;
 using static OpenCvSharp.FileStorage;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
+using System.Globalization;
+using System.Text.RegularExpressions;
+using Kitware.VTK;
 
 namespace _3DLaserGlueInspection
 {
@@ -29,32 +32,32 @@ namespace _3DLaserGlueInspection
         bool IsOpen { get; }
 
         /// <summary>
-        /// Ëé∑ÂèñÊúÄÂêé‰∏ÄÊ¨°ÈîôËØØ‰ø°ÊÅØ
+        /// ªÒ»°◊Ó∫Û“ª¥Œ¥ÌŒÛ–≈œ¢
         /// </summary>
         /// <returns></returns>
         string ErrMsg { get; }
         /// <summary>
-        /// Âä†ËΩΩÂèÇÊï∞
+        /// º”‘ÿ≤Œ ˝
         /// </summary>
         /// <returns></returns>
         bool Load();
         /// <summary>
-        /// ‰øùÂ≠òÂèÇÊï∞
+        /// ±£¥Ê≤Œ ˝
         /// </summary>
         /// <returns></returns>
         bool Save();
         /// <summary>
-        /// ÊâìÂºÄÔºàËøûÊé•Ôºâ
+        /// ¥Úø™£®¡¨Ω”£©
         /// </summary>
         /// <returns></returns>
         bool Open();
         /// <summary>
-        /// ÂÖ≥Èó≠ÔºàÊñ≠ÂºÄÔºâ
+        /// πÿ±’£®∂œø™£©
         /// </summary>
         /// <returns></returns>
         bool Close();
         /// <summary>
-        /// Ëé∑ÂèñÂùêÊ†á
+        /// ªÒ»°◊¯±Í
         /// </summary>
         /// <param name="hPose"></param>
         /// <returns></returns>
@@ -86,7 +89,7 @@ namespace _3DLaserGlueInspection
         YRCHighEthernet yrc = new YRCHighEthernet();
         public YRCRobot() { }
 
-        public bool ReadÂùêÊ†á(out string[] value)
+        public bool Read◊¯±Í(out string[] value)
         {
             OperateResult<byte[]> operateResult = yrc.ReadCommand(117, 101, 0, 1, null);
             if (operateResult.IsSuccess)
@@ -106,9 +109,9 @@ namespace _3DLaserGlueInspection
                 return false;
             }
         }
-        public bool ReadÂùêÊ†á(out PoseParameters hPose)
+        public bool Read◊¯±Í(out PoseParameters hPose)
         {
-            OperateResult<string[]> read = yrc.ReadPose();//ÂÖ≥ËäÇÂùêÊ†á
+            OperateResult<string[]> read = yrc.ReadPose();//πÿΩ⁄◊¯±Í
             if (read.IsSuccess)
             {
                 double x = double.Parse(read.Content[0]) / 1000;
@@ -119,7 +122,7 @@ namespace _3DLaserGlueInspection
                 double rz = double.Parse(read.Content[5]) / 10000;
                 hPose = new PoseParameters();
                 hPose.x = x; hPose.y = y; hPose.z = z;
-                hPose.rx = rx; hPose.ry = ry;   hPose.rz = rz;
+                hPose.rx = rx; hPose.ry = ry; hPose.rz = rz;
                 hPose.PoseType = 2;
             }
             else
@@ -214,7 +217,7 @@ namespace _3DLaserGlueInspection
                 hPose = new PoseParameters();
 
                 hPose.x = array[0] / 1000; hPose.y = array[1] / 1000; hPose.z = array[2] / 1000;
-                hPose.rx = array[3] ; hPose.ry = array[4] ; hPose.rz = array[5] ;
+                hPose.rx = array[3]; hPose.ry = array[4]; hPose.rz = array[5];
                 hPose.PoseType = 2;
 
                 return true;
@@ -227,7 +230,7 @@ namespace _3DLaserGlueInspection
             }
         }
         /// <summary>
-        /// ËØªÂèñËæìÂá∫‰ø°Âè∑DO1~DO128
+        /// ∂¡»° ‰≥ˆ–≈∫≈DO1~DO128
         /// </summary>
         /// <param name="index">1~128</param>
         /// <param name="value"></param>
@@ -241,7 +244,7 @@ namespace _3DLaserGlueInspection
             return operateResult.IsSuccess;
         }
         /// <summary>
-        /// ËØªÂèñËæìÂÖ•‰ø°Âè∑DI1~DI128
+        /// ∂¡»° ‰»Î–≈∫≈DI1~DI128
         /// </summary>
         /// <param name="index">1~128</param>
         /// <param name="value"></param>
@@ -255,7 +258,7 @@ namespace _3DLaserGlueInspection
             return operateResult.IsSuccess;
         }
         /// <summary>
-        /// ÂÜôÂÖ•ËæìÂÖ•‰ø°Âè∑DI1~DI128
+        /// –¥»Î ‰»Î–≈∫≈DI1~DI128
         /// </summary>
         /// <param name="index">1~128</param>
         /// <param name="value"></param>
@@ -268,7 +271,7 @@ namespace _3DLaserGlueInspection
             return operateResult.IsSuccess;
         }
         /// <summary>
-        /// ËØªÂèñËæìÂá∫‰ø°Âè∑AO1~AO32
+        /// ∂¡»° ‰≥ˆ–≈∫≈AO1~AO32
         /// </summary>
         /// <param name="index">1~32</param>
         /// <param name="value"></param>
@@ -282,7 +285,7 @@ namespace _3DLaserGlueInspection
             return operateResult.IsSuccess;
         }
         /// <summary>
-        /// ËØªÂèñËæìÂá∫‰ø°Âè∑AI1~AI32
+        /// ∂¡»° ‰≥ˆ–≈∫≈AI1~AI32
         /// </summary>
         /// <param name="index">1~32</param>
         /// <param name="value"></param>
@@ -296,7 +299,7 @@ namespace _3DLaserGlueInspection
             return operateResult.IsSuccess;
         }
         /// <summary>
-        /// ÂÜôÂÖ•ËæìÂÖ•‰ø°Âè∑AI1~AI32
+        /// –¥»Î ‰»Î–≈∫≈AI1~AI32
         /// </summary>
         /// <param name="index">1~32</param>
         /// <param name="value"></param>
@@ -309,7 +312,7 @@ namespace _3DLaserGlueInspection
             return operateResult.IsSuccess;
         }
         /// <summary>
-        /// ËØªÂèñËæìÂá∫‰ø°Âè∑AO33~AO64
+        /// ∂¡»° ‰≥ˆ–≈∫≈AO33~AO64
         /// </summary>
         /// <param name="index">33~64</param>
         /// <param name="value"></param>
@@ -323,7 +326,7 @@ namespace _3DLaserGlueInspection
             return operateResult.IsSuccess;
         }
         /// <summary>
-        /// ËØªÂèñËæìÂá∫‰ø°Âè∑AI33~AI64
+        /// ∂¡»° ‰≥ˆ–≈∫≈AI33~AI64
         /// </summary>
         /// <param name="index">33~64</param>
         /// <param name="value"></param>
@@ -337,7 +340,7 @@ namespace _3DLaserGlueInspection
             return operateResult.IsSuccess;
         }
         /// <summary>
-        /// ÂÜôÂÖ•ËæìÂÖ•‰ø°Âè∑AI33~AI64
+        /// –¥»Î ‰»Î–≈∫≈AI33~AI64
         /// </summary>
         /// <param name="index">33~64</param>
         /// <param name="value"></param>
@@ -371,14 +374,14 @@ namespace _3DLaserGlueInspection
                         }
                         else
                         {
-                            _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("Êñá‰ª∂Ê†ºÂºèÂºÇÂ∏∏");
+                            _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("Œƒº˛∏Ò Ω“Ï≥£");
                             result = false;
                         }
                     }
                 }
                 else
                 {
-                    _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("Êñá‰ª∂‰∏çÂ≠òÂú®");
+                    _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("Œƒº˛≤ª¥Ê‘⁄");
                     result = false;
                 }
             }
@@ -402,7 +405,7 @@ namespace _3DLaserGlueInspection
                     if (ios == null)
                     {
                         result = false;
-                        _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("Êñá‰ª∂Ê†ºÂºèÂºÇÂ∏∏");
+                        _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("Œƒº˛∏Ò Ω“Ï≥£");
                     }
                     else
                     {
@@ -412,7 +415,7 @@ namespace _3DLaserGlueInspection
                 else
                 {
                     result = false;
-                    _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("Êñá‰ª∂‰∏çÂ≠òÂú®");
+                    _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("Œƒº˛≤ª¥Ê‘⁄");
                 }
             }
             catch (Exception ex)
@@ -461,8 +464,8 @@ namespace _3DLaserGlueInspection
         {
             modbus.IpAddress = param.IpAddress;
             modbus.Port = param.Port;
-            modbus.ConnectTimeOut = 5000;     // ËøûÊé•Ë∂ÖÊó∂ÔºåÂçï‰ΩçÊØ´Áßí
-            modbus.ReceiveTimeOut = 3000;     // Êé•Êî∂Ë∂ÖÊó∂ÔºåÂçï‰ΩçÊØ´Áßí
+            modbus.ConnectTimeOut = 5000;     // ¡¨Ω”≥¨ ±£¨µ•Œª∫¡√Î
+            modbus.ReceiveTimeOut = 3000;     // Ω” ’≥¨ ±£¨µ•Œª∫¡√Î
             modbus.Station = 1;
             modbus.AddressStartWithZero = true;
             modbus.IsCheckMessageId = true;
@@ -491,14 +494,14 @@ namespace _3DLaserGlueInspection
 
         public bool Read(DI eDI, out string value)
         {
-            _errMsg = GlobalVarAndFunc.LanguageTranslate("‰∏çÊîØÊåÅÂ≠óÁ¨¶‰∏≤");
+            _errMsg = GlobalVarAndFunc.LanguageTranslate("≤ª÷ß≥÷◊÷∑˚¥Æ");
             value = "";
             return false;
         }
 
         public bool Read(DO eDO, out string value)
         {
-            _errMsg = GlobalVarAndFunc.LanguageTranslate("‰∏çÊîØÊåÅÂ≠óÁ¨¶‰∏≤");
+            _errMsg = GlobalVarAndFunc.LanguageTranslate("≤ª÷ß≥÷◊÷∑˚¥Æ");
             value = "";
             return false;
         }
@@ -529,7 +532,7 @@ namespace _3DLaserGlueInspection
                             return ReadDO(index, out value);
                         }
                     }
-                    _errMsg = ioName + GlobalVarAndFunc.LanguageTranslate("Âú∞ÂùÄÊ†ºÂºè‰∏çÂåπÈÖç");
+                    _errMsg = ioName + GlobalVarAndFunc.LanguageTranslate("µÿ÷∑∏Ò Ω≤ª∆•≈‰");
                 }
                 else
                 {
@@ -539,7 +542,7 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = ioName + GlobalVarAndFunc.LanguageTranslate("Âú∞ÂùÄÊú™ÂàÜÈÖç");
+                _errMsg = ioName + GlobalVarAndFunc.LanguageTranslate("µÿ÷∑Œ¥∑÷≈‰");
             }
             value = false;
             return false;
@@ -571,7 +574,7 @@ namespace _3DLaserGlueInspection
                             return ReadAO(index, out value);
                         }
                     }
-                    _errMsg = ioName + GlobalVarAndFunc.LanguageTranslate("Âú∞ÂùÄÊ†ºÂºè‰∏çÂåπÈÖç");
+                    _errMsg = ioName + GlobalVarAndFunc.LanguageTranslate("µÿ÷∑∏Ò Ω≤ª∆•≈‰");
                 }
                 else
                 {
@@ -581,7 +584,7 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = ioName + GlobalVarAndFunc.LanguageTranslate("Âú∞ÂùÄÊú™ÂàÜÈÖç");
+                _errMsg = ioName + GlobalVarAndFunc.LanguageTranslate("µÿ÷∑Œ¥∑÷≈‰");
             }
             value = 0;
             return false;
@@ -606,7 +609,7 @@ namespace _3DLaserGlueInspection
                                     return WriteDI(index, (bool)value);
                                 }
                             }
-                            _errMsg = eDO.ToString() + GlobalVarAndFunc.LanguageTranslate("Âú∞ÂùÄÊ†ºÂºè‰∏çÂåπÈÖç");
+                            _errMsg = eDO.ToString() + GlobalVarAndFunc.LanguageTranslate("µÿ÷∑∏Ò Ω≤ª∆•≈‰");
                         }
                         else if (value is ushort)
                         {
@@ -617,11 +620,11 @@ namespace _3DLaserGlueInspection
                                     return WriteAI(index, (ushort)value);
                                 }
                             }
-                            _errMsg = eDO.ToString() + GlobalVarAndFunc.LanguageTranslate("Âú∞ÂùÄÊ†ºÂºè‰∏çÂåπÈÖç");
+                            _errMsg = eDO.ToString() + GlobalVarAndFunc.LanguageTranslate("µÿ÷∑∏Ò Ω≤ª∆•≈‰");
                         }
                         else
                         {
-                            _errMsg = GlobalVarAndFunc.LanguageTranslate("ÂÜôÂÖ•Ê†ºÂºè‰∏çÊîØÊåÅ");
+                            _errMsg = GlobalVarAndFunc.LanguageTranslate("–¥»Î∏Ò Ω≤ª÷ß≥÷");
                             return false;
                         }
                     }
@@ -633,11 +636,11 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = eDO.ToString() + GlobalVarAndFunc.LanguageTranslate("Âú∞ÂùÄÊú™ÂàÜÈÖç");
+                _errMsg = eDO.ToString() + GlobalVarAndFunc.LanguageTranslate("µÿ÷∑Œ¥∑÷≈‰");
             }
             return false;
         }
-    
+
     }
 
     public class FanucRobot : IRobot, ISignal
@@ -675,11 +678,11 @@ namespace _3DLaserGlueInspection
 
                 hPose = new PoseParameters();
 
-                hPose.x = x; 
-                hPose.y = y; 
+                hPose.x = x;
+                hPose.y = y;
                 hPose.z = z;
-                hPose.rx = rx; 
-                hPose.ry = ry; 
+                hPose.rx = rx;
+                hPose.ry = ry;
                 hPose.rz = rz;
                 hPose.PoseType = 2;
             }
@@ -710,14 +713,14 @@ namespace _3DLaserGlueInspection
                         }
                         else
                         {
-                            _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("Êñá‰ª∂Ê†ºÂºèÂºÇÂ∏∏");
+                            _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("Œƒº˛∏Ò Ω“Ï≥£");
                             result = false;
                         }
                     }
                 }
                 else
                 {
-                    _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("Êñá‰ª∂‰∏çÂ≠òÂú®");
+                    _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("Œƒº˛≤ª¥Ê‘⁄");
                     result = false;
                 }
             }
@@ -741,7 +744,7 @@ namespace _3DLaserGlueInspection
                     if (ios == null)
                     {
                         result = false;
-                        _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("Êñá‰ª∂Ê†ºÂºèÂºÇÂ∏∏");
+                        _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("Œƒº˛∏Ò Ω“Ï≥£");
                     }
                     else
                     {
@@ -751,7 +754,7 @@ namespace _3DLaserGlueInspection
                 else
                 {
                     result = false;
-                    _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("Êñá‰ª∂‰∏çÂ≠òÂú®");
+                    _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("Œƒº˛≤ª¥Ê‘⁄");
                 }
             }
             catch (Exception ex)
@@ -800,8 +803,8 @@ namespace _3DLaserGlueInspection
         {
             robot.IpAddress = param.IpAddress;
             robot.Port = param.Port;
-            robot.ConnectTimeOut = 5000;     // ËøûÊé•Ë∂ÖÊó∂ÔºåÂçï‰ΩçÊØ´Áßí
-            robot.ReceiveTimeOut = 3000;     // Êé•Êî∂Ë∂ÖÊó∂ÔºåÂçï‰ΩçÊØ´Áßí
+            robot.ConnectTimeOut = 5000;     // ¡¨Ω”≥¨ ±£¨µ•Œª∫¡√Î
+            robot.ReceiveTimeOut = 3000;     // Ω” ’≥¨ ±£¨µ•Œª∫¡√Î
             //robot.Station = 1;
             //robot.AddressStartWithZero = true;
             //robot.IsCheckMessageId = true;
@@ -830,14 +833,14 @@ namespace _3DLaserGlueInspection
 
         public bool Read(DI eDI, out string value)
         {
-            _errMsg = GlobalVarAndFunc.LanguageTranslate("‰∏çÊîØÊåÅÂ≠óÁ¨¶‰∏≤");
+            _errMsg = GlobalVarAndFunc.LanguageTranslate("≤ª÷ß≥÷◊÷∑˚¥Æ");
             value = "";
             return false;
         }
 
         public bool Read(DO eDO, out string value)
         {
-            _errMsg = GlobalVarAndFunc.LanguageTranslate("‰∏çÊîØÊåÅÂ≠óÁ¨¶‰∏≤");
+            _errMsg = GlobalVarAndFunc.LanguageTranslate("≤ª÷ß≥÷◊÷∑˚¥Æ");
             value = "";
             return false;
         }
@@ -880,7 +883,7 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = ioName + GlobalVarAndFunc.LanguageTranslate("Âú∞ÂùÄÊú™ÂàÜÈÖç");
+                _errMsg = ioName + GlobalVarAndFunc.LanguageTranslate("µÿ÷∑Œ¥∑÷≈‰");
             }
             value = false;
             return false;
@@ -914,7 +917,7 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = ioName + GlobalVarAndFunc.LanguageTranslate("Âú∞ÂùÄÊú™ÂàÜÈÖç");
+                _errMsg = ioName + GlobalVarAndFunc.LanguageTranslate("µÿ÷∑Œ¥∑÷≈‰");
             }
             value = 0;
             return false;
@@ -953,7 +956,7 @@ namespace _3DLaserGlueInspection
                         }
                         else
                         {
-                            _errMsg = GlobalVarAndFunc.LanguageTranslate("ÂÜôÂÖ•Ê†ºÂºè‰∏çÊîØÊåÅ");
+                            _errMsg = GlobalVarAndFunc.LanguageTranslate("–¥»Î∏Ò Ω≤ª÷ß≥÷");
                             return false;
                         }
                     }
@@ -965,9 +968,361 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = eDO.ToString() + GlobalVarAndFunc.LanguageTranslate("Âú∞ÂùÄÊú™ÂàÜÈÖç");
+                _errMsg = eDO.ToString() + GlobalVarAndFunc.LanguageTranslate("µÿ÷∑Œ¥∑÷≈‰");
             }
             return false;
         }
     }
+
+    public class KukaRobot : IRobot, ISignal
+    {
+        public string ErrMsg => _errMsg;
+        string _errMsg;
+        public bool IsOpen => _isOpen;
+        bool _isOpen = false;
+
+        RobotParam param = new RobotParam();
+        Dictionary<string, IoAddress> ioDict = new Dictionary<string, IoAddress>();
+        public RobotParam Param { get => param; set => param = value; }
+        public Dictionary<string, IoAddress> IoDict { get => ioDict; set => ioDict = value; }
+
+        HslCommunication.Robot.KUKA.KukaTcpNet robot = new HslCommunication.Robot.KUKA.KukaTcpNet();
+        public KukaRobot() { }
+
+        public void ShowForm()
+        {
+            new WindowRobot(this).ShowDialog();
+        }
+
+        public bool FormatTransform(string info, out PoseParameters hPose)
+        {
+            hPose = new PoseParameters();
+            try
+            {
+                var pattern = @"\b([XYZABC])\s+([-+]?\d*\.?\d+)";
+                var matches = Regex.Matches(info, pattern);
+
+                var dict = new Dictionary<string, double>();
+                foreach (Match m in matches)
+                {
+                    dict[m.Groups[1].Value] = double.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture);
+                }
+
+                if (dict.ContainsKey("X"))
+                {
+                    double x = dict["X"];
+                    hPose.x = x/1000;
+                }
+                else { return false; }
+
+                if (dict.ContainsKey("Y"))
+                {
+                    double y = dict["Y"];
+                    hPose.y = y/1000;
+                }
+                else { return false; }
+                if (dict.ContainsKey("Z"))
+                {
+                    double z = dict["Z"];
+                    hPose.z = z / 1000;
+                }
+                else { return false; }
+                if (dict.ContainsKey("A"))
+                {
+                    double a = dict["A"];
+                    hPose.rz = a;
+                }
+                else { return false; }
+                if (dict.ContainsKey("B"))
+                {
+                    double b = dict["B"];
+                    hPose.ry = b;
+                }
+                else { return false; }
+                if (dict.ContainsKey("C"))
+                {
+                    double c = dict["C"];
+                    hPose.rx = c;
+                }
+                else { return false; }
+
+                hPose.PoseType = 2;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+
+            return true;
+        }
+        public bool ReadPose(out PoseParameters hPose)
+        {
+            bool rt = Read("$POS_ACT", out string info);
+            hPose = new PoseParameters();
+
+            if (rt)
+            {
+                rt = FormatTransform(info, out hPose); 
+            }
+            
+
+            return rt;
+        }
+
+        public bool Read(string key, out string info)
+        {
+            var value = robot.ReadString(key);
+
+            info = value.Content;
+            return value.IsSuccess;
+        }
+
+
+        public bool Load()
+        {
+            bool result = true;
+            string basePath = AppDomain.CurrentDomain.BaseDirectory + "Data\\";
+            try
+            {
+                string paramPath = basePath + "KukaParam.xml";
+                if (File.Exists(paramPath))
+                {
+                    XmlSerializer xml = new XmlSerializer(param.GetType());
+                    using (FileStream stream = new FileStream(paramPath, FileMode.OpenOrCreate))
+                    {
+                        RobotParam _ = (RobotParam)xml.Deserialize(stream);
+                        if (_ != null)
+                        {
+                            param = _;
+                        }
+                        else
+                        {
+                            _errMsg = paramPath + "Œƒº˛∏Ò Ω“Ï≥£";
+                            result = false;
+                        }
+                    }
+                }
+                else
+                {
+                    _errMsg = paramPath + "Œƒº˛≤ª¥Ê‘⁄";
+                    result = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                result = false;
+                _errMsg = ex.ToString();
+            }
+
+            try
+            {
+                string paramPath = basePath + "KukaIoParam.xml";
+                if (File.Exists(paramPath))
+                {
+                    List<IoAddress> ios = new List<IoAddress>();
+                    XmlSerializer xml = new XmlSerializer(ios.GetType());
+                    using (FileStream stream = new FileStream(paramPath, FileMode.OpenOrCreate))
+                    {
+                        ios = (List<IoAddress>)xml.Deserialize(stream);
+                    }
+                    if (ios == null)
+                    {
+                        result = false;
+                        _errMsg = paramPath + "Œƒº˛∏Ò Ω“Ï≥£";
+                    }
+                    else
+                    {
+                        ioDict = ios.ToDictionary(n => { return n.IoName; });
+                    }
+                }
+                else
+                {
+                    result = false;
+                    _errMsg = paramPath + "Œƒº˛≤ª¥Ê‘⁄";
+                }
+            }
+            catch (Exception ex)
+            {
+                result = false;
+                _errMsg = ex.ToString();
+            }
+            return result;
+        }
+
+        public bool Save()
+        {
+            bool result = true;
+            try
+            {
+                string basePath = AppDomain.CurrentDomain.BaseDirectory + "Data\\";
+                if (!Directory.Exists(basePath))
+                {
+                    Directory.CreateDirectory(basePath);
+                }
+
+                string OpcParamPath = basePath + "KukaParam.xml";
+                XmlSerializer xml = new XmlSerializer(param.GetType());
+                using (FileStream stream = new FileStream(OpcParamPath, FileMode.Create))
+                {
+                    xml.Serialize(stream, param);
+                }
+
+                List<IoAddress> ios = ioDict.Values.ToList();
+                string ioParamPath = basePath + "KukaIoParam.xml";
+                XmlSerializer ioXml = new XmlSerializer(ios.GetType());
+                using (FileStream stream = new FileStream(ioParamPath, FileMode.Create))
+                {
+                    ioXml.Serialize(stream, ios);
+                }
+            }
+            catch (Exception ex)
+            {
+                result = false;
+                _errMsg = ex.ToString();
+            }
+            return result;
+        }
+
+        public bool Open()
+        {
+            robot.IpAddress = param.IpAddress;
+            robot.Port = param.Port;
+            robot.ConnectTimeOut = 5000;     // ¡¨Ω”≥¨ ±£¨µ•Œª∫¡√Î
+            robot.ReceiveTimeOut = 3000;     // Ω” ’≥¨ ±£¨µ•Œª∫¡√Î
+            //robot.Station = 1;
+            //robot.AddressStartWithZero = true;
+            //robot.IsCheckMessageId = true;
+            //robot.IsStringReverse = false;
+            //robot.DataFormat = HslCommunication.Core.DataFormat.ABCD;
+
+            var result = robot.ConnectServer();
+            if (result.IsSuccess)
+            {
+                _isOpen = true;
+                return true;
+            }
+            else
+            {
+                _errMsg = result.Message;
+                return false;
+            }
+        }
+
+        public bool Close()
+        {
+            robot.ConnectClose();
+            _isOpen = false;
+            return true;
+        }
+
+        public bool Read(DI eDI, out string value)
+        {
+            return Read(eDI.ToString(), out value);
+        }
+
+        public bool Read(DO eDO, out string value)
+        {
+            return Read(eDO.ToString(), out value);
+        }
+
+        public bool Read(DI eDI, out bool value)
+        {
+            _errMsg = "≤ª÷ß≥÷bool";
+            value = false;
+            return false;
+        }
+        public bool Read(DO eDO, out bool value)
+        {
+            return Read(eDO.ToString(), out value);
+        }
+        private bool Read(string ioName, out bool value)
+        {
+            if (ioDict.ContainsKey(ioName))
+            {
+                string ioAddress = ioDict[ioName].Address.Trim();
+                if (!string.IsNullOrEmpty(ioAddress))
+                {
+                    _errMsg = "≤ª÷ß≥÷bool";
+                    value = false;
+                    return false;
+
+
+                }
+                else
+                {
+                    value = false;
+                    return true;
+                }
+            }
+            else
+            {
+                _errMsg = ioName + "µÿ÷∑Œ¥∑÷≈‰";
+            }
+            value = false;
+            return false;
+        }
+
+        public bool Read(DI eDI, out ushort value)
+        {
+            return Read(eDI.ToString(), out value);
+        }
+        public bool Read(DO eDO, out ushort value)
+        {
+            return Read(eDO.ToString(), out value);
+        }
+        private bool Read(string ioName, out ushort value)
+        {
+            if (ioDict.ContainsKey(ioName))
+            {
+                string ioAddress = ioDict[ioName].Address.Trim();
+                if (!string.IsNullOrEmpty(ioAddress))
+                {
+                    _errMsg = "≤ª÷ß≥÷int";
+                    value = 0;
+                    return false;
+
+
+                }
+                else
+                {
+                    value = 0;
+                    return true;
+                }
+            }
+            else
+            {
+                _errMsg = ioName + "µÿ÷∑Œ¥∑÷≈‰";
+            }
+            value = 0;
+            return false;
+        }
+
+        object iolock = new object();
+        public bool Write(DO eDO, object value)
+        {
+            if (ioDict.ContainsKey(eDO.ToString()))
+            {
+                string ioAddress = ioDict[eDO.ToString()].Address.Trim();
+                if (!string.IsNullOrEmpty(ioAddress))
+                {
+                    lock (iolock)
+                    {
+                        _errMsg = "≤ª÷ß≥÷–¥»Î";
+                        value = false;
+                        return false;
+                    }
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                _errMsg = eDO.ToString() + "µÿ÷∑Œ¥∑÷≈‰";
+            }
+            return false;
+        }
+    }
+
 }

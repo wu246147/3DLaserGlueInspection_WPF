@@ -333,7 +333,9 @@ namespace _3DLaserGlueInspection
             bool heng = Math.Abs(phi) <= Math.PI / 4;
             resultData.glueHeight = (heng ? height : width) / scaleSize;
             resultData.glueWidth = (heng ? width : height) / scaleSize;
-            resultData.glueArea = maxArea / (scaleSize* scaleSize);
+            //resultData.glueArea = (heng ? width : height) / scaleSize;
+
+            resultData.glueArea = maxArea / (scaleSize * scaleSize);
             if (resultData.glueHeight >= imageSet.heightMin && resultData.glueHeight <= imageSet.heightMax)
             {
                 bResult.glueHeight = true;
@@ -628,7 +630,7 @@ namespace _3DLaserGlueInspection
             double height = 0;
             double maxArea = 0;
 
-            ////开始检测
+            //////开始检测
             //Stopwatch stopwatch = new Stopwatch();
             //stopwatch.Start();
 
@@ -642,7 +644,7 @@ namespace _3DLaserGlueInspection
             //TimeSpan elapsedTime = stopwatch.Elapsed;
             //double useTime = elapsedTime.TotalMilliseconds;
 
-            //Console.WriteLine($"singleFrameDet use time:{useTime}");    
+            //Console.WriteLine($"singleFrameDet use time:{useTime}ms");
 
 
             if (maxArea > 0)

@@ -30,7 +30,7 @@ using static _3DLaserGlueInspection.MainWindowModel;
 namespace _3DLaserGlueInspection
 {
     /// <summary>
-    /// MainWindow.xaml çš„äº¤äº’é€»è¾‘
+    /// MainWindow.xaml µÄ½»»¥Âß¼­
     /// </summary>
     public partial class MainWindow : System.Windows.Window
     {
@@ -41,7 +41,7 @@ namespace _3DLaserGlueInspection
         JAKARobot robot = new JAKARobot();
 
 
-        //readonly UserHWindowControl hWindowæ•°æ¨¡å›¾ = new UserHWindowControl();
+        //readonly UserHWindowControl hWindowÊıÄ£Í¼ = new UserHWindowControl();
         //readonly UserHWindowControl hWindowControl = new UserHWindowControl();
         //readonly Wpf_halcon.ImageControl2 hWindowModel = new Wpf_halcon.ImageControl2();
         //readonly Wpf_halcon.ImageControl2 hWindowControl = new Wpf_halcon.ImageControl2();
@@ -56,7 +56,9 @@ namespace _3DLaserGlueInspection
             InitializeComponent();
             model = new MainWindowModel();
             this.DataContext = model.mainModel;
-            //mess
+            //´ò¿ªÍ¨Ñ¶
+
+            model.InitCommunicationConnection();
         }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -81,7 +83,7 @@ namespace _3DLaserGlueInspection
 
         private void Window_Closing(object sender, CancelEventArgs e)
         {
-
+            model.StopCommunicationThread();
 
         }
 
@@ -114,18 +116,18 @@ namespace _3DLaserGlueInspection
 
         private void ButtonRun_Click(object sender, RoutedEventArgs e)
         {
-            if ((string)ButtonRun.Content == GlobalVarAndFunc.LanguageTranslate("å¯åŠ¨"))
+            if ((string)ButtonRun.Content == GlobalVarAndFunc.LanguageTranslate("Æô¶¯"))
             {
                 if (model.simulation)
                 {
                     if (model.simulationPath == "")
                     {
-                        model.ShowMessage(GlobalVarAndFunc.LanguageTranslate("ä»¿çœŸè·¯å¾„æœªå¡«å†™"), LogType.warn);
+                        model.ShowMessage(GlobalVarAndFunc.LanguageTranslate("·ÂÕæÂ·¾¶Î´ÌîĞ´"), LogType.warn);
                         return;
                     }
                     else if (!Directory.Exists(model.simulationPath))
                     {
-                        model.ShowMessage(GlobalVarAndFunc.LanguageTranslate("ä»¿çœŸè·¯å¾„ä¸å­˜åœ¨"), LogType.warn);
+                        model.ShowMessage(GlobalVarAndFunc.LanguageTranslate("·ÂÕæÂ·¾¶²»´æÔÚ"), LogType.warn);
                         return;
                     }
                 }
@@ -137,12 +139,12 @@ namespace _3DLaserGlueInspection
                 }
                 else
                 {
-                    model.ShowMessage(GlobalVarAndFunc.LanguageTranslate("ä¸»çº¿ç¨‹å·²ç»è¿è¡Œä¸­"), LogType.warn);
+                    model.ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ö÷Ïß³ÌÒÑ¾­ÔËĞĞÖĞ"), LogType.warn);
                 }
-                //ButtonRun.Content = GlobalVarAndFunc.LanguageTranslate("åœæ­¢");
-                //buttonå¯åœ.Image = Resources._3;
+                //ButtonRun.Content = GlobalVarAndFunc.LanguageTranslate("Í£Ö¹");
+                //buttonÆôÍ£.Image = Resources._3;
 
-                model.mainModel.buttonRunContentControl = GlobalVarAndFunc.LanguageTranslate("åœæ­¢");
+                model.mainModel.buttonRunContentControl = GlobalVarAndFunc.LanguageTranslate("Í£Ö¹");
                 model.mainModel.buttonRunTagControl = "\uE67A";
 
             }
@@ -153,7 +155,7 @@ namespace _3DLaserGlueInspection
 
                 }
                 model.stop = true;
-                model.mainModel.buttonRunContentControl = GlobalVarAndFunc.LanguageTranslate("å¯åŠ¨");
+                model.mainModel.buttonRunContentControl = GlobalVarAndFunc.LanguageTranslate("Æô¶¯");
                 model.mainModel.buttonRunTagControl = "\uE658";
             }
         }
@@ -178,7 +180,7 @@ namespace _3DLaserGlueInspection
 
         private void MenuItem_robotSetting_signalSetting_Click(object sender, RoutedEventArgs e)
         {
-            //å¯†ç éªŒè¯ï¼Œæœªå¯ç”¨
+            //ÃÜÂëÑéÖ¤£¬Î´ÆôÓÃ
             WindowPassWord formPassword = new WindowPassWord();
             if ((bool)formPassword.ShowDialog())
                 robot.ShowForm();
@@ -338,7 +340,7 @@ namespace _3DLaserGlueInspection
         //                Mat mat = new Mat();
         //                mat = Mat.Zeros((int)(showHeight * Vision.scaleSize), (int)(showWidth * Vision.scaleSize), MatType.CV_8UC3);
         //                hWindowModel.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));
-        //                //DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//æ‰©ç”»å¸ƒ
+        //                //DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//À©»­²¼
         //                PointCollection points = new PointCollection();
         //                for (int i = 0; i < hXLDCont10mm.Rows; i++)
         //                {
@@ -370,7 +372,7 @@ namespace _3DLaserGlueInspection
         //                Mat mat = new Mat();
         //                mat = Mat.Zeros((int)(showHeight * Vision.scaleSize), (int)(showWidth * Vision.scaleSize), MatType.CV_8UC3);
 
-        //                //DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//æ‰©ç”»å¸ƒ
+        //                //DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//À©»­²¼
         //                hWindowModel.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));
 
         //                PointCollection points = new PointCollection();
@@ -410,18 +412,18 @@ namespace _3DLaserGlueInspection
         //                    //DispPolygonjHWindowControlEvent(regionSmallestRectangle2Points, Colors.Blue, "margin");
         //                    hWindowModel.AddPolygon(regionSmallestRectangle2Points, Colors.Blue, "margin");
 
-        //                    string text = GlobalVarAndFunc.LanguageTranslate("èƒ¶é«˜ï¼š") + $"{data.èƒ¶é«˜:0.00}\r\n"
-        //                       + GlobalVarAndFunc.LanguageTranslate("èƒ¶å®½ï¼š") + $"{data.èƒ¶å®½:0.00}\r\n"
-        //                       + GlobalVarAndFunc.LanguageTranslate("é¢ç§¯ï¼š") + $"{data.é¢ç§¯:0.00}";
+        //                    string text = GlobalVarAndFunc.LanguageTranslate("½º¸ß£º") + $"{data.½º¸ß:0.00}\r\n"
+        //                       + GlobalVarAndFunc.LanguageTranslate("½º¿í£º") + $"{data.½º¿í:0.00}\r\n"
+        //                       + GlobalVarAndFunc.LanguageTranslate("Ãæ»ı£º") + $"{data.Ãæ»ı:0.00}";
 
 
         //                    //DispTextInImageHWindowControlEvent(text, Colors.Black, (int)data.column, (int)data.row);
         //                    hWindowModel.AddTextBlock(text, Colors.Black, (int)data.column, (int)data.row);
 
         //                    //hWindowControl.DispTextInImage(text, data.row, data.column);
-        //                    string textWindow1 = GlobalVarAndFunc.LanguageTranslate("èƒ¶å®½ï¼š") + (bResult.èƒ¶å®½ ? "OK" : "NG");
-        //                    string textWindow2 = GlobalVarAndFunc.LanguageTranslate("èƒ¶é«˜ï¼š") + (bResult.èƒ¶é«˜ ? "OK" : "NG");
-        //                    string textWindow3 = GlobalVarAndFunc.LanguageTranslate("é¢ç§¯ï¼š") + (bResult.é¢ç§¯ ? "OK" : "NG");
+        //                    string textWindow1 = GlobalVarAndFunc.LanguageTranslate("½º¿í£º") + (bResult.½º¿í ? "OK" : "NG");
+        //                    string textWindow2 = GlobalVarAndFunc.LanguageTranslate("½º¸ß£º") + (bResult.½º¸ß ? "OK" : "NG");
+        //                    string textWindow3 = GlobalVarAndFunc.LanguageTranslate("Ãæ»ı£º") + (bResult.Ãæ»ı ? "OK" : "NG");
         //                    string textWindow = textWindow1 + "\r\n" + textWindow2 + "\r\n" + textWindow3;
 
         //                    //DispTextInImageHWindowControlEvent(textWindow, Colors.Black, 10, 10);

@@ -1970,9 +1970,6 @@ namespace _3DLaserGlueInspection.subForm
             _3DShowControl.ClearPointCloud();
             Thread.Sleep(100);
 
-            //画面切换
-            showImageComboBox.SelectedIndex = -1;
-            showImageComboBox.SelectedIndex = 2;
             //数据清空
             List<string> camKeyList = new List<string> { "Cam1", "Cam2", "Cam3", "Cam4" };
             tasks.Clear();
@@ -1981,14 +1978,25 @@ namespace _3DLaserGlueInspection.subForm
             Point3DYsDict.Clear();
             Point3DZsDict.Clear();
 
+            //画面切换
+            showImageComboBox.SelectedIndex = -1;
+            showImageComboBox.SelectedIndex = 2;
+
+
+
             // 3D 每隔100毫秒再刷新一下结果
             _3DShowControl.RefreshOn(100, true);
 
             var cutSet = set.CutSets[cutSetListBox.SelectedIndex];
 
+            int camID = -1;
+
             //相机循环
             foreach (var camKey in camKeyList)
             {
+                camID += 1;
+                int currentCamID = camID;
+
                 //判断是否启用相机
                 bool CamEnabled = camKey == "Cam1" ? cutSet.Cam1Enabled :
                         camKey == "Cam2" ? cutSet.Cam2Enabled :
@@ -2040,6 +2048,10 @@ namespace _3DLaserGlueInspection.subForm
                         foreach (var camTimeKey in imageDict.Keys)
                         {
                             indexImage += 1;
+
+                            var imageSet = cutSet.imageSet[currentCamID][indexImage];
+
+
                             if (robotPoseKeys[indexRobotPose] < camTimeKey)//循环到的姿态晚于等于图片，处理
                             {
 
@@ -2571,6 +2583,11 @@ namespace _3DLaserGlueInspection.subForm
                 System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("无机器人位姿"));
                 return;
             }
+
+            outMaxRegion = new Mat();
+            outRegionRectangle2 = new Mat();
+            hXLDCont10mm3D = new Mat();
+
             // 计算机器人移动距离
             double PoseD = Math.Sqrt(Math.Pow((currentRobotPose.x - lastRobotPose.x), 2) +
                 Math.Pow((currentRobotPose.y - lastRobotPose.y), 2) +
@@ -2606,7 +2623,7 @@ namespace _3DLaserGlueInspection.subForm
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            for (int i = 0; i < 1000; i++)
+            //for (int i = 0; i < 1000; i++)
             {
                 if (imageSet.轮廓检测)
                 {

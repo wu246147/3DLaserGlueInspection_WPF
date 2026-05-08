@@ -1,55 +1,55 @@
-ï»¿using System.Reflection;
+using System.Reflection;
 using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows;
 
-// æœ‰å…³ç¨‹åºé›†çš„ä¸€èˆ¬ä¿¡æ¯ç”±ä»¥ä¸‹
-// æ§åˆ¶ã€‚æ›´æ”¹è¿™äº›ç‰¹æ€§å€¼å¯ä¿®æ”¹
-// ä¸ç¨‹åºé›†å…³è”çš„ä¿¡æ¯ã€‚
+// ÓĞ¹Ø³ÌĞò¼¯µÄÒ»°ãĞÅÏ¢ÓÉÒÔÏÂ
+// ¿ØÖÆ¡£¸ü¸ÄÕâĞ©ÌØĞÔÖµ¿ÉĞŞ¸Ä
+// Óë³ÌĞò¼¯¹ØÁªµÄĞÅÏ¢¡£
 [assembly: AssemblyTitle("3DLaserGlueInspection_WPF")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("3DÍ¿½º¼ì²âÈí¼ş")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("ÈğÎÖË¹")]
 [assembly: AssemblyProduct("3DLaserGlueInspection_WPF")]
-[assembly: AssemblyCopyright("Copyright Â©  2025")]
-[assembly: AssemblyTrademark("")]
+[assembly: AssemblyCopyright("Copyright ?  2026")]
+[assembly: AssemblyTrademark("Raivas")]
 [assembly: AssemblyCulture("")]
 
-// å°† ComVisible è®¾ç½®ä¸º false ä¼šä½¿æ­¤ç¨‹åºé›†ä¸­çš„ç±»å‹
-//å¯¹ COM ç»„ä»¶ä¸å¯è§ã€‚å¦‚æœéœ€è¦ä» COM è®¿é—®æ­¤ç¨‹åºé›†ä¸­çš„ç±»å‹
-//è¯·å°†æ­¤ç±»å‹çš„ ComVisible ç‰¹æ€§è®¾ç½®ä¸º trueã€‚
+// ½« ComVisible ÉèÖÃÎª false »áÊ¹´Ë³ÌĞò¼¯ÖĞµÄÀàĞÍ
+//¶Ô COM ×é¼ş²»¿É¼û¡£Èç¹ûĞèÒª´Ó COM ·ÃÎÊ´Ë³ÌĞò¼¯ÖĞµÄÀàĞÍ
+//Çë½«´ËÀàĞÍµÄ ComVisible ÌØĞÔÉèÖÃÎª true¡£
 [assembly: ComVisible(false)]
 
-//è‹¥è¦å¼€å§‹ç”Ÿæˆå¯æœ¬åœ°åŒ–çš„åº”ç”¨ç¨‹åºï¼Œè¯·è®¾ç½®
-//.csproj æ–‡ä»¶ä¸­çš„ <UICulture>CultureYouAreCodingWith</UICulture>
-//åœ¨ <PropertyGroup> ä¸­ã€‚ä¾‹å¦‚ï¼Œå¦‚æœä½ ä½¿ç”¨çš„æ˜¯ç¾å›½è‹±è¯­ã€‚
-//ä½¿ç”¨çš„æ˜¯ç¾å›½è‹±è¯­ï¼Œè¯·å°† <UICulture> è®¾ç½®ä¸º en-USã€‚  ç„¶åå–æ¶ˆ
-//å¯¹ä»¥ä¸‹ NeutralResourceLanguage ç‰¹æ€§çš„æ³¨é‡Šã€‚  æ›´æ–°
-//ä»¥ä¸‹è¡Œä¸­çš„â€œen-USâ€ä»¥åŒ¹é…é¡¹ç›®æ–‡ä»¶ä¸­çš„ UICulture è®¾ç½®ã€‚
+//ÈôÒª¿ªÊ¼Éú³É¿É±¾µØ»¯µÄÓ¦ÓÃ³ÌĞò£¬ÇëÉèÖÃ
+//.csproj ÎÄ¼şÖĞµÄ <UICulture>CultureYouAreCodingWith</UICulture>
+//ÔÚ <PropertyGroup> ÖĞ¡£ÀıÈç£¬Èç¹ûÄãÊ¹ÓÃµÄÊÇÃÀ¹úÓ¢Óï¡£
+//Ê¹ÓÃµÄÊÇÃÀ¹úÓ¢Óï£¬Çë½« <UICulture> ÉèÖÃÎª en-US¡£  È»ºóÈ¡Ïû
+//¶ÔÒÔÏÂ NeutralResourceLanguage ÌØĞÔµÄ×¢ÊÍ¡£  ¸üĞÂ
+//ÒÔÏÂĞĞÖĞµÄ¡°en-US¡±ÒÔÆ¥ÅäÏîÄ¿ÎÄ¼şÖĞµÄ UICulture ÉèÖÃ¡£
 
 //[assembly: NeutralResourcesLanguage("en-US", UltimateResourceFallbackLocation.Satellite)]
 
 
 [assembly: ThemeInfo(
-    ResourceDictionaryLocation.None, //ä¸»é¢˜ç‰¹å®šèµ„æºè¯å…¸æ‰€å¤„ä½ç½®
-                                     //(æœªåœ¨é¡µé¢ä¸­æ‰¾åˆ°èµ„æºæ—¶ä½¿ç”¨ï¼Œ
-                                     //æˆ–åº”ç”¨ç¨‹åºèµ„æºå­—å…¸ä¸­æ‰¾åˆ°æ—¶ä½¿ç”¨)
-    ResourceDictionaryLocation.SourceAssembly //å¸¸è§„èµ„æºè¯å…¸æ‰€å¤„ä½ç½®
-                                              //(æœªåœ¨é¡µé¢ä¸­æ‰¾åˆ°èµ„æºæ—¶ä½¿ç”¨ï¼Œ
-                                              //ã€åº”ç”¨ç¨‹åºæˆ–ä»»ä½•ä¸»é¢˜ä¸“ç”¨èµ„æºå­—å…¸ä¸­æ‰¾åˆ°æ—¶ä½¿ç”¨)
+    ResourceDictionaryLocation.None, //Ö÷ÌâÌØ¶¨×ÊÔ´´ÊµäËù´¦Î»ÖÃ
+                                     //(Î´ÔÚÒ³ÃæÖĞÕÒµ½×ÊÔ´Ê±Ê¹ÓÃ£¬
+                                     //»òÓ¦ÓÃ³ÌĞò×ÊÔ´×ÖµäÖĞÕÒµ½Ê±Ê¹ÓÃ)
+    ResourceDictionaryLocation.SourceAssembly //³£¹æ×ÊÔ´´ÊµäËù´¦Î»ÖÃ
+                                              //(Î´ÔÚÒ³ÃæÖĞÕÒµ½×ÊÔ´Ê±Ê¹ÓÃ£¬
+                                              //¡¢Ó¦ÓÃ³ÌĞò»òÈÎºÎÖ÷Ìâ×¨ÓÃ×ÊÔ´×ÖµäÖĞÕÒµ½Ê±Ê¹ÓÃ)
 )]
 
 
-// ç¨‹åºé›†çš„ç‰ˆæœ¬ä¿¡æ¯ç”±ä¸‹åˆ—å››ä¸ªå€¼ç»„æˆ: 
+// ³ÌĞò¼¯µÄ°æ±¾ĞÅÏ¢ÓÉÏÂÁĞËÄ¸öÖµ×é³É: 
 //
-//      ä¸»ç‰ˆæœ¬
-//      æ¬¡ç‰ˆæœ¬
-//      ç”Ÿæˆå·
-//      ä¿®è®¢å·
+//      Ö÷°æ±¾
+//      ´Î°æ±¾
+//      Éú³ÉºÅ
+//      ĞŞ¶©ºÅ
 //
-//å¯ä»¥æŒ‡å®šæ‰€æœ‰è¿™äº›å€¼ï¼Œä¹Ÿå¯ä»¥ä½¿ç”¨â€œç”Ÿæˆå·â€å’Œâ€œä¿®è®¢å·â€çš„é»˜è®¤å€¼
-//é€šè¿‡ä½¿ç”¨ "*"ï¼Œå¦‚ä¸‹æ‰€ç¤º:
+//¿ÉÒÔÖ¸¶¨ËùÓĞÕâĞ©Öµ£¬Ò²¿ÉÒÔÊ¹ÓÃ¡°Éú³ÉºÅ¡±ºÍ¡°ĞŞ¶©ºÅ¡±µÄÄ¬ÈÏÖµ
+//Í¨¹ıÊ¹ÓÃ "*"£¬ÈçÏÂËùÊ¾:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyVersion("1.4.0.0")]
+[assembly: AssemblyFileVersion("1.4.0.0")]

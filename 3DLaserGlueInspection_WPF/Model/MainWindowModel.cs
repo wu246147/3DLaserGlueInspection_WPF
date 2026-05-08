@@ -1,6 +1,8 @@
 
 //using HalconDotNet;
 using HelixToolkit.Wpf;
+using HslCommunication.Core.Net;
+using LiveCharts.Wpf;
 using OpenCvSharp;
 using RAIVASCS.Common;
 using System;
@@ -13,12 +15,17 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
+using System.Web.UI.WebControls;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
+using System.Windows.Threading;
+using System.Xml.Linq;
 using System.Xml.Serialization;
+using TCPIP;
 using Wpf_Replace_halcon;
 
 namespace _3DLaserGlueInspection
@@ -83,27 +90,36 @@ namespace _3DLaserGlueInspection
         Dictionary<string, Cam> cams = new Dictionary<string, Cam>();
         //Vision vision = new Vision();
         //JAKARobot robot = new JAKARobot();
-        FanucRobot robot = new FanucRobot();
+        //FanucRobot robot = new FanucRobot();
+        //»úÆ÷ÈËÍ¨Ñ¶£¬»ñÈ¡×ø±ê
+        KukaRobot robot = new KukaRobot();
+        //socketÍ¨Ñ¶£¬»ñÈ¡ioĞÅºÅ
+        // TCP Í¨Ñ¶
+        TCP_Server Server;
+        Thread threadReconnect = null; // Í¨Ñ¶ÖØÁ¬Ïß³Ì
+
+        //·ÂÕæÍ¨Ñ¶£¬»ñÈ¡ioĞÅºÅ
         Mmf mmf = new Mmf();
         ISignal io;
         public Dictionary<string, Setting> sets = new Dictionary<string, Setting>();
 
         object olockDataGridViewImageList = new object();
         Stopwatch watch = new Stopwatch();
+        bool bRobotRun = true;//¿ØÖÆ»úÆ÷ÈËÏß³ÌÊÇ·ñÔËĞĞ
 
         SynchronizedList<long> robotPoseKeys = new SynchronizedList<long>();
         SynchronizedList<Wpf_Replace_halcon.PoseParameters> robotPoseValues = new SynchronizedList<Wpf_Replace_halcon.PoseParameters>();
         Task taskRobot = null;
 
-        public Dictionary<string, SynchronizedList<SynchronizedList<long>>> ImageKeys = new Dictionary<string, SynchronizedList<SynchronizedList<long>>>();//æŒ‡ç¤ºæ‹ç…§ä½ç½®
-        Dictionary<string, SynchronizedList<Dictionary<long, Mat>>> Images = new Dictionary<string, SynchronizedList<Dictionary<long, Mat>>>();//ç›¸æœº-åˆ†æ®µ-æ—¶é—´-å›¾ç‰‡
+        public Dictionary<string, SynchronizedList<SynchronizedList<long>>> ImageKeys = new Dictionary<string, SynchronizedList<SynchronizedList<long>>>();//Ö¸Ê¾ÅÄÕÕÎ»ÖÃ
+        Dictionary<string, SynchronizedList<Dictionary<long, Mat>>> Images = new Dictionary<string, SynchronizedList<Dictionary<long, Mat>>>();//Ïà»ú-·Ö¶Î-Ê±¼ä-Í¼Æ¬
         SynchronizedList<int> dataGridViewImageListRowsStartPoint = new SynchronizedList<int>();
-        Dictionary<string, SynchronizedList<Dictionary<long, Wpf_Replace_halcon.PoseParameters>>> Robot3DPose = new Dictionary<string, SynchronizedList<Dictionary<long, Wpf_Replace_halcon.PoseParameters>>>();//ç›¸æœº-åˆ†æ®µ-æ—¶é—´-æœºå™¨ä½å§¿
-        Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>> Point3DXs = new Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>>();//ç›¸æœº-åˆ†æ®µ-æ—¶é—´-å›¾ç‰‡æ•°æ®
+        Dictionary<string, SynchronizedList<Dictionary<long, Wpf_Replace_halcon.PoseParameters>>> Robot3DPose = new Dictionary<string, SynchronizedList<Dictionary<long, Wpf_Replace_halcon.PoseParameters>>>();//Ïà»ú-·Ö¶Î-Ê±¼ä-»úÆ÷Î»×Ë
+        Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>> Point3DXs = new Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>>();//Ïà»ú-·Ö¶Î-Ê±¼ä-Í¼Æ¬Êı¾İ
         Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>> Point3DYs = new Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>>();
         Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>> Point3DZs = new Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>>();
 
-        Dictionary<string, SynchronizedList<Dictionary<long, double>>> glueVols = new Dictionary<string, SynchronizedList<Dictionary<long, double>>>(); //ä½“ç§¯ç»“æœ //ç›¸æœº-åˆ†æ®µ-æ—¶é—´-ä½“ç§¯ç»“æœ
+        Dictionary<string, SynchronizedList<Dictionary<long, double>>> glueVols = new Dictionary<string, SynchronizedList<Dictionary<long, double>>>(); //Ìå»ı½á¹û //Ïà»ú-·Ö¶Î-Ê±¼ä-Ìå»ı½á¹û
 
         public Dictionary<string, SynchronizedList<Dictionary<long, Mat>>> outLineDict = new Dictionary<string, SynchronizedList<Dictionary<long, Mat>>>();
         public Dictionary<string, SynchronizedList<Dictionary<long, Mat>>> glueRegionDict = new Dictionary<string, SynchronizedList<Dictionary<long, Mat>>>();
@@ -113,23 +129,311 @@ namespace _3DLaserGlueInspection
 
         public Dictionary<string, SynchronizedList<System.Windows.Size>> displaySize = new Dictionary<string, SynchronizedList<System.Windows.Size>>();
 
-        Dictionary<string, Task> tasks = new Dictionary<string, Task>();//ç›¸æœº-å¤„ç†ä»»åŠ¡
+        Dictionary<string, Task> tasks = new Dictionary<string, Task>();//Ïà»ú-´¦ÀíÈÎÎñ
 
         Task taskPoint3D = null;
         Task taskShow3D = null;
 
-        int indexImageCut = -1;//æŒ‡ç¤ºæ­£åœ¨å›¾åƒé‡‡é›†æ®µæ•°
+        int indexImageCut = -1;//Ö¸Ê¾ÕıÔÚÍ¼Ïñ²É¼¯¶ÎÊı
 
         int displayIntervalID = 4;
 
-        public Dictionary<string, int> indexImageCutProcessDict = new Dictionary<string, int>(); // è¡¨ç¤ºæ­£åœ¨å›¾åƒå¤„ç†çš„æ®µæ•°
+        public Dictionary<string, int> indexImageCutProcessDict = new Dictionary<string, int>(); // ±íÊ¾ÕıÔÚÍ¼Ïñ´¦ÀíµÄ¶ÎÊı
         bool totalResult = true;
 
         public bool simulation = false;
 
         public string simulationPath = "";
 
-        public void MainRun()
+        /// <summary>
+        /// ¿ªÊ¼ĞÅºÅ
+        /// </summary>
+        
+        bool isStart = false;
+
+
+        /// <summary>
+        /// ´¥·¢ĞÅºÅ
+        /// </summary>
+        bool isPGON = false;
+
+
+        /// <summary>
+        /// ¿ªÊ¼ĞÅºÅ
+        /// </summary>
+
+        bool isStartEnd = false;
+
+
+        /// <summary>
+        /// ´¥·¢ĞÅºÅ
+        /// </summary>
+        bool isPGONEnd = false;
+
+        /// <summary>
+        /// ÖĞ¶ÏĞÅºÅ
+        /// </summary>
+        bool isAbort = false;
+
+        /// <summary>
+        /// ½áÊøĞÅºÅ
+        /// </summary>
+        bool isEND = false;
+
+        //ushort 256
+
+        /// <summary>
+        /// ³µĞÍºÅ
+        /// </summary>
+        int CarNumber = -1;
+
+
+        public void resetSignal()
+        {
+            isStart = false;
+            isPGON = false ;
+            isAbort = false ;
+            isEND = false ;
+            isStartEnd = false ;
+            isPGONEnd   = false ;
+        }
+
+
+        /// <summary>
+        /// ¸ù¾İÍ¨Ñ¶·½Ê½³õÊ¼»¯Á¬½ÓÏß³Ì
+        /// </summary>
+        public void InitCommunicationConnection()
+        {
+
+            IniTCPSocketServer();
+
+        }
+
+        /// <summary>
+        /// Í£Ö¹Í¨Ñ¶Ïß³Ì
+        /// </summary>
+        public void StopCommunicationThread()
+        {
+            if (Server != null)
+            {
+
+                // TCP Í£Ö¹¼àÌı²¢null
+                if (Server != null)
+                {
+                    Server.StopListen();
+                    Server = null;
+
+                    //_timer.Stop();
+                }
+                // µÈ´ıÏß³Ì½áÊø
+                if (!threadReconnect.Join(1000))  // µÈ´ı×î¶à1Ãë
+                {
+                    try
+                    {
+                        threadReconnect.Abort();  // Ç¿ÖÆÖÕÖ¹£¨²»ÍÆ¼ö£¬µ«ÓĞÊ±±ØÒª£©
+                    }
+                    catch { }
+                }
+                threadReconnect = null;
+            }
+        }
+
+        private void IniTCPSocketServer()
+        {
+            threadReconnect = new Thread(IniRobotTCPserver);
+            threadReconnect.Start();
+
+            //// TCP¼ÆÊ±Æ÷
+            //_timer = new DispatcherTimer();
+            //_timer.Tick += Timer_Tick;
+            //_timer.Interval = TimeSpan.FromMilliseconds(100); // 0.1Ãë¼ä¸ô
+            //_timer.Start();
+        }
+        private void IniRobotTCPserver()
+        {
+
+            try
+            {
+                Server = new TCP_Server();
+
+                bool rt = Server.Load();
+                if (rt)
+                {
+                    //°ó¶¨Î¯ÍĞÓëÊÂ¼ş
+                    Server.reserveInfoSignal += ProcessInfo;
+
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("·şÎñÆ÷ĞÅºÅ¼ÓÔØ³É¹¦"));
+
+                    //¿ªÊ¼¼àÌı
+                    Server.StartListen();
+
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("TCPÍ¨Ñ¶·şÎñÆ÷½¨Á¢³É¹¦!"));
+
+                    return;
+                }
+                else
+                {
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("·şÎñÆ÷ĞÅºÅ¼ÓÔØÊ§°Ü"));
+
+                }
+
+
+            }
+
+            catch (Exception ex)
+            {
+                ShowMessage(GlobalVarAndFunc.LanguageTranslate("TCPÍ¨Ñ¶·şÎñÆ÷½¨Á¢Ê§°Ü"));
+
+                return;
+            }
+        }
+
+        void ProcessInfo(string info)
+        {
+            int PROGRAM_ID = 0;
+            int COMMAND_ID = 0;
+            int POINT_ID = 0;
+            Thread cameraThread;
+            try
+            {
+                ShowMessage(GlobalVarAndFunc.LanguageTranslate("ÊÕµ½ĞÅºÅ£º")+info);
+
+                //string[] tempReceivedParts;
+                //tempReceivedParts = info.Split(',');
+                
+                if(robot.GetType() == typeof(KukaRobot))
+                {
+                    var doc = XDocument.Parse(info);
+                    var root = doc.Root;
+
+                    int programId = int.Parse(root.Element("PROGRAM_ID").Value);
+                    int commandId = int.Parse(root.Element("COMMAND_ID").Value);
+                    int pointId = int.Parse(root.Element("POINT_ID").Value);
+
+
+                    CarNumber = programId;
+                    switch(commandId)
+                    {
+                        case 0:
+                            //¿ªÊ¼ĞÅºÅ
+                            if (pointId == 1)
+                            {
+                                isStart = true;
+                            }
+                            else if (pointId == 0)
+                            {
+                                isStart = false;
+                            }
+                            break;
+                        case 1:
+                            //Æô¶¯ĞÅºÅ
+                            if (pointId == 1)
+                            {
+                                isPGON = true;
+                            }
+                            else if (pointId == 0)
+                            {
+                                isPGON = false;
+                            }
+                            break;
+
+                        case 2:
+                            //¿ªÊ¼ĞÅºÅ½áÊø
+                            if (pointId == 1)
+                            {
+                                isStartEnd = true;
+                            }
+                            else if (pointId == 0)
+                            {
+                                isStartEnd = false;
+                            }
+                            break;
+                        case 3:
+                            //Æô¶¯ĞÅºÅ½áÊø
+                            if (pointId == 1)
+                            {
+                                isPGONEnd = true;
+                            }
+                            else if (pointId == 0)
+                            {
+                                isPGONEnd = false;
+                            }
+                            break;
+                        case 4:
+                            //ÖĞ¶ÏĞÅºÅ
+                            if (pointId == 1)
+                            {
+                                isAbort = true;
+                            }
+                            else if (pointId == 0)
+                            {
+                                isAbort = false;
+                            }
+                            break;
+                        case 5:
+                            //Í£Ö¹ĞÅºÅ
+                            if (pointId == 1)
+                            {
+                                isEND = true;
+                            }
+                            else if (pointId == 0)
+                            {
+                                isEND = false;
+                            }
+                            break;
+                    }
+
+                }
+
+
+
+
+            }
+            catch (Exception ex)
+            {
+                
+            }
+        }
+
+
+        public string serializationInfo(double x, double y, double z, double a, double b, double c, int result, string setflat)
+        {
+
+            XElement xml = new XElement("VISION",
+
+
+                new XElement("ROBOTPOS",
+                    new XAttribute("X", x),
+                    new XAttribute("Y", y),
+                    new XAttribute("Z", z),
+                    new XAttribute("A", a),
+                    new XAttribute("B", b),
+                    new XAttribute("C", c),
+                    "" 
+                ),
+
+                new XElement("RESULT", result),
+
+
+                new XAttribute("Set_Flag", setflat), "" 
+
+            );
+
+            return xml.ToString();
+        }
+
+
+        void SocketSend(int RESULT = 0)
+        {
+            if (robot.GetType() == typeof(KukaRobot))
+            {
+                string msg = serializationInfo(0, 0, 0, 0, 0, 0, RESULT, "11");
+                Server.Send(msg);
+            }
+        }
+
+
+        public void MainRunOld()
         {
             try
             {
@@ -142,20 +446,20 @@ namespace _3DLaserGlueInspection
                     io = robot;
                 }
 
-                //åŠ è½½å‚æ•°
-                #region åŠ è½½å‚æ•°
+                //¼ÓÔØ²ÎÊı
+                #region ¼ÓÔØ²ÎÊı
                 if (Params.Load())
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç›¸æœºå‚æ•°åŠ è½½æˆåŠŸ"));
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú²ÎÊı¼ÓÔØ³É¹¦"));
                 }
                 else
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç›¸æœºå‚æ•°åŠ è½½å¤±è´¥ï¼š") + Params.ErrMsg, LogType.ng);
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú²ÎÊı¼ÓÔØÊ§°Ü£º") + Params.ErrMsg, LogType.ng);
                     return;
                 }
                 if (cars.Load())
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("äº§å“é…ç½®å‚æ•°åŠ è½½æˆåŠŸ"));
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("²úÆ·ÅäÖÃ²ÎÊı¼ÓÔØ³É¹¦"));
                     sets.Clear();
                     bool bLoad = true;
                     foreach (var item in cars.Cars.Values)
@@ -163,11 +467,11 @@ namespace _3DLaserGlueInspection
                         Setting set = new Setting(item.Name);
                         if (set.Load())
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("äº§å“å‚æ•°") + " " + item.Name + " " + GlobalVarAndFunc.LanguageTranslate("åŠ è½½æˆåŠŸ"));
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("²úÆ·²ÎÊı") + " " + item.Name + " " + GlobalVarAndFunc.LanguageTranslate("¼ÓÔØ³É¹¦"));
                         }
                         else
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("äº§å“å‚æ•°") + " " + item.Name + " " + GlobalVarAndFunc.LanguageTranslate("åŠ è½½å¤±è´¥ï¼š") + set.ErrMsg, LogType.ng);
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("²úÆ·²ÎÊı") + " " + item.Name + " " + GlobalVarAndFunc.LanguageTranslate("¼ÓÔØÊ§°Ü£º") + set.ErrMsg, LogType.ng);
                             bLoad = false;
                         }
                         sets.Add(item.Name, set);
@@ -179,42 +483,42 @@ namespace _3DLaserGlueInspection
                 }
                 else
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("äº§å“é…ç½®å‚æ•°åŠ è½½å¤±è´¥ï¼š") + cars.ErrMsg, LogType.ng);
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("²úÆ·ÅäÖÃ²ÎÊı¼ÓÔØÊ§°Ü£º") + cars.ErrMsg, LogType.ng);
                     return;
                 }
                 if (robot.Load())
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("æœºå™¨äººå‚æ•°åŠ è½½æˆåŠŸ"));
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("»úÆ÷ÈË²ÎÊı¼ÓÔØ³É¹¦"));
                 }
                 else
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("æœºå™¨äººå‚æ•°åŠ è½½å¤±è´¥ï¼š") + robot.ErrMsg, LogType.ng);
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("»úÆ÷ÈË²ÎÊı¼ÓÔØÊ§°Ü£º") + robot.ErrMsg, LogType.ng);
                     return;
                 }
                 if (io.Load())
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("IOå‚æ•°åŠ è½½æˆåŠŸ"));
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("IO²ÎÊı¼ÓÔØ³É¹¦"));
                 }
                 else
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("IOå‚æ•°åŠ è½½å¤±è´¥ï¼š") + io.ErrMsg, LogType.ng);
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("IO²ÎÊı¼ÓÔØÊ§°Ü£º") + io.ErrMsg, LogType.ng);
                     return;
                 }
                 #endregion
 
-                //è¿æ¥è®¾å¤‡
-                #region è¿æ¥è®¾å¤‡
+                //Á¬½ÓÉè±¸
+                #region Á¬½ÓÉè±¸
                 if (!simulation)
                 {
                     if (robot.Open())
                     {
-                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("æœºå™¨äººè¿æ¥æˆåŠŸ"));
+                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("»úÆ÷ÈËÁ¬½Ó³É¹¦"));
 
                         mainModel.robotCommunicationLabelColorControl = labelColorEnum["green"];
                     }
                     else
                     {
-                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("æœºå™¨äººè¿æ¥å¤±è´¥ï¼š") + robot.ErrMsg, LogType.ng);
+                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("»úÆ÷ÈËÁ¬½ÓÊ§°Ü£º") + robot.ErrMsg, LogType.ng);
 
                         mainModel.robotCommunicationLabelColorControl = labelColorEnum["red"];
 
@@ -223,11 +527,11 @@ namespace _3DLaserGlueInspection
                 }
                 if (io.Open())
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("IOè¿æ¥æˆåŠŸ"));
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("IOÁ¬½Ó³É¹¦"));
                 }
                 else
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("IOè¿æ¥å¤±è´¥ï¼š") + io.ErrMsg, LogType.ng);
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("IOÁ¬½ÓÊ§°Ü£º") + io.ErrMsg, LogType.ng);
                     return;
                 }
                 #endregion
@@ -237,12 +541,12 @@ namespace _3DLaserGlueInspection
                 {
                     if (!Write(DO.Running, false)) return;
                     if (!Write(DO.Triggering, false)) return;
-                    //è¾“å‡ºå‡†å¤‡å·å¥½
+                    //Êä³ö×¼±¸ºÅºÃ
                     if (!Write(DO.Ready, true)) return;
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("è¾“å‡ºReadyä¿¡å·"));
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("Êä³öReadyĞÅºÅ"));
 
-                    //ç­‰å¾…å¼€å§‹ä¿¡å·
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç­‰å¾…å¼€å§‹ä¿¡å·"));
+                    //µÈ´ı¿ªÊ¼ĞÅºÅ
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("µÈ´ı¿ªÊ¼ĞÅºÅ"));
                     while (true)
                     {
                         bool val;
@@ -250,7 +554,7 @@ namespace _3DLaserGlueInspection
                         {
                             if (val == true)
                             {
-                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("æ”¶åˆ°å¼€å§‹ä¿¡å·"));
+                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("ÊÕµ½¿ªÊ¼ĞÅºÅ"));
                                 break;
                             }
                         }
@@ -262,8 +566,8 @@ namespace _3DLaserGlueInspection
                         if (stop) return;
                     }
 
-                    //æ¸…é™¤æ•°æ®
-                    #region æ¸…é™¤æ•°æ®
+                    //Çå³ıÊı¾İ
+                    #region Çå³ıÊı¾İ
                     foreach (var item in Images.Values)
                     {
                         foreach (var item2 in item)
@@ -324,7 +628,7 @@ namespace _3DLaserGlueInspection
                     tasks.Clear();
                     #endregion
                     //Invoke(new Action(() => { form3DShow.ClearCloud(); }));
-                    //æ¸…ç©ºç»“æœ
+                    //Çå¿Õ½á¹û
                     Application.Current.Dispatcher.Invoke(() =>
                     {
                         Clear3DPointControlEvent();
@@ -333,7 +637,7 @@ namespace _3DLaserGlueInspection
 
                     GC.Collect();
 
-                    //æ¸…é™¤ä¿¡å·
+                    //Çå³ıĞÅºÅ
                     foreach (DO item in Enum.GetValues(typeof(DO)))
                     {
                         if (item == DO.Alive)
@@ -352,12 +656,12 @@ namespace _3DLaserGlueInspection
                         mainModel.ImageResultRecords.Clear();
                     });
 
-                    //è·å–äº§å“å·
+                    //»ñÈ¡²úÆ·ºÅ
                     ushort ID = 0;
                     Car car = new Car();
                     if (Read(DI.CarNumber, out ID))
                     {
-                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("æ”¶åˆ°è½¦å‹å·ä¸º") + " " + ID);
+                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("ÊÕµ½³µĞÍºÅÎª") + " " + ID);
                         bool isExist = false;
                         foreach (var item in cars.Cars.Values)
                         {
@@ -370,7 +674,7 @@ namespace _3DLaserGlueInspection
                         }
                         if (!isExist)
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("ä¸å­˜åœ¨è½¦å‹") + " " + ID, LogType.ng);
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("²»´æÔÚ³µĞÍ") + " " + ID, LogType.ng);
                             continue;
                         }
                     }
@@ -379,7 +683,7 @@ namespace _3DLaserGlueInspection
                         return;
                     }
 
-                    //è·å–è½¦æ¶å·VIN
+                    //»ñÈ¡³µ¼ÜºÅVIN
                     string inVIN = "";
 
                     DateTime dateTime = DateTime.Now;
@@ -391,30 +695,39 @@ namespace _3DLaserGlueInspection
                     mainModel.resultColorControl = "White";
 
 
-                    //æ£€æµ‹å‚æ•°æ˜¯å¦å­˜åœ¨
+                    //¼ì²â²ÎÊıÊÇ·ñ´æÔÚ
                     string camParamName = car.CamParamName;
                     if (!Params.Param.TryGetValue(camParamName, out Dictionary<string, CamParam> camParam))
                     {
-                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("ä¸å­˜åœ¨ç›¸æœºå‚æ•°ï¼š") + camParamName, LogType.ng);
+                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("²»´æÔÚÏà»ú²ÎÊı£º") + camParamName, LogType.ng);
                         return;
                     }
                     if (!sets.TryGetValue(car.Name, out Setting set))
                     {
-                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("ä¸å­˜åœ¨äº§å“å‚æ•°ï¼š") + car.Name, LogType.ng);
+                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("²»´æÔÚ²úÆ·²ÎÊı£º") + car.Name, LogType.ng);
                         return;
                     }
                     if (stop) return;
 
-                    //æ˜¾ç¤ºNumericalModelDiagram
+                    //ÏÔÊ¾NumericalModelDiagram
                     Application.Current.Dispatcher.Invoke(() =>
                     {
                         DispImageHWindowNumericalModelDiagramEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(set.image));
                     });
+
+                    
+
                     List<double>[] rowss = new List<double>[set.XLDDatas.Count];
                     List<double>[] colss = new List<double>[set.XLDDatas.Count];
                     List<double>[] angless = new List<double>[set.XLDDatas.Count];
                     for (int i = 0; i < set.XLDDatas.Count; i++)
                     {
+                        if (set.XLDDatas[i].ControlRows.Length < 2 )
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("ÏÔÊ¾µÄ¹ì¼£Ã»ÓĞÉèÖÃºÃ¡£"));
+                            return;
+
+                        }
                         if (set.CutSets[i].EndImageIndex > set.CutSets[i].StartImageIndex)
                         {
                             int setCount = set.CutSets[i].EndImageIndex - set.CutSets[i].StartImageIndex + 1;
@@ -428,14 +741,14 @@ namespace _3DLaserGlueInspection
                         }
                         else
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("æ˜¾ç¤ºçš„èµ·ç‚¹å›¾åƒåºå·å’Œç»“æŸå›¾åƒåºå·æ²¡æœ‰è®¾ç½®å¥½ã€‚"));
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("ÏÔÊ¾µÄÆğµãÍ¼ÏñĞòºÅºÍ½áÊøÍ¼ÏñĞòºÅÃ»ÓĞÉèÖÃºÃ¡£"));
 
                             return;
                         }
                     }
                     if (stop) return;
 
-                    //è¿ç›¸æœº
+                    //Á¬Ïà»ú
                     foreach (var item in camParam)
                     {
                         item.Value.Key = item.Key;
@@ -453,15 +766,15 @@ namespace _3DLaserGlueInspection
                                 {
                                     if (cam.OpenBySN(item.Value.CamName))
                                     {
-                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç›¸æœº") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("æ‰“å¼€æˆåŠŸ"));
+                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("´ò¿ª³É¹¦"));
                                     }
                                     else
                                     {
-                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç›¸æœº") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("æ‰“å¼€å¤±è´¥ï¼š") + cam.ErrMsg, LogType.ng);
+                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("´ò¿ªÊ§°Ü£º") + cam.ErrMsg, LogType.ng);
                                         //Invoke(new Action(() =>
                                         //{
-                                        //    eç¯é¢œè‰² = ç¯é¢œè‰².çº¢;
-                                        //    labelç›¸æœº.Refresh();
+                                        //    eµÆÑÕÉ« = µÆÑÕÉ«.ºì;
+                                        //    labelÏà»ú.Refresh();
                                         //}));
                                         mainModel.camCommunicationLabelColorControl = labelColorEnum["red"];
 
@@ -470,25 +783,25 @@ namespace _3DLaserGlueInspection
                                 }
                                 if (cam.InitSet(item.Value, false))
                                 {
-                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç›¸æœº") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("åˆå§‹åŒ–è®¾ç½®æˆåŠŸ"));
+                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("³õÊ¼»¯ÉèÖÃ³É¹¦"));
                                 }
                                 else
                                 {
-                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç›¸æœº") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("åˆå§‹åŒ–è®¾ç½®å¤±è´¥ï¼š") + cam.ErrMsg, LogType.ng);
+                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("³õÊ¼»¯ÉèÖÃÊ§°Ü£º") + cam.ErrMsg, LogType.ng);
                                     //return;
                                 }
                             }
                         }
                         else
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç›¸æœº") + " " + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("æœªå¯ç”¨"));
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + " " + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("Î´ÆôÓÃ"));
                         }
                     }
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç›¸æœºè¿æ¥å®Œæˆ"));
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»úÁ¬½ÓÍê³É"));
                     mainModel.camCommunicationLabelColorControl = labelColorEnum["green"];
 
 
-                    //åˆå§‹åŒ–æ•°æ®
+                    //³õÊ¼»¯Êı¾İ
                     foreach (var item in camParam)
                     {
                         if (item.Value.Enable)
@@ -542,62 +855,62 @@ namespace _3DLaserGlueInspection
                                                     }
                                                     else
                                                     {
-                                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç›¸æœº") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("å¤šç›¸æœºè½¬æ¢(CamToCam1)ä¸å­˜åœ¨"), LogType.ng);
+                                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("¶àÏà»ú×ª»»(CamToCam1)²»´æÔÚ"), LogType.ng);
                                                         return;
                                                     }
                                                 }
                                                 else
                                                 {
-                                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç›¸æœº") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("å¤šç›¸æœºè½¬æ¢(Cam1InCam)ä¸å­˜åœ¨"), LogType.ng);
+                                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("¶àÏà»ú×ª»»(Cam1InCam)²»´æÔÚ"), LogType.ng);
                                                     return;
                                                 }
                                             }
                                             else
                                             {
-                                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç›¸æœº") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("åæ ‡è½¬æ¢(CamToTool)ä¸å­˜åœ¨"), LogType.ng);
+                                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("×ø±ê×ª»»(CamToTool)²»´æÔÚ"), LogType.ng);
                                                 return;
                                             }
                                         }
                                         else
                                         {
-                                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç›¸æœº") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("åæ ‡è½¬æ¢(LightToCam)ä¸å­˜åœ¨"), LogType.ng);
+                                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("×ø±ê×ª»»(LightToCam)²»´æÔÚ"), LogType.ng);
                                             return;
                                         }
                                     }
                                     else
                                     {
-                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç›¸æœº") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("å¤–å‚(ToolInCam.dat)ä¸å­˜åœ¨"), LogType.ng);
+                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("Íâ²Î(ToolInCam.dat)²»´æÔÚ"), LogType.ng);
                                         return;
                                     }
                                 }
                                 else
                                 {
-                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç›¸æœº") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("å¤–å‚(LightInCam.dat)ä¸å­˜åœ¨"), LogType.ng);
+                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("Íâ²Î(LightInCam.dat)²»´æÔÚ"), LogType.ng);
                                     return;
                                 }
                             }
                             else
                             {
-                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç›¸æœº") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("å†…å‚(camparam.cal)ä¸å­˜åœ¨"), LogType.ng);
+                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("ÄÚ²Î(camparam.cal)²»´æÔÚ"), LogType.ng);
                                 return;
                             }
                         }
                     }
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("åˆå§‹åŒ–æ•°æ®æˆåŠŸ"));
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("³õÊ¼»¯Êı¾İ³É¹¦"));
 
-                    indexImageCut = -1;//æŒ‡ç¤ºæ­£åœ¨å›¾åƒé‡‡é›†æ®µæ•°
+                    indexImageCut = -1;//Ö¸Ê¾ÕıÔÚÍ¼Ïñ²É¼¯¶ÎÊı
                     totalResult = true;
                     if (stop) return;
 
-                    // 3D æ¯éš”100æ¯«ç§’å†åˆ·æ–°ä¸€ä¸‹ç»“æœ
+                    // 3D Ã¿¸ô100ºÁÃëÔÙË¢ĞÂÒ»ÏÂ½á¹û
                     RefreshOnEvent(500, true);
 
                     watch.Restart();
                     bool bRobotRun = true;
-                    //å¯åŠ¨æœºå™¨äººå§¿æ€è·å–(å®‰å·20ms)
+                    //Æô¶¯»úÆ÷ÈË×ËÌ¬»ñÈ¡(°²´¨20ms)
                     taskRobot = Task.Run(() =>
                     {
-                        // æš‚æ—¶å±è”½
+                        // ÔİÊ±ÆÁ±Î
                         RefreshOnEvent(500, true);
                         //form3DShow.RefreshOn(10, true);
                         double colorUpperLimit = -0.5;
@@ -623,14 +936,14 @@ namespace _3DLaserGlueInspection
                                         }
                                         else
                                         {
-                                            ShowMessage(robotPoseKeysPath + GlobalVarAndFunc.LanguageTranslate("æ–‡ä»¶æ ¼å¼å¼‚å¸¸"));
+                                            ShowMessage(robotPoseKeysPath + GlobalVarAndFunc.LanguageTranslate("ÎÄ¼ş¸ñÊ½Òì³£"));
                                             return;
                                         }
                                     }
                                 }
                                 else
                                 {
-                                    ShowMessage(robotPoseKeysPath + GlobalVarAndFunc.LanguageTranslate("æ–‡ä»¶ä¸å­˜åœ¨"));
+                                    ShowMessage(robotPoseKeysPath + GlobalVarAndFunc.LanguageTranslate("ÎÄ¼ş²»´æÔÚ"));
                                     return;
                                 }
                             }
@@ -667,14 +980,14 @@ namespace _3DLaserGlueInspection
                                         }
                                         else
                                         {
-                                            System.Windows.Forms.MessageBox.Show(robotPoseValuesPath + GlobalVarAndFunc.LanguageTranslate("æ–‡ä»¶æ ¼å¼å¼‚å¸¸"));
+                                            System.Windows.Forms.MessageBox.Show(robotPoseValuesPath + GlobalVarAndFunc.LanguageTranslate("ÎÄ¼ş¸ñÊ½Òì³£"));
                                             return;
                                         }
                                     }
                                 }
                                 else
                                 {
-                                    ShowMessage(robotPoseValuesPath + GlobalVarAndFunc.LanguageTranslate("æ–‡ä»¶ä¸å­˜åœ¨"));
+                                    ShowMessage(robotPoseValuesPath + GlobalVarAndFunc.LanguageTranslate("ÎÄ¼ş²»´æÔÚ"));
                                     return;
                                 }
                             }
@@ -696,7 +1009,7 @@ namespace _3DLaserGlueInspection
                                     robotPoseValues.Add(hPose);
                                     robotPoseKeys.Add(key);
                                 }
-                                //form3DShow.InsertNextPoint(hPose.RawData[0], hPose.RawData[1], hPose.RawData[2], (hPose.RawData[2].D - é¢œè‰²ä¸‹é™å€¼) / èŒƒå›´);
+                                //form3DShow.InsertNextPoint(hPose.RawData[0], hPose.RawData[1], hPose.RawData[2], (hPose.RawData[2].D - ÑÕÉ«ÏÂÏŞÖµ) / ·¶Î§);
                                 Thread.Sleep(20);
                             }
                         }
@@ -711,47 +1024,47 @@ namespace _3DLaserGlueInspection
                                         robotPoseValues.Add(hPose);
                                         robotPoseKeys.Add(key);
                                     }
-                                    //form3DShow.InsertNextPoint(hPose.RawData[0], hPose.RawData[1], hPose.RawData[2], (hPose.RawData[2].D - é¢œè‰²ä¸‹é™å€¼) / èŒƒå›´);
+                                    //form3DShow.InsertNextPoint(hPose.RawData[0], hPose.RawData[1], hPose.RawData[2], (hPose.RawData[2].D - ÑÕÉ«ÏÂÏŞÖµ) / ·¶Î§);
                                 }
                                 Thread.Sleep(20);
                                 if (stop) break;
                             }
                         }
                     });
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("æœºå™¨äººå§¿æ€è·å–ä»»åŠ¡å¯åŠ¨å®Œæˆ"));
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("»úÆ÷ÈË×ËÌ¬»ñÈ¡ÈÎÎñÆô¶¯Íê³É"));
 
                     bool bTaskRun = true;
-                    //å¯åŠ¨å›¾åƒå¤„ç†ä»»åŠ¡
+                    //Æô¶¯Í¼Ïñ´¦ÀíÈÎÎñ
                     foreach (var item in camParam)
                     {
                         if (item.Value.Enable)
                         {
-                            /// ç›¸æœºå†…å‚ï¼Œç”¨äºå°†åƒç´ åæ ‡è½¬ä¸ºå›¾åƒåæ ‡
+                            /// Ïà»úÄÚ²Î£¬ÓÃÓÚ½«ÏñËØ×ø±ê×ªÎªÍ¼Ïñ×ø±ê
                             var hCamPar = Params.CamPar[camParamName][item.Key];
-                            /// ç”¨äºå°†å›¾åƒåæ ‡è½¬ä¸ºæ¿€å…‰åæ ‡ï¼Œåº”è¯¥æ˜¯ImageToLightæ‰å¯¹ã€‚
+                            /// ÓÃÓÚ½«Í¼Ïñ×ø±ê×ªÎª¼¤¹â×ø±ê£¬Ó¦¸ÃÊÇImageToLight²Å¶Ô¡£
                             var LightInCam = Params.LightInCam[camParamName][item.Key];
-                            /// ç”¨äºå°†æ¿€å…‰åæ ‡è½¬ä¸ºç›¸æœºåæ ‡
+                            /// ÓÃÓÚ½«¼¤¹â×ø±ê×ªÎªÏà»ú×ø±ê
                             var LightToCam = Params.LightToCam[camParamName][item.Key];
-                            /// ç›¸æœºè½¬ç›¸æœº1åæ ‡
+                            /// Ïà»ú×ªÏà»ú1×ø±ê
                             var CamToCam1 = Params.CamToCam1[camParamName][item.Key];
-                            /// ç›¸æœºåæ ‡è½¬ä¸ºæ³•å…°ç›˜åæ ‡
+                            /// Ïà»ú×ø±ê×ªÎª·¨À¼ÅÌ×ø±ê
                             var Cam1ToTool = Params.CamToTool[camParamName][item.Key];
 
                             Mat CamToTool = Cam1ToTool * CamToCam1;
 
                             tasks.Add(item.Key, Task.Run((Action)(() =>
                             {
-                                while (indexImageCut < 0)//ç­‰å¾…é‡‡é›†å¼€å§‹ï¼Œæ•°æ®é›†åˆå®Œæˆæ·»åŠ 
+                                while (indexImageCut < 0)//µÈ´ı²É¼¯¿ªÊ¼£¬Êı¾İ¼¯ºÏÍê³ÉÌí¼Ó
                                 {
                                     Thread.Sleep(10);
                                     if (!bRobotRun) return;
                                     if (stop) return;
                                 }
                                 int indexRobotPose = 1;
-                                //int indexImageCutProcessDict[item.Key] = 0;//æŒ‡ç¤ºæ­£åœ¨å›¾åƒå¤„ç†æ®µæ•°
+                                //int indexImageCutProcessDict[item.Key] = 0;//Ö¸Ê¾ÕıÔÚÍ¼Ïñ´¦Àí¶ÎÊı
 
                                 indexImageCutProcessDict[item.Key] = 0;
-                                while (true)//åˆ†æ®µå¾ªç¯
+                                while (true)//·Ö¶ÎÑ­»·
                                 {
                                     var dictImageKey = ImageKeys[item.Key][indexImageCutProcessDict[item.Key]];
                                     var dictImage = Images[item.Key][indexImageCutProcessDict[item.Key]];
@@ -768,43 +1081,43 @@ namespace _3DLaserGlueInspection
 
                                     int indexImage = 0;
                                     bool bRun = true;
-                                    while (bRun)//æ®µå†…å¾ªç¯
+                                    while (bRun)//¶ÎÄÚÑ­»·
                                     {
                                         bool bAdd = false;
                                         long imageKey = 0;
-                                        if (dictImageKey.Count > indexImage)//æœ‰æ–°å¢å›¾ç‰‡
+                                        if (dictImageKey.Count > indexImage)//ÓĞĞÂÔöÍ¼Æ¬
                                         {
-                                            if (robotPoseKeys.Count > indexRobotPose)//æœ‰æ–°å¢å§¿æ€
+                                            if (robotPoseKeys.Count > indexRobotPose)//ÓĞĞÂÔö×ËÌ¬
                                             {
-                                                if (robotPoseKeys[indexRobotPose] >= dictImageKey[indexImage])//å¾ªç¯åˆ°çš„å§¿æ€æ™šäºç­‰äºå›¾ç‰‡ï¼Œå¤„ç†
+                                                if (robotPoseKeys[indexRobotPose] >= dictImageKey[indexImage])//Ñ­»·µ½µÄ×ËÌ¬ÍíÓÚµÈÓÚÍ¼Æ¬£¬´¦Àí
                                                 {
                                                     imageKey = dictImageKey[indexImage];
                                                     bAdd = true;
                                                 }
-                                                else//å¾ªç¯åˆ°çš„å§¿æ€æ—©äºå›¾ç‰‡ï¼Œå¿½ç•¥
+                                                else//Ñ­»·µ½µÄ×ËÌ¬ÔçÓÚÍ¼Æ¬£¬ºöÂÔ
                                                 {
                                                     indexRobotPose++;
                                                 }
                                             }
                                             else
                                             {
-                                                if (!bRobotRun)//é€€å‡ºæ¡ä»¶
+                                                if (!bRobotRun)//ÍË³öÌõ¼ş
                                                 {
                                                     return;
                                                 }
                                                 Thread.Sleep(10);
                                             }
                                         }
-                                        else//æ²¡æœ‰æ–°å¢å›¾ç‰‡
+                                        else//Ã»ÓĞĞÂÔöÍ¼Æ¬
                                         {
-                                            if (indexImageCut > indexImageCutProcessDict[item.Key])//è¿›å…¥ä¸‹ä¸€æ®µæ¡ä»¶
+                                            if (indexImageCut > indexImageCutProcessDict[item.Key])//½øÈëÏÂÒ»¶ÎÌõ¼ş
                                             {
                                                 indexImageCutProcessDict[item.Key]++;
                                                 bRun = false;
                                             }
                                             else
                                             {
-                                                if (!bRobotRun)//é€€å‡ºæ¡ä»¶
+                                                if (!bRobotRun)//ÍË³öÌõ¼ş
                                                 {
                                                     return;
                                                 }
@@ -821,7 +1134,7 @@ namespace _3DLaserGlueInspection
                                                 {
                                                     var cutSet = set.CutSets[indexImageCutProcessDict[item.Key]];
                                                     var imageSet = set.CutSets[indexImageCutProcessDict[item.Key]].imageSet[camIndex][indexImage];
-                                                    // ä¸´æ—¶ç»“æœä¿å­˜å˜é‡
+                                                    // ÁÙÊ±½á¹û±£´æ±äÁ¿
                                                     bool getOutlineResult = false;
                                                     bool singleFrameExistOutline = false;
                                                     bool singleFrameExistGlue = false;
@@ -841,16 +1154,16 @@ namespace _3DLaserGlueInspection
                                                     double robotAndCamAngle = int.MaxValue;
 
 
-                                                    if (imageSet.è½®å»“æ£€æµ‹)
+                                                    if (imageSet.ÂÖÀª¼ì²â)
                                                     {
-                                                        //æ¿€å…‰è½®å»“æå–
+                                                        //¼¤¹âÂÖÀªÌáÈ¡
                                                         //Mat xy = new Mat();
                                                         //Vision.getLaserPosition(dictImage[imageKey], imageSet.minThreshold, out xy, item.Value.OffsetX, item.Value.OffsetY);
                                                         Mat xy = new Mat();
                                                         Mat imgCut = new Mat();
                                                         int LeftX = 0;
                                                         int TopY = 0;
-                                                        if (imageSet.å¯ç”¨è£å‰ª)
+                                                        if (imageSet.ÆôÓÃ²Ã¼ô)
                                                         {
                                                             //Vision.cutLight(xy, camParam, hImage, imageSet, out xyCut);
                                                             int imageWidth, imageHeight;
@@ -871,14 +1184,14 @@ namespace _3DLaserGlueInspection
 
                                                         Vision.getLaserPosition(imgCut, imageSet.minThreshold, imageSet.laserMinWidth, out xy, item.Value.OffsetX + LeftX, item.Value.OffsetY + TopY);
 
-                                                        //åæ ‡è½¬æ¢
+                                                        //×ø±ê×ª»»
                                                         Wpf_Replace_halcon.PoseParameters robotPose = new PoseParameters();
                                                         HMatrixTransform.mathHPose(robotPoseValues[indexRobotPose - 1],
                                                             robotPoseValues[indexRobotPose], out robotPose,
                                                             (imageKey - robotPoseKeys[indexRobotPose - 1]) /
                                                             (double)(robotPoseKeys[indexRobotPose] - robotPoseKeys[indexRobotPose - 1])
                                                             );
-                                                        // è®¡ç®—æœºå™¨äººç§»åŠ¨è·ç¦»
+                                                        // ¼ÆËã»úÆ÷ÈËÒÆ¶¯¾àÀë
                                                         if (dictRobotPose.Count > 0)
                                                         {
                                                             var last = dictRobotPose.Last();
@@ -889,12 +1202,12 @@ namespace _3DLaserGlueInspection
                                                                 Math.Pow((robotPose.z - lastRobotPose.z), 2)) ;
                                                         }
 
-                                                        // è®¡ç®—æœºå™¨äººä¸ç›¸æœºçš„å¤¹è§’,å¿…é¡»è¦æœºå™¨äººæœ‰ç§»åŠ¨
+                                                        // ¼ÆËã»úÆ÷ÈËÓëÏà»úµÄ¼Ğ½Ç,±ØĞëÒª»úÆ÷ÈËÓĞÒÆ¶¯
                                                         if (dictRobotPose.Count > 0&& PoseD>0) 
                                                         {
-                                                            //è®¡ç®—CamToToolçš„çŸ©é˜µ
+                                                            //¼ÆËãCamToToolµÄ¾ØÕó
 
-                                                            //æ‰“åŒ…å‰åæœºå™¨äººpose
+                                                            //´ò°üÇ°ºó»úÆ÷ÈËpose
                                                             var last = dictRobotPose.Last();
                                                             var lastRobotPose = last.Value;
 
@@ -920,16 +1233,16 @@ namespace _3DLaserGlueInspection
                                                         }
                                                             
 
-                                                        //ä¸‰ç»´æ•°æ®æ·»åŠ æœºå™¨äººåæ ‡
+                                                        //ÈıÎ¬Êı¾İÌí¼Ó»úÆ÷ÈË×ø±ê
                                                         dictRobotPose.Add(imageKey, robotPose);
 
-                                                        //éœ€è¦ä¿è¯æ£€æµ‹åˆ°æœ‰ç‚¹ï¼Œå¹¶ä¸”æœºå™¨äººå·²ç»å¤„äºç§»åŠ¨çŠ¶æ€
+                                                        //ĞèÒª±£Ö¤¼ì²âµ½ÓĞµã£¬²¢ÇÒ»úÆ÷ÈËÒÑ¾­´¦ÓÚÒÆ¶¯×´Ì¬
                                                         if (xy.Rows > 0 && dictRobotPose.Count > 0 && PoseD > 0)
                                                         {
                                                             getOutlineResult = true;
 
                                                             //Mat xyCut = new Mat();
-                                                            //if (imageSet.å¯ç”¨è£å‰ª)
+                                                            //if (imageSet.ÆôÓÃ²Ã¼ô)
                                                             //{
                                                             //    Vision.cutLight(xy, item.Value, dictImage[imageKey], imageSet, out xyCut);
                                                             //}
@@ -944,15 +1257,15 @@ namespace _3DLaserGlueInspection
                                                             Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToTool,
                                                             robotPose, out lightXY, out robotX, out robotY, out robotZ);
 
-                                                            //å¦‚æœè¿˜æ²¡åˆ°å¼€å§‹idï¼Œåˆ™è·³è¿‡æ˜¾ç¤º
+                                                            //Èç¹û»¹Ã»µ½¿ªÊ¼id£¬ÔòÌø¹ıÏÔÊ¾
                                                             int indexCross = indexImage - cutSet.StartImageIndex;
                                                             if (indexCross >= 0 && indexCross < angless[indexImageCutProcessDict[item.Key]].Count)
                                                             {
-                                                                //é—´éš”æ˜¾ç¤ºï¼Œå‡å°‘æ˜¾ç¤ºæ—¶é—´
+                                                                //¼ä¸ôÏÔÊ¾£¬¼õÉÙÏÔÊ¾Ê±¼ä
                                                                 if (indexCross % displayIntervalID == 0)
                                                                 {
                                                                     colorScale = new List<double>();
-                                                                    //è®¡ç®—æ˜¾ç¤ºé¢œè‰²
+                                                                    //¼ÆËãÏÔÊ¾ÑÕÉ«
                                                                     for (int i = 0; i < robotZ.Count; i++)
                                                                     {
                                                                         double color = ((robotZ[i] - cutSet.ShowColorMin / 1000) / ((cutSet.ShowColorMax - cutSet.ShowColorMin) / 1000));
@@ -961,7 +1274,7 @@ namespace _3DLaserGlueInspection
                                                                     }
                                                                     //Application.Current.Dispatcher.Invoke(() =>
                                                                     //{
-                                                                    //æ˜¾ç¤ºç‚¹äº‘
+                                                                    //ÏÔÊ¾µãÔÆ
                                                                     Disp3DPointControlEvent(robotX, robotY, robotZ, colorScale);
 
                                                                     //Console.WriteLine($"indexCross:{indexCross}");
@@ -969,7 +1282,7 @@ namespace _3DLaserGlueInspection
                                                                 }
 
                                                             }
-                                                            //ä¸‰ç»´æ•°æ®æ·»åŠ 
+                                                            //ÈıÎ¬Êı¾İÌí¼Ó
                                                             dictX.Add(imageKey, robotX);
                                                             dictY.Add(imageKey, robotY);
                                                             dictZ.Add(imageKey, robotZ);
@@ -979,9 +1292,9 @@ namespace _3DLaserGlueInspection
                                                         }
                                                     }
 
-                                                    if (imageSet.è½®å»“æ£€æµ‹)
+                                                    if (imageSet.ÂÖÀª¼ì²â)
                                                     {
-                                                        //if (imageSet.å•å¸§æ£€æµ‹)
+                                                        //if (imageSet.µ¥Ö¡¼ì²â)
                                                         //{
 
                                                         if (imageSet._3DGlueDet)
@@ -994,7 +1307,7 @@ namespace _3DLaserGlueInspection
                                                                 Vision.scalePoint(lightXY, cutSet, 90 - LightInCam.rx, out hXLDCont10mm);
                                                                 if (cutSet.isUseAngleOpt)
                                                                 {
-                                                                    //å¯¹xæ–¹å‘è¿›è¡ŒçŸ«æ­£
+                                                                    //¶Ôx·½Ïò½øĞĞ½ÃÕı
                                                                     double scaleX = 1;
                                                                     scaleX = Math.Cos(robotAndCamAngle / 180 * Math.PI);
                                                                     Mat correctionPoints = new Mat();
@@ -1008,7 +1321,7 @@ namespace _3DLaserGlueInspection
                                                                     hXLDCont10mm = correctionPoints.Clone();
                                                                 }
                                                                 {
-                                                                    //å¯¹ä¸¤ä¸ªæ–¹å‘è¿›è¡ŒçŸ«æ­£
+                                                                    //¶ÔÁ½¸ö·½Ïò½øĞĞ½ÃÕı
                                                                     double scaleX = cutSet.correctionScaleSizeX;
                                                                     double scaleY = cutSet.correctionScaleSizeY;
 
@@ -1024,15 +1337,15 @@ namespace _3DLaserGlueInspection
 
                                                                     hXLDCont10mm = correctionPoints.Clone();
                                                                 }
-                                                                //å¦‚æœå­˜åœ¨
+                                                                //Èç¹û´æÔÚ
                                                                 if (!hXLDCont10mm.Empty())
                                                                 {
 
                                                                     Mat hXLDContPorcess = new Mat();
-                                                                    //ç¦»æ•£æ»¤æ³¢
-                                                                    if (imageSet.ç¦»æ•£å»å™ª)
+                                                                    //ÀëÉ¢ÂË²¨
+                                                                    if (imageSet.ÀëÉ¢È¥Ôë)
                                                                     {
-                                                                        Vision.TrajectoryDiscreteFilter(hXLDCont10mm, out hXLDContPorcess, imageSet.åˆ†æ®µè·ç¦» * cutSet.scaleSize, imageSet.æˆæ®µç‚¹æ•°);
+                                                                        Vision.TrajectoryDiscreteFilter(hXLDCont10mm, out hXLDContPorcess, imageSet.·Ö¶Î¾àÀë * cutSet.scaleSize, imageSet.³É¶ÎµãÊı);
                                                                     }
                                                                     else
                                                                     {
@@ -1041,7 +1354,7 @@ namespace _3DLaserGlueInspection
 
                                                                     Vision.singleFrameDetAndResult(hXLDContPorcess, imageSet,cutSet, ref singleFrameExistGlue, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2);
 
-                                                                    //è®¡ç®—æ¶‚èƒ¶ä½“ç§¯
+                                                                    //¼ÆËãÍ¿½ºÌå»ı
                                                                     V = resultData.glueArea * PoseD;
 
 
@@ -1061,7 +1374,7 @@ namespace _3DLaserGlueInspection
                                                             totalResult = false;
                                                         }
 
-                                                        //ç»“æœç»Ÿè®¡
+                                                        //½á¹ûÍ³¼Æ
                                                         if (hXLDCont10mm.Rows > 0)
                                                         {
                                                             if (dictXLD.ContainsKey(imageKey))
@@ -1076,7 +1389,7 @@ namespace _3DLaserGlueInspection
                                                         }
                                                         if (resultData.glueArea > 0)
                                                         {
-                                                            //ä½“ç§¯ç»“æœ
+                                                            //Ìå»ı½á¹û
 
                                                             if (dictV.ContainsKey(imageKey))
                                                             {
@@ -1086,7 +1399,7 @@ namespace _3DLaserGlueInspection
                                                             {
                                                                 dictV.Add(imageKey, V);
                                                             }
-                                                            //èƒ¶åŒºåŸŸç»“æœ
+                                                            //½ºÇøÓò½á¹û
 
                                                             if (dictRegion.ContainsKey(imageKey))
                                                             {
@@ -1096,7 +1409,7 @@ namespace _3DLaserGlueInspection
                                                             {
                                                                 dictRegion.Add(imageKey, outMaxRegion);
                                                             }
-                                                            //èƒ¶æœ€å°å¤–æ¥çŸ©å½¢ç»“æœ
+                                                            //½º×îĞ¡Íâ½Ó¾ØĞÎ½á¹û
 
                                                             if (dictRegionRectangle2.ContainsKey(imageKey))
                                                             {
@@ -1106,7 +1419,7 @@ namespace _3DLaserGlueInspection
                                                             {
                                                                 dictRegionRectangle2.Add(imageKey, outRegionRectangle2);
                                                             }
-                                                            //èƒ¶æ£€æµ‹æ•°æ®ç»“æœ
+                                                            //½º¼ì²âÊı¾İ½á¹û
                                                             if (dictData.ContainsKey(imageKey))
                                                             {
                                                                 dictData[imageKey] = resultData;
@@ -1115,7 +1428,7 @@ namespace _3DLaserGlueInspection
                                                             {
                                                                 dictData.Add(imageKey, resultData);
                                                             }
-                                                            //èƒ¶æ£€æµ‹ç»“æœ
+                                                            //½º¼ì²â½á¹û
 
                                                             if (dictResult.ContainsKey(imageKey))
                                                             {
@@ -1129,7 +1442,7 @@ namespace _3DLaserGlueInspection
 
                                                         if (imageSet._3DGlueDet)
                                                         {
-                                                            // å·²å¼€æ”¾
+                                                            // ÒÑ¿ª·Å
                                                             int indexCross = indexImage - cutSet.StartImageIndex;
                                                             if (indexCross >= 0 && indexCross < angless[indexImageCutProcessDict[item.Key]].Count)
                                                             {
@@ -1141,7 +1454,7 @@ namespace _3DLaserGlueInspection
 
                                                     }
 
-                                                    // æ²¡å¿…è¦æ˜¾ç¤ºæ¯å¸§çš„æ£€æµ‹ç»“æœï¼Œè€Œä¸”è¿™æ ·åšå¯¼è‡´å½±å“æ£€æµ‹é€Ÿåº¦
+                                                    // Ã»±ØÒªÏÔÊ¾Ã¿Ö¡µÄ¼ì²â½á¹û£¬¶øÇÒÕâÑù×öµ¼ÖÂÓ°Ïì¼ì²âËÙ¶È
                                                     //if (singleFrameExistGlue)
                                                     //{
                                                     //    Application.Current.Dispatcher.Invoke(() =>
@@ -1154,7 +1467,7 @@ namespace _3DLaserGlueInspection
                                                 }
                                                 else
                                                 {
-                                                    //æ— æ£€æµ‹å‚æ•°
+                                                    //ÎŞ¼ì²â²ÎÊı
                                                 }
                                             }
                                             catch (Exception ex)
@@ -1172,23 +1485,23 @@ namespace _3DLaserGlueInspection
                             })));
                         }
                     }
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("å›¾åƒå¤„ç†ä»»åŠ¡å¯åŠ¨å®Œæˆ"));
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("Í¼Ïñ´¦ÀíÈÎÎñÆô¶¯Íê³É"));
 
-                    //è¾“å‡ºè¿è¡Œä¸­ä¿¡å·
+                    //Êä³öÔËĞĞÖĞĞÅºÅ
                     if (!Write(DO.Running, true)) return;
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("è¾“å‡ºRunningä¿¡å·"));
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("Êä³öRunningĞÅºÅ"));
                     if (!Write(DO.Ready, false)) return;
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("å…³é—­Readyä¿¡å·"));
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("¹Ø±ÕReadyĞÅºÅ"));
 
                     if (stop) return;
                     bool bAbort = false;
 
-                    //å¯åŠ¨é‡‡é›†ä»»åŠ¡
+                    //Æô¶¯²É¼¯ÈÎÎñ
                     while (true)
                     {
                         bool bEnd = false;
-                        //ç­‰è§¦å‘ä¿¡å·ON
-                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç­‰å¾…è§¦å‘ä¿¡å·ON"));
+                        //µÈ´¥·¢ĞÅºÅON
+                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("µÈ´ı´¥·¢ĞÅºÅON"));
                         while (true)
                         {
                             bool val;
@@ -1196,7 +1509,7 @@ namespace _3DLaserGlueInspection
                             {
                                 if (val == true)
                                 {
-                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("æ”¶åˆ°è§¦å‘ä¿¡å·ON"));
+                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("ÊÕµ½´¥·¢ĞÅºÅON"));
                                     break;
                                 }
                             }
@@ -1209,7 +1522,7 @@ namespace _3DLaserGlueInspection
                             {
                                 if (val == true)
                                 {
-                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("æ”¶åˆ°ENDä¿¡å·,é€€å‡ºæ‹ç…§å¾ªç¯"), LogType.warn);
+                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("ÊÕµ½ENDĞÅºÅ,ÍË³öÅÄÕÕÑ­»·"), LogType.warn);
                                     bEnd = true;
                                     break;
                                 }
@@ -1222,7 +1535,7 @@ namespace _3DLaserGlueInspection
                             {
                                 if (val == true)
                                 {
-                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("æ”¶åˆ°Abortä¿¡å·,æµç¨‹é‡æ–°å¼€å§‹"), LogType.warn);
+                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("ÊÕµ½AbortĞÅºÅ,Á÷³ÌÖØĞÂ¿ªÊ¼"), LogType.warn);
                                     bAbort = true;
                                     break;
                                 }
@@ -1237,10 +1550,10 @@ namespace _3DLaserGlueInspection
                         if (bAbort) break;
 
                         bool bTriggering = true;
-                        //int èµ·ç‚¹ = dataGridViewImageList.Rows.Count;
+                        //int Æğµã = dataGridViewImageList.Rows.Count;
                         int startPoint = mainModel.ImageResultRecords.Count;
                         dataGridViewImageListRowsStartPoint.Add(startPoint);
-                        //æ‹ç…§
+                        //ÅÄÕÕ
                         foreach (var item in camParam)
                         {
                             if (item.Value.Enable)
@@ -1378,25 +1691,25 @@ namespace _3DLaserGlueInspection
                                         if (flag)
                                         {
                                             ShowMessage(item.Key);
-                                            //ç›¸æœº1è¦è½¯è§¦å‘å¯åŠ¨
+                                            //Ïà»ú1ÒªÈí´¥·¢Æô¶¯
                                             if (item.Key == "Cam1")
                                             {
                                                 bool rt = cam.TriggerSoftwareExecute();
                                                 if (rt)
                                                 {
-                                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç›¸æœº") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("è½¯è§¦å‘æˆåŠŸ"));
+                                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("Èí´¥·¢³É¹¦"));
                                                 }
                                                 else
                                                 {
-                                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç›¸æœº") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("è½¯è§¦å‘å¤±è´¥"));
+                                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("Èí´¥·¢Ê§°Ü"));
                                                 }
 
                                             }
-                                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç›¸æœº") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("å¼€å§‹è¿ç»­é‡‡é›†æˆåŠŸ"));
+                                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("¿ªÊ¼Á¬Ğø²É¼¯³É¹¦"));
                                         }
                                         else
                                         {
-                                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç›¸æœº") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("å¼€å§‹è¿ç»­é‡‡é›†å¤±è´¥ï¼š") + cams[item.Value.CamName].ErrMsg, LogType.ng);
+                                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("¿ªÊ¼Á¬Ğø²É¼¯Ê§°Ü£º") + cams[item.Value.CamName].ErrMsg, LogType.ng);
                                         }
                                     }
                                     else
@@ -1504,7 +1817,7 @@ namespace _3DLaserGlueInspection
                                                     Thread.Sleep(1);
                                                 }
 
-                                                ShowMessage(item.Key + GlobalVarAndFunc.LanguageTranslate("ä»¿çœŸå›¾ç‰‡éå†å®Œ"));
+                                                ShowMessage(item.Key + GlobalVarAndFunc.LanguageTranslate("·ÂÕæÍ¼Æ¬±éÀúÍê"));
 
                                             });
 
@@ -1516,11 +1829,11 @@ namespace _3DLaserGlueInspection
                         }
                         indexImageCut++;
 
-                        //è¾“å‡ºæ‹ç…§ä¸­ä¿¡å·
+                        //Êä³öÅÄÕÕÖĞĞÅºÅ
                         if (!Write(DO.Triggering, true)) return;
 
-                        //ç­‰è§¦å‘ä¿¡å·OFF
-                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç­‰å¾…è§¦å‘ä¿¡å·OFF"));
+                        //µÈ´¥·¢ĞÅºÅOFF
+                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("µÈ´ı´¥·¢ĞÅºÅOFF"));
                         while (true)
                         {
                             if (stop) return;
@@ -1529,7 +1842,7 @@ namespace _3DLaserGlueInspection
                             {
                                 if (val == false)
                                 {
-                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("æ”¶åˆ°è§¦å‘ä¿¡å·OFF"));
+                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("ÊÕµ½´¥·¢ĞÅºÅOFF"));
                                     break;
                                 }
                             }
@@ -1542,7 +1855,7 @@ namespace _3DLaserGlueInspection
                             {
                                 if (val == true)
                                 {
-                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("æ”¶åˆ°ENDä¿¡å·,é€€å‡ºæ‹ç…§å¾ªç¯"), LogType.warn);
+                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("ÊÕµ½ENDĞÅºÅ,ÍË³öÅÄÕÕÑ­»·"), LogType.warn);
                                     bEnd = true;
                                     break;
                                 }
@@ -1555,7 +1868,7 @@ namespace _3DLaserGlueInspection
                             {
                                 if (val == true)
                                 {
-                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("æ”¶åˆ°Abortä¿¡å·,æµç¨‹é‡æ–°å¼€å§‹"), LogType.warn);
+                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("ÊÕµ½AbortĞÅºÅ,Á÷³ÌÖØĞÂ¿ªÊ¼"), LogType.warn);
                                     bAbort = true;
                                     break;
                                 }
@@ -1568,12 +1881,12 @@ namespace _3DLaserGlueInspection
                         }
 
 
-                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç­‰å¾…æ•°æ®è½¬æ¢å®Œæˆ"));
+                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("µÈ´ıÊı¾İ×ª»»Íê³É"));
 
-                        ////æ•°æ®è½¬æ¢
-                        ////pose æ ¼å¼è½¬æ¢
+                        ////Êı¾İ×ª»»
+                        ////pose ¸ñÊ½×ª»»
                         //string camKey = "Cam1";
-                        //foreach (var item in camParam) //æ ¹æ®ä½¿ç”¨çš„ç¬¬ä¸€ä¸ªç›¸æœºæ•°æ®æ¥ä½œä¸ºå‚è€ƒï¼Œæ­£å¸¸æ˜¯ç”¨ç¬¬ä¸€ä¸ªç›¸æœº
+                        //foreach (var item in camParam) //¸ù¾İÊ¹ÓÃµÄµÚÒ»¸öÏà»úÊı¾İÀ´×÷Îª²Î¿¼£¬Õı³£ÊÇÓÃµÚÒ»¸öÏà»ú
                         //{
                         //    if (item.Value.Enable)
                         //    {
@@ -1597,7 +1910,7 @@ namespace _3DLaserGlueInspection
                         //    poseList.At<Double>(id, 5) = poseKey.rz;
                         //    id++;
                         //}
-                        ////3d ç‚¹äº‘æ ¼å¼è½¬æ¢
+                        ////3d µãÔÆ¸ñÊ½×ª»»
                         //int pointCount = 0;
                         //foreach (var item in camParam)
                         //{
@@ -1641,22 +1954,22 @@ namespace _3DLaserGlueInspection
                         //    }
                         //}
 
-                        //ShowMessage(GlobalVarAndFunc.LanguageTranslate("å¼€å§‹ç‚¹äº‘æ•°æ®å¤„ç†"));
+                        //ShowMessage(GlobalVarAndFunc.LanguageTranslate("¿ªÊ¼µãÔÆÊı¾İ´¦Àí"));
 
-                        ////ç‚¹äº‘æ•°æ®å¤„ç†
+                        ////µãÔÆÊı¾İ´¦Àí
                         //taskPoint3D = Task.Run(() =>
                         //{
                         //    //Console.WriteLine($"points count:{Point3DXs.Count}.");
                         //    //if (Point3DXs.Count > 0)
                         //    //{
-                        //    //    //ä¿å­˜æœºå™¨äººæ¯å¼ å›¾çš„ä½å§¿æ•°æ®
+                        //    //    //±£´æ»úÆ÷ÈËÃ¿ÕÅÍ¼µÄÎ»×ËÊı¾İ
                         //    //    foreach (var camKeyTmp in Robot3DPose.Keys)
                         //    //    {
                         //    //        for (int i = 0; i < Robot3DPose[camKeyTmp].Count; i++)
                         //    //        {
                         //    //            using (FileStream stream = new FileStream($"{camKeyTmp}_{(i + 1).ToString()}_robotPoseValues.xml", FileMode.Create))
                         //    //            {
-                        //    //                //è½¬åŒ–
+                        //    //                //×ª»¯
                         //    //                List<double[]> pose = new List<double[]>();
                         //    //                foreach (var poseKey in Robot3DPose[camKeyTmp][i].Values)
                         //    //                {
@@ -1666,7 +1979,7 @@ namespace _3DLaserGlueInspection
                         //    //            }
                         //    //        }
                         //    //    }
-                        //    //    //ä¿å­˜æµ‹è¯•ç‚¹äº‘æ•°æ®
+                        //    //    //±£´æ²âÊÔµãÔÆÊı¾İ
                         //    //    string fPath = "pointCloud.xml";
                         //    //    XmlSerializer xml = new XmlSerializer(pointsSave.GetType());
                         //    //    using (FileStream stream = new FileStream(fPath, FileMode.Create))
@@ -1677,7 +1990,7 @@ namespace _3DLaserGlueInspection
 
                         //    if (poseList.Rows > 0 && cloudList.Rows > 0)
                         //    {
-                        //        //3dæ£€æµ‹
+                        //        //3d¼ì²â
 
                         //        Mat[] imgList = new Mat[poseList.Rows];
                         //        var dictXLD = outLineDict[camKey][indexImageCut];
@@ -1692,31 +2005,31 @@ namespace _3DLaserGlueInspection
                         //            imgList[i] = new Mat();
                         //            imgsPtr[i] = imgList[i].CvPtr;
                         //        }
-                        //        ShowMessage(GlobalVarAndFunc.LanguageTranslate("å¼€å§‹ç‚¹äº‘åˆ‡ç‰‡å¤„ç†"));
+                        //        ShowMessage(GlobalVarAndFunc.LanguageTranslate("¿ªÊ¼µãÔÆÇĞÆ¬´¦Àí"));
 
                         //        Vision.pointCloudCutAll(cloudList.CvPtr, poseList.CvPtr, Vision.xSize, Vision.ySize, Vision.zSize, Vision.scaleSize * 1000, Vision.offset_z, imgsPtr);
-                        //        ShowMessage(GlobalVarAndFunc.LanguageTranslate("å¼€å§‹ç‚¹äº‘ç‰‡å›¾åƒå¤„ç†"));
+                        //        ShowMessage(GlobalVarAndFunc.LanguageTranslate("¿ªÊ¼µãÔÆÆ¬Í¼Ïñ´¦Àí"));
 
                         //        for (int indexImage = 0; indexImage < imgList.Length; indexImage++)
                         //        {
-                        //            //3dæ£€æµ‹å‚æ•°ï¼Œå…ˆä»¥ç›¸æœº1ä¸ºæ ‡å‡†,åé¢å†æŠŠå‚æ•°ç»Ÿä¸€
+                        //            //3d¼ì²â²ÎÊı£¬ÏÈÒÔÏà»ú1Îª±ê×¼,ºóÃæÔÙ°Ñ²ÎÊıÍ³Ò»
                         //            var imageSet = cutSet.imageSet[0][indexImage];
 
 
                         //            if (imageSet._3DGlueDet)
                         //            {
                         //                var imageKey = imageKeyList[indexImage];
-                        //                //éœ€è¦åˆ¤æ–­å›¾ç‰‡æ˜¯å¦ä¸ºç©ºï¼Œæ¥åˆ¤æ–­æ˜¯å¦æœ‰ç»“æœ
+                        //                //ĞèÒªÅĞ¶ÏÍ¼Æ¬ÊÇ·ñÎª¿Õ£¬À´ÅĞ¶ÏÊÇ·ñÓĞ½á¹û
                         //                if (!imgList[indexImage].Empty())
                         //                {
                         //                    Mat thinn = new Mat();
                         //                    Mat points = new Mat();
                         //                    Vision.thinning3d(imgList[indexImage].CvPtr, thinn.CvPtr, points.CvPtr);
 
-                        //                    //éœ€è¦åˆ¤æ–­å›¾ç‰‡æ˜¯å¦ä¸ºç©ºï¼Œæ¥åˆ¤æ–­æ˜¯å¦æœ‰ç»“æœ
+                        //                    //ĞèÒªÅĞ¶ÏÍ¼Æ¬ÊÇ·ñÎª¿Õ£¬À´ÅĞ¶ÏÊÇ·ñÓĞ½á¹û
                         //                    if (!thinn.Empty())
                         //                    {
-                        //                        //æ£€æµ‹
+                        //                        //¼ì²â
                         //                        bool singleFrameExistGlue = false;
                         //                        Data resultData = new Data();
                         //                        BResult bResult = new BResult();
@@ -1725,10 +2038,10 @@ namespace _3DLaserGlueInspection
                         //                        Mat hXLDCont10mm;
 
 
-                        //                        //ç¦»æ•£æ»¤æ³¢
-                        //                        if (imageSet.ç¦»æ•£å»å™ª)
+                        //                        //ÀëÉ¢ÂË²¨
+                        //                        if (imageSet.ÀëÉ¢È¥Ôë)
                         //                        {
-                        //                            Vision.TrajectoryDiscreteFilter(points, out hXLDCont10mm, imageSet.åˆ†æ®µè·ç¦» * Vision.scaleSize, imageSet.æˆæ®µç‚¹æ•°);
+                        //                            Vision.TrajectoryDiscreteFilter(points, out hXLDCont10mm, imageSet.·Ö¶Î¾àÀë * Vision.scaleSize, imageSet.³É¶ÎµãÊı);
                         //                        }
                         //                        else
                         //                        {
@@ -1788,7 +2101,7 @@ namespace _3DLaserGlueInspection
                         //                            }
                         //                        }
 
-                        //                        //ç»“æœæ˜¾ç¤º
+                        //                        //½á¹ûÏÔÊ¾
                         //                        if (singleFrameExistGlue)
                         //                        {
                         //                            Application.Current.Dispatcher.Invoke(() =>
@@ -1818,18 +2131,18 @@ namespace _3DLaserGlueInspection
 
                         if (!simulation)
                         {
-                            //åœæ­¢æ‹ç…§
+                            //Í£Ö¹ÅÄÕÕ
                             foreach (var item in camParam)
                             {
                                 if (item.Value.Enable)
                                 {
                                     if (!cams[item.Value.CamName].IsGrabbing || cams[item.Value.CamName].StopGrabbing())
                                     {
-                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç›¸æœº") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("åœæ­¢é‡‡é›†æˆåŠŸ"));
+                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("Í£Ö¹²É¼¯³É¹¦"));
                                     }
                                     else
                                     {
-                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç›¸æœº") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("åœæ­¢é‡‡é›†å¤±è´¥ï¼š") + cams[item.Value.CamName].ErrMsg, LogType.ng);
+                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("Í£Ö¹²É¼¯Ê§°Ü£º") + cams[item.Value.CamName].ErrMsg, LogType.ng);
                                     }
                                 }
                             }
@@ -1837,22 +2150,22 @@ namespace _3DLaserGlueInspection
                         }
                         bTriggering = false;
 
-                        //å…³é—­æ‹ç…§ä¸­ä¿¡å·
+                        //¹Ø±ÕÅÄÕÕÖĞĞÅºÅ
                         if (!Write(DO.Triggering, false)) return;
 
                         if (stop) return;
                         if (bEnd) break;
                         if (bAbort) break;
 
-                        //åˆ¤æ–­æ®µæ•°æ˜¯å¦è¶³å¤Ÿ
+                        //ÅĞ¶Ï¶ÎÊıÊÇ·ñ×ã¹»
                         if (indexImageCut + 1 >= set.CutSets.Count)
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("æ‹ç…§æ®µæ•°è¶³å¤Ÿ") + $"({indexImageCut + 1}/{set.CutSets.Count})ï¼Œ" + GlobalVarAndFunc.LanguageTranslate("é€€å‡ºæ‹ç…§å¾ªç¯"));
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("ÅÄÕÕ¶ÎÊı×ã¹»") + $"({indexImageCut + 1}/{set.CutSets.Count})£¬" + GlobalVarAndFunc.LanguageTranslate("ÍË³öÅÄÕÕÑ­»·"));
                             break;
                         }
                         else
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("æ‹ç…§æ®µæ•°ä¸è¶³") + $"({indexImageCut + 1}/{set.CutSets.Count})ï¼Œ" + GlobalVarAndFunc.LanguageTranslate("ç»§ç»­æ‹ç…§å¾ªç¯"));
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("ÅÄÕÕ¶ÎÊı²»×ã") + $"({indexImageCut + 1}/{set.CutSets.Count})£¬" + GlobalVarAndFunc.LanguageTranslate("¼ÌĞøÅÄÕÕÑ­»·"));
                         }
                     }
 
@@ -1861,18 +2174,18 @@ namespace _3DLaserGlueInspection
                     if (bAbort) continue;
 
                     bRobotRun = false;
-                    //ç­‰å¾…æœºå™¨äººå¤„ç†å®Œæˆ
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç­‰å¾…æœºå™¨äººå¤„ç†å®Œæˆ"));
+                    //µÈ´ı»úÆ÷ÈË´¦ÀíÍê³É
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("µÈ´ı»úÆ÷ÈË´¦ÀíÍê³É"));
                     while (!taskRobot.IsCompleted)
                     {
                         Thread.Sleep(10);
                         if (stop) return;
                     }
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("æœºå™¨äººå¤„ç†å®Œæˆ"));
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("»úÆ÷ÈË´¦ÀíÍê³É"));
 
 
-                    //ç­‰å¾…å›¾åƒå¤„ç†å®Œæˆ
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç­‰å¾…å›¾åƒå¤„ç†å®Œæˆ"));
+                    //µÈ´ıÍ¼Ïñ´¦ÀíÍê³É
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("µÈ´ıÍ¼Ïñ´¦ÀíÍê³É"));
                     foreach (var item in tasks.Values)
                     {
                         while (!item.IsCompleted)
@@ -1884,24 +2197,24 @@ namespace _3DLaserGlueInspection
                     RefreshOFFEvent();
                     RefreshPointsEvent();
 
-                    ////ç­‰å¾…3dæ˜¾ç¤ºå®Œæ¯•
+                    ////µÈ´ı3dÏÔÊ¾Íê±Ï
                     //while (!taskShow3D.IsCompleted)
                     //{
                     //    Thread.Sleep(10);
                     //    if (stop) return;
                     //}
 
-                    //ç­‰å¾…3då¤„ç†å®Œæˆ
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç­‰å¾…3då›¾åƒå¤„ç†å®Œæˆ"));
+                    //µÈ´ı3d´¦ÀíÍê³É
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("µÈ´ı3dÍ¼Ïñ´¦ÀíÍê³É"));
 
                     //while (!taskPoint3D.IsCompleted)
                     //{
                     //    Thread.Sleep(10);
                     //    if (stop) return;
                     //}
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("å›¾åƒå¤„ç†å®Œæˆ"));
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("Í¼Ïñ´¦ÀíÍê³É"));
 
-                    //ä¿å­˜æ£€æµ‹ç»“æœæ–‡ä»¶
+                    //±£´æ¼ì²â½á¹ûÎÄ¼ş
                     if (true && simulation)
                     {
                         foreach (var camID in glueDataDict.Keys)
@@ -1931,7 +2244,7 @@ namespace _3DLaserGlueInspection
                     }
 
 
-                    // æš‚æ—¶å±è”½
+                    // ÔİÊ±ÆÁ±Î
                     if (totalResult)
                     {
                         mainModel.OKCountControl++;
@@ -1957,7 +2270,7 @@ namespace _3DLaserGlueInspection
 
                     });
 
-                    //æœºå™¨äººè½¨è¿¹
+                    //»úÆ÷ÈË¹ì¼£
                     {
                         //double[] X = new double[robotPoseValues.Count];
                         //double[] Y = new double[robotPoseValues.Count];
@@ -1975,7 +2288,7 @@ namespace _3DLaserGlueInspection
                         //form3DShow.ShowDialog();
                     }
 
-                    //å›¾åƒä¸‰ç»´æ•°æ®
+                    //Í¼ÏñÈıÎ¬Êı¾İ
                     {
                         //HTuple hTupleX = new HTuple();
                         //HTuple hTupleY = new HTuple();
@@ -2022,29 +2335,29 @@ namespace _3DLaserGlueInspection
                     }
 
                     if (!Write(DO.Running, false)) return;
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("å…³é—­Runningä¿¡å·"));
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("¹Ø±ÕRunningĞÅºÅ"));
 
-                    //å­˜å›¾
+                    //´æÍ¼
                     if (!simulation)
                     {
                         if ((totalResult && set.OtherSet.SaveOKImage) || (!totalResult && set.OtherSet.SaveNGImage))
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("å¼€å§‹å­˜å›¾"));
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("¿ªÊ¼´æÍ¼"));
                             try
                             {
                                 string OKNG = totalResult ? "OK" : "NG";
                                 string basePath = $"D:\\image\\{car.Name}\\{dateTime:yyyy-MM-dd HH_mm_ss} {OKNG} [{inVIN}]";
                                 Directory.CreateDirectory(basePath);
 
-                                foreach (var camValue in Images)//ç›¸æœº
+                                foreach (var camValue in Images)//Ïà»ú
                                 {
-                                    for (int i = 0; i < camValue.Value.Count; i++)//æ®µæ•°
+                                    for (int i = 0; i < camValue.Value.Count; i++)//¶ÎÊı
                                     {
                                         if (camValue.Value[i].Count > 0)
                                         {
                                             string imageDirectory = $"{basePath}\\{i}\\{camValue.Key}";
                                             Directory.CreateDirectory(imageDirectory);
-                                            foreach (var image in camValue.Value[i])//å›¾ç‰‡
+                                            foreach (var image in camValue.Value[i])//Í¼Æ¬
                                             {
                                                 //image.Value.WriteImage("png 1", 0, $"{imageDirectory}\\{image.Key:000000000000}.png");
                                                 Cv2.ImWrite($"{imageDirectory}\\{image.Key:000000000000}.png", image.Value);
@@ -2059,7 +2372,7 @@ namespace _3DLaserGlueInspection
                                 }
                                 using (FileStream stream = new FileStream($"{basePath}\\robotPoseValues.xml", FileMode.Create))
                                 {
-                                    //è½¬åŒ–
+                                    //×ª»¯
                                     List<double[]> pose = new List<double[]>();
                                     foreach (var poseKey in robotPoseValues)
                                     {
@@ -2074,9 +2387,9 @@ namespace _3DLaserGlueInspection
                             }
                             catch (Exception ex)
                             {
-                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("å­˜å›¾å¼‚å¸¸ï¼š") + ex.ToString(), LogType.ng);
+                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("´æÍ¼Òì³££º") + ex.ToString(), LogType.ng);
                             }
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("å­˜å›¾å®Œæˆ"));
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("´æÍ¼Íê³É"));
                         }
                     }
 
@@ -2088,32 +2401,32 @@ namespace _3DLaserGlueInspection
             }
             catch (Exception ex)
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("æµç¨‹å¼‚å¸¸ï¼š") + ex.ToString(), LogType.ng);
+                ShowMessage(GlobalVarAndFunc.LanguageTranslate("Á÷³ÌÒì³££º") + ex.ToString(), LogType.ng);
             }
             finally
             {
                 robot.Close();
                 io.Close();
-                //å…³é—­æ¿€å…‰å’Œç›¸æœº
+                //¹Ø±Õ¼¤¹âºÍÏà»ú
                 foreach (var cam in cams.Values)
                 {
                     if (cam.IsOpen)
                     {
                         if (cam.SetLine1Inverter(false))
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç›¸æœº") + "(" + cam.Name + ")" + GlobalVarAndFunc.LanguageTranslate("å…³é—­æ¿€å…‰æˆåŠŸ"));
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + "(" + cam.Name + ")" + GlobalVarAndFunc.LanguageTranslate("¹Ø±Õ¼¤¹â³É¹¦"));
                         }
                         else
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç›¸æœº") + "(" + cam.Name + ")" + GlobalVarAndFunc.LanguageTranslate("å…³é—­æ¿€å…‰å¤±è´¥ï¼š") + cam.ErrMsg, LogType.ng);
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + "(" + cam.Name + ")" + GlobalVarAndFunc.LanguageTranslate("¹Ø±Õ¼¤¹âÊ§°Ü£º") + cam.ErrMsg, LogType.ng);
                         }
                         if (cam.Close())
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç›¸æœº") + "(" + cam.Name + ")" + GlobalVarAndFunc.LanguageTranslate("å…³é—­æˆåŠŸ"));
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + "(" + cam.Name + ")" + GlobalVarAndFunc.LanguageTranslate("¹Ø±Õ³É¹¦"));
                         }
                         else
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("ç›¸æœº") + "(" + cam.Name + ")" + GlobalVarAndFunc.LanguageTranslate("å…³é—­å¤±è´¥ï¼š") + cam.ErrMsg, LogType.ng);
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + "(" + cam.Name + ")" + GlobalVarAndFunc.LanguageTranslate("¹Ø±ÕÊ§°Ü£º") + cam.ErrMsg, LogType.ng);
                         }
                     }
                 }
@@ -2121,16 +2434,16 @@ namespace _3DLaserGlueInspection
                 {
                     //BeginInvoke(new Action(() =>
                     //{
-                    //    buttonå¯åœ.Text = GlobalVarAndFunc.LanguageTranslate("å¯åŠ¨");
-                    //    buttonå¯åœ.Image = Resources._2;
+                    //    buttonÆôÍ£.Text = GlobalVarAndFunc.LanguageTranslate("Æô¶¯");
+                    //    buttonÆôÍ£.Image = Resources._2;
                     //}));
 
-                    mainModel.buttonRunContentControl = GlobalVarAndFunc.LanguageTranslate("å¯åŠ¨");
+                    mainModel.buttonRunContentControl = GlobalVarAndFunc.LanguageTranslate("Æô¶¯");
                     mainModel.buttonRunTagControl = "\uE658";
                     //Invoke(new Action(() =>
                     //{
-                    //    eç¯é¢œè‰² = ç¯é¢œè‰².çº¢;
-                    //    labelè½¯ä»¶.Refresh();
+                    //    eµÆÑÕÉ« = µÆÑÕÉ«.ºì;
+                    //    labelÈí¼ş.Refresh();
                     //}));
 
                     mainModel.softwareRunLabelColorControl = labelColorEnum["red"];
@@ -2140,12 +2453,1726 @@ namespace _3DLaserGlueInspection
             }
         }
 
+        public void MainRun()
+        {
+            try
+            {
+                //if (simulation)
+                //{
+                //    io = mmf;
+                //}
+                //else
+                //{
+                //    io = robot;
+                //}
+
+                //¼ÓÔØ²ÎÊı
+                #region ¼ÓÔØ²ÎÊı
+                if (Params.Load())
+                {
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú²ÎÊı¼ÓÔØ³É¹¦"));
+                }
+                else
+                {
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú²ÎÊı¼ÓÔØÊ§°Ü£º") + Params.ErrMsg, LogType.ng);
+                    return;
+                }
+                if (cars.Load())
+                {
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("²úÆ·ÅäÖÃ²ÎÊı¼ÓÔØ³É¹¦"));
+                    sets.Clear();
+                    bool bLoad = true;
+                    foreach (var item in cars.Cars.Values)
+                    {
+                        Setting set = new Setting(item.Name);
+                        if (set.Load())
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("²úÆ·²ÎÊı") + " " + item.Name + " " + GlobalVarAndFunc.LanguageTranslate("¼ÓÔØ³É¹¦"));
+                        }
+                        else
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("²úÆ·²ÎÊı") + " " + item.Name + " " + GlobalVarAndFunc.LanguageTranslate("¼ÓÔØÊ§°Ü£º") + set.ErrMsg, LogType.ng);
+                            bLoad = false;
+                        }
+                        sets.Add(item.Name, set);
+                    }
+                    if (!bLoad)
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("²úÆ·ÅäÖÃ²ÎÊı¼ÓÔØÊ§°Ü£º") + cars.ErrMsg, LogType.ng);
+                    return;
+                }
+                if (robot.Load())
+                {
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("»úÆ÷ÈË²ÎÊı¼ÓÔØ³É¹¦"));
+                }
+                else
+                {
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("»úÆ÷ÈË²ÎÊı¼ÓÔØÊ§°Ü£º") + robot.ErrMsg, LogType.ng);
+                    return;
+                }
+                //if (io.Load())
+                //{
+                //    ShowMessage(GlobalVarAndFunc.LanguageTranslate("IO²ÎÊı¼ÓÔØ³É¹¦"));
+                //}
+                //else
+                //{
+                //    ShowMessage(GlobalVarAndFunc.LanguageTranslate("IO²ÎÊı¼ÓÔØÊ§°Ü£º") + io.ErrMsg, LogType.ng);
+                //    return;
+                //}
+                #endregion
+
+                //Á¬½ÓÉè±¸
+                #region Á¬½ÓÉè±¸
+                if (!simulation)
+                {
+                    if (robot.Open())
+                    {
+                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("»úÆ÷ÈËÁ¬½Ó³É¹¦"));
+
+                        mainModel.robotCommunicationLabelColorControl = labelColorEnum["green"];
+                    }
+                    else
+                    {
+                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("»úÆ÷ÈËÁ¬½ÓÊ§°Ü£º") + robot.ErrMsg, LogType.ng);
+
+                        mainModel.robotCommunicationLabelColorControl = labelColorEnum["red"];
+
+                        return;
+                    }
+                }
+                //if (io.Open())
+                //{
+                //    ShowMessage(GlobalVarAndFunc.LanguageTranslate("IOÁ¬½Ó³É¹¦"));
+                //}
+                //else
+                //{
+                //    ShowMessage(GlobalVarAndFunc.LanguageTranslate("IOÁ¬½ÓÊ§°Ü£º") + io.ErrMsg, LogType.ng);
+                //    return;
+                //}
+                #endregion
+
+                mainModel.softwareRunLabelColorControl = labelColorEnum["green"];
+                //³õÊ¼»¯
+                resetSignal();
+
+                while (!stop)
+                {
+                    //if (!Write(DO.Running, false)) return;
+                    //if (!Write(DO.Triggering, false)) return;
+                    //Êä³ö×¼±¸ºÅºÃ
+                    //if (!Write(DO.Ready, true)) return;
 
 
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("Êä³öReadyĞÅºÅ"));
+
+                    //µÈ´ı¿ªÊ¼ĞÅºÅ
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("µÈ´ı¿ªÊ¼ĞÅºÅ"));
+                    while (true)
+                    {
+                        bool val;
+                        if (isStart)
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("ÊÕµ½¿ªÊ¼ĞÅºÅ"));
+                            break;
+                        }
+
+                        Thread.Sleep(60);
+                        if (stop) return;
+                    }
+                    //ÊÕµ½ĞÅºÅºó£¬¾ÍÁ¢¿Ì»Ö¸´×´Ì¬
+                    resetSignal();
+
+                    ushort ID;
+                    Car car;
+                    string inVIN;
+                    DateTime dateTime;
+                    Dictionary<string, CamParam> camParam;
+                    Setting set;
+
+
+                    bool rt = initRun(out ID, out car, out inVIN, out dateTime, out camParam, out set);
+
+                    //»Ø¸´¿ªÊ¼ONĞÅºÅ
+                    if (rt)
+                    {
+                        SocketSend(0);
+                    }
+                    else
+                    {
+                        SocketSend(-1);
+                        return;
+                    } 
+
+                    if (stop) return;
+                    bool bAbort = false;
+
+                    //Æô¶¯²É¼¯ÈÎÎñ
+                    while (true)
+                    {
+                        bool bEnd = false;
+                        //µÈ´¥·¢ĞÅºÅON
+                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("µÈ´ı´¥·¢ĞÅºÅON"));
+                        while (true)
+                        {
+                            if (stop)
+                            {
+                                return;
+                            }
+
+                            if (isPGON)
+                            {
+                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("ÊÕµ½´¥·¢ĞÅºÅON"));
+                                break;
+                            }
+                            if (isEND)
+                            {
+                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("ÊÕµ½ENDĞÅºÅ,ÍË³öÅÄÕÕÑ­»·"), LogType.warn);
+                                bEnd = true;
+                                break;
+                            }
+                            if (isAbort)
+                            {
+                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("ÊÕµ½AbortĞÅºÅ,Á÷³ÌÖØĞÂ¿ªÊ¼"), LogType.warn);
+                                bAbort = true;
+                                break;
+                            }
+                            Thread.Sleep(1);
+                        }
+                        if (bEnd) break;
+                        if (bAbort) break;
+                        //»Ø¸´´¥·¢ONĞÅºÅ
+                        //ÊÕµ½ĞÅºÅºó£¬¾ÍÁ¢¿Ì»Ö¸´×´Ì¬
+                        resetSignal();
+
+                        SocketSend(0);
+
+                        bool bTriggering = true;
+                        //int Æğµã = dataGridViewImageList.Rows.Count;
+                        int startPoint = mainModel.ImageResultRecords.Count;
+                        dataGridViewImageListRowsStartPoint.Add(startPoint);
+                        //ÅÄÕÕ
+                        foreach (var item in camParam)
+                        {
+                            if (item.Value.Enable)
+                            {
+                                var dictImageKey = new SynchronizedList<long>();
+                                ImageKeys[item.Key].Add(dictImageKey);
+                                var dictImage = new Dictionary<long, Mat>(new Dictionary<long, Mat>());
+                                Images[item.Key].Add(dictImage);
+
+                                var dictRobotPose = new Dictionary<long, PoseParameters>();
+                                Robot3DPose[item.Key].Add(dictRobotPose);
+
+                                var dictX = new Dictionary<long, List<double>>();
+                                Point3DXs[item.Key].Add(dictX);
+                                var dictY = new Dictionary<long, List<double>>();
+                                Point3DYs[item.Key].Add(dictY);
+                                var dictZ = new Dictionary<long, List<double>>();
+                                Point3DZs[item.Key].Add(dictZ);
+
+                                var dictV = new Dictionary<long, double>();
+                                glueVols[item.Key].Add(dictV);
+
+
+                                var dictXLD = new Dictionary<long, Mat>();
+                                outLineDict[item.Key].Add(dictXLD);
+                                var dictRegion = new Dictionary<long, Mat>();
+                                glueRegionDict[item.Key].Add(dictRegion);
+                                var dictRegionRectangle2 = new Dictionary<long, Mat>();
+                                glueSmallRectRegionDict[item.Key].Add(dictRegionRectangle2);
+                                var dictData = new Dictionary<long, Data>();
+                                glueDataDict[item.Key].Add(dictData);
+                                var dictResult = new Dictionary<long, BResult>();
+                                glueResultDict[item.Key].Add(dictResult);
+
+                                var cam = cams[item.Value.CamName];
+                                int segmentIndex = indexImageCut + 1;
+                                bool CamEnabled = item.Key == "Cam1" ? set.CutSets[segmentIndex].Cam1Enabled :
+                                    item.Key == "Cam2" ? set.CutSets[segmentIndex].Cam2Enabled :
+                                    item.Key == "Cam3" ? set.CutSets[segmentIndex].Cam3Enabled :
+                                    set.CutSets[segmentIndex].Cam4Enabled;
+                                displaySize[item.Key].Add(new System.Windows.Size(set.CutSets[segmentIndex].ShowWidth, set.CutSets[segmentIndex].ShowHeight));
+                                if (CamEnabled)
+                                {
+                                    if (!simulation)
+                                    {
+                                        bool flag = cam.KeepShot(new Action<Mat>(image =>
+                                        {
+                                            long key = watch.ElapsedTicks;
+                                            {
+                                                if (dictImageKey.Count < set.CutSets[segmentIndex].ImageNum)
+                                                {
+                                                    dictImage.Add(key, image);
+                                                    dictImageKey.Add(key);
+                                                    var dictImageKeyCount = dictImageKey.Count;
+
+                                                    double fps = dictImageKey.Count * 1000.0 * 1000.0 / key;
+                                                    //Console.WriteLine("fps:{0}", fps);
+
+                                                    Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                                                    {
+                                                        lock (olockDataGridViewImageList)
+                                                        {
+                                                            if (mainModel.ImageResultRecords.Count - startPoint < dictImageKeyCount)
+                                                            {
+                                                                do
+                                                                {
+                                                                    ImageResultRecord imageResultRecord = new ImageResultRecord();
+
+                                                                    switch (item.Key)
+                                                                    {
+                                                                        case "Cam1":
+                                                                            imageResultRecord.Cam1 = $"{segmentIndex}:{dictImageKeyCount - 1}";
+                                                                            break;
+                                                                        case "Cam2":
+                                                                            imageResultRecord.Cam2 = $"{segmentIndex}:{dictImageKeyCount - 1}";
+                                                                            break;
+                                                                        case "Cam3":
+                                                                            imageResultRecord.Cam3 = $"{segmentIndex}:{dictImageKeyCount - 1}";
+                                                                            break;
+                                                                        case "Cam4":
+                                                                            imageResultRecord.Cam4 = $"{segmentIndex}:{dictImageKeyCount - 1}";
+                                                                            break;
+
+                                                                        default:
+                                                                            break;
+                                                                    }
+                                                                    mainModel.ImageResultRecords.Add(imageResultRecord);
+                                                                    //Application.Current.Dispatcher.Invoke(() =>
+                                                                    //{
+                                                                    //    mainModel.ImageResultRecords.Add(imageResultRecord);
+                                                                    //});
+                                                                }
+                                                                while (mainModel.ImageResultRecords.Count - startPoint < dictImageKeyCount);
+                                                            }
+                                                            else
+                                                            {
+                                                                switch (item.Key)
+                                                                {
+                                                                    case "Cam1":
+                                                                        //Application.Current.Dispatcher.Invoke(() =>
+                                                                        //{
+                                                                        mainModel.ImageResultRecords[startPoint + dictImageKeyCount - 1].Cam1 = $"{segmentIndex}:{dictImageKeyCount - 1}";
+                                                                        //});
+                                                                        break;
+                                                                    case "Cam2":
+                                                                        //Application.Current.Dispatcher.Invoke(() =>
+                                                                        //{
+                                                                        mainModel.ImageResultRecords[startPoint + dictImageKeyCount - 1].Cam2 = $"{segmentIndex}:{dictImageKeyCount - 1}";
+                                                                        //});
+                                                                        break;
+                                                                    case "Cam3":
+                                                                        //Application.Current.Dispatcher.Invoke(() =>
+                                                                        //{
+                                                                        mainModel.ImageResultRecords[startPoint + dictImageKeyCount - 1].Cam3 = $"{segmentIndex}:{dictImageKeyCount - 1}";
+                                                                        //});
+                                                                        break;
+                                                                    case "Cam4":
+                                                                        //Application.Current.Dispatcher.Invoke(() =>
+                                                                        //{
+                                                                        mainModel.ImageResultRecords[startPoint + dictImageKeyCount - 1].Cam4 = $"{segmentIndex}:{dictImageKeyCount - 1}";
+                                                                        //});
+                                                                        break;
+
+                                                                    default:
+                                                                        break;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                               ));
+                                                }
+                                            }
+                                        }));
+                                        if (flag)
+                                        {
+                                            ShowMessage(item.Key);
+                                            //Ïà»ú1ÒªÈí´¥·¢Æô¶¯
+                                            if (item.Key == "Cam1")
+                                            {
+                                                bool rt2 = cam.TriggerSoftwareExecute();
+                                                if (rt2)
+                                                {
+                                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("Èí´¥·¢³É¹¦"));
+                                                }
+                                                else
+                                                {
+                                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("Èí´¥·¢Ê§°Ü"));
+                                                }
+
+                                            }
+                                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("¿ªÊ¼Á¬Ğø²É¼¯³É¹¦"));
+                                        }
+                                        else
+                                        {
+                                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("¿ªÊ¼Á¬Ğø²É¼¯Ê§°Ü£º") + cams[item.Value.CamName].ErrMsg, LogType.ng);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        string path = $"{simulationPath}\\{segmentIndex}\\{item.Key}";
+                                        if (Directory.Exists(path))
+                                        {
+                                            Task.Run(() =>
+                                            {
+                                                var filePaths = Directory.GetFiles(path, "*.png").OrderBy(n => n).ToArray();
+                                                for (int i = 0; i < filePaths.Length; i++)
+                                                {
+                                                    if (long.TryParse(System.IO.Path.GetFileNameWithoutExtension(filePaths[i]), out long key))
+                                                    {
+                                                        if (dictImageKey.Count < set.CutSets[segmentIndex].ImageNum)
+                                                        {
+                                                            try
+                                                            {
+                                                                Mat image = new Mat(filePaths[i], ImreadModes.Unchanged);
+
+                                                                dictImage.Add(key, image);
+                                                                dictImageKey.Add(key);
+                                                                var dictImageKeyCount = dictImageKey.Count;
+
+                                                                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                                                                {
+
+                                                                    lock (olockDataGridViewImageList)
+                                                                    {
+                                                                        if (mainModel.ImageResultRecords.Count - startPoint < dictImageKeyCount)
+                                                                        {
+                                                                            do
+                                                                            {
+                                                                                ImageResultRecord imageResultRecord = new ImageResultRecord();
+
+                                                                                switch (item.Key)
+                                                                                {
+                                                                                    case "Cam1":
+                                                                                        imageResultRecord.Cam1 = $"{segmentIndex}:{dictImageKeyCount - 1}";
+                                                                                        break;
+                                                                                    case "Cam2":
+                                                                                        imageResultRecord.Cam2 = $"{segmentIndex}:{dictImageKeyCount - 1}";
+                                                                                        break;
+                                                                                    case "Cam3":
+                                                                                        imageResultRecord.Cam3 = $"{segmentIndex}:{dictImageKeyCount - 1}";
+                                                                                        break;
+                                                                                    case "Cam4":
+                                                                                        imageResultRecord.Cam4 = $"{segmentIndex}:{dictImageKeyCount - 1}";
+                                                                                        break;
+
+                                                                                    default:
+                                                                                        break;
+                                                                                }
+                                                                                mainModel.ImageResultRecords.Add(imageResultRecord);
+                                                                                //Application.Current.Dispatcher.Invoke(() =>
+                                                                                //{
+                                                                                //    mainModel.ImageResultRecords.Add(imageResultRecord);
+                                                                                //});
+                                                                            }
+                                                                            while (mainModel.ImageResultRecords.Count - startPoint < dictImageKeyCount);
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            switch (item.Key)
+                                                                            {
+                                                                                case "Cam1":
+                                                                                    //Application.Current.Dispatcher.Invoke(() =>
+                                                                                    //{
+                                                                                    mainModel.ImageResultRecords[startPoint + dictImageKeyCount - 1].Cam1 = $"{segmentIndex}:{dictImageKeyCount - 1}";
+                                                                                    //});
+                                                                                    break;
+                                                                                case "Cam2":
+                                                                                    //Application.Current.Dispatcher.Invoke(() =>
+                                                                                    //{
+                                                                                    mainModel.ImageResultRecords[startPoint + dictImageKeyCount - 1].Cam2 = $"{segmentIndex}:{dictImageKeyCount - 1}";
+                                                                                    //});
+                                                                                    break;
+                                                                                case "Cam3":
+                                                                                    //Application.Current.Dispatcher.Invoke(() =>
+                                                                                    //{
+                                                                                    mainModel.ImageResultRecords[startPoint + dictImageKeyCount - 1].Cam3 = $"{segmentIndex}:{dictImageKeyCount - 1}";
+                                                                                    //});
+                                                                                    break;
+                                                                                case "Cam4":
+                                                                                    //Application.Current.Dispatcher.Invoke(() =>
+                                                                                    //{
+                                                                                    mainModel.ImageResultRecords[startPoint + dictImageKeyCount - 1].Cam4 = $"{segmentIndex}:{dictImageKeyCount - 1}";
+                                                                                    //});
+                                                                                    break;
+
+                                                                                default:
+                                                                                    break;
+                                                                            }
+                                                                        }
+                                                                    }
+
+                                                                }));
+                                                            }
+                                                            catch (Exception ex)
+                                                            {
+                                                            }
+                                                        }
+                                                    }
+                                                    if (!bTriggering) { break; }
+                                                    Thread.Sleep(1);
+                                                }
+
+                                                ShowMessage(item.Key + GlobalVarAndFunc.LanguageTranslate("·ÂÕæÍ¼Æ¬±éÀúÍê"));
+
+                                            });
+
+
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        indexImageCut++;
+
+                        ////Êä³öÅÄÕÕÖĞĞÅºÅ
+                        //if (!Write(DO.Triggering, true)) return;
+
+                        //µÈ´¥·¢ĞÅºÅOFF
+                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("µÈ´ı´¥·¢ĞÅºÅOFF"));
+                        while (true)
+                        {
+                            if (stop) return;
+
+                            if (isPGONEnd == true)
+                            {
+                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("ÊÕµ½´¥·¢ĞÅºÅOFF"));
+                                break;
+                            }
+
+                            if (isEND == true)
+                            {
+                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("ÊÕµ½ENDĞÅºÅ,ÍË³öÅÄÕÕÑ­»·"), LogType.warn);
+                                bEnd = true;
+                                break;
+                            }
+                            if (isAbort == true)
+                            {
+                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("ÊÕµ½AbortĞÅºÅ,Á÷³ÌÖØĞÂ¿ªÊ¼"), LogType.warn);
+                                bAbort = true;
+                                break;
+                            }
+                            Thread.Sleep(1);
+                        }
+                        //ÊÕµ½ĞÅºÅºó£¬¾ÍÁ¢¿Ì»Ö¸´×´Ì¬
+                        resetSignal();
+
+                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("µÈ´ıÊı¾İ×ª»»Íê³É"));
+
+                        if (!simulation)
+                        {
+                            //Í£Ö¹ÅÄÕÕ
+                            foreach (var item in camParam)
+                            {
+                                if (item.Value.Enable)
+                                {
+                                    if (!cams[item.Value.CamName].IsGrabbing || cams[item.Value.CamName].StopGrabbing())
+                                    {
+                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("Í£Ö¹²É¼¯³É¹¦"));
+                                    }
+                                    else
+                                    {
+                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("Í£Ö¹²É¼¯Ê§°Ü£º") + cams[item.Value.CamName].ErrMsg, LogType.ng);
+                                    }
+                                }
+                            }
+
+                        }
+                        bTriggering = false;
+
+                        ////¹Ø±ÕÅÄÕÕÖĞĞÅºÅ
+                        //if (!Write(DO.Triggering, false)) return;
+
+                        if (stop) return;
+                        if (bEnd) break;
+                        if (bAbort) break;
+
+                        //»Ø¸´´¥·¢OFFĞÅºÅ
+
+                        if (totalResult)
+                        {
+                            SocketSend(0);
+                        }
+                        else
+                        {
+                            SocketSend(-1);
+                        }
+
+                        //ÅĞ¶Ï¶ÎÊıÊÇ·ñ×ã¹»
+                        if (indexImageCut + 1 >= set.CutSets.Count)
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("ÅÄÕÕ¶ÎÊı×ã¹»") + $"({indexImageCut + 1}/{set.CutSets.Count})£¬" + GlobalVarAndFunc.LanguageTranslate("ÍË³öÅÄÕÕÑ­»·"));
+                            break;
+                        }
+                        else
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("ÅÄÕÕ¶ÎÊı²»×ã") + $"({indexImageCut + 1}/{set.CutSets.Count})£¬" + GlobalVarAndFunc.LanguageTranslate("¼ÌĞøÅÄÕÕÑ­»·"));
+                        }
+                    }
+
+
+                    if (stop) return;
+                    if (bAbort) continue;
+                    bRobotRun = false;
+
+                    //µÈ´ı»úÆ÷ÈË´¦ÀíÍê³É
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("µÈ´ı»úÆ÷ÈË´¦ÀíÍê³É"));
+                    while (!taskRobot.IsCompleted)
+                    {
+                        Thread.Sleep(10);
+                        if (stop) return;
+                    }
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("»úÆ÷ÈË´¦ÀíÍê³É"));
+
+
+                    //µÈ´ıÍ¼Ïñ´¦ÀíÍê³É
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("µÈ´ıÍ¼Ïñ´¦ÀíÍê³É"));
+                    foreach (var item in tasks.Values)
+                    {
+                        while (!item.IsCompleted)
+                        {
+                            Thread.Sleep(10);
+                            if (stop) return;
+                        }
+                    }
+                    RefreshOFFEvent();
+                    RefreshPointsEvent();
+
+                    ////µÈ´ı3dÏÔÊ¾Íê±Ï
+                    //while (!taskShow3D.IsCompleted)
+                    //{
+                    //    Thread.Sleep(10);
+                    //    if (stop) return;
+                    //}
+
+                    //µÈ´ı3d´¦ÀíÍê³É
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("µÈ´ı3dÍ¼Ïñ´¦ÀíÍê³É"));
+
+                    //while (!taskPoint3D.IsCompleted)
+                    //{
+                    //    Thread.Sleep(10);
+                    //    if (stop) return;
+                    //}
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("Í¼Ïñ´¦ÀíÍê³É"));
+
+                    //±£´æ¼ì²â½á¹ûÎÄ¼ş
+                    if (true && simulation)
+                    {
+                        foreach (var camID in glueDataDict.Keys)
+                        {
+                            var camResultDir = glueDataDict[camID];
+                            for (int partID = 0; partID < camResultDir.Count; partID++)
+                            {
+                                var partResultDict = camResultDir[partID];
+
+                                string path = simulationPath + $"\\{camID}_{partID}_result.csv";
+                                if (!File.Exists(path))
+                                    File.Create(path).Close();
+
+                                using (StreamWriter sw = new StreamWriter(path, true, Encoding.UTF8))
+                                {
+
+                                    foreach (var imageID in partResultDict.Keys)
+                                    {
+                                        var imageResult = partResultDict[imageID];
+                                        sw.Write($"{imageResult.glueWidth},");
+                                        sw.Write($"{imageResult.glueHeight},");
+                                        sw.Write($"{imageResult.glueArea}\r\n");
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+
+                    // ÔİÊ±ÆÁ±Î
+                    if (totalResult)
+                    {
+                        mainModel.OKCountControl++;
+                    }
+                    else
+                    {
+                        mainModel.NGCountControl++;
+                    }
+                    mainModel.totalCountControl = mainModel.OKCountControl + mainModel.NGCountControl;
+
+                    mainModel.passRateControl = ((double)mainModel.OKCountControl * 100 / mainModel.totalCountControl).ToString("0.00") + "%";
+
+                    mainModel.resultControl = totalResult ? "OK" : "NG";
+                    mainModel.resultColorControl = totalResult ? "#FF06BD00" : "Red";
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        CarResultRecord carResultRecord = new CarResultRecord();
+                        carResultRecord.CarDetTime = dateTime.ToString("yyyy-MM-dd HH:mm:ss");
+                        carResultRecord.CarID = ID.ToString();
+                        carResultRecord.CarResult = totalResult ? "OK" : "NG";
+
+                        mainModel.CarResultRecords.Insert(0, carResultRecord);
+
+                    });
+
+                    //´æÍ¼
+                    if (!simulation)
+                    {
+                        if ((totalResult && set.OtherSet.SaveOKImage) || (!totalResult && set.OtherSet.SaveNGImage))
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("¿ªÊ¼´æÍ¼"));
+                            try
+                            {
+                                string OKNG = totalResult ? "OK" : "NG";
+                                string basePath = $"D:\\image\\{car.Name}\\{dateTime:yyyy-MM-dd HH_mm_ss} {OKNG} [{inVIN}]";
+                                Directory.CreateDirectory(basePath);
+
+                                foreach (var camValue in Images)//Ïà»ú
+                                {
+                                    for (int i = 0; i < camValue.Value.Count; i++)//¶ÎÊı
+                                    {
+                                        if (camValue.Value[i].Count > 0)
+                                        {
+                                            string imageDirectory = $"{basePath}\\{i}\\{camValue.Key}";
+                                            Directory.CreateDirectory(imageDirectory);
+                                            foreach (var image in camValue.Value[i])//Í¼Æ¬
+                                            {
+                                                //image.Value.WriteImage("png 1", 0, $"{imageDirectory}\\{image.Key:000000000000}.png");
+                                                Cv2.ImWrite($"{imageDirectory}\\{image.Key:000000000000}.png", image.Value);
+
+                                            }
+                                        }
+                                    }
+                                }
+                                using (FileStream stream = new FileStream($"{basePath}\\robotPoseKeys.xml", FileMode.Create))
+                                {
+                                    new XmlSerializer(robotPoseKeys.GetType()).Serialize(stream, robotPoseKeys);
+                                }
+                                using (FileStream stream = new FileStream($"{basePath}\\robotPoseValues.xml", FileMode.Create))
+                                {
+                                    //×ª»¯
+                                    List<double[]> pose = new List<double[]>();
+                                    foreach (var poseKey in robotPoseValues)
+                                    {
+                                        pose.Add(new double[] { poseKey.x, poseKey.y, poseKey.z, poseKey.rx, poseKey.ry, poseKey.rz, poseKey.PoseType });
+                                    }
+                                    new XmlSerializer(pose.GetType()).Serialize(stream, pose);
+                                }
+                                using (FileStream stream = new FileStream($"{basePath}\\robotPoseValues", FileMode.Create))
+                                {
+                                    new BinaryFormatter().Serialize(stream, robotPoseValues);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("´æÍ¼Òì³££º") + ex.ToString(), LogType.ng);
+                            }
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("´æÍ¼Íê³É"));
+                        }
+                    }
+
+                    //µÈ´ı¿ªÊ¼ĞÅºÅOFF
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("µÈ´ı¿ªÊ¼ĞÅºÅOFF"));
+                    while (true)
+                    {
+                        bool val;
+                        if (isStartEnd)
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("ÊÕµ½¿ªÊ¼ĞÅºÅOFF"));
+                            break;
+                        }
+
+                        Thread.Sleep(60);
+                        if (stop) return;
+                    }
+                    //ÊÕµ½ĞÅºÅºó£¬¾ÍÁ¢¿Ì»Ö¸´×´Ì¬
+                    resetSignal();
+
+                    SocketSend(0);
+
+                }
+            }
+            catch (Exception ex)
+            {
+                ShowMessage(GlobalVarAndFunc.LanguageTranslate("Á÷³ÌÒì³££º") + ex.ToString(), LogType.ng);
+            }
+            finally
+            {
+                robot.Close();
+                //io.Close();
+                //¹Ø±Õ¼¤¹âºÍÏà»ú
+                foreach (var cam in cams.Values)
+                {
+                    if (cam.IsOpen)
+                    {
+                        if (cam.SetLine1Inverter(false))
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + "(" + cam.Name + ")" + GlobalVarAndFunc.LanguageTranslate("¹Ø±Õ¼¤¹â³É¹¦"));
+                        }
+                        else
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + "(" + cam.Name + ")" + GlobalVarAndFunc.LanguageTranslate("¹Ø±Õ¼¤¹âÊ§°Ü£º") + cam.ErrMsg, LogType.ng);
+                        }
+                        if (cam.Close())
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + "(" + cam.Name + ")" + GlobalVarAndFunc.LanguageTranslate("¹Ø±Õ³É¹¦"));
+                        }
+                        else
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + "(" + cam.Name + ")" + GlobalVarAndFunc.LanguageTranslate("¹Ø±ÕÊ§°Ü£º") + cam.ErrMsg, LogType.ng);
+                        }
+                    }
+                }
+                try
+                {
+                    //BeginInvoke(new Action(() =>
+                    //{
+                    //    buttonÆôÍ£.Text = GlobalVarAndFunc.LanguageTranslate("Æô¶¯");
+                    //    buttonÆôÍ£.Image = Resources._2;
+                    //}));
+
+                    mainModel.buttonRunContentControl = GlobalVarAndFunc.LanguageTranslate("Æô¶¯");
+                    mainModel.buttonRunTagControl = "\uE658";
+                    //Invoke(new Action(() =>
+                    //{
+                    //    eµÆÑÕÉ« = µÆÑÕÉ«.ºì;
+                    //    labelÈí¼ş.Refresh();
+                    //}));
+
+                    mainModel.softwareRunLabelColorControl = labelColorEnum["red"];
+
+                }
+                catch { }
+            }
+        }
+
+        private bool initRun(out ushort ID, out Car car, out string inVIN, out DateTime dateTime, out Dictionary<string, CamParam> camParam, out Setting set)
+        {
+            set = new Setting("1");
+            inVIN = "";
+            camParam = new Dictionary<string, CamParam>();
+            dateTime = DateTime.Now;
+
+            //Çå³ıÊı¾İ
+            clearData();
+
+            //»ñÈ¡²úÆ·ºÅ
+            ID = 0;
+            car = new Car();
+            ID = (ushort)CarNumber;
+            bool isExist = false;
+            foreach (var item in cars.Cars.Values)
+            {
+                if (item.IDs.Contains(ID))
+                {
+                    car = item;
+                    isExist = true;
+                    break;
+                }
+            }
+            if (!isExist)
+            {
+                ShowMessage(GlobalVarAndFunc.LanguageTranslate("²»´æÔÚ³µĞÍ") + " " + ID, LogType.ng);
+                return false; 
+            }
+
+
+            //»ñÈ¡³µ¼ÜºÅVIN
+            inVIN = "";
+            dateTime = DateTime.Now;
+            mainModel.productIDControl = ID.ToString();
+            mainModel.nameControl = car.Name;
+            mainModel.VINControl = inVIN;
+            mainModel.timeControl = dateTime.ToString("G");
+            mainModel.resultControl = "--";
+            mainModel.resultColorControl = "White";
+
+
+            //¼ì²â²ÎÊıÊÇ·ñ´æÔÚ
+            string camParamName = car.CamParamName;
+            if (!Params.Param.TryGetValue(camParamName, out camParam))
+            {
+                ShowMessage(GlobalVarAndFunc.LanguageTranslate("²»´æÔÚÏà»ú²ÎÊı£º") + camParamName, LogType.ng);
+                return false;
+            }
+            if (!sets.TryGetValue(car.Name, out set))
+            {
+                ShowMessage(GlobalVarAndFunc.LanguageTranslate("²»´æÔÚ²úÆ·²ÎÊı£º") + car.Name, LogType.ng);
+                return false;
+            }
+            if (stop) return false;
+
+            Setting set_copy = set;
+            //ÏÔÊ¾NumericalModelDiagram
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                DispImageHWindowNumericalModelDiagramEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(set_copy.image));
+            });
+
+
+
+            List<double>[] rowss = new List<double>[set.XLDDatas.Count];
+            List<double>[] colss = new List<double>[set.XLDDatas.Count];
+            List<double>[] angless = new List<double>[set.XLDDatas.Count];
+            for (int i = 0; i < set.XLDDatas.Count; i++)
+            {
+                if (set.XLDDatas[i].ControlRows.Length < 2)
+                {
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("ÏÔÊ¾µÄ¹ì¼£Ã»ÓĞÉèÖÃºÃ¡£"));
+                    return false; 
+
+                }
+                if (set.CutSets[i].EndImageIndex > set.CutSets[i].StartImageIndex)
+                {
+                    int setCount = set.CutSets[i].EndImageIndex - set.CutSets[i].StartImageIndex + 1;
+                    if (setCount < 1) setCount = 1;
+                    Vision.XLDDataDivide(set.XLDDatas[i], setCount, out rowss[i], out colss[i], out angless[i]);
+
+                    for (int j = 0; j < setCount; j++)
+                    {
+                        hWindowNumericalModelDiagramDispCross(rowss[i][j], colss[i][j], angless[i][j], set.CutSets[i].Size, Colors.Blue);
+                    }
+                }
+                else
+                {
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("ÏÔÊ¾µÄÆğµãÍ¼ÏñĞòºÅºÍ½áÊøÍ¼ÏñĞòºÅÃ»ÓĞÉèÖÃºÃ¡£"));
+
+                    return false;
+                }
+            }
+            if (stop) return false;
+
+            //Á¬Ïà»ú
+            foreach (var item in camParam)
+            {
+                item.Value.Key = item.Key;
+                if (item.Value.Enable)
+                {
+                    if (!cams.TryGetValue(item.Value.CamName, out Cam cam))
+                    {
+                        cam = new Cam();
+
+                        cams.Add(item.Value.CamName, cam);
+                    }
+                    if (!simulation)
+                    {
+                        if (!cam.IsOpen)
+                        {
+                            if (cam.OpenBySN(item.Value.CamName))
+                            {
+                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("´ò¿ª³É¹¦"));
+                            }
+                            else
+                            {
+                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("´ò¿ªÊ§°Ü£º") + cam.ErrMsg, LogType.ng);
+                                //Invoke(new Action(() =>
+                                //{
+                                //    eµÆÑÕÉ« = µÆÑÕÉ«.ºì;
+                                //    labelÏà»ú.Refresh();
+                                //}));
+                                mainModel.camCommunicationLabelColorControl = labelColorEnum["red"];
+
+                                return false;
+                            }
+                        }
+                        if (cam.InitSet(item.Value, false))
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("³õÊ¼»¯ÉèÖÃ³É¹¦"));
+                        }
+                        else
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("³õÊ¼»¯ÉèÖÃÊ§°Ü£º") + cam.ErrMsg, LogType.ng);
+                            //return;
+                        }
+                    }
+                }
+                else
+                {
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + " " + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("Î´ÆôÓÃ"));
+                }
+            }
+            ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»úÁ¬½ÓÍê³É"));
+            mainModel.camCommunicationLabelColorControl = labelColorEnum["green"];
+
+
+            //³õÊ¼»¯Êı¾İ
+            foreach (var item in camParam)
+            {
+                if (item.Value.Enable)
+                {
+                    if (Params.CamPar.ContainsKey(camParamName) && Params.CamPar[camParamName].ContainsKey(item.Key))
+                    {
+                        if (Params.LightInCam.ContainsKey(camParamName) && Params.LightInCam[camParamName].ContainsKey(item.Key))
+                        {
+                            if (Params.ToolInCam.ContainsKey(camParamName) && Params.ToolInCam[camParamName].ContainsKey(item.Key))
+                            {
+                                if (Params.LightToCam.ContainsKey(camParamName) && Params.LightToCam[camParamName].ContainsKey(item.Key))
+                                {
+                                    if (Params.CamToTool.ContainsKey(camParamName) && Params.CamToTool[camParamName].ContainsKey(item.Key))
+                                    {
+                                        if (Params.Cam1InCam.ContainsKey(camParamName) && Params.Cam1InCam[camParamName].ContainsKey(item.Key))
+                                        {
+                                            if (Params.CamToCam1.ContainsKey(camParamName) && Params.CamToCam1[camParamName].ContainsKey(item.Key))
+                                            {
+                                                var dictImageKey = new SynchronizedList<SynchronizedList<long>>();
+                                                ImageKeys.Add(item.Key, dictImageKey);
+                                                var dictImage = new SynchronizedList<Dictionary<long, Mat>>();
+                                                Images.Add(item.Key, dictImage);
+
+                                                var dictRobotPose = new SynchronizedList<Dictionary<long, PoseParameters>>();
+                                                Robot3DPose.Add(item.Key, dictRobotPose);
+
+                                                var dictX = new SynchronizedList<Dictionary<long, List<double>>>();
+                                                Point3DXs.Add(item.Key, dictX);
+                                                var dictY = new SynchronizedList<Dictionary<long, List<double>>>();
+                                                Point3DYs.Add(item.Key, dictY);
+                                                var dictZ = new SynchronizedList<Dictionary<long, List<double>>>();
+                                                Point3DZs.Add(item.Key, dictZ);
+                                                var dictXLD = new SynchronizedList<Dictionary<long, Mat>>();
+
+                                                var dictV = new SynchronizedList<Dictionary<long, double>>();
+                                                glueVols.Add(item.Key, dictV);
+
+                                                outLineDict.Add(item.Key, dictXLD);
+                                                var dictRegion = new SynchronizedList<Dictionary<long, Mat>>();
+                                                glueRegionDict.Add(item.Key, dictRegion);
+                                                var dictRegionRectangle2 = new SynchronizedList<Dictionary<long, Mat>>();
+                                                glueSmallRectRegionDict.Add(item.Key, dictRegionRectangle2);
+                                                var dictData = new SynchronizedList<Dictionary<long, Data>>();
+                                                glueDataDict.Add(item.Key, dictData);
+                                                var dictResult = new SynchronizedList<Dictionary<long, BResult>>();
+                                                glueResultDict.Add(item.Key, dictResult);
+
+                                                indexImageCutProcessDict.Add(item.Key, 0);
+
+                                                displaySize.Add(item.Key, new SynchronizedList<System.Windows.Size>());
+                                            }
+                                            else
+                                            {
+                                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("¶àÏà»ú×ª»»(CamToCam1)²»´æÔÚ"), LogType.ng);
+                                                return false;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("¶àÏà»ú×ª»»(Cam1InCam)²»´æÔÚ"), LogType.ng);
+                                            return false;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("×ø±ê×ª»»(CamToTool)²»´æÔÚ"), LogType.ng);
+                                        return false;
+                                    } 
+                                }
+                                else
+                                {
+                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("×ø±ê×ª»»(LightToCam)²»´æÔÚ"), LogType.ng);
+                                    return false;
+                                }
+                            }
+                            else
+                            {
+                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("Íâ²Î(ToolInCam.dat)²»´æÔÚ"), LogType.ng);
+                                return false;
+                            }
+                        }
+                        else
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("Íâ²Î(LightInCam.dat)²»´æÔÚ"), LogType.ng);
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("Ïà»ú") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("ÄÚ²Î(camparam.cal)²»´æÔÚ"), LogType.ng);
+                        return false;
+                    }
+                }
+            }
+            ShowMessage(GlobalVarAndFunc.LanguageTranslate("³õÊ¼»¯Êı¾İ³É¹¦"));
+
+            indexImageCut = -1;//Ö¸Ê¾ÕıÔÚÍ¼Ïñ²É¼¯¶ÎÊı
+            totalResult = true;
+            if (stop) return false;
+
+            // 3D Ã¿¸ô100ºÁÃëÔÙË¢ĞÂÒ»ÏÂ½á¹û
+            RefreshOnEvent(500, true);
+            bRobotRun = true;
+            watch.Restart();
+            //Æô¶¯»úÆ÷ÈË×ËÌ¬»ñÈ¡(°²´¨20ms)
+            taskRobot = Task.Run(() =>
+            {
+                // ÔİÊ±ÆÁ±Î
+                RefreshOnEvent(500, true);
+                //form3DShow.RefreshOn(10, true);
+                double colorUpperLimit = -0.5;
+                double colorLowerLimit = 0.5;
+                double rangeSize = colorLowerLimit - colorUpperLimit;
+                if (simulation)
+                {
+                    SynchronizedList<long> robotPoseKeysSimulation = new SynchronizedList<long>();
+                    SynchronizedList<Wpf_Replace_halcon.PoseParameters> robotPoseValuesSimulation = new SynchronizedList<Wpf_Replace_halcon.PoseParameters>();
+                    string basePath = simulationPath;
+                    try
+                    {
+                        string robotPoseKeysPath = $"{basePath}\\robotPoseKeys.xml";
+                        if (File.Exists(robotPoseKeysPath))
+                        {
+                            XmlSerializer xml = new XmlSerializer(typeof(SynchronizedList<long>));
+                            using (FileStream stream = new FileStream(robotPoseKeysPath, FileMode.OpenOrCreate))
+                            {
+                                var paramList = (SynchronizedList<long>)xml.Deserialize(stream);
+                                if (paramList != null)
+                                {
+                                    robotPoseKeysSimulation = paramList;
+                                }
+                                else
+                                {
+                                    ShowMessage(robotPoseKeysPath + GlobalVarAndFunc.LanguageTranslate("ÎÄ¼ş¸ñÊ½Òì³£"));
+                                    return;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            ShowMessage(robotPoseKeysPath + GlobalVarAndFunc.LanguageTranslate("ÎÄ¼ş²»´æÔÚ"));
+                            return;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ShowMessage(ex.ToString());
+                        return;
+                    }
+                    try
+                    {
+                        string robotPoseValuesPath = $"{basePath}\\robotPoseValues.xml";
+                        if (File.Exists(robotPoseValuesPath))
+                        {
+                            XmlSerializer xml = new XmlSerializer(typeof(SynchronizedList<double[]>));
+                            using (FileStream stream = new FileStream(robotPoseValuesPath, FileMode.OpenOrCreate))
+                            {
+                                var paramList = (SynchronizedList<double[]>)xml.Deserialize(stream);
+                                if (paramList != null)
+                                {
+                                    robotPoseValuesSimulation.Clear();
+                                    //robotPoseValues = paramList;
+                                    foreach (var pose in paramList)
+                                    {
+                                        PoseParameters posePara = new PoseParameters();
+                                        posePara.x = pose[0];
+                                        posePara.y = pose[1];
+                                        posePara.z = pose[2];
+                                        posePara.rx = pose[3];
+                                        posePara.ry = pose[4];
+                                        posePara.rz = pose[5];
+                                        posePara.PoseType = (int)pose[6];
+                                        robotPoseValuesSimulation.Add(posePara);
+                                    }
+                                }
+                                else
+                                {
+                                    System.Windows.Forms.MessageBox.Show(robotPoseValuesPath + GlobalVarAndFunc.LanguageTranslate("ÎÄ¼ş¸ñÊ½Òì³£"));
+                                    return;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            ShowMessage(robotPoseValuesPath + GlobalVarAndFunc.LanguageTranslate("ÎÄ¼ş²»´æÔÚ"));
+                            return;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ShowMessage(ex.ToString());
+                        return;
+                    }
+
+                    for (int i = 0; i < robotPoseKeysSimulation.Count; i++)
+                    {
+                        if (!bRobotRun)
+                        {
+                            break;
+                        }
+                        var key = robotPoseKeysSimulation[i];
+                        var hPose = robotPoseValuesSimulation[i];
+                        {
+                            robotPoseValues.Add(hPose);
+                            robotPoseKeys.Add(key);
+                        }
+                        //form3DShow.InsertNextPoint(hPose.RawData[0], hPose.RawData[1], hPose.RawData[2], (hPose.RawData[2].D - ÑÕÉ«ÏÂÏŞÖµ) / ·¶Î§);
+                        Thread.Sleep(20);
+                    }
+                }
+                else
+                {
+                    while (bRobotRun)
+                    {
+                        if (robot.ReadPose(out Wpf_Replace_halcon.PoseParameters hPose))
+                        {
+                            var key = watch.ElapsedTicks;
+                            {
+                                robotPoseValues.Add(hPose);
+                                robotPoseKeys.Add(key);
+                            }
+                            //form3DShow.InsertNextPoint(hPose.RawData[0], hPose.RawData[1], hPose.RawData[2], (hPose.RawData[2].D - ÑÕÉ«ÏÂÏŞÖµ) / ·¶Î§);
+                        }
+                        Thread.Sleep(20);
+                        if (stop) break;
+                    }
+                }
+            });
+            ShowMessage(GlobalVarAndFunc.LanguageTranslate("»úÆ÷ÈË×ËÌ¬»ñÈ¡ÈÎÎñÆô¶¯Íê³É"));
+
+            bool bTaskRun = true;
+            //Æô¶¯Í¼Ïñ´¦ÀíÈÎÎñ
+            foreach (var item in camParam)
+            {
+                if (item.Value.Enable)
+                {
+                    /// Ïà»úÄÚ²Î£¬ÓÃÓÚ½«ÏñËØ×ø±ê×ªÎªÍ¼Ïñ×ø±ê
+                    var hCamPar = Params.CamPar[camParamName][item.Key];
+                    /// ÓÃÓÚ½«Í¼Ïñ×ø±ê×ªÎª¼¤¹â×ø±ê£¬Ó¦¸ÃÊÇImageToLight²Å¶Ô¡£
+                    var LightInCam = Params.LightInCam[camParamName][item.Key];
+                    /// ÓÃÓÚ½«¼¤¹â×ø±ê×ªÎªÏà»ú×ø±ê
+                    var LightToCam = Params.LightToCam[camParamName][item.Key];
+                    /// Ïà»ú×ªÏà»ú1×ø±ê
+                    var CamToCam1 = Params.CamToCam1[camParamName][item.Key];
+                    /// Ïà»ú×ø±ê×ªÎª·¨À¼ÅÌ×ø±ê
+                    var Cam1ToTool = Params.CamToTool[camParamName][item.Key];
+
+                    Mat CamToTool = Cam1ToTool * CamToCam1;
+
+                    tasks.Add(item.Key, Task.Run((Action)(() =>
+                    {
+                        while (indexImageCut < 0)//µÈ´ı²É¼¯¿ªÊ¼£¬Êı¾İ¼¯ºÏÍê³ÉÌí¼Ó
+                        {
+                            Thread.Sleep(10);
+                            if (!bRobotRun) return;
+                            if (stop) return;
+                        }
+                        int indexRobotPose = 1;
+                        //int indexImageCutProcessDict[item.Key] = 0;//Ö¸Ê¾ÕıÔÚÍ¼Ïñ´¦Àí¶ÎÊı
+
+                        indexImageCutProcessDict[item.Key] = 0;
+                        while (true)//·Ö¶ÎÑ­»·
+                        {
+                            var dictImageKey = ImageKeys[item.Key][indexImageCutProcessDict[item.Key]];
+                            var dictImage = Images[item.Key][indexImageCutProcessDict[item.Key]];
+                            var dictRobotPose = Robot3DPose[item.Key][indexImageCutProcessDict[item.Key]];
+                            var dictX = Point3DXs[item.Key][indexImageCutProcessDict[item.Key]];
+                            var dictY = Point3DYs[item.Key][indexImageCutProcessDict[item.Key]];
+                            var dictZ = Point3DZs[item.Key][indexImageCutProcessDict[item.Key]];
+                            var dictV = glueVols[item.Key][indexImageCutProcessDict[item.Key]];
+                            var dictXLD = outLineDict[item.Key][indexImageCutProcessDict[item.Key]];
+                            var dictRegion = glueRegionDict[item.Key][indexImageCutProcessDict[item.Key]];
+                            var dictRegionRectangle2 = glueSmallRectRegionDict[item.Key][indexImageCutProcessDict[item.Key]];
+                            var dictData = glueDataDict[item.Key][indexImageCutProcessDict[item.Key]];
+                            var dictResult = glueResultDict[item.Key][indexImageCutProcessDict[item.Key]];
+
+                            int indexImage = 0;
+                            bool bRun = true;
+                            while (bRun)//¶ÎÄÚÑ­»·
+                            {
+                                bool bAdd = false;
+                                long imageKey = 0;
+                                if (dictImageKey.Count > indexImage)//ÓĞĞÂÔöÍ¼Æ¬
+                                {
+                                    if (robotPoseKeys.Count > indexRobotPose)//ÓĞĞÂÔö×ËÌ¬
+                                    {
+                                        if (robotPoseKeys[indexRobotPose] >= dictImageKey[indexImage])//Ñ­»·µ½µÄ×ËÌ¬ÍíÓÚµÈÓÚÍ¼Æ¬£¬´¦Àí
+                                        {
+                                            imageKey = dictImageKey[indexImage];
+                                            bAdd = true;
+                                        }
+                                        else//Ñ­»·µ½µÄ×ËÌ¬ÔçÓÚÍ¼Æ¬£¬ºöÂÔ
+                                        {
+                                            indexRobotPose++;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (!bRobotRun)//ÍË³öÌõ¼ş
+                                        {
+                                            return;
+                                        }
+                                        Thread.Sleep(10);
+                                    }
+                                }
+                                else//Ã»ÓĞĞÂÔöÍ¼Æ¬
+                                {
+                                    if (indexImageCut > indexImageCutProcessDict[item.Key])//½øÈëÏÂÒ»¶ÎÌõ¼ş
+                                    {
+                                        indexImageCutProcessDict[item.Key]++;
+                                        bRun = false;
+                                    }
+                                    else
+                                    {
+                                        if (!bRobotRun)//ÍË³öÌõ¼ş
+                                        {
+                                            return;
+                                        }
+                                    }
+                                    Thread.Sleep(10);
+                                }
+
+                                if (bAdd)
+                                {
+                                    try
+                                    {
+                                        int camIndex = item.Key == "Cam1" ? 0 : item.Key == "Cam2" ? 1 : item.Key == "Cam3" ? 2 : 3;
+                                        if (set_copy.CutSets.Count > indexImageCutProcessDict[item.Key] && set_copy.CutSets[indexImageCutProcessDict[item.Key]].imageSet.Count > camIndex && set_copy.CutSets[indexImageCutProcessDict[item.Key]].imageSet[camIndex].Count > indexImage)
+                                        {
+                                            var cutSet = set_copy.CutSets[indexImageCutProcessDict[item.Key]];
+                                            var imageSet = set_copy.CutSets[indexImageCutProcessDict[item.Key]].imageSet[camIndex][indexImage];
+                                            // ÁÙÊ±½á¹û±£´æ±äÁ¿
+                                            bool getOutlineResult = false;
+                                            bool singleFrameExistOutline = false;
+                                            bool singleFrameExistGlue = false;
+                                            Data resultData = new Data();
+                                            BResult bResult = new BResult();
+                                            Mat outMaxRegion = new Mat();
+                                            Mat outRegionRectangle2 = new Mat();
+                                            Mat hXLDCont10mm = new Mat();
+                                            List<double> robotX, robotY, robotZ, colorScale;
+                                            robotX = new List<double>();
+                                            robotY = new List<double>();
+                                            robotZ = new List<double>();
+                                            Mat lightXY = new Mat();
+                                            double PoseD = 0;
+                                            double V = 0;
+
+                                            double robotAndCamAngle = int.MaxValue;
+
+
+                                            if (imageSet.ÂÖÀª¼ì²â)
+                                            {
+                                                //¼¤¹âÂÖÀªÌáÈ¡
+                                                //Mat xy = new Mat();
+                                                //Vision.getLaserPosition(dictImage[imageKey], imageSet.minThreshold, out xy, item.Value.OffsetX, item.Value.OffsetY);
+                                                Mat xy = new Mat();
+                                                Mat imgCut = new Mat();
+                                                int LeftX = 0;
+                                                int TopY = 0;
+                                                if (imageSet.ÆôÓÃ²Ã¼ô)
+                                                {
+                                                    //Vision.cutLight(xy, camParam, hImage, imageSet, out xyCut);
+                                                    int imageWidth, imageHeight;
+                                                    imageWidth = dictImage[imageKey].Cols;
+                                                    imageHeight = dictImage[imageKey].Rows;
+
+                                                    LeftX = (int)(imageWidth * imageSet.LeftX);
+                                                    TopY = (int)(imageHeight * imageSet.TopY);
+                                                    int cutWidth = (int)((imageSet.RightX - imageSet.LeftX) * imageWidth);
+                                                    int cutHeight = (int)((imageSet.DownY - imageSet.TopY) * imageHeight);
+
+                                                    imgCut = new Mat(dictImage[imageKey], new OpenCvSharp.Rect(LeftX, TopY, cutWidth, cutHeight));
+                                                }
+                                                else
+                                                {
+                                                    imgCut = dictImage[imageKey].Clone();
+                                                }
+
+                                                Vision.getLaserPosition(imgCut, imageSet.minThreshold, imageSet.laserMinWidth, out xy, item.Value.OffsetX + LeftX, item.Value.OffsetY + TopY);
+
+                                                //×ø±ê×ª»»
+                                                Wpf_Replace_halcon.PoseParameters robotPose = new PoseParameters();
+                                                HMatrixTransform.mathHPose(robotPoseValues[indexRobotPose - 1],
+                                                    robotPoseValues[indexRobotPose], out robotPose,
+                                                    (imageKey - robotPoseKeys[indexRobotPose - 1]) /
+                                                    (double)(robotPoseKeys[indexRobotPose] - robotPoseKeys[indexRobotPose - 1])
+                                                    );
+                                                // ¼ÆËã»úÆ÷ÈËÒÆ¶¯¾àÀë
+                                                if (dictRobotPose.Count > 0)
+                                                {
+                                                    var last = dictRobotPose.Last();
+                                                    var lastRobotPose = last.Value;
+
+                                                    PoseD = Math.Sqrt(Math.Pow((robotPose.x - lastRobotPose.x), 2) +
+                                                        Math.Pow((robotPose.y - lastRobotPose.y), 2) +
+                                                        Math.Pow((robotPose.z - lastRobotPose.z), 2));
+                                                }
+
+                                                // ¼ÆËã»úÆ÷ÈËÓëÏà»úµÄ¼Ğ½Ç,±ØĞëÒª»úÆ÷ÈËÓĞÒÆ¶¯
+                                                if (dictRobotPose.Count > 0 && PoseD > 0)
+                                                {
+                                                    //¼ÆËãCamToToolµÄ¾ØÕó
+
+                                                    //´ò°üÇ°ºó»úÆ÷ÈËpose
+                                                    var last = dictRobotPose.Last();
+                                                    var lastRobotPose = last.Value;
+
+                                                    Mat robotPoseMat = new Mat();
+                                                    robotPoseMat = Mat.Zeros(2, 7, MatType.CV_64FC1);
+                                                    robotPoseMat.At<double>(0, 0) = lastRobotPose.x;
+                                                    robotPoseMat.At<double>(0, 1) = lastRobotPose.y;
+                                                    robotPoseMat.At<double>(0, 2) = lastRobotPose.z;
+                                                    robotPoseMat.At<double>(0, 3) = lastRobotPose.rx;
+                                                    robotPoseMat.At<double>(0, 4) = lastRobotPose.ry;
+                                                    robotPoseMat.At<double>(0, 5) = lastRobotPose.rz;
+                                                    robotPoseMat.At<double>(0, 6) = lastRobotPose.PoseType;
+
+                                                    robotPoseMat.At<double>(1, 0) = robotPose.x;
+                                                    robotPoseMat.At<double>(1, 1) = robotPose.y;
+                                                    robotPoseMat.At<double>(1, 2) = robotPose.z;
+                                                    robotPoseMat.At<double>(1, 3) = robotPose.rx;
+                                                    robotPoseMat.At<double>(1, 4) = robotPose.ry;
+                                                    robotPoseMat.At<double>(1, 5) = robotPose.rz;
+                                                    robotPoseMat.At<double>(1, 6) = robotPose.PoseType;
+
+                                                    Vision.robotAndCamVectorAngle(robotPoseMat.CvPtr, CamToTool.CvPtr, 2, 0, out robotAndCamAngle);
+                                                }
+
+
+                                                //ÈıÎ¬Êı¾İÌí¼Ó»úÆ÷ÈË×ø±ê
+                                                dictRobotPose.Add(imageKey, robotPose);
+
+                                                //ĞèÒª±£Ö¤¼ì²âµ½ÓĞµã£¬²¢ÇÒ»úÆ÷ÈËÒÑ¾­´¦ÓÚÒÆ¶¯×´Ì¬
+                                                if (xy.Rows > 0 && dictRobotPose.Count > 0 && PoseD > 0)
+                                                {
+                                                    getOutlineResult = true;
+
+                                                    //Mat xyCut = new Mat();
+                                                    //if (imageSet.ÆôÓÃ²Ã¼ô)
+                                                    //{
+                                                    //    Vision.cutLight(xy, item.Value, dictImage[imageKey], imageSet, out xyCut);
+                                                    //}
+                                                    //else
+                                                    //{
+                                                    //    xyCut = xy;
+                                                    //}
+                                                    //if (xy.Height > 0)
+                                                    //{
+
+
+                                                    Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToTool,
+                                                    robotPose, out lightXY, out robotX, out robotY, out robotZ);
+
+                                                    //Èç¹û»¹Ã»µ½¿ªÊ¼id£¬ÔòÌø¹ıÏÔÊ¾
+                                                    int indexCross = indexImage - cutSet.StartImageIndex;
+                                                    if (indexCross >= 0 && indexCross < angless[indexImageCutProcessDict[item.Key]].Count)
+                                                    {
+                                                        //¼ä¸ôÏÔÊ¾£¬¼õÉÙÏÔÊ¾Ê±¼ä
+                                                        if (indexCross % displayIntervalID == 0)
+                                                        {
+                                                            colorScale = new List<double>();
+                                                            //¼ÆËãÏÔÊ¾ÑÕÉ«
+                                                            for (int i = 0; i < robotZ.Count; i++)
+                                                            {
+                                                                double color = ((robotZ[i] - cutSet.ShowColorMin / 1000) / ((cutSet.ShowColorMax - cutSet.ShowColorMin) / 1000));
+
+                                                                colorScale.Add(color);
+                                                            }
+                                                            //Application.Current.Dispatcher.Invoke(() =>
+                                                            //{
+                                                            //ÏÔÊ¾µãÔÆ
+                                                            Disp3DPointControlEvent(robotX, robotY, robotZ, colorScale);
+
+                                                            //Console.WriteLine($"indexCross:{indexCross}");
+                                                            //});
+                                                        }
+
+                                                    }
+                                                    //ÈıÎ¬Êı¾İÌí¼Ó
+                                                    dictX.Add(imageKey, robotX);
+                                                    dictY.Add(imageKey, robotY);
+                                                    dictZ.Add(imageKey, robotZ);
+                                                    //}
+
+
+                                                }
+                                            }
+
+                                            if (imageSet.ÂÖÀª¼ì²â)
+                                            {
+                                                //if (imageSet.µ¥Ö¡¼ì²â)
+                                                //{
+
+                                                if (imageSet._3DGlueDet)
+                                                {
+
+                                                    if (lightXY.Rows > 0)
+                                                    {
+
+                                                        singleFrameExistOutline = true;
+                                                        Vision.scalePoint(lightXY, cutSet, 90 - LightInCam.rx, out hXLDCont10mm);
+                                                        if (cutSet.isUseAngleOpt)
+                                                        {
+                                                            //¶Ôx·½Ïò½øĞĞ½ÃÕı
+                                                            double scaleX = 1;
+                                                            scaleX = Math.Cos(robotAndCamAngle / 180 * Math.PI);
+                                                            Mat correctionPoints = new Mat();
+                                                            correctionPoints = hXLDCont10mm.Clone();
+
+                                                            for (int id = 0; id < correctionPoints.Rows; id++)
+                                                            {
+                                                                correctionPoints.At<double>(id, 0) = correctionPoints.At<double>(id, 0) * scaleX;
+                                                            }
+
+                                                            hXLDCont10mm = correctionPoints.Clone();
+                                                        }
+                                                        {
+                                                            //¶ÔÁ½¸ö·½Ïò½øĞĞ½ÃÕı
+                                                            double scaleX = cutSet.correctionScaleSizeX;
+                                                            double scaleY = cutSet.correctionScaleSizeY;
+
+                                                            Mat correctionPoints = new Mat();
+                                                            correctionPoints = hXLDCont10mm.Clone();
+
+                                                            for (int id = 0; id < correctionPoints.Rows; id++)
+                                                            {
+                                                                correctionPoints.At<double>(id, 0) = correctionPoints.At<double>(id, 0) * scaleX;
+                                                                correctionPoints.At<double>(id, 1) = correctionPoints.At<double>(id, 1) * scaleY;
+
+                                                            }
+
+                                                            hXLDCont10mm = correctionPoints.Clone();
+                                                        }
+                                                        //Èç¹û´æÔÚ
+                                                        if (!hXLDCont10mm.Empty())
+                                                        {
+
+                                                            Mat hXLDContPorcess = new Mat();
+                                                            //ÀëÉ¢ÂË²¨
+                                                            if (imageSet.ÀëÉ¢È¥Ôë)
+                                                            {
+                                                                Vision.TrajectoryDiscreteFilter(hXLDCont10mm, out hXLDContPorcess, imageSet.·Ö¶Î¾àÀë * cutSet.scaleSize, imageSet.³É¶ÎµãÊı);
+                                                            }
+                                                            else
+                                                            {
+                                                                hXLDContPorcess = hXLDCont10mm.Clone();
+                                                            }
+
+                                                            Vision.singleFrameDetAndResult(hXLDContPorcess, imageSet, cutSet, ref singleFrameExistGlue, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2);
+
+                                                            //¼ÆËãÍ¿½ºÌå»ı
+                                                            //V = resultData.glueArea * PoseD;
+
+
+                                                        }
+                                                        else
+                                                        {
+                                                            bResult.Result = false;
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        bResult.Result = false;
+                                                    }
+                                                }
+                                                if (!bResult.Result)
+                                                {
+                                                    totalResult = false;
+                                                }
+
+                                                //½á¹ûÍ³¼Æ
+                                                if (hXLDCont10mm.Rows > 0)
+                                                {
+                                                    if (dictXLD.ContainsKey(imageKey))
+                                                    {
+                                                        dictXLD[imageKey] = hXLDCont10mm;
+                                                    }
+                                                    else
+                                                    {
+                                                        dictXLD.Add(imageKey, hXLDCont10mm);
+                                                    }
+
+                                                }
+                                                if (resultData.glueArea > 0)
+                                                {
+                                                    //Ìå»ı½á¹û
+
+                                                    if (dictV.ContainsKey(imageKey))
+                                                    {
+                                                        dictV[imageKey] = V;
+                                                    }
+                                                    else
+                                                    {
+                                                        dictV.Add(imageKey, V);
+                                                    }
+
+                                                    ////½ºÇøÓò½á¹û
+                                                    ////if (dictRegion.ContainsKey(imageKey))
+                                                    ////{
+                                                    ////    dictRegion[imageKey] = outMaxRegion;
+                                                    ////}
+                                                    ////else
+                                                    ////{
+                                                    ////    dictRegion.Add(imageKey, outMaxRegion);
+                                                    ////}
+
+                                                    ////½º×îĞ¡Íâ½Ó¾ØĞÎ½á¹û
+                                                    ////if (dictRegionRectangle2.ContainsKey(imageKey))
+                                                    ////{
+                                                    ////    dictRegionRectangle2[imageKey] = outRegionRectangle2;
+                                                    ////}
+                                                    ////else
+                                                    ////{
+                                                    ////    dictRegionRectangle2.Add(imageKey, outRegionRectangle2);
+                                                    ////}
+
+                                                    ////½º¼ì²âÊı¾İ½á¹û
+                                                    //if (dictData.ContainsKey(imageKey))
+                                                    //{
+                                                    //    dictData[imageKey] = resultData;
+                                                    //}
+                                                    //else
+                                                    //{
+                                                    //    dictData.Add(imageKey, resultData);
+                                                    //}
+                                                    ////½º¼ì²â½á¹û
+
+                                                    //if (dictResult.ContainsKey(imageKey))
+                                                    //{
+                                                    //    dictResult[imageKey] = bResult;
+                                                    //}
+                                                    //else
+                                                    //{
+                                                    //    dictResult.Add(imageKey, bResult);
+                                                    //}
+                                                }
+
+                                                if (imageSet._3DGlueDet)
+                                                {
+                                                    // ÒÑ¿ª·Å
+                                                    int indexCross = indexImage - cutSet.StartImageIndex;
+                                                    if (indexCross >= 0 && indexCross < angless[indexImageCutProcessDict[item.Key]].Count)
+                                                    {
+                                                        hWindowNumericalModelDiagramDispCross(rowss[indexImageCutProcessDict[item.Key]][indexCross],
+                                                            colss[indexImageCutProcessDict[item.Key]][indexCross],
+                                                            angless[indexImageCutProcessDict[item.Key]][indexCross], cutSet.Size, bResult.Result ? Colors.Green : Colors.Red);
+                                                    }
+                                                }
+
+                                            }
+
+                                            // Ã»±ØÒªÏÔÊ¾Ã¿Ö¡µÄ¼ì²â½á¹û£¬¶øÇÒÕâÑù×öµ¼ÖÂÓ°Ïì¼ì²âËÙ¶È
+                                            //if (singleFrameExistGlue)
+                                            //{
+                                            //    Application.Current.Dispatcher.Invoke(() =>
+                                            //    {
+                                            //        ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, hXLDCont10mm, outMaxRegion, outRegionRectangle2, resultData, bResult);
+                                            //    });
+                                            //}
+                                            dictResult.Add(imageKey, bResult);
+                                            dictData.Add(imageKey, resultData);
+                                        }
+                                        else
+                                        {
+                                            //ÎŞ¼ì²â²ÎÊı
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+
+                                    }
+                                    indexImage++;
+                                }
+                                if (!bTaskRun) return;
+                                if (stop) return;
+                            }
+                            if (!bTaskRun) return;
+                            if (stop) return;
+                        }
+                    })));
+                }
+            }
+            ShowMessage(GlobalVarAndFunc.LanguageTranslate("Í¼Ïñ´¦ÀíÈÎÎñÆô¶¯Íê³É"));
+
+            ////Êä³öÔËĞĞÖĞĞÅºÅ
+            //if (!Write(DO.Running, true)) return;
+            //ShowMessage(GlobalVarAndFunc.LanguageTranslate("Êä³öRunningĞÅºÅ"));
+            //if (!Write(DO.Ready, false)) return;
+            //ShowMessage(GlobalVarAndFunc.LanguageTranslate("¹Ø±ÕReadyĞÅºÅ"));
+
+            return true;
+        }
+
+        private void clearData()
+        {
+            #region Çå³ıÊı¾İ
+            foreach (var item in Images.Values)
+            {
+                foreach (var item2 in item)
+                {
+                    foreach (var item3 in item2.Values)
+                    {
+                        item3?.Dispose();
+                    }
+                }
+            }
+            foreach (var item in outLineDict.Values)
+            {
+                foreach (var item2 in item)
+                {
+                    foreach (var item3 in item2.Values)
+                    {
+                        item3?.Dispose();
+                    }
+                }
+            }
+            foreach (var item in glueRegionDict.Values)
+            {
+                foreach (var item2 in item)
+                {
+                    foreach (var item3 in item2.Values)
+                    {
+                        item3?.Dispose();
+                    }
+                }
+            }
+            foreach (var item in glueSmallRectRegionDict.Values)
+            {
+                foreach (var item2 in item)
+                {
+                    foreach (var item3 in item2.Values)
+                    {
+                        item3?.Dispose();
+                    }
+                }
+            }
+            robotPoseKeys.Clear();
+            robotPoseValues.Clear();
+            ImageKeys.Clear();
+            Images.Clear();
+            dataGridViewImageListRowsStartPoint.Clear();
+            Robot3DPose.Clear();
+            Point3DXs.Clear();
+            Point3DYs.Clear();
+            Point3DZs.Clear();
+            glueVols.Clear();
+            outLineDict.Clear();
+            glueRegionDict.Clear();
+            glueSmallRectRegionDict.Clear();
+            glueDataDict.Clear();
+            glueResultDict.Clear();
+            indexImageCutProcessDict.Clear();
+            displaySize.Clear();
+            tasks.Clear();
+            #endregion
+            //Invoke(new Action(() => { form3DShow.ClearCloud(); }));
+            //Çå¿Õ½á¹û
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                Clear3DPointControlEvent();
+                DispClearHWindowControlEvent();
+            });
+
+            GC.Collect();
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                mainModel.ImageResultRecords.Clear();
+            });
+        }
 
         private void hWindowNumericalModelDiagramDispCross(double row, double col, double angle, double size, System.Windows.Media.Color color)
         {
-            //ç”Ÿæˆäº¤å‰å›¾æ¡ˆ
+            //Éú³É½»²æÍ¼°¸
             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
                 //Mat hXLDCont = new Mat();
@@ -2182,26 +4209,26 @@ namespace _3DLaserGlueInspection
 
 
 
-        #region ä¿¡å·è¯»å†™
+        #region ĞÅºÅ¶ÁĞ´
         bool Read(DI di, out bool val)
         {
-            bool bå¤±è´¥è¿‡ = false;
+            bool bÊ§°Ü¹ı = false;
             while (!stop)
             {
                 if (io.Read(di, out val))
                 {
-                    if (bå¤±è´¥è¿‡)
+                    if (bÊ§°Ü¹ı)
                     {
-                        ShowMessage($"{di}" + GlobalVarAndFunc.LanguageTranslate("ä¿¡å·é‡è¯»æˆåŠŸ"));
+                        ShowMessage($"{di}" + GlobalVarAndFunc.LanguageTranslate("ĞÅºÅÖØ¶Á³É¹¦"));
                     }
                     return true;
                 }
                 else
                 {
-                    if (!bå¤±è´¥è¿‡)
+                    if (!bÊ§°Ü¹ı)
                     {
-                        ShowMessage($"{di}" + GlobalVarAndFunc.LanguageTranslate("ä¿¡å·è¯»å–å¤±è´¥ï¼Œé‡è¯»ä¸­:") + io.ErrMsg, LogType.warn);
-                        bå¤±è´¥è¿‡ = true;
+                        ShowMessage($"{di}" + GlobalVarAndFunc.LanguageTranslate("ĞÅºÅ¶ÁÈ¡Ê§°Ü£¬ÖØ¶ÁÖĞ:") + io.ErrMsg, LogType.warn);
+                        bÊ§°Ü¹ı = true;
                     }
                     if (!io.IsOpen)
                     {
@@ -2215,23 +4242,23 @@ namespace _3DLaserGlueInspection
         }
         bool Read(DO dO, out bool val)
         {
-            bool bå¤±è´¥è¿‡ = false;
+            bool bÊ§°Ü¹ı = false;
             while (!stop)
             {
                 if (io.Read(dO, out val))
                 {
-                    if (bå¤±è´¥è¿‡)
+                    if (bÊ§°Ü¹ı)
                     {
-                        ShowMessage($"{dO}" + GlobalVarAndFunc.LanguageTranslate("ä¿¡å·é‡è¯»æˆåŠŸ"));
+                        ShowMessage($"{dO}" + GlobalVarAndFunc.LanguageTranslate("ĞÅºÅÖØ¶Á³É¹¦"));
                     }
                     return true;
                 }
                 else
                 {
-                    if (!bå¤±è´¥è¿‡)
+                    if (!bÊ§°Ü¹ı)
                     {
-                        ShowMessage($"{dO}" + GlobalVarAndFunc.LanguageTranslate("ä¿¡å·è¯»å–å¤±è´¥ï¼Œé‡è¯»ä¸­:") + io.ErrMsg, LogType.warn);
-                        bå¤±è´¥è¿‡ = true;
+                        ShowMessage($"{dO}" + GlobalVarAndFunc.LanguageTranslate("ĞÅºÅ¶ÁÈ¡Ê§°Ü£¬ÖØ¶ÁÖĞ:") + io.ErrMsg, LogType.warn);
+                        bÊ§°Ü¹ı = true;
                     }
                     if (!io.IsOpen)
                     {
@@ -2245,23 +4272,23 @@ namespace _3DLaserGlueInspection
         }
         bool Read(DI di, out ushort val)
         {
-            bool bå¤±è´¥è¿‡ = false;
+            bool bÊ§°Ü¹ı = false;
             while (!stop)
             {
                 if (io.Read(di, out val))
                 {
-                    if (bå¤±è´¥è¿‡)
+                    if (bÊ§°Ü¹ı)
                     {
-                        ShowMessage($"{di}" + GlobalVarAndFunc.LanguageTranslate("ä¿¡å·é‡è¯»æˆåŠŸ"));
+                        ShowMessage($"{di}" + GlobalVarAndFunc.LanguageTranslate("ĞÅºÅÖØ¶Á³É¹¦"));
                     }
                     return true;
                 }
                 else
                 {
-                    if (!bå¤±è´¥è¿‡)
+                    if (!bÊ§°Ü¹ı)
                     {
-                        ShowMessage($"{di}" + GlobalVarAndFunc.LanguageTranslate("ä¿¡å·è¯»å–å¤±è´¥ï¼Œé‡è¯»ä¸­:") + io.ErrMsg, LogType.warn);
-                        bå¤±è´¥è¿‡ = true;
+                        ShowMessage($"{di}" + GlobalVarAndFunc.LanguageTranslate("ĞÅºÅ¶ÁÈ¡Ê§°Ü£¬ÖØ¶ÁÖĞ:") + io.ErrMsg, LogType.warn);
+                        bÊ§°Ü¹ı = true;
                     }
                     if (!io.IsOpen)
                     {
@@ -2275,23 +4302,23 @@ namespace _3DLaserGlueInspection
         }
         bool Read(DO dO, out ushort val)
         {
-            bool bå¤±è´¥è¿‡ = false;
+            bool bÊ§°Ü¹ı = false;
             while (!stop)
             {
                 if (io.Read(dO, out val))
                 {
-                    if (bå¤±è´¥è¿‡)
+                    if (bÊ§°Ü¹ı)
                     {
-                        ShowMessage($"{dO}" + GlobalVarAndFunc.LanguageTranslate("ä¿¡å·é‡è¯»æˆåŠŸ"));
+                        ShowMessage($"{dO}" + GlobalVarAndFunc.LanguageTranslate("ĞÅºÅÖØ¶Á³É¹¦"));
                     }
                     return true;
                 }
                 else
                 {
-                    if (!bå¤±è´¥è¿‡)
+                    if (!bÊ§°Ü¹ı)
                     {
-                        ShowMessage($"{dO}" + GlobalVarAndFunc.LanguageTranslate("ä¿¡å·è¯»å–å¤±è´¥ï¼Œé‡è¯»ä¸­:") + io.ErrMsg, LogType.warn);
-                        bå¤±è´¥è¿‡ = true;
+                        ShowMessage($"{dO}" + GlobalVarAndFunc.LanguageTranslate("ĞÅºÅ¶ÁÈ¡Ê§°Ü£¬ÖØ¶ÁÖĞ:") + io.ErrMsg, LogType.warn);
+                        bÊ§°Ü¹ı = true;
                     }
                     if (!io.IsOpen)
                     {
@@ -2305,23 +4332,23 @@ namespace _3DLaserGlueInspection
         }
         bool Write(DO dO, object val)
         {
-            bool bå¤±è´¥è¿‡ = false;
+            bool bÊ§°Ü¹ı = false;
             while (!stop)
             {
                 if (io.Write(dO, val))
                 {
-                    if (bå¤±è´¥è¿‡)
+                    if (bÊ§°Ü¹ı)
                     {
-                        ShowMessage($"{dO}" + GlobalVarAndFunc.LanguageTranslate("ä¿¡å·é‡å†™æˆåŠŸ"));
+                        ShowMessage($"{dO}" + GlobalVarAndFunc.LanguageTranslate("ĞÅºÅÖØĞ´³É¹¦"));
                     }
                     return true;
                 }
                 else
                 {
-                    if (!bå¤±è´¥è¿‡)
+                    if (!bÊ§°Ü¹ı)
                     {
-                        ShowMessage($"{dO}" + GlobalVarAndFunc.LanguageTranslate("ä¿¡å·å†™å…¥å¤±è´¥ï¼Œé‡å†™ä¸­:") + io.ErrMsg, LogType.warn);
-                        bå¤±è´¥è¿‡ = true;
+                        ShowMessage($"{dO}" + GlobalVarAndFunc.LanguageTranslate("ĞÅºÅĞ´ÈëÊ§°Ü£¬ÖØĞ´ÖĞ:") + io.ErrMsg, LogType.warn);
+                        bÊ§°Ü¹ı = true;
                     }
                     if (!io.IsOpen)
                     {
@@ -2395,7 +4422,7 @@ namespace _3DLaserGlueInspection
                         Mat mat = new Mat();
                         mat = Mat.Zeros((int)(showHeight * cutSet.scaleSize), (int)(showWidth * cutSet.scaleSize), MatType.CV_8UC3);
 
-                        DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//æ‰©ç”»å¸ƒ
+                        DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//À©»­²¼
 
                         PointCollection points = new PointCollection();
                         for (int i = 0; i < hXLDCont10mm.Rows; i++)
@@ -2406,8 +4433,8 @@ namespace _3DLaserGlueInspection
                             points.Add(point);
                         }
                         DispPolylinejHWindowControlEvent(points, Colors.Gray);
-                        //hWindowControl.DispImageWithoutClone(new HImage("byte", showWidth * 100, showHeight * 100));//æ‰©ç”»å¸ƒ
-                        //hWindowControl.DispObj(hXLDCont10å¾®ç±³, null, "gray");
+                        //hWindowControl.DispImageWithoutClone(new HImage("byte", showWidth * 100, showHeight * 100));//À©»­²¼
+                        //hWindowControl.DispObj(hXLDCont10Î¢Ã×, null, "gray");
                     }
                 }
                 catch (Exception ex)
@@ -2430,7 +4457,7 @@ namespace _3DLaserGlueInspection
                         Mat mat = new Mat();
                         mat = Mat.Zeros((int)(showHeight * cutSet.scaleSize), (int)(showWidth * cutSet.scaleSize), MatType.CV_8UC3);
 
-                        DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//æ‰©ç”»å¸ƒ
+                        DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//À©»­²¼
 
                         PointCollection points = new PointCollection();
                         for (int i = 0; i < hXLDCont10mm.Rows; i++)
@@ -2464,16 +4491,16 @@ namespace _3DLaserGlueInspection
 
                             DispPolygonjHWindowControlEvent(regionSmallestRectangle2Points, Colors.Blue, "margin");
 
-                            string text = GlobalVarAndFunc.LanguageTranslate("èƒ¶é«˜ï¼š") + $"{data.glueHeight:0.00}\r\n"
-                               + GlobalVarAndFunc.LanguageTranslate("èƒ¶å®½ï¼š") + $"{data.glueWidth:0.00}\r\n"
-                               + GlobalVarAndFunc.LanguageTranslate("é¢ç§¯ï¼š") + $"{data.glueArea:0.00}";
+                            string text = GlobalVarAndFunc.LanguageTranslate("½º¸ß£º") + $"{data.glueHeight:0.00}\r\n"
+                               + GlobalVarAndFunc.LanguageTranslate("½º¿í£º") + $"{data.glueWidth:0.00}\r\n"
+                               + GlobalVarAndFunc.LanguageTranslate("Ãæ»ı£º") + $"{data.glueArea:0.00}";
                             DispTextInImageHWindowControlEvent(text, Colors.White, (int)data.column + (int)(data.glueWidth / 2 * cutSet.scaleSize + offsetX),
                                 (int)data.row + (int)(data.glueHeight / 2 * cutSet.scaleSize + offsetY));
 
                             //hWindowControl.DispTextInImage(text, data.row, data.column);
-                            string textWindow1 = GlobalVarAndFunc.LanguageTranslate("èƒ¶å®½ï¼š") + (bResult.glueWidth ? "OK" : "NG");
-                            string textWindow2 = GlobalVarAndFunc.LanguageTranslate("èƒ¶é«˜ï¼š") + (bResult.glueHeight ? "OK" : "NG");
-                            string textWindow3 = GlobalVarAndFunc.LanguageTranslate("é¢ç§¯ï¼š") + (bResult.glueArea ? "OK" : "NG");
+                            string textWindow1 = GlobalVarAndFunc.LanguageTranslate("½º¿í£º") + (bResult.glueWidth ? "OK" : "NG");
+                            string textWindow2 = GlobalVarAndFunc.LanguageTranslate("½º¸ß£º") + (bResult.glueHeight ? "OK" : "NG");
+                            string textWindow3 = GlobalVarAndFunc.LanguageTranslate("Ãæ»ı£º") + (bResult.glueArea ? "OK" : "NG");
                             string textWindow = textWindow1 + "\r\n" + textWindow2 + "\r\n" + textWindow3;
                             DispTextInImageHWindowControlEvent(textWindow, Colors.White, 10, 10);
 

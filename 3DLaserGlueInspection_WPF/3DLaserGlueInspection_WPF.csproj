@@ -30,7 +30,7 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <ApplicationVersion>1.4.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -75,7 +75,7 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>3Dicon.ico</ApplicationIcon>
+    <ApplicationIcon>Icon\3Dicon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="HelixToolkit, Version=2.26.0.0, Culture=neutral, PublicKeyToken=52aa3500039caf0d, processorArchitecture=MSIL">
@@ -168,7 +168,6 @@
     <Compile Include="subForm\User3DShowControl_V.xaml.cs">
       <DependentUpon>User3DShowControl_V.xaml</DependentUpon>
     </Compile>
-    <Compile Include="subForm\VisualHost1.cs" />
     <Compile Include="subForm\WindowCamera.xaml.cs">
       <DependentUpon>WindowCamera.xaml</DependentUpon>
     </Compile>
@@ -205,6 +204,7 @@
     <Compile Include="tool\Reg.cs" />
     <Compile Include="tool\Robot.cs" />
     <Compile Include="tool\Synchronized.cs" />
+    <Compile Include="tool\TCPServer.cs" />
     <Compile Include="tool\Tool.cs" />
     <Compile Include="tool\Vision.cs" />
     <Page Include="Assets\Styles\DefaultStyle.xaml">
