@@ -2449,14 +2449,18 @@ namespace _3DLaserGlueInspection
         public Dictionary<string, Dictionary<string, CameraParameters>> CamPar = new Dictionary<string, Dictionary<string, CameraParameters>>();    //相机内参
         public Dictionary<string, Dictionary<string, PoseParameters>> LightInCam = new Dictionary<string, Dictionary<string, PoseParameters>>();    //光平面内参
         //public Dictionary<string, Dictionary<string, PoseParameters>> SensorInCam = new Dictionary<string, Dictionary<string, PoseParameters>>();
-        public Dictionary<string, Dictionary<string, PoseParameters>> ToolInCam = new Dictionary<string, Dictionary<string, PoseParameters>>();    //相机外参（手眼标定，其实都是相机1的）
-        public Dictionary<string, Dictionary<string, PoseParameters>> Cam1InCam = new Dictionary<string, Dictionary<string, PoseParameters>>();    //转相机1坐标系的外参
+        public Dictionary<string, Dictionary<string, PoseParameters>> ToolInCam1 = new Dictionary<string, Dictionary<string, PoseParameters>>();    //相机外参（手眼标定，其实都是相机1的）
+        public Dictionary<string, Dictionary<string, PoseParameters>> CamInCam1 = new Dictionary<string, Dictionary<string, PoseParameters>>();    //转相机坐标系的外参
+
+        public Dictionary<string, Dictionary<string, PoseParameters>> CenterInCam1 = new Dictionary<string, Dictionary<string, PoseParameters>>();    //转涂胶中心坐标系的外参
 
         //计算的参数
         public Dictionary<string, Dictionary<string, Mat>> LightToCam = new Dictionary<string, Dictionary<string, Mat>>();    //光平面旋转矩阵
         //public Dictionary<string, Dictionary<string, Mat>> CamToSensor = new Dictionary<string, Dictionary<string, Mat>>();
-        public Dictionary<string, Dictionary<string, Mat>> CamToTool = new Dictionary<string, Dictionary<string, Mat>>();    //手眼标定的旋转矩阵（其实都是相机1的，要右乘CamToCam1才是自己的）
+        public Dictionary<string, Dictionary<string, Mat>> Cam1ToTool = new Dictionary<string, Dictionary<string, Mat>>();    //手眼标定的旋转矩阵（其实都是相机1的，要右乘CamToCam1才是自己的）
         public Dictionary<string, Dictionary<string, Mat>> CamToCam1 = new Dictionary<string, Dictionary<string, Mat>>();    //转相机1的旋转矩阵
+
+        public Dictionary<string, Dictionary<string, Mat>> CenterToCam1 = new Dictionary<string, Dictionary<string, Mat>>();    //转涂胶中心的旋转矩阵
 
         ////保存的参数
         //public Dictionary<string, Mat> SensorToTool = new Dictionary<string, Mat>();
@@ -2468,11 +2472,14 @@ namespace _3DLaserGlueInspection
             Param.Clear();
             CamPar.Clear();
             LightInCam.Clear();
-            ToolInCam.Clear();
+            ToolInCam1.Clear();
             LightToCam.Clear();
-            CamToTool.Clear();
-            Cam1InCam.Clear();
+            Cam1ToTool.Clear();
+            CamInCam1.Clear();
             CamToCam1.Clear();
+
+            CenterToCam1.Clear();
+            CenterInCam1.Clear();
 
             string camSetPath = basePath + "\\CamSet";
             if (Directory.Exists(camSetPath))
@@ -2485,13 +2492,16 @@ namespace _3DLaserGlueInspection
                     CamPar.Add(name, new Dictionary<string, CameraParameters>());
                     LightInCam.Add(name, new Dictionary<string, PoseParameters>());
                     //SensorInCam.Add(name, new Dictionary<string, PoseParameters>());
-                    ToolInCam.Add(name, new Dictionary<string, PoseParameters>());
+                    ToolInCam1.Add(name, new Dictionary<string, PoseParameters>());
                     LightToCam.Add(name, new Dictionary<string, Mat>());
                     //CamToSensor.Add(name, new Dictionary<string, Mat>());
-                    CamToTool.Add(name, new Dictionary<string, Mat>());
+                    Cam1ToTool.Add(name, new Dictionary<string, Mat>());
 
-                    Cam1InCam.Add(name, new Dictionary<string, PoseParameters>());
+                    CamInCam1.Add(name, new Dictionary<string, PoseParameters>());
                     CamToCam1.Add(name, new Dictionary<string, Mat>());
+
+                    CenterInCam1.Add(name, new Dictionary<string, PoseParameters>());
+                    CenterToCam1.Add(name, new Dictionary<string, Mat>());
 
                     string[] camPaths = Directory.GetDirectories(path);
                     foreach (string camPath in camPaths)
@@ -2699,13 +2709,13 @@ namespace _3DLaserGlueInspection
                                 //hWorldPose.ReadPose(paramPath);
                                 hWorldPose = HFileIO.ReadPosePara(paramPath);
 
-                                if (ToolInCam[name].ContainsKey(camKey))
+                                if (ToolInCam1[name].ContainsKey(camKey))
                                 {
-                                    ToolInCam[name][camKey] = hWorldPose;
+                                    ToolInCam1[name][camKey] = hWorldPose;
                                 }
                                 else
                                 {
-                                    ToolInCam[name].Add(camKey, hWorldPose);
+                                    ToolInCam1[name].Add(camKey, hWorldPose);
                                 }
                             }
                             else
@@ -2731,13 +2741,13 @@ namespace _3DLaserGlueInspection
                                     //hWorldPose.ReadPose(paramPath);
                                     hWorldPose = HFileIO.ReadPosePara(paramPath);
 
-                                    if (ToolInCam[name].ContainsKey(camKey))
+                                    if (ToolInCam1[name].ContainsKey(camKey))
                                     {
-                                        ToolInCam[name][camKey] = hWorldPose;
+                                        ToolInCam1[name][camKey] = hWorldPose;
                                     }
                                     else
                                     {
-                                        ToolInCam[name].Add(camKey, hWorldPose);
+                                        ToolInCam1[name].Add(camKey, hWorldPose);
                                     }
                                 }
                                 else
@@ -2755,20 +2765,20 @@ namespace _3DLaserGlueInspection
                         bool result7 = true;
                         try
                         {
-                            string paramPath = camPath + "\\Cam1InCam.dat";
+                            string paramPath = camPath + "\\CamInCam1.dat";
                             if (File.Exists(paramPath))
                             {
                                 var hWorldPose = new PoseParameters();
                                 //hWorldPose.ReadPose(paramPath);
                                 hWorldPose = HFileIO.ReadPosePara(paramPath);
 
-                                if (Cam1InCam[name].ContainsKey(camKey))
+                                if (CamInCam1[name].ContainsKey(camKey))
                                 {
-                                    Cam1InCam[name][camKey] = hWorldPose;
+                                    CamInCam1[name][camKey] = hWorldPose;
                                 }
                                 else
                                 {
-                                    Cam1InCam[name].Add(camKey, hWorldPose);
+                                    CamInCam1[name].Add(camKey, hWorldPose);
                                 }
                             }
                             else
@@ -2787,20 +2797,20 @@ namespace _3DLaserGlueInspection
                             result7 = true;
                             try
                             {
-                                string paramPath = camPath + "\\Cam1InCam_bak.dat";
+                                string paramPath = camPath + "\\CamInCam1_bak.dat";
                                 if (File.Exists(paramPath))
                                 {
                                     var hWorldPose = new PoseParameters();
                                     //hWorldPose.ReadPose(paramPath);
                                     hWorldPose = HFileIO.ReadPosePara(paramPath);
 
-                                    if (Cam1InCam[name].ContainsKey(camKey))
+                                    if (CamInCam1[name].ContainsKey(camKey))
                                     {
-                                        Cam1InCam[name][camKey] = hWorldPose;
+                                        CamInCam1[name][camKey] = hWorldPose;
                                     }
                                     else
                                     {
-                                        Cam1InCam[name].Add(camKey, hWorldPose);
+                                        CamInCam1[name].Add(camKey, hWorldPose);
                                     }
                                 }
                                 else
@@ -2814,7 +2824,66 @@ namespace _3DLaserGlueInspection
                             }
                         }
 
+                        bool result8 = true;
+                        try
+                        {
+                            string paramPath = camPath + "\\CenterInCam1.dat";
+                            if (File.Exists(paramPath))
+                            {
+                                var hWorldPose = new PoseParameters();
+                                hWorldPose = HFileIO.ReadPosePara(paramPath);
 
+                                if (CenterInCam1[name].ContainsKey(camKey))
+                                {
+                                    CenterInCam1[name][camKey] = hWorldPose;
+                                }
+                                else
+                                {
+                                    CenterInCam1[name].Add(camKey, hWorldPose);
+                                }
+                            }
+                            else
+                            {
+                                result8 = false;
+                                _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("文件不存在");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            result8 = false;
+                            _errMsg = ex.ToString();
+                        }
+                        if (!result8)
+                        {
+                            result8 = true;
+                            try
+                            {
+                                string paramPath = camPath + "\\CenterInCam1_bak.dat";
+                                if (File.Exists(paramPath))
+                                {
+                                    var hWorldPose = new PoseParameters();
+                                    //hWorldPose.ReadPose(paramPath);
+                                    hWorldPose = HFileIO.ReadPosePara(paramPath);
+
+                                    if (CenterInCam1[name].ContainsKey(camKey))
+                                    {
+                                        CenterInCam1[name][camKey] = hWorldPose;
+                                    }
+                                    else
+                                    {
+                                        CenterInCam1[name].Add(camKey, hWorldPose);
+                                    }
+                                }
+                                else
+                                {
+                                    result8 = false;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                result8 = false;
+                            }
+                        }
 
                         bool result6 = true;
                         // pose转mat
@@ -2839,43 +2908,62 @@ namespace _3DLaserGlueInspection
                                     LightToCam[name].Add(camKey, H);
                                 }
                             }
-                            if (ToolInCam[name].ContainsKey(camKey))
+                            if (ToolInCam1[name].ContainsKey(camKey))
                             {
-                                if (CamToTool[name].ContainsKey(camKey))
+                                if (Cam1ToTool[name].ContainsKey(camKey))
                                 {
                                     //CamToTool[name][camKey] = ToolInCam[name][camKey].PoseInvert().PoseToHomMat3d();
                                     Mat H = new Mat();
-                                    Vision.poseToHomMat3d(ToolInCam[name][camKey].PoseType, ToolInCam[name][camKey].x, ToolInCam[name][camKey].y, ToolInCam[name][camKey].z,
-                                        ToolInCam[name][camKey].rx, ToolInCam[name][camKey].ry, ToolInCam[name][camKey].rz, H.CvPtr);
+                                    Vision.poseToHomMat3d(ToolInCam1[name][camKey].PoseType, ToolInCam1[name][camKey].x, ToolInCam1[name][camKey].y, ToolInCam1[name][camKey].z,
+                                        ToolInCam1[name][camKey].rx, ToolInCam1[name][camKey].ry, ToolInCam1[name][camKey].rz, H.CvPtr);
                                     //CamToTool[name][camKey] = H;
                                     //这里必须要求逆才行，因为标定的是相机坐标系下的法兰盘位姿，不是法兰盘坐标系下的相机位姿
-                                    CamToTool[name][camKey] = H.Inv();
+                                    Cam1ToTool[name][camKey] = H.Inv();
                                 }
                                 else
                                 {
                                     Mat H = new Mat();
-                                    Vision.poseToHomMat3d(ToolInCam[name][camKey].PoseType, ToolInCam[name][camKey].x, ToolInCam[name][camKey].y, ToolInCam[name][camKey].z,
-                                        ToolInCam[name][camKey].rx, ToolInCam[name][camKey].ry, ToolInCam[name][camKey].rz, H.CvPtr);
+                                    Vision.poseToHomMat3d(ToolInCam1[name][camKey].PoseType, ToolInCam1[name][camKey].x, ToolInCam1[name][camKey].y, ToolInCam1[name][camKey].z,
+                                        ToolInCam1[name][camKey].rx, ToolInCam1[name][camKey].ry, ToolInCam1[name][camKey].rz, H.CvPtr);
                                     //CamToTool[name].Add(camKey, H);
 
-                                    CamToTool[name].Add(camKey, H.Inv());
+                                    Cam1ToTool[name].Add(camKey, H.Inv());
                                 }
                             }
 
-                            if (Cam1InCam[name].ContainsKey(camKey))
+                            if (CenterInCam1[name].ContainsKey(camKey))
+                            {
+                                if (CenterToCam1[name].ContainsKey(camKey))
+                                {
+                                    Mat H = new Mat();
+                                    Vision.poseToHomMat3d(CenterInCam1[name][camKey].PoseType, CenterInCam1[name][camKey].x, CenterInCam1[name][camKey].y, CenterInCam1[name][camKey].z,
+                                        CenterInCam1[name][camKey].rx, CenterInCam1[name][camKey].ry, CenterInCam1[name][camKey].rz, H.CvPtr);
+                                    CenterToCam1[name][camKey] = H;
+                                }
+                                else
+                                {
+                                    Mat H = new Mat();
+                                    Vision.poseToHomMat3d(CenterInCam1[name][camKey].PoseType, CenterInCam1[name][camKey].x, CenterInCam1[name][camKey].y, CenterInCam1[name][camKey].z,
+                                        CenterInCam1[name][camKey].rx, CenterInCam1[name][camKey].ry, CenterInCam1[name][camKey].rz, H.CvPtr);
+                                    CenterToCam1[name].Add(camKey, H);
+                                }
+                            }
+
+
+                            if (CamInCam1[name].ContainsKey(camKey))
                             {
                                 if (CamToCam1[name].ContainsKey(camKey))
                                 {
                                     Mat H = new Mat();
-                                    Vision.poseToHomMat3d(Cam1InCam[name][camKey].PoseType, Cam1InCam[name][camKey].x, Cam1InCam[name][camKey].y, Cam1InCam[name][camKey].z,
-                                        Cam1InCam[name][camKey].rx, Cam1InCam[name][camKey].ry, Cam1InCam[name][camKey].rz, H.CvPtr);
+                                    Vision.poseToHomMat3d(CamInCam1[name][camKey].PoseType, CamInCam1[name][camKey].x, CamInCam1[name][camKey].y, CamInCam1[name][camKey].z,
+                                        CamInCam1[name][camKey].rx, CamInCam1[name][camKey].ry, CamInCam1[name][camKey].rz, H.CvPtr);
                                     CamToCam1[name][camKey] = H;
                                 }
                                 else
                                 {
                                     Mat H = new Mat();
-                                    Vision.poseToHomMat3d(Cam1InCam[name][camKey].PoseType, Cam1InCam[name][camKey].x, Cam1InCam[name][camKey].y, Cam1InCam[name][camKey].z,
-                                        Cam1InCam[name][camKey].rx, Cam1InCam[name][camKey].ry, Cam1InCam[name][camKey].rz, H.CvPtr);
+                                    Vision.poseToHomMat3d(CamInCam1[name][camKey].PoseType, CamInCam1[name][camKey].x, CamInCam1[name][camKey].y, CamInCam1[name][camKey].z,
+                                        CamInCam1[name][camKey].rx, CamInCam1[name][camKey].ry, CamInCam1[name][camKey].rz, H.CvPtr);
                                     CamToCam1[name].Add(camKey, H);
                                 }
                             }
@@ -2971,25 +3059,39 @@ namespace _3DLaserGlueInspection
                     }
                 }
 
-                foreach (var name in Cam1InCam.Keys)
+                foreach (var name in CamInCam1.Keys)
                 {
-                    foreach (var key in Cam1InCam[name].Keys)
+                    foreach (var key in CamInCam1[name].Keys)
                     {
                         string path = $"{basePath}\\CamSet\\{name}\\{key}";
                         if (!Directory.Exists(path))
                         {
                             Directory.CreateDirectory(path);
                         }
-                        string paramPath = $"{path}\\Cam1InCam.dat";
-                        HFileIO.WritePosePara(paramPath, Cam1InCam[name][key]);
-                        File.Copy(paramPath, path + "\\Cam1InCam_bak.dat", true);
+                        string paramPath = $"{path}\\CamInCam1.dat";
+                        HFileIO.WritePosePara(paramPath, CamInCam1[name][key]);
+                        File.Copy(paramPath, path + "\\CamInCam1_bak.dat", true);
                     }
                 }
 
-
-                foreach (var name in ToolInCam.Keys)
+                foreach (var name in CenterInCam1.Keys)
                 {
-                    foreach (var key in ToolInCam[name].Keys)
+                    foreach (var key in CenterInCam1[name].Keys)
+                    {
+                        string path = $"{basePath}\\CamSet\\{name}\\{key}";
+                        if (!Directory.Exists(path))
+                        {
+                            Directory.CreateDirectory(path);
+                        }
+                        string paramPath = $"{path}\\CenterInCam1.dat";
+                        HFileIO.WritePosePara(paramPath, CenterInCam1[name][key]);
+                        File.Copy(paramPath, path + "\\CenterInCam1_bak.dat", true);
+                    }
+                }
+
+                foreach (var name in ToolInCam1.Keys)
+                {
+                    foreach (var key in ToolInCam1[name].Keys)
                     {
                         string path = $"{basePath}\\CamSet\\{name}\\{key}";
                         if (!Directory.Exists(path))
@@ -2999,7 +3101,7 @@ namespace _3DLaserGlueInspection
 
                         string paramPath = $"{path}\\ToolInCam.dat";
                         //ToolInCam[name][key].WritePose(paramPath);
-                        HFileIO.WritePosePara(paramPath, ToolInCam[name][key]);
+                        HFileIO.WritePosePara(paramPath, ToolInCam1[name][key]);
                         File.Copy(paramPath, path + "\\ToolInCam_bak.dat", true);
                     }
                 }
@@ -3084,20 +3186,20 @@ namespace _3DLaserGlueInspection
                 }
             }
 
-            if (ToolInCam.ContainsKey(source) && ToolInCam[source] != null)
+            if (ToolInCam1.ContainsKey(source) && ToolInCam1[source] != null)
             {
                 Dictionary<string, PoseParameters> pairs = new Dictionary<string, PoseParameters>();
-                foreach (var key in ToolInCam[source].Keys)
+                foreach (var key in ToolInCam1[source].Keys)
                 {
-                    pairs.Add(key, ToolInCam[source][key].Clone());
+                    pairs.Add(key, ToolInCam1[source][key].Clone());
                 }
-                if (ToolInCam.ContainsKey(target))
+                if (ToolInCam1.ContainsKey(target))
                 {
-                    ToolInCam[target] = pairs;
+                    ToolInCam1[target] = pairs;
                 }
                 else
                 {
-                    ToolInCam.Add(target, pairs);
+                    ToolInCam1.Add(target, pairs);
                 }
             }
             if (LightToCam.ContainsKey(source) && LightToCam[source] != null)
@@ -3116,39 +3218,39 @@ namespace _3DLaserGlueInspection
                     LightToCam.Add(target, pairs);
                 }
             }
-            if (CamToTool.ContainsKey(source) && CamToTool[source] != null)
+            if (Cam1ToTool.ContainsKey(source) && Cam1ToTool[source] != null)
             {
                 Dictionary<string, Mat> pairs = new Dictionary<string, Mat>();
-                foreach (var key in CamToTool[source].Keys)
+                foreach (var key in Cam1ToTool[source].Keys)
                 {
-                    pairs.Add(key, CamToTool[source][key].Clone());
+                    pairs.Add(key, Cam1ToTool[source][key].Clone());
                 }
-                if (CamToTool.ContainsKey(target))
+                if (Cam1ToTool.ContainsKey(target))
                 {
-                    CamToTool[target] = pairs;
+                    Cam1ToTool[target] = pairs;
                 }
                 else
                 {
-                    CamToTool.Add(target, pairs);
+                    Cam1ToTool.Add(target, pairs);
                 }
             }
 
 
 
-            if (Cam1InCam.ContainsKey(source) && Cam1InCam[source] != null)
+            if (CamInCam1.ContainsKey(source) && CamInCam1[source] != null)
             {
                 Dictionary<string, PoseParameters> pairs = new Dictionary<string, PoseParameters>();
-                foreach (var key in Cam1InCam[source].Keys)
+                foreach (var key in CamInCam1[source].Keys)
                 {
-                    pairs.Add(key, Cam1InCam[source][key].Clone());
+                    pairs.Add(key, CamInCam1[source][key].Clone());
                 }
-                if (Cam1InCam.ContainsKey(target))
+                if (CamInCam1.ContainsKey(target))
                 {
-                    Cam1InCam[target] = pairs;
+                    CamInCam1[target] = pairs;
                 }
                 else
                 {
-                    Cam1InCam.Add(target, pairs);
+                    CamInCam1.Add(target, pairs);
                 }
             }
 
@@ -3166,6 +3268,41 @@ namespace _3DLaserGlueInspection
                 else
                 {
                     CamToCam1.Add(target, pairs);
+                }
+            }
+
+
+            if (CenterInCam1.ContainsKey(source) && CenterInCam1[source] != null)
+            {
+                Dictionary<string, PoseParameters> pairs = new Dictionary<string, PoseParameters>();
+                foreach (var key in CenterInCam1[source].Keys)
+                {
+                    pairs.Add(key, CenterInCam1[source][key].Clone());
+                }
+                if (CenterInCam1.ContainsKey(target))
+                {
+                    CenterInCam1[target] = pairs;
+                }
+                else
+                {
+                    CenterInCam1.Add(target, pairs);
+                }
+            }
+
+            if (CenterToCam1.ContainsKey(source) && CenterToCam1[source] != null)
+            {
+                Dictionary<string, Mat> pairs = new Dictionary<string, Mat>();
+                foreach (var key in CenterToCam1[source].Keys)
+                {
+                    pairs.Add(key, CenterToCam1[source][key].Clone());
+                }
+                if (CenterToCam1.ContainsKey(target))
+                {
+                    CenterToCam1[target] = pairs;
+                }
+                else
+                {
+                    CenterToCam1.Add(target, pairs);
                 }
             }
         }

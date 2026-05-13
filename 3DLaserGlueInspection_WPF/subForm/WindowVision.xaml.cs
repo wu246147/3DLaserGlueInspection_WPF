@@ -621,7 +621,7 @@ namespace _3DLaserGlueInspection.subForm
             outlineCheck.Unchecked -= UpData;
 
             threNumericUpDown.TextChanged -= UpData;
-            laserMinWidthNumericUpDown.TextChanged += UpData;
+            laserMinWidthNumericUpDown.TextChanged -= UpData;
 
             singleFrameCheck.Checked -= UpData;
             singleFrameCheck.Unchecked -= UpData;
@@ -838,7 +838,7 @@ namespace _3DLaserGlueInspection.subForm
 
                         //夹角计算
                         if (CamParamName == null || camKey == null
-                           || !Params.CamToTool.TryGetValue(CamParamName, out var CamToTools) || !CamToTools.TryGetValue(camKey, out Mat Cam1ToTool)
+                           || !Params.Cam1ToTool.TryGetValue(CamParamName, out var CamToTools) || !CamToTools.TryGetValue(camKey, out Mat Cam1ToTool)
                            || !Params.CamToCam1.TryGetValue(CamParamName, out var CamToCam1s) || !CamToCam1s.TryGetValue(camKey, out Mat CamToCam1))
                         {
                             System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("缺少相机参数"));
@@ -1380,7 +1380,7 @@ namespace _3DLaserGlueInspection.subForm
                 || !Params.CamPar.TryGetValue(CamParamName, out var hCamPars) || !hCamPars.TryGetValue(camKey, out var hCamPar)
                 || !Params.LightInCam.TryGetValue(CamParamName, out var LightInCams) || !LightInCams.TryGetValue(camKey, out var LightInCam)
                 || !Params.LightToCam.TryGetValue(CamParamName, out var LightToCams) || !LightToCams.TryGetValue(camKey, out var LightToCam)
-                || !Params.CamToTool.TryGetValue(CamParamName, out var CamToTools) || !CamToTools.TryGetValue(camKey, out var Cam1ToTool)
+                || !Params.Cam1ToTool.TryGetValue(CamParamName, out var CamToTools) || !CamToTools.TryGetValue(camKey, out var Cam1ToTool)
                 || !Params.CamToCam1.TryGetValue(CamParamName, out var CamToCam1s) || !CamToCam1s.TryGetValue(camKey, out var CamToCam1))
             {
                 System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("无相机参数"));
@@ -1893,10 +1893,41 @@ namespace _3DLaserGlueInspection.subForm
                         //        }
                         //    }
                         //}
+
+                        if (CamParamName == null || camKey == null
+                           || !Params.Param.TryGetValue(CamParamName, out var camParams) || !camParams.TryGetValue(camKey, out var camParam)
+                           || !Params.CamPar.TryGetValue(CamParamName, out var hCamPars) || !hCamPars.TryGetValue(camKey, out var hCamPar)
+                           || !Params.LightInCam.TryGetValue(CamParamName, out var LightInCams) || !LightInCams.TryGetValue(camKey, out var LightInCam)
+                           || !Params.LightToCam.TryGetValue(CamParamName, out var LightToCams) || !LightToCams.TryGetValue(camKey, out var LightToCam)
+                           || !Params.Cam1ToTool.TryGetValue(CamParamName, out var CamToTools) || !CamToTools.TryGetValue(camKey, out var Cam1ToTool)
+                           || !Params.CamToCam1.TryGetValue(CamParamName, out var CamToCam1s) || !CamToCam1s.TryGetValue(camKey, out var CamToCam1)
+                           || !Params.CenterToCam1.TryGetValue(CamParamName, out var CenterToCam1s) || !CenterToCam1s.TryGetValue(camKey, out var CenterToCam1))
+
+                        {
+                            System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("无相机参数"));
+                            goto showCamPoseFinish;
+                        }
+
                         for (int i = 0; i < robotPoseValues.Count; i++)
                         {
                             var dictRobotPoseVal = robotPoseValues[i];
-                            _3DShowControl.AddPoint(dictRobotPoseVal.x, dictRobotPoseVal.y, dictRobotPoseVal.z, 4);
+
+                            //改为添加相机中心的坐标
+                            Mat ToolToBase = new Mat();
+                            Mat CenterToBase = new Mat();
+                            PoseParameters centerInBase = new PoseParameters();
+                            Vision.poseToHomMat3d(dictRobotPoseVal.PoseType, dictRobotPoseVal.x, dictRobotPoseVal.y, dictRobotPoseVal.z, dictRobotPoseVal.rx, dictRobotPoseVal.ry, dictRobotPoseVal.rz, ToolToBase.CvPtr);
+                            CenterToBase = ToolToBase * Cam1ToTool * CenterToCam1;
+                            centerInBase.PoseType = 2;
+                            Vision.HomMat3dToPose(centerInBase.PoseType, out double centerX, out double centerY, out double centerZ, out double centerRX, out double centerRY, out double centerRZ, CenterToBase.CvPtr);
+                            centerInBase.x = centerX;
+                            centerInBase.y = centerY;
+                            centerInBase.z = centerZ;
+                            centerInBase.rx = centerRX;
+                            centerInBase.ry = centerRY;
+                            centerInBase.rz = centerRZ;
+
+                            _3DShowControl.AddPoint(centerInBase.x, centerInBase.y, centerInBase.z, 4);
                         }
 
 
@@ -1904,18 +1935,6 @@ namespace _3DLaserGlueInspection.subForm
                         if (cutSetListBox.SelectedIndex >= 0 && selectCamListBox.SelectedIndex >= 0 && selectPictureListBox.SelectedIndex >= 0 && robotPoseKeys.Count > 0)
                         {
                             int indexRobotPose = 1;
-
-                            if (CamParamName == null || camKey == null
-                            || !Params.Param.TryGetValue(CamParamName, out var camParams) || !camParams.TryGetValue(camKey, out var camParam)
-                            || !Params.CamPar.TryGetValue(CamParamName, out var hCamPars) || !hCamPars.TryGetValue(camKey, out var hCamPar)
-                            || !Params.LightInCam.TryGetValue(CamParamName, out var LightInCams) || !LightInCams.TryGetValue(camKey, out var LightInCam)
-                            || !Params.LightToCam.TryGetValue(CamParamName, out var LightToCams) || !LightToCams.TryGetValue(camKey, out var LightToCam)
-                            || !Params.CamToTool.TryGetValue(CamParamName, out var CamToTools) || !CamToTools.TryGetValue(camKey, out var Cam1ToTool)
-                            || !Params.CamToCam1.TryGetValue(CamParamName, out var CamToCam1s) || !CamToCam1s.TryGetValue(camKey, out var CamToCam1))
-                            {
-                                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("无相机参数"));
-                                goto showCamPoseFinish;
-                            }
 
                             //获取机器人位姿
                             long imageKey = ImageKeys[cutSetListBox.SelectedIndex][camKey][selectPictureListBox.SelectedIndex];
@@ -2036,6 +2055,7 @@ namespace _3DLaserGlueInspection.subForm
                         var imageDict = Images[indexTaskCut][camKeyCopy];
 
                         var dictRobotPose = new Dictionary<long, PoseParameters>();
+
                         Robot3DPoseDict[camKeyCopy].Add(dictRobotPose);
                         var dictX = new Dictionary<long, List<double>>();
                         Point3DXsDict[camKeyCopy].Add(dictX);
@@ -2075,10 +2095,12 @@ namespace _3DLaserGlueInspection.subForm
                              || !Params.CamPar.TryGetValue(CamParamName, out var hCamPars) || !hCamPars.TryGetValue(camKey, out var hCamPar)
                              || !Params.LightInCam.TryGetValue(CamParamName, out var LightInCams) || !LightInCams.TryGetValue(camKey, out var LightInCam)
                              || !Params.LightToCam.TryGetValue(CamParamName, out var LightToCams) || !LightToCams.TryGetValue(camKey, out var LightToCam)
-                             || !Params.CamToTool.TryGetValue(CamParamName, out var CamToTools) || !CamToTools.TryGetValue(camKey, out var Cam1ToTool)
-                             || !Params.CamToCam1.TryGetValue(CamParamName, out var CamToCam1s) || !CamToCam1s.TryGetValue(camKey, out var CamToCam1))
+                             || !Params.Cam1ToTool.TryGetValue(CamParamName, out var CamToTools) || !CamToTools.TryGetValue(camKey, out var Cam1ToTool)
+                             || !Params.CamToCam1.TryGetValue(CamParamName, out var CamToCam1s) || !CamToCam1s.TryGetValue(camKey, out var CamToCam1)
+                             || !Params.CenterToCam1.TryGetValue(CamParamName, out var CenterToCam1s) || !CenterToCam1s.TryGetValue(camKey, out var CenterToCam1))
+
                             {
-                                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("无相机参数"));
+                        System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("无相机参数"));
                                 return;
                             }
 
@@ -2142,7 +2164,22 @@ namespace _3DLaserGlueInspection.subForm
                                                                            (double)(robotPoseKeys[indexRobotPose] - robotPoseKeys[indexRobotPose - 1])
                                                                            );
                                     //三维数据添加(机器人坐标)
-                                    dictRobotPose.Add(camTimeKey, robotPose);
+                                    //改为添加相机中心的坐标
+                                    Mat ToolToBase = new Mat();
+                                    Mat CenterToBase = new Mat();
+                                    PoseParameters centerInBase = new PoseParameters();
+                                    Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
+                                    CenterToBase = ToolToBase * Cam1ToTool * CenterToCam1;
+                                    centerInBase.PoseType = 2;
+                                    Vision.HomMat3dToPose(centerInBase.PoseType, out double centerX, out double centerY, out double centerZ, out double centerRX, out double centerRY, out double centerRZ, CenterToBase.CvPtr);
+                                    centerInBase.x = centerX;
+                                    centerInBase.y = centerY;
+                                    centerInBase.z = centerZ;
+                                    centerInBase.rx = centerRX;
+                                    centerInBase.ry = centerRY;
+                                    centerInBase.rz = centerRZ;
+
+                                    dictRobotPose.Add(camTimeKey, centerInBase);
 
                                     // 计算机器人移动距离
                                     if (dictRobotPose.Count > 0)
@@ -2605,7 +2642,7 @@ namespace _3DLaserGlueInspection.subForm
                 || !Params.CamPar.TryGetValue(CamParamName, out var hCamPars) || !hCamPars.TryGetValue(camKey, out var hCamPar)
                 || !Params.LightInCam.TryGetValue(CamParamName, out var LightInCams) || !LightInCams.TryGetValue(camKey, out var LightInCam)
                 || !Params.LightToCam.TryGetValue(CamParamName, out var LightToCams) || !LightToCams.TryGetValue(camKey, out var LightToCam)
-                || !Params.CamToTool.TryGetValue(CamParamName, out var CamToTools) || !CamToTools.TryGetValue(camKey, out var Cam1ToTool)
+                || !Params.Cam1ToTool.TryGetValue(CamParamName, out var CamToTools) || !CamToTools.TryGetValue(camKey, out var Cam1ToTool)
                 || !Params.CamToCam1.TryGetValue(CamParamName, out var CamToCam1s) || !CamToCam1s.TryGetValue(camKey, out var CamToCam1))
             {
                 System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("无相机参数"));
