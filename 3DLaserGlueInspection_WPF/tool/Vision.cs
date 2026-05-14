@@ -406,14 +406,20 @@ namespace _3DLaserGlueInspection
         }
 
         /// <summary>
-        /// 点坐标转换，从相机转为激光坐标系和机器人坐标系
+        /// 点坐标转换，从相机转为激光坐标系和机器人坐标系.眼在手上输出的是机器坐标系下的点云坐标；眼在手外输出的是法兰盘坐标系下的点云位置。
+        /// 眼在手上时，输出objToBase
+        /// 眼在手上时，输出objToTool
         /// </summary>
         /// <param name="imagePoint"></param>
         /// <param name="hCamPar"></param>
         /// <param name="LightInCam"></param>
         /// <param name="LightToCam"></param>
         /// <param name="CamToTool"></param>
+        /// 眼在手上时，应该调用CamToTool
+        /// 眼在手外时，应该调用CamToBase
         /// <param name="robotPose"></param>
+        /// 眼在手上时，应该调用robotPose
+        /// 眼在手外时，应该调用robotPoseInv
         /// <param name="lightXY"></param>
         /// <param name="robotX"></param>
         /// <param name="robotY"></param>
@@ -663,6 +669,25 @@ namespace _3DLaserGlueInspection
 
 
 
+        }
+
+        public static PoseParameters PoseInv(PoseParameters robotPose)
+        {
+            PoseParameters BaseInTool = new PoseParameters();
+            Mat ToolToBase = new Mat();
+            Mat BaseToTool = new Mat();
+            Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
+            BaseToTool = ToolToBase.Inv();
+
+            BaseInTool.PoseType = robotPose.PoseType;
+            Vision.HomMat3dToPose(BaseInTool.PoseType, out double centerX, out double centerY, out double centerZ, out double centerRX, out double centerRY, out double centerRZ, BaseToTool.CvPtr);
+            BaseInTool.x = centerX;
+            BaseInTool.y = centerY;
+            BaseInTool.z = centerZ;
+            BaseInTool.rx = centerRX;
+            BaseInTool.ry = centerRY;
+            BaseInTool.rz = centerRZ;
+            return BaseInTool;
         }
     }
     //public struct Point3D

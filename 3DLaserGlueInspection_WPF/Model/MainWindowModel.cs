@@ -3394,65 +3394,50 @@ namespace _3DLaserGlueInspection
                         {
                             if (Params.LightToCam.ContainsKey(camParamName) && Params.LightToCam[camParamName].ContainsKey(item.Key))
                             {
-                                if (Params.Cam1ToTool.ContainsKey(camParamName) && Params.Cam1ToTool[camParamName].ContainsKey(item.Key))
+                                if (Params.CamToCam1.ContainsKey(camParamName) && Params.CamToCam1[camParamName].ContainsKey(item.Key))
                                 {
-                                    if (Params.CamToCam1.ContainsKey(camParamName) && Params.CamToCam1[camParamName].ContainsKey(item.Key))
+                                    if (Params.CenterToCam1.ContainsKey(camParamName) && Params.CenterToCam1[camParamName].ContainsKey(item.Key))
                                     {
-                                        if (Params.CenterToCam1.ContainsKey(camParamName) && Params.CenterToCam1[camParamName].ContainsKey(item.Key))
+                                        if (Params.CamHandEyeType.ContainsKey(camParamName) && Params.CamHandEyeType[camParamName] == 0)
                                         {
+                                            if (Params.Cam1ToTool.ContainsKey(camParamName) && Params.Cam1ToTool[camParamName].ContainsKey(item.Key))
+                                            {
 
-                                            var dictImageKey = new SynchronizedList<SynchronizedList<long>>();
-                                            ImageKeys.Add(item.Key, dictImageKey);
-                                            var dictImage = new SynchronizedList<Dictionary<long, Mat>>();
-                                            Images.Add(item.Key, dictImage);
-
-                                            var dictRobotPose = new SynchronizedList<Dictionary<long, PoseParameters>>();
-                                            Robot3DPose.Add(item.Key, dictRobotPose);
-
-                                            var dictX = new SynchronizedList<Dictionary<long, List<double>>>();
-                                            Point3DXs.Add(item.Key, dictX);
-                                            var dictY = new SynchronizedList<Dictionary<long, List<double>>>();
-                                            Point3DYs.Add(item.Key, dictY);
-                                            var dictZ = new SynchronizedList<Dictionary<long, List<double>>>();
-                                            Point3DZs.Add(item.Key, dictZ);
-                                            var dictXLD = new SynchronizedList<Dictionary<long, Mat>>();
-
-                                            var dictV = new SynchronizedList<Dictionary<long, double>>();
-                                            glueVols.Add(item.Key, dictV);
-
-                                            outLineDict.Add(item.Key, dictXLD);
-                                            var dictRegion = new SynchronizedList<Dictionary<long, Mat>>();
-                                            glueRegionDict.Add(item.Key, dictRegion);
-                                            var dictRegionRectangle2 = new SynchronizedList<Dictionary<long, Mat>>();
-                                            glueSmallRectRegionDict.Add(item.Key, dictRegionRectangle2);
-                                            var dictData = new SynchronizedList<Dictionary<long, Data>>();
-                                            glueDataDict.Add(item.Key, dictData);
-                                            var dictResult = new SynchronizedList<Dictionary<long, BResult>>();
-                                            glueResultDict.Add(item.Key, dictResult);
-
-                                            indexImageCutProcessDict.Add(item.Key, 0);
-
-                                            displaySize.Add(item.Key, new SynchronizedList<System.Windows.Size>());
+                                            }
+                                            else
+                                            {
+                                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("坐标转换(CamToTool)不存在"), LogType.ng);
+                                                return false;
+                                            }
                                         }
                                         else
                                         {
-                                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("坐标转换(CenterToCam1)不存在"), LogType.ng);
-                                            return false;
+                                            if (Params.Cam1ToBase.ContainsKey(camParamName) && Params.Cam1ToBase[camParamName].ContainsKey(item.Key))
+                                            {
+
+                                            }
+                                            else
+                                            {
+                                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("坐标转换(CamToBase)不存在"), LogType.ng);
+                                                return false;
+                                            }
                                         }
 
                                     }
                                     else
                                     {
-                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("多相机转换(CamToCam1)不存在"), LogType.ng);
+                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("坐标转换(CenterToCam1)不存在"), LogType.ng);
                                         return false;
                                     }
 
                                 }
                                 else
                                 {
-                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("坐标转换(CamToTool)不存在"), LogType.ng);
+                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("多相机转换(CamToCam1)不存在"), LogType.ng);
                                     return false;
                                 }
+
+                               
                             }
                             else
                             {
@@ -3471,6 +3456,39 @@ namespace _3DLaserGlueInspection
                         ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("内参(camparam.cal)不存在"), LogType.ng);
                         return false;
                     }
+
+                    var dictImageKey = new SynchronizedList<SynchronizedList<long>>();
+                    ImageKeys.Add(item.Key, dictImageKey);
+                    var dictImage = new SynchronizedList<Dictionary<long, Mat>>();
+                    Images.Add(item.Key, dictImage);
+
+                    var dictRobotPose = new SynchronizedList<Dictionary<long, PoseParameters>>();
+                    Robot3DPose.Add(item.Key, dictRobotPose);
+
+                    var dictX = new SynchronizedList<Dictionary<long, List<double>>>();
+                    Point3DXs.Add(item.Key, dictX);
+                    var dictY = new SynchronizedList<Dictionary<long, List<double>>>();
+                    Point3DYs.Add(item.Key, dictY);
+                    var dictZ = new SynchronizedList<Dictionary<long, List<double>>>();
+                    Point3DZs.Add(item.Key, dictZ);
+                    var dictXLD = new SynchronizedList<Dictionary<long, Mat>>();
+
+                    var dictV = new SynchronizedList<Dictionary<long, double>>();
+                    glueVols.Add(item.Key, dictV);
+
+                    outLineDict.Add(item.Key, dictXLD);
+                    var dictRegion = new SynchronizedList<Dictionary<long, Mat>>();
+                    glueRegionDict.Add(item.Key, dictRegion);
+                    var dictRegionRectangle2 = new SynchronizedList<Dictionary<long, Mat>>();
+                    glueSmallRectRegionDict.Add(item.Key, dictRegionRectangle2);
+                    var dictData = new SynchronizedList<Dictionary<long, Data>>();
+                    glueDataDict.Add(item.Key, dictData);
+                    var dictResult = new SynchronizedList<Dictionary<long, BResult>>();
+                    glueResultDict.Add(item.Key, dictResult);
+
+                    indexImageCutProcessDict.Add(item.Key, 0);
+
+                    displaySize.Add(item.Key, new SynchronizedList<System.Windows.Size>());
                 }
             }
             ShowMessage(GlobalVarAndFunc.LanguageTranslate("初始化数据成功"));
@@ -3627,9 +3645,26 @@ namespace _3DLaserGlueInspection
                     var CenterToCam1 = Params.CenterToCam1[camParamName][item.Key];
 
                     /// 相机1坐标转为法兰盘坐标
-                    var Cam1ToTool = Params.Cam1ToTool[camParamName][item.Key];
+                    Mat Cam1ToTool = new Mat();
+                    Mat Cam1ToBase = new Mat();
+                    Mat CamToTool = new Mat();
+                    Mat CamToBase = new Mat();
 
-                    Mat CamToTool = Cam1ToTool * CamToCam1;
+                    if (Params.CamHandEyeType[camParamName] == 0)
+                    {
+                        Cam1ToTool = Params.Cam1ToTool[camParamName][item.Key];
+                        CamToTool = Cam1ToTool * CamToCam1;
+                    }
+                    else
+                    {
+                        //眼在手外，求Cam1ToTool,需要机器人pose才可以完成转换
+                        Cam1ToBase = Params.Cam1ToBase[camParamName][item.Key];
+                        CamToBase = Cam1ToBase * CamToCam1;
+
+                    }
+
+
+                    
 
                     tasks.Add(item.Key, Task.Run((Action)(() =>
                     {
@@ -3808,28 +3843,61 @@ namespace _3DLaserGlueInspection
                                                     robotPoseMat.At<double>(1, 5) = robotPose.rz;
                                                     robotPoseMat.At<double>(1, 6) = robotPose.PoseType;
 
+                                                    if (Params.CamHandEyeType[camParamName] == 1)
+                                                    {
+                                                        //眼在手外，求Cam1ToTool,需要机器人pose才可以完成转换
+                                                        //Mat BaseToTool = robotPoseMat.Inv();
+                                                        Mat ToolToBase = new Mat();
+                                                        Mat BaseToTool = new Mat();
+                                                        Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
+                                                        BaseToTool = ToolToBase.Inv();
+
+                                                        CamToTool = BaseToTool * Cam1ToBase * CamToCam1;
+                                                    }
+
                                                     Vision.robotAndCamVectorAngle(robotPoseMat.CvPtr, CamToTool.CvPtr, 2, 0, out robotAndCamAngle);
                                                 }
 
 
                                                 //三维数据添加机器人坐标
-                                                //改为添加相机中心的坐标
+                                                if (Params.CamHandEyeType[camParamName] == 0)
+                                                {
+                                                    //改为添加相机中心的坐标
+                                                    Mat ToolToBase = new Mat();
+                                                    Mat CenterToBase = new Mat();
+                                                    PoseParameters centerInBase = new PoseParameters();
+                                                    Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
+                                                    CenterToBase = ToolToBase * Cam1ToTool * CenterToCam1;
+                                                    centerInBase.PoseType = 2;
+                                                    Vision.HomMat3dToPose(centerInBase.PoseType, out double centerX, out double centerY, out double centerZ, out double centerRX, out double centerRY, out double centerRZ, CenterToBase.CvPtr);
+                                                    centerInBase.x = centerX;
+                                                    centerInBase.y = centerY;
+                                                    centerInBase.z = centerZ;
+                                                    centerInBase.rx = centerRX;
+                                                    centerInBase.ry = centerRY;
+                                                    centerInBase.rz = centerRZ;
+                                                    dictRobotPose.Add(imageKey, centerInBase);
+                                                }
+                                                else
+                                                {
+                                                    //也改为添加相机中心的坐标，但是这里是法兰盘的坐标系
+                                                    PoseParameters BaseInTool = Vision.PoseInv(robotPose);
+                                                    Mat BaseToTool = new Mat();
+                                                    PoseParameters centerInTool = new PoseParameters();
+                                                    Vision.poseToHomMat3d(BaseInTool.PoseType, BaseInTool.x, BaseInTool.y, BaseInTool.z, BaseInTool.rx, BaseInTool.ry, BaseInTool.rz, BaseToTool.CvPtr);
+                                                    Mat CenterToTool = new Mat();
+                                                    CenterToTool = BaseToTool * Cam1ToBase * CenterToCam1;
+                                                    centerInTool.PoseType = 2;
+                                                    Vision.HomMat3dToPose(centerInTool.PoseType, out double centerX, out double centerY, out double centerZ, out double centerRX, out double centerRY, out double centerRZ, CenterToTool.CvPtr);
+                                                    centerInTool.x = centerX;
+                                                    centerInTool.y = centerY;
+                                                    centerInTool.z = centerZ;
+                                                    centerInTool.rx = centerRX;
+                                                    centerInTool.ry = centerRY;
+                                                    centerInTool.rz = centerRZ;
+                                                    dictRobotPose.Add(imageKey, centerInTool);
 
-                                                Mat ToolToBase = new Mat();
-                                                Mat CenterToBase = new Mat();
-                                                PoseParameters centerInBase= new PoseParameters();
-                                                Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
-                                                CenterToBase = ToolToBase * Cam1ToTool*CenterToCam1;
-                                                centerInBase.PoseType = 2;
-                                                Vision.HomMat3dToPose(centerInBase.PoseType, out double centerX, out double centerY, out double centerZ, out double centerRX, out double centerRY, out double centerRZ, CenterToBase.CvPtr);
-                                                centerInBase.x = centerX;
-                                                centerInBase.y = centerY;
-                                                centerInBase.z = centerZ;
-                                                centerInBase.rx = centerRX;
-                                                centerInBase.ry = centerRY;
-                                                centerInBase.rz = centerRZ;
-
-                                                dictRobotPose.Add(imageKey, centerInBase);
+                                                }
 
                                                 //需要保证检测到有点，并且机器人已经处于移动状态
                                                 if (xy.Rows > 0 && dictRobotPose.Count > 0 && PoseD > 0)
@@ -3848,9 +3916,18 @@ namespace _3DLaserGlueInspection
                                                     //if (xy.Height > 0)
                                                     //{
 
-
-                                                    Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToTool,
+                                                    if (Params.CamHandEyeType[camParamName] == 0)
+                                                    {
+                                                        Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToTool,
                                                     robotPose, out lightXY, out robotX, out robotY, out robotZ);
+                                                    }
+                                                    else 
+                                                    {
+                                                        //搞个robot的逆pose，后面再专门打包个算法搞逆pose
+                                                        PoseParameters BaseInTool = Vision.PoseInv(robotPose);
+                                                        Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToBase,
+                                                            BaseInTool, out lightXY, out robotX, out robotY, out robotZ);
+                                                    }
 
                                                     //如果还没到开始id，则跳过显示
                                                     int indexCross = indexImage - cutSet.StartImageIndex;
