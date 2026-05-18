@@ -74,7 +74,7 @@
                     VerticalContentAlignment="Center"
                     Background="#FF242B35"
                     BorderBrush="{x:Null}"
-                    Content="AI 3D视觉涂胶检测系统 1.4.3"
+                    Content="AI 3D视觉涂胶检测系统 1.5.3"
                     FontSize="22"
                     Foreground="#FF1679D0" Margin="0,-2,0,0" />
 

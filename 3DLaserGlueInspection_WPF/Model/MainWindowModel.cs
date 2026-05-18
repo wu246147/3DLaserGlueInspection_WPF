@@ -3825,37 +3825,119 @@ namespace _3DLaserGlueInspection
                                                     var last = dictRobotPose.Last();
                                                     var lastRobotPose = last.Value;
 
-                                                    Mat robotPoseMat = new Mat();
-                                                    robotPoseMat = Mat.Zeros(2, 7, MatType.CV_64FC1);
-                                                    robotPoseMat.At<double>(0, 0) = lastRobotPose.x;
-                                                    robotPoseMat.At<double>(0, 1) = lastRobotPose.y;
-                                                    robotPoseMat.At<double>(0, 2) = lastRobotPose.z;
-                                                    robotPoseMat.At<double>(0, 3) = lastRobotPose.rx;
-                                                    robotPoseMat.At<double>(0, 4) = lastRobotPose.ry;
-                                                    robotPoseMat.At<double>(0, 5) = lastRobotPose.rz;
-                                                    robotPoseMat.At<double>(0, 6) = lastRobotPose.PoseType;
+                                                    
 
-                                                    robotPoseMat.At<double>(1, 0) = robotPose.x;
-                                                    robotPoseMat.At<double>(1, 1) = robotPose.y;
-                                                    robotPoseMat.At<double>(1, 2) = robotPose.z;
-                                                    robotPoseMat.At<double>(1, 3) = robotPose.rx;
-                                                    robotPoseMat.At<double>(1, 4) = robotPose.ry;
-                                                    robotPoseMat.At<double>(1, 5) = robotPose.rz;
-                                                    robotPoseMat.At<double>(1, 6) = robotPose.PoseType;
-
-                                                    if (Params.CamHandEyeType[camParamName] == 1)
+                                                    if (Params.CamHandEyeType[camParamName] == 0)
                                                     {
-                                                        //眼在手外，求Cam1ToTool,需要机器人pose才可以完成转换
-                                                        //Mat BaseToTool = robotPoseMat.Inv();
-                                                        Mat ToolToBase = new Mat();
-                                                        Mat BaseToTool = new Mat();
-                                                        Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
-                                                        BaseToTool = ToolToBase.Inv();
+                                                        Mat robotPoseMat = new Mat();
+                                                        robotPoseMat = Mat.Zeros(2, 7, MatType.CV_64FC1);
+                                                        robotPoseMat.At<double>(0, 0) = lastRobotPose.x;
+                                                        robotPoseMat.At<double>(0, 1) = lastRobotPose.y;
+                                                        robotPoseMat.At<double>(0, 2) = lastRobotPose.z;
+                                                        robotPoseMat.At<double>(0, 3) = lastRobotPose.rx;
+                                                        robotPoseMat.At<double>(0, 4) = lastRobotPose.ry;
+                                                        robotPoseMat.At<double>(0, 5) = lastRobotPose.rz;
+                                                        robotPoseMat.At<double>(0, 6) = lastRobotPose.PoseType;
 
-                                                        CamToTool = BaseToTool * Cam1ToBase * CamToCam1;
+                                                        robotPoseMat.At<double>(1, 0) = robotPose.x;
+                                                        robotPoseMat.At<double>(1, 1) = robotPose.y;
+                                                        robotPoseMat.At<double>(1, 2) = robotPose.z;
+                                                        robotPoseMat.At<double>(1, 3) = robotPose.rx;
+                                                        robotPoseMat.At<double>(1, 4) = robotPose.ry;
+                                                        robotPoseMat.At<double>(1, 5) = robotPose.rz;
+                                                        robotPoseMat.At<double>(1, 6) = robotPose.PoseType;
+
+                                                        Mat ToolToBase = new Mat();
+                                                        Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
+                                                        CamToBase = ToolToBase * CamToTool;
+
+                                                        Vision.robotAndCamVectorAngle(robotPoseMat.CvPtr, CamToBase.CvPtr, 2, 0, out robotAndCamAngle);
+                                                        //大于90的，都取缩小后的值
+                                                        if (robotAndCamAngle > 90)
+                                                        {
+                                                            robotAndCamAngle = 180 - robotAndCamAngle;
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        Mat camInTools = new Mat();
+                                                        camInTools = Mat.Zeros(2, 7, MatType.CV_64FC1);
+
+                                                        //这里直接使用Cam2Tool，后面可以使用Center2Tool
+                                                        //轨迹的前一个点，要转成center2Tool
+                                                        {
+                                                            Mat ToolToBase = new Mat();
+                                                            Mat BaseToTool = new Mat();
+                                                            Mat CenterToTool = new Mat();
+                                                            Vision.poseToHomMat3d(lastRobotPose.PoseType, lastRobotPose.x, lastRobotPose.y, lastRobotPose.z,
+                                                                lastRobotPose.rx, lastRobotPose.ry, lastRobotPose.rz, ToolToBase.CvPtr);
+
+                                                            BaseToTool = ToolToBase.Inv();
+
+                                                            CenterToTool = BaseToTool * Cam1ToBase * CenterToCam1;
+
+                                                            double x, y, z, rx, ry, rz;
+                                                            Vision.HomMat3dToPose(2,out x, out y, out z, out rx, out ry, out rz, CenterToTool.CvPtr);
+
+                                                            camInTools.At<double>(0, 0) = x;
+                                                            camInTools.At<double>(0, 1) = y;
+                                                            camInTools.At<double>(0, 2) = z;
+                                                            camInTools.At<double>(0, 3) = rx;
+                                                            camInTools.At<double>(0, 4) = ry;
+                                                            camInTools.At<double>(0, 5) = rz;
+                                                            camInTools.At<double>(0, 6) = 2;
+
+                                                        }
+                                                        //轨迹的后一个点，要转成center2Tool
+                                                        {
+                                                            Mat ToolToBase = new Mat();
+                                                            Mat BaseToTool = new Mat();
+                                                            Mat CenterToTool = new Mat();
+                                                            Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z,
+                                                                robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
+
+                                                            BaseToTool = ToolToBase.Inv();
+
+                                                            CenterToTool = BaseToTool * Cam1ToBase * CenterToCam1;
+
+                                                            double x, y, z, rx, ry, rz;
+                                                            Vision.HomMat3dToPose(2, out x, out y, out z, out rx, out ry, out rz, CenterToTool.CvPtr);
+
+                                                            camInTools.At<double>(1, 0) = x;
+                                                            camInTools.At<double>(1, 1) = y;
+                                                            camInTools.At<double>(1, 2) = z;
+                                                            camInTools.At<double>(1, 3) = rx;
+                                                            camInTools.At<double>(1, 4) = ry;
+                                                            camInTools.At<double>(1, 5) = rz;
+                                                            camInTools.At<double>(1, 6) = 2;
+
+                                                        }
+
+                                                        //检测的相机位姿
+                                                        {
+                                                            //眼在手外，求Cam1ToTool,需要机器人pose才可以完成转换
+                                                            //Mat BaseToTool = robotPoseMat.Inv();
+                                                            Mat ToolToBase = new Mat();
+                                                            Mat BaseToTool = new Mat();
+                                                            Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
+                                                            BaseToTool = ToolToBase.Inv();
+
+                                                            CamToTool = BaseToTool * Cam1ToBase * CamToCam1;
+
+                                                            Vision.robotAndCamVectorAngle(camInTools.CvPtr, CamToTool.CvPtr, 2, 0, out robotAndCamAngle);
+
+                                                            //眼在手外，要减180度
+                                                            robotAndCamAngle = 180 - robotAndCamAngle;
+                                                            //大于90的，都取缩小后的值
+                                                            if (robotAndCamAngle > 90)
+                                                            {
+                                                                robotAndCamAngle = 180 - robotAndCamAngle;
+                                                            }
+                                                        }
+
                                                     }
 
-                                                    Vision.robotAndCamVectorAngle(robotPoseMat.CvPtr, CamToTool.CvPtr, 2, 0, out robotAndCamAngle);
+
                                                 }
 
 
