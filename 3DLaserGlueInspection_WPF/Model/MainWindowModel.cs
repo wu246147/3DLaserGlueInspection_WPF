@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.UI.WebControls;
 using System.Windows;
+using System.Windows.Forms;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
@@ -629,7 +630,7 @@ namespace _3DLaserGlueInspection
                     #endregion
                     //Invoke(new Action(() => { form3DShow.ClearCloud(); }));
                     //清空结果
-                    Application.Current.Dispatcher.Invoke(() =>
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
                     {
                         Clear3DPointControlEvent();
                         DispClearHWindowControlEvent();
@@ -651,7 +652,7 @@ namespace _3DLaserGlueInspection
                         if (!Write(item, false)) return;
                     }
 
-                    Application.Current.Dispatcher.Invoke(() =>
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
                     {
                         mainModel.ImageResultRecords.Clear();
                     });
@@ -710,7 +711,7 @@ namespace _3DLaserGlueInspection
                     if (stop) return;
 
                     //显示NumericalModelDiagram
-                    Application.Current.Dispatcher.Invoke(() =>
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
                     {
                         DispImageHWindowNumericalModelDiagramEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(set.image));
                     });
@@ -1012,7 +1013,11 @@ namespace _3DLaserGlueInspection
                                     }
                                     //form3DShow.InsertNextPoint(hPose.RawData[0], hPose.RawData[1], hPose.RawData[2], (hPose.RawData[2].D - 颜色下限值) / 范围);
                                 }
-                                Thread.Sleep(20);
+                                ////暂时定间隔20ms
+                                //Thread.Sleep(20);
+
+                                //加快到5ms 
+                                Thread.Sleep(5);
                                 if (stop) break;
                             }
                         }
@@ -1120,7 +1125,7 @@ namespace _3DLaserGlueInspection
                                                 {
                                                     var cutSet = set.CutSets[indexImageCutProcessDict[item.Key]];
                                                     var imageSet = set.CutSets[indexImageCutProcessDict[item.Key]].imageSet[camIndex][indexImage];
-                                                    // 临时结果保存变量
+                                                    // 结果保存变量
                                                     bool getOutlineResult = false;
                                                     bool singleFrameExistOutline = false;
                                                     bool singleFrameExistGlue = false;
@@ -1598,7 +1603,7 @@ namespace _3DLaserGlueInspection
                                                     double fps = dictImageKey.Count * 1000.0 * 1000.0 / key;
                                                     //Console.WriteLine("fps:{0}", fps);
 
-                                                    Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                                                    System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                                                     {
                                                         lock (olockDataGridViewImageList)
                                                         {
@@ -1720,7 +1725,7 @@ namespace _3DLaserGlueInspection
                                                                 dictImageKey.Add(key);
                                                                 var dictImageKeyCount = dictImageKey.Count;
 
-                                                                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                                                                    System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                                                                 {
 
                                                                     lock (olockDataGridViewImageList)
@@ -2245,7 +2250,7 @@ namespace _3DLaserGlueInspection
 
                     mainModel.resultControl = totalResult ? "OK" : "NG";
                     mainModel.resultColorControl = totalResult ? "#FF06BD00" : "Red";
-                    Application.Current.Dispatcher.Invoke(() =>
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
                     {
                         CarResultRecord carResultRecord = new CarResultRecord();
                         carResultRecord.CarDetTime = dateTime.ToString("yyyy-MM-dd HH:mm:ss");
@@ -2700,7 +2705,7 @@ namespace _3DLaserGlueInspection
                                                     double fps = dictImageKey.Count * 1000.0 * 1000.0 / key;
                                                     //Console.WriteLine("fps:{0}", fps);
 
-                                                    Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                                                    System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                                                     {
                                                         lock (olockDataGridViewImageList)
                                                         {
@@ -2822,7 +2827,7 @@ namespace _3DLaserGlueInspection
                                                                 dictImageKey.Add(key);
                                                                 var dictImageKeyCount = dictImageKey.Count;
 
-                                                                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                                                                System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                                                                 {
 
                                                                     lock (olockDataGridViewImageList)
@@ -3092,7 +3097,7 @@ namespace _3DLaserGlueInspection
 
                     mainModel.resultControl = totalResult ? "OK" : "NG";
                     mainModel.resultColorControl = totalResult ? "#FF06BD00" : "Red";
-                    Application.Current.Dispatcher.Invoke(() =>
+                        System.Windows.Application.Current.Dispatcher.Invoke(() =>
                     {
                         CarResultRecord carResultRecord = new CarResultRecord();
                         carResultRecord.CarDetTime = dateTime.ToString("yyyy-MM-dd HH:mm:ss");
@@ -3292,7 +3297,7 @@ namespace _3DLaserGlueInspection
 
             Setting set_copy = set;
             //显示NumericalModelDiagram
-            Application.Current.Dispatcher.Invoke(() =>
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
                 DispImageHWindowNumericalModelDiagramEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(set_copy.image));
             });
@@ -3620,7 +3625,12 @@ namespace _3DLaserGlueInspection
                             }
                             //form3DShow.InsertNextPoint(hPose.RawData[0], hPose.RawData[1], hPose.RawData[2], (hPose.RawData[2].D - 颜色下限值) / 范围);
                         }
-                        Thread.Sleep(20);
+                        ////暂时定间隔20ms
+                        //Thread.Sleep(20);
+
+                        //加快到5ms 
+                        Thread.Sleep(5);
+
                         if (stop) break;
                     }
                 }
@@ -3748,7 +3758,7 @@ namespace _3DLaserGlueInspection
                                         {
                                             var cutSet = set_copy.CutSets[indexImageCutProcessDict[item.Key]];
                                             var imageSet = set_copy.CutSets[indexImageCutProcessDict[item.Key]].imageSet[camIndex][indexImage];
-                                            // 临时结果保存变量
+                                            // 结果保存变量
                                             bool getOutlineResult = false;
                                             bool singleFrameExistOutline = false;
                                             bool singleFrameExistGlue = false;
@@ -4109,7 +4119,7 @@ namespace _3DLaserGlueInspection
                                                             Vision.singleFrameDetAndResult(hXLDContPorcess, imageSet, cutSet, ref singleFrameExistGlue, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2);
 
                                                             //计算涂胶体积
-                                                            //V = resultData.glueArea * PoseD;
+                                                            V = resultData.glueArea * PoseD;
 
 
                                                         }
@@ -4315,7 +4325,7 @@ namespace _3DLaserGlueInspection
             #endregion
             //Invoke(new Action(() => { form3DShow.ClearCloud(); }));
             //清空结果
-            Application.Current.Dispatcher.Invoke(() =>
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
                 Clear3DPointControlEvent();
                 DispClearHWindowControlEvent();
@@ -4323,7 +4333,7 @@ namespace _3DLaserGlueInspection
 
             GC.Collect();
 
-            Application.Current.Dispatcher.Invoke(() =>
+            System.Windows. Application.Current.Dispatcher.Invoke(() =>
             {
                 mainModel.ImageResultRecords.Clear();
             });
@@ -4332,7 +4342,7 @@ namespace _3DLaserGlueInspection
         private void hWindowNumericalModelDiagramDispCross(double row, double col, double angle, double size, System.Windows.Media.Color color)
         {
             //生成交叉图案
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
                 //Mat hXLDCont = new Mat();
                 PointCollection Points1 = new PointCollection();
@@ -4521,18 +4531,23 @@ namespace _3DLaserGlueInspection
         #endregion
 
 
-        public void ShowMessage(string mesage)
+        public void ShowMessage(string message)
         {
-            ShowMessage(mesage, LogType.normal);
+            ShowMessage(message, LogType.normal);
         }
 
-        public void ShowMessage(string mesage, LogType type)
+        object olock = new object();
+
+        public void ShowMessage(string message, LogType type)
         {
             DateTime dateTime = DateTime.Now;
+            string day = dateTime.ToString("yyyy-MM-dd");
+            string time = dateTime.ToString("HH:mm:ss.fff");
+
 
             LogRecord logRecord = new LogRecord();
             logRecord.LogTime = dateTime.ToString("G");
-            logRecord.LogInfo = mesage;
+            logRecord.LogInfo = message;
 
             switch (type)
             {
@@ -4554,7 +4569,7 @@ namespace _3DLaserGlueInspection
                 default:
                     break;
             }
-            Application.Current.Dispatcher.Invoke(() =>
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
                 while (mainModel.LogRecords.Count > 10000)
                     //while (mainModel.LogRecords.Count > 0)
@@ -4563,6 +4578,26 @@ namespace _3DLaserGlueInspection
                 }
                 mainModel.LogRecords.Insert(0, logRecord);
             });
+
+            lock (olock)
+            {
+                if (!Directory.Exists("RunLog"))
+                {
+                    Directory.CreateDirectory("RunLog");
+                }
+                using (StreamWriter writer = new StreamWriter("RunLog\\" + day + ".log", true))
+                {
+                    writer.WriteLine(time + " " + message);
+                }
+                if (type == LogType.ng || type == LogType.warn)
+                {
+                    try
+                    {
+                        File.AppendAllText("Error.log", dateTime.ToString("yyyy-MM-dd HH:mm:ss  ") + message + "\r\n\r\n");
+                    }
+                    catch { }
+                }
+            }
 
         }
 
@@ -4598,7 +4633,7 @@ namespace _3DLaserGlueInspection
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.ToString());
+                    System.Windows.MessageBox.Show(ex.ToString());
                 }
                 showing = false;
             }
@@ -4668,7 +4703,7 @@ namespace _3DLaserGlueInspection
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.ToString());
+                    System.Windows.MessageBox.Show(ex.ToString());
                 }
                 showing = false;
             }

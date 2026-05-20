@@ -571,14 +571,14 @@
                         Fill="LightGreen"
                         FontSize="14"
                         Stroke="White"
-                        Values="456" />
+                        Values="1" />
                     <lvc:PieSeries
                         Title="NG"
                         DataLabels="True"
                         Fill="Red"
                         FontSize="14"
                         Stroke="White"
-                        Values="36" />
+                        Values="1" />
                 </lvc:PieChart.Series>
             </lvc:PieChart>
             <Border

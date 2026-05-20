@@ -124,7 +124,7 @@ namespace _3DLaserGlueInspection
 
             thinningD(Image.CvPtr, outImage.CvPtr, outlinePoints.CvPtr, (int)minThreshold, laserMinWidth);
 
-            ////临时添加
+            ////添加
             //Vision.printPoint(outlinePoints, "outlinePoints");
             //Console.WriteLine($"outlinePoints:\r\n");
 
@@ -167,7 +167,7 @@ namespace _3DLaserGlueInspection
 
         public static void showMatPoint(Mat Points, string windowName)
         {
-            //临时显示
+            //显示
             double imgW = 0;
             double imgH = 0;
             for (int i = 0; i < Points.Rows; i++)

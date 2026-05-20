@@ -28,6 +28,7 @@ using System.Data.Common;
 using System.Diagnostics;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Rebar;
 using System.Windows.Media.Media3D;
+using System.Reflection;
 namespace _3DLaserGlueInspection.subForm
 {
     /// <summary>
@@ -958,7 +959,28 @@ namespace _3DLaserGlueInspection.subForm
                                 Vision.poseToHomMat3d(currentRobotPose.PoseType, currentRobotPose.x, currentRobotPose.y, currentRobotPose.z, currentRobotPose.rx, currentRobotPose.ry, currentRobotPose.rz, ToolToBase.CvPtr);
                                 BaseToTool = ToolToBase.Inv();
 
+                                //临时测试，中心点位姿
+                                //CamToTool = BaseToTool * Cam1ToBase * CenterToCam1;
+
+                                //当前相机的位姿
                                 CamToTool = BaseToTool * CamToBase;
+
+                                //Vision.showMatPoint(CamToTool, "CamToTool");
+
+                                Console.Write($"CamToTool:\r\n[");
+                                for (int i = 0; i < CamToTool.Rows; i++)
+                                {
+                                    Console.Write($"[");
+                                    for (int j = 0; j < CamToTool.Cols; j++)
+                                    {
+                                        Console.Write($"{CamToTool.At<double>(i, j)},");
+                                    }
+                                    Console.Write($"]");
+                                    Console.Write($"\r\n");
+
+                                }
+                                Console.Write($"]");
+
                             }
                             // 角度计算
                             Vision.robotAndCamVectorAngle(robotPoseMat.CvPtr, CamToTool.CvPtr, 2, 0, out robotAndCamAngle);
@@ -1542,7 +1564,7 @@ namespace _3DLaserGlueInspection.subForm
             }
 
 
-            // 临时结果保存变量
+            // 结果保存变量
             bool getOutlineResult = false;
             hXLDCont10mm = new Mat();
 
@@ -2171,6 +2193,8 @@ namespace _3DLaserGlueInspection.subForm
                                 PoseParameters centerInTool = new PoseParameters();
                                 Vision.poseToHomMat3d(BaseInTool.PoseType, BaseInTool.x, BaseInTool.y, BaseInTool.z, BaseInTool.rx, BaseInTool.ry, BaseInTool.rz, BaseToTool.CvPtr);
 
+                                // 临时测试
+                                //CamToTool = BaseToTool * Cam1ToBase * CenterToCam1;
 
                                 CamToTool = BaseToTool * Cam1ToBase * CamToCam1;
 
@@ -2354,7 +2378,7 @@ namespace _3DLaserGlueInspection.subForm
                             
 
 
-                            // 临时结果保存变量
+                            // 结果保存变量
                             bool getOutlineResult = false;
                             bool singleFrameExisOutline = false;
                             bool singleFrameExistGlue = false;
@@ -2427,7 +2451,7 @@ namespace _3DLaserGlueInspection.subForm
                                         centerInBase.rz = centerRZ;
                                         dictRobotPose.Add(camTimeKey, centerInBase);
 
-                                        ////临时测试
+                                        ////测试
                                         _3DShowControl.AddPoint(centerX, centerY, centerZ, 4);
 
                                     }
@@ -2454,7 +2478,7 @@ namespace _3DLaserGlueInspection.subForm
                                         centerInTool.rz = centerRZ;
                                         dictRobotPose.Add(camTimeKey, centerInTool);
 
-                                        ////临时测试
+                                        ////测试
                                         _3DShowControl.AddPoint(centerX, centerY, centerZ, 4);
 
                                     }
@@ -2634,7 +2658,7 @@ namespace _3DLaserGlueInspection.subForm
 
                                         List<double> robotX, robotY, robotZ, colorScale;
 
-                                        ////临时测试
+                                        ////测试
                                         if (Params.CamHandEyeType[CamParamName] == 0)
                                         {
                                             Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToTool,
@@ -2730,7 +2754,7 @@ namespace _3DLaserGlueInspection.subForm
                                                     hXLDCont10mm3D = hXLDCont10mm.Clone();
                                                 }
 
-                                                //临时测试
+                                                //测试
                                                 Vision.singleFrameDetAndResult(hXLDCont10mm3D, imageSet, cutSet, ref singleFrameExistGlue, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2);
                                                 //计算涂胶体积
                                                 V = resultData.glueArea * PoseD;
@@ -3081,7 +3105,7 @@ namespace _3DLaserGlueInspection.subForm
 
             }
 
-            // 临时结果保存变量
+            // 结果保存变量
             bool getOutlineResult = false;
 
             //清空3d界面
@@ -3126,12 +3150,12 @@ namespace _3DLaserGlueInspection.subForm
                     }
 
 
-                    //临时修改，让相机拍照偏移值为0，测试用
+                    //修改，让相机拍照偏移值为0，测试用
                     //Vision.getLaserPosition(imgCut, imageSet.minThreshold, out xy,  LeftX,  TopY);
                     Vision.getLaserPosition(imgCut, imageSet.minThreshold, imageSet.laserMinWidth, out xy, camParam.OffsetX + LeftX, camParam.OffsetY + TopY);
 
 
-                    ////临时添加
+                    ////添加
                     //Vision.printPoint(xy, "xy");
 
                     if (xy.Rows > 0)
@@ -3170,7 +3194,7 @@ namespace _3DLaserGlueInspection.subForm
                             Vision.scalePoint(lightXY, cutSet, 90 - LightInCam.rx, out hXLDCont10mm);
                             //Vision.showMatPoint(lightXY, "lightXY");
 
-                            ////临时添加
+                            ////添加
 
                             //Console.WriteLine($"lightXY:\r\n");
 
@@ -3220,7 +3244,7 @@ namespace _3DLaserGlueInspection.subForm
                             }
 
                             //Vision.showMatPoint(hXLDCont10mm, "hXLDCont10mm");
-                            ////临时添加
+                            ////添加
                             //Vision.printPoint(hXLDCont10mm, "hXLDCont10mm");
 
                             //Console.WriteLine($"hXLDCont10mm:\r\n");
