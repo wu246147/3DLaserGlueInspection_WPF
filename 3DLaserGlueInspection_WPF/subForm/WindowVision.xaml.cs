@@ -967,19 +967,19 @@ namespace _3DLaserGlueInspection.subForm
 
                                 //Vision.showMatPoint(CamToTool, "CamToTool");
 
-                                Console.Write($"CamToTool:\r\n[");
-                                for (int i = 0; i < CamToTool.Rows; i++)
-                                {
-                                    Console.Write($"[");
-                                    for (int j = 0; j < CamToTool.Cols; j++)
-                                    {
-                                        Console.Write($"{CamToTool.At<double>(i, j)},");
-                                    }
-                                    Console.Write($"]");
-                                    Console.Write($"\r\n");
+                                //Console.Write($"CamToTool:\r\n[");
+                                //for (int i = 0; i < CamToTool.Rows; i++)
+                                //{
+                                //    Console.Write($"[");
+                                //    for (int j = 0; j < CamToTool.Cols; j++)
+                                //    {
+                                //        Console.Write($"{CamToTool.At<double>(i, j)},");
+                                //    }
+                                //    Console.Write($"]");
+                                //    Console.Write($"\r\n");
 
-                                }
-                                Console.Write($"]");
+                                //}
+                                //Console.Write($"]");
 
                             }
                             // 角度计算

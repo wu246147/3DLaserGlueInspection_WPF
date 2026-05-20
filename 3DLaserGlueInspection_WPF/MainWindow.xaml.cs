@@ -118,54 +118,58 @@ namespace _3DLaserGlueInspection
         private void ButtonRun_Click(object sender, RoutedEventArgs e)
         {
             //正常启动
-            //if ((string)ButtonRun.Content == GlobalVarAndFunc.LanguageTranslate("启动"))
-            //{
-            //    if (model.simulation)
-            //    {
-            //        if (model.simulationPath == "")
-            //        {
-            //            model.ShowMessage(GlobalVarAndFunc.LanguageTranslate("仿真路径未填写"), LogType.warn);
-            //            return;
-            //        }
-            //        else if (!Directory.Exists(model.simulationPath))
-            //        {
-            //            model.ShowMessage(GlobalVarAndFunc.LanguageTranslate("仿真路径不存在"), LogType.warn);
-            //            return;
-            //        }
-            //    }
-            //    if (mainThread == null || !mainThread.IsAlive)
-            //    {
-            //        model.stop = false;
-            //        mainThread = new Thread(model.MainRun);
-            //        mainThread.Start();
-            //    }
-            //    else
-            //    {
-            //        model.ShowMessage(GlobalVarAndFunc.LanguageTranslate("主线程已经运行中"), LogType.warn);
-            //    }
-            //    //ButtonRun.Content = GlobalVarAndFunc.LanguageTranslate("停止");
-            //    //button启停.Image = Resources._3;
+            if ((string)ButtonRun.Content == GlobalVarAndFunc.LanguageTranslate("启动"))
+            {
+                if (model.simulation)
+                {
+                    if (model.simulationPath == "")
+                    {
+                        model.ShowMessage(GlobalVarAndFunc.LanguageTranslate("仿真路径未填写"), LogType.warn);
+                        return;
+                    }
+                    else if (!Directory.Exists(model.simulationPath))
+                    {
+                        model.ShowMessage(GlobalVarAndFunc.LanguageTranslate("仿真路径不存在"), LogType.warn);
+                        return;
+                    }
+                }
+                if (mainThread == null || !mainThread.IsAlive)
+                {
+                    model.stop = false;
+                    //mainThread = new Thread(model.MainRun);
 
-            //    model.mainModel.buttonRunContentControl = GlobalVarAndFunc.LanguageTranslate("停止");
-            //    model.mainModel.buttonRunTagControl = "\uE67A";
+                    //测试取像问题
+                    mainThread = new Thread(model.AcqAndRobotTest);
 
-            //}
-            //else
-            //{
-            //    if (mainThread != null && mainThread.IsAlive)
-            //    {
+                    mainThread.Start();
+                }
+                else
+                {
+                    model.ShowMessage(GlobalVarAndFunc.LanguageTranslate("主线程已经运行中"), LogType.warn);
+                }
+                //ButtonRun.Content = GlobalVarAndFunc.LanguageTranslate("停止");
+                //button启停.Image = Resources._3;
 
-            //    }
-            //    model.stop = true;
-            //    model.mainModel.buttonRunContentControl = GlobalVarAndFunc.LanguageTranslate("启动");
-            //    model.mainModel.buttonRunTagControl = "\uE658";
-            //}
+                model.mainModel.buttonRunContentControl = GlobalVarAndFunc.LanguageTranslate("停止");
+                model.mainModel.buttonRunTagControl = "\uE67A";
 
-            //测试
+            }
+            else
+            {
+                if (mainThread != null && mainThread.IsAlive)
+                {
 
-            //PieChartResult.Series[0].Values = new ChartValues<double> { 100 };
-            model.mainModel.OKCountControl += 1;
-            model.mainModel.NGCountControl += 1;
+                }
+                model.stop = true;
+                model.mainModel.buttonRunContentControl = GlobalVarAndFunc.LanguageTranslate("启动");
+                model.mainModel.buttonRunTagControl = "\uE658";
+            }
+
+            ////测试
+
+            ////PieChartResult.Series[0].Values = new ChartValues<double> { 100 };
+            //model.mainModel.OKCountControl += 1;
+            //model.mainModel.NGCountControl += 1;
 
         }
 

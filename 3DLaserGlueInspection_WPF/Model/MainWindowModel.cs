@@ -1016,8 +1016,12 @@ namespace _3DLaserGlueInspection
                                 ////暂时定间隔20ms
                                 //Thread.Sleep(20);
 
-                                //加快到5ms 
-                                Thread.Sleep(5);
+                                //加快到5ms ,太快了机器人不行
+                                //Thread.Sleep(5);
+
+                                //库卡测下来30比较好
+                                Thread.Sleep(30);
+
                                 if (stop) break;
                             }
                         }
@@ -3238,6 +3242,854 @@ namespace _3DLaserGlueInspection
                 catch { }
             }
         }
+
+
+        public void AcqAndRobotTest()
+        {
+            try
+            {
+
+                //加载参数
+                #region 加载参数
+                if (Params.Load())
+                {
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机参数加载成功"));
+                }
+                else
+                {
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机参数加载失败：") + Params.ErrMsg, LogType.ng);
+                    return;
+                }
+                if (cars.Load())
+                {
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("产品配置参数加载成功"));
+                    sets.Clear();
+                    bool bLoad = true;
+                    foreach (var item in cars.Cars.Values)
+                    {
+                        Setting set = new Setting(item.Name);
+                        if (set.Load())
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("产品参数") + " " + item.Name + " " + GlobalVarAndFunc.LanguageTranslate("加载成功"));
+                        }
+                        else
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("产品参数") + " " + item.Name + " " + GlobalVarAndFunc.LanguageTranslate("加载失败：") + set.ErrMsg, LogType.ng);
+                            bLoad = false;
+                        }
+                        sets.Add(item.Name, set);
+                    }
+                    if (!bLoad)
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("产品配置参数加载失败：") + cars.ErrMsg, LogType.ng);
+                    return;
+                }
+                if (robot.Load())
+                {
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("机器人参数加载成功"));
+                }
+                else
+                {
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("机器人参数加载失败：") + robot.ErrMsg, LogType.ng);
+                    return;
+                }
+
+                #endregion
+
+                //连接设备
+                #region 连接设备
+                if (!simulation)
+                {
+                    if (robot.Open())
+                    {
+                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("机器人连接成功"));
+
+                        mainModel.robotCommunicationLabelColorControl = labelColorEnum["green"];
+                    }
+                    else
+                    {
+                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("机器人连接失败：") + robot.ErrMsg, LogType.ng);
+
+                        mainModel.robotCommunicationLabelColorControl = labelColorEnum["red"];
+
+                        return;
+                    }
+                }
+                #endregion
+
+                mainModel.softwareRunLabelColorControl = labelColorEnum["green"];
+                //初始化
+                resetSignal();
+
+                while (!stop)
+                {
+
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("输出Ready信号"));
+
+                    //等待开始信号
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待开始信号"));
+                    while (true)
+                    {
+                        bool val;
+                        if (isStart)
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("收到开始信号"));
+                            break;
+                        }
+
+                        Thread.Sleep(60);
+                        if (stop) return;
+                    }
+                    //收到信号后，就立刻恢复状态
+                    resetSignal();
+
+                    ushort ID;
+                    Car car;
+                    string inVIN;
+                    DateTime dateTime;
+                    Dictionary<string, CamParam> camParam;
+                    Setting set;
+
+
+                    set = new Setting("1");
+                    inVIN = "";
+                    camParam = new Dictionary<string, CamParam>();
+                    dateTime = DateTime.Now;
+
+                    //清除数据
+                    clearData();
+
+                    //开始计时
+                    watch.Restart();
+
+                    //获取产品号
+                    ID = 0;
+                    car = new Car();
+                    ID = (ushort)CarNumber;
+                    bool isExist = false;
+                    foreach (var item in cars.Cars.Values)
+                    {
+                        if (item.IDs.Contains(ID))
+                        {
+                            car = item;
+                            isExist = true;
+                            break;
+                        }
+                    }
+                    if (!isExist)
+                    {
+                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("不存在车型") + " " + ID, LogType.ng);
+                        return ;
+                    }
+
+
+                    //获取车架号VIN
+                    inVIN = "";
+                    dateTime = DateTime.Now;
+                    mainModel.productIDControl = ID.ToString();
+                    mainModel.nameControl = car.Name;
+                    mainModel.VINControl = inVIN;
+                    mainModel.timeControl = dateTime.ToString("G");
+                    mainModel.resultControl = "--";
+                    mainModel.resultColorControl = "White";
+
+
+                    //检测参数是否存在
+                    string camParamName = car.CamParamName;
+                    if (!Params.Param.TryGetValue(camParamName, out camParam))
+                    {
+                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("不存在相机参数：") + camParamName, LogType.ng);
+                        return ;
+                    }
+                    if (!sets.TryGetValue(car.Name, out set))
+                    {
+                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("不存在产品参数：") + car.Name, LogType.ng);
+                        return ;
+                    }
+                    if (stop) return ;
+
+                    Setting set_copy = set;
+                    //显示NumericalModelDiagram
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        DispImageHWindowNumericalModelDiagramEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(set_copy.image));
+                    });
+
+
+
+                    List<double>[] rowss = new List<double>[set.XLDDatas.Count];
+                    List<double>[] colss = new List<double>[set.XLDDatas.Count];
+                    List<double>[] angless = new List<double>[set.XLDDatas.Count];
+                    for (int i = 0; i < set.XLDDatas.Count; i++)
+                    {
+                        if (set.XLDDatas[i].ControlRows.Length < 2)
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("显示的轨迹没有设置好。"));
+                            return ;
+
+                        }
+                        if (set.CutSets[i].EndImageIndex > set.CutSets[i].StartImageIndex)
+                        {
+                            int setCount = set.CutSets[i].EndImageIndex - set.CutSets[i].StartImageIndex + 1;
+                            if (setCount < 1) setCount = 1;
+                            Vision.XLDDataDivide(set.XLDDatas[i], setCount, out rowss[i], out colss[i], out angless[i]);
+
+                            for (int j = 0; j < setCount; j++)
+                            {
+                                hWindowNumericalModelDiagramDispCross(rowss[i][j], colss[i][j], angless[i][j], set.CutSets[i].Size, Colors.Blue);
+                            }
+                        }
+                        else
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("显示的起点图像序号和结束图像序号没有设置好。"));
+
+                            return ;
+                        }
+                    }
+                    if (stop) return ;
+
+                    //连相机
+                    foreach (var item in camParam)
+                    {
+                        item.Value.Key = item.Key;
+                        if (item.Value.Enable)
+                        {
+                            if (!cams.TryGetValue(item.Value.CamName, out Cam cam))
+                            {
+                                cam = new Cam();
+
+                                cams.Add(item.Value.CamName, cam);
+                            }
+                            if (!simulation)
+                            {
+                                if (!cam.IsOpen)
+                                {
+                                    if (cam.OpenBySN(item.Value.CamName))
+                                    {
+                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("打开成功"));
+                                    }
+                                    else
+                                    {
+                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("打开失败：") + cam.ErrMsg, LogType.ng);
+                                        //Invoke(new Action(() =>
+                                        //{
+                                        //    e灯颜色 = 灯颜色.红;
+                                        //    label相机.Refresh();
+                                        //}));
+                                        mainModel.camCommunicationLabelColorControl = labelColorEnum["red"];
+
+                                        return ;
+                                    }
+                                }
+                                if (cam.InitSet(item.Value, false))
+                                {
+                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("初始化设置成功"));
+                                }
+                                else
+                                {
+                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("初始化设置失败：") + cam.ErrMsg, LogType.ng);
+                                    //return;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + " " + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("未启用"));
+                        }
+                    }
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机连接完成"));
+                    mainModel.camCommunicationLabelColorControl = labelColorEnum["green"];
+
+
+                    //初始化数据
+                    foreach (var item in camParam)
+                    {
+                        if (item.Value.Enable)
+                        {
+                            if (Params.CamPar.ContainsKey(camParamName) && Params.CamPar[camParamName].ContainsKey(item.Key))
+                            {
+                                if (Params.LightInCam.ContainsKey(camParamName) && Params.LightInCam[camParamName].ContainsKey(item.Key))
+                                {
+                                    if (Params.LightToCam.ContainsKey(camParamName) && Params.LightToCam[camParamName].ContainsKey(item.Key))
+                                    {
+                                        if (Params.CamToCam1.ContainsKey(camParamName) && Params.CamToCam1[camParamName].ContainsKey(item.Key))
+                                        {
+                                            if (Params.CenterToCam1.ContainsKey(camParamName) && Params.CenterToCam1[camParamName].ContainsKey(item.Key))
+                                            {
+                                                if (Params.CamHandEyeType.ContainsKey(camParamName) && Params.CamHandEyeType[camParamName] == 0)
+                                                {
+                                                    if (Params.Cam1ToTool.ContainsKey(camParamName) && Params.Cam1ToTool[camParamName].ContainsKey(item.Key))
+                                                    {
+
+                                                    }
+                                                    else
+                                                    {
+                                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("坐标转换(CamToTool)不存在"), LogType.ng);
+                                                        return ;
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    if (Params.Cam1ToBase.ContainsKey(camParamName) && Params.Cam1ToBase[camParamName].ContainsKey(item.Key))
+                                                    {
+
+                                                    }
+                                                    else
+                                                    {
+                                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("坐标转换(CamToBase)不存在"), LogType.ng);
+                                                        return ;
+                                                    }
+                                                }
+
+                                            }
+                                            else
+                                            {
+                                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("坐标转换(CenterToCam1)不存在"), LogType.ng);
+                                                return ;
+                                            }
+
+                                        }
+                                        else
+                                        {
+                                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("多相机转换(CamToCam1)不存在"), LogType.ng);
+                                            return ;
+                                        }
+
+
+                                    }
+                                    else
+                                    {
+                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("坐标转换(LightToCam)不存在"), LogType.ng);
+                                        return ;
+                                    }
+                                }
+                                else
+                                {
+                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("外参(LightInCam.dat)不存在"), LogType.ng);
+                                    return ;
+                                }
+                            }
+                            else
+                            {
+                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("内参(camparam.cal)不存在"), LogType.ng);
+                                return ;
+                            }
+
+                            var dictImageKey = new SynchronizedList<SynchronizedList<long>>();
+                            ImageKeys.Add(item.Key, dictImageKey);
+                            var dictImage = new SynchronizedList<Dictionary<long, Mat>>();
+                            Images.Add(item.Key, dictImage);
+
+                            var dictRobotPose = new SynchronizedList<Dictionary<long, PoseParameters>>();
+                            Robot3DPose.Add(item.Key, dictRobotPose);
+
+                            var dictX = new SynchronizedList<Dictionary<long, List<double>>>();
+                            Point3DXs.Add(item.Key, dictX);
+                            var dictY = new SynchronizedList<Dictionary<long, List<double>>>();
+                            Point3DYs.Add(item.Key, dictY);
+                            var dictZ = new SynchronizedList<Dictionary<long, List<double>>>();
+                            Point3DZs.Add(item.Key, dictZ);
+                            var dictXLD = new SynchronizedList<Dictionary<long, Mat>>();
+
+                            var dictV = new SynchronizedList<Dictionary<long, double>>();
+                            glueVols.Add(item.Key, dictV);
+
+                            outLineDict.Add(item.Key, dictXLD);
+                            var dictRegion = new SynchronizedList<Dictionary<long, Mat>>();
+                            glueRegionDict.Add(item.Key, dictRegion);
+                            var dictRegionRectangle2 = new SynchronizedList<Dictionary<long, Mat>>();
+                            glueSmallRectRegionDict.Add(item.Key, dictRegionRectangle2);
+                            var dictData = new SynchronizedList<Dictionary<long, Data>>();
+                            glueDataDict.Add(item.Key, dictData);
+                            var dictResult = new SynchronizedList<Dictionary<long, BResult>>();
+                            glueResultDict.Add(item.Key, dictResult);
+
+                            indexImageCutProcessDict.Add(item.Key, 0);
+
+                            displaySize.Add(item.Key, new SynchronizedList<System.Windows.Size>());
+                        }
+                    }
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("初始化数据成功"));
+
+                    indexImageCut = -1;//指示正在图像采集段数
+                    totalResult = true;
+                    if (stop) return;
+
+                    // 3D 每隔100毫秒再刷新一下结果
+                    RefreshOnEvent(500, true);
+                    bRobotRun = true;
+                    //启动机器人姿态获取(安川20ms)
+                    taskRobot = Task.Run(() =>
+                    {
+                        // 暂时屏蔽
+                        RefreshOnEvent(500, true);
+                        //form3DShow.RefreshOn(10, true);
+                        double colorUpperLimit = -0.5;
+                        double colorLowerLimit = 0.5;
+                        double rangeSize = colorLowerLimit - colorUpperLimit;
+                        while (bRobotRun)
+                        {
+                            if (robot.ReadPose(out Wpf_Replace_halcon.PoseParameters hPose))
+                            {
+                                var key = watch.ElapsedTicks;
+                                {
+                                    robotPoseValues.Add(hPose);
+                                    robotPoseKeys.Add(key);
+                                }
+                                //form3DShow.InsertNextPoint(hPose.RawData[0], hPose.RawData[1], hPose.RawData[2], (hPose.RawData[2].D - 颜色下限值) / 范围);
+                            }
+                            Thread.Sleep(30);
+
+                            if (stop) break;
+                        }
+
+                    });
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("机器人姿态获取任务启动完成"));
+
+                    //回复开始ON信号
+                    if (true)
+                    {
+                        SocketSend(0);
+                    }
+                    else
+                    {
+                        SocketSend(-1);
+                        return;
+                    }
+
+                    if (stop) return;
+                    bool bAbort = false;
+
+                    //启动采集任务
+                    while (true)
+                    {
+                        bool bEnd = false;
+                        //等触发信号ON
+                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待触发信号ON"));
+                        while (true)
+                        {
+                            if (stop)
+                            {
+                                return;
+                            }
+
+                            if (isPGON)
+                            {
+                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("收到触发信号ON"));
+                                break;
+                            }
+                            if (isEND)
+                            {
+                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("收到END信号,退出拍照循环"), LogType.warn);
+                                bEnd = true;
+                                break;
+                            }
+                            if (isAbort)
+                            {
+                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("收到Abort信号,流程重新开始"), LogType.warn);
+                                bAbort = true;
+                                break;
+                            }
+                            Thread.Sleep(1);
+                        }
+                        if (bEnd) break;
+                        if (bAbort) break;
+                        //回复触发ON信号
+                        //收到信号后，就立刻恢复状态
+                        resetSignal();
+
+                        SocketSend(0);
+
+                        bool bTriggering = true;
+                        //int 起点 = dataGridViewImageList.Rows.Count;
+                        int startPoint = mainModel.ImageResultRecords.Count;
+                        dataGridViewImageListRowsStartPoint.Add(startPoint);
+                        //拍照
+                        foreach (var item in camParam)
+                        {
+                            if (item.Value.Enable)
+                            {
+                                var dictImageKey = new SynchronizedList<long>();
+                                ImageKeys[item.Key].Add(dictImageKey);
+                                var dictImage = new Dictionary<long, Mat>(new Dictionary<long, Mat>());
+                                Images[item.Key].Add(dictImage);
+
+
+                                var cam = cams[item.Value.CamName];
+                                int segmentIndex = indexImageCut + 1;
+                                bool CamEnabled = item.Key == "Cam1" ? set.CutSets[segmentIndex].Cam1Enabled :
+                                    item.Key == "Cam2" ? set.CutSets[segmentIndex].Cam2Enabled :
+                                    item.Key == "Cam3" ? set.CutSets[segmentIndex].Cam3Enabled :
+                                    set.CutSets[segmentIndex].Cam4Enabled;
+                                displaySize[item.Key].Add(new System.Windows.Size(set.CutSets[segmentIndex].ShowWidth, set.CutSets[segmentIndex].ShowHeight));
+                                if (CamEnabled)
+                                {
+                                    {
+                                        bool flag = cam.KeepShot(new Action<Mat>(image =>
+                                        {
+                                            long key = watch.ElapsedTicks;
+                                            {
+                                                if (dictImageKey.Count < set.CutSets[segmentIndex].ImageNum)
+                                                {
+                                                    dictImage.Add(key, image);
+                                                    dictImageKey.Add(key);
+                                                    var dictImageKeyCount = dictImageKey.Count;
+
+                                                }
+                                            }
+                                        }));
+                                        if (flag)
+                                        {
+                                            ShowMessage(item.Key);
+                                            //相机1要软触发启动
+                                            if (item.Key == "Cam1")
+                                            {
+                                                bool rt2 = cam.TriggerSoftwareExecute();
+                                                if (rt2)
+                                                {
+                                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("软触发成功"));
+                                                }
+                                                else
+                                                {
+                                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("软触发失败"));
+                                                }
+
+                                            }
+                                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("开始连续采集成功"));
+                                        }
+                                        else
+                                        {
+                                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("开始连续采集失败：") + cams[item.Value.CamName].ErrMsg, LogType.ng);
+                                        }
+                                    }
+                                    
+                                }
+                            }
+                        }
+                        indexImageCut++;
+
+                        ////输出拍照中信号
+                        //if (!Write(DO.Triggering, true)) return;
+
+                        //等触发信号OFF
+                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待触发信号OFF"));
+                        while (true)
+                        {
+                            if (stop) return;
+
+                            if (isPGONEnd == true)
+                            {
+                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("收到触发信号OFF"));
+                                break;
+                            }
+
+                            if (isEND == true)
+                            {
+                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("收到END信号,退出拍照循环"), LogType.warn);
+                                bEnd = true;
+                                break;
+                            }
+                            if (isAbort == true)
+                            {
+                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("收到Abort信号,流程重新开始"), LogType.warn);
+                                bAbort = true;
+                                break;
+                            }
+                            Thread.Sleep(1);
+                        }
+                        //收到信号后，就立刻恢复状态
+                        resetSignal();
+
+                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待数据转换完成"));
+
+                        if (!simulation)
+                        {
+                            //停止拍照
+                            foreach (var item in camParam)
+                            {
+                                if (item.Value.Enable)
+                                {
+                                    if (!cams[item.Value.CamName].IsGrabbing || cams[item.Value.CamName].StopGrabbing())
+                                    {
+                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("停止采集成功"));
+                                    }
+                                    else
+                                    {
+                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("停止采集失败：") + cams[item.Value.CamName].ErrMsg, LogType.ng);
+                                    }
+                                }
+                            }
+
+                        }
+                        bTriggering = false;
+
+                        ////关闭拍照中信号
+                        //if (!Write(DO.Triggering, false)) return;
+
+                        if (stop) return;
+                        if (bEnd) break;
+                        if (bAbort) break;
+
+                        //回复触发OFF信号
+
+                        if (totalResult)
+                        {
+                            SocketSend(0);
+                        }
+                        else
+                        {
+                            SocketSend(-1);
+                        }
+
+                        //判断段数是否足够
+                        if (indexImageCut + 1 >= set.CutSets.Count)
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("拍照段数足够") + $"({indexImageCut + 1}/{set.CutSets.Count})，" + GlobalVarAndFunc.LanguageTranslate("退出拍照循环"));
+                            break;
+                        }
+                        else
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("拍照段数不足") + $"({indexImageCut + 1}/{set.CutSets.Count})，" + GlobalVarAndFunc.LanguageTranslate("继续拍照循环"));
+                        }
+                    }
+
+
+                    if (stop) return;
+                    if (bAbort) continue;
+                    bRobotRun = false;
+
+                    //等待机器人处理完成
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待机器人处理完成"));
+                    while (!taskRobot.IsCompleted)
+                    {
+                        Thread.Sleep(10);
+                        if (stop) return;
+                    }
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("机器人处理完成"));
+
+
+                    //等待图像处理完成
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待图像处理完成"));
+                    foreach (var item in tasks.Values)
+                    {
+                        while (!item.IsCompleted)
+                        {
+                            Thread.Sleep(10);
+                            if (stop) return;
+                        }
+                    }
+                    RefreshOFFEvent();
+                    RefreshPointsEvent();
+
+                    ////等待3d显示完毕
+                    //while (!taskShow3D.IsCompleted)
+                    //{
+                    //    Thread.Sleep(10);
+                    //    if (stop) return;
+                    //}
+
+                    //等待3d处理完成
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待3d图像处理完成"));
+
+                    //while (!taskPoint3D.IsCompleted)
+                    //{
+                    //    Thread.Sleep(10);
+                    //    if (stop) return;
+                    //}
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("图像处理完成"));
+
+                    //保存检测结果文件
+                    if (true && simulation)
+                    {
+                        foreach (var camID in glueDataDict.Keys)
+                        {
+                            var camResultDir = glueDataDict[camID];
+                            for (int partID = 0; partID < camResultDir.Count; partID++)
+                            {
+                                var partResultDict = camResultDir[partID];
+
+                                string path = simulationPath + $"\\{camID}_{partID}_result.csv";
+                                if (!File.Exists(path))
+                                    File.Create(path).Close();
+
+                                using (StreamWriter sw = new StreamWriter(path, true, Encoding.UTF8))
+                                {
+
+                                    foreach (var imageID in partResultDict.Keys)
+                                    {
+                                        var imageResult = partResultDict[imageID];
+                                        sw.Write($"{imageResult.glueWidth},");
+                                        sw.Write($"{imageResult.glueHeight},");
+                                        sw.Write($"{imageResult.glueArea}\r\n");
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+
+                    // 暂时屏蔽
+                    if (totalResult)
+                    {
+                        mainModel.OKCountControl++;
+                    }
+                    else
+                    {
+                        mainModel.NGCountControl++;
+                    }
+                    mainModel.totalCountControl = mainModel.OKCountControl + mainModel.NGCountControl;
+
+                    mainModel.passRateControl = ((double)mainModel.OKCountControl * 100 / mainModel.totalCountControl).ToString("0.00") + "%";
+
+                    mainModel.resultControl = totalResult ? "OK" : "NG";
+                    mainModel.resultColorControl = totalResult ? "#FF06BD00" : "Red";
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        CarResultRecord carResultRecord = new CarResultRecord();
+                        carResultRecord.CarDetTime = dateTime.ToString("yyyy-MM-dd HH:mm:ss");
+                        carResultRecord.CarID = ID.ToString();
+                        carResultRecord.CarResult = totalResult ? "OK" : "NG";
+
+                        mainModel.CarResultRecords.Insert(0, carResultRecord);
+
+                    });
+
+                    //存图
+                    if (!simulation)
+                    {
+                        if ((totalResult && set.OtherSet.SaveOKImage) || (!totalResult && set.OtherSet.SaveNGImage))
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("开始存图"));
+                            try
+                            {
+                                string OKNG = totalResult ? "OK" : "NG";
+                                string basePath = $"D:\\image\\{car.Name}\\{dateTime:yyyy-MM-dd HH_mm_ss} {OKNG} [{inVIN}]";
+                                Directory.CreateDirectory(basePath);
+
+                                foreach (var camValue in Images)//相机
+                                {
+                                    for (int i = 0; i < camValue.Value.Count; i++)//段数
+                                    {
+                                        if (camValue.Value[i].Count > 0)
+                                        {
+                                            string imageDirectory = $"{basePath}\\{i}\\{camValue.Key}";
+                                            Directory.CreateDirectory(imageDirectory);
+                                            foreach (var image in camValue.Value[i])//图片
+                                            {
+                                                //image.Value.WriteImage("png 1", 0, $"{imageDirectory}\\{image.Key:000000000000}.png");
+                                                Cv2.ImWrite($"{imageDirectory}\\{image.Key:000000000000}.png", image.Value);
+
+                                            }
+                                        }
+                                    }
+                                }
+                                using (FileStream stream = new FileStream($"{basePath}\\robotPoseKeys.xml", FileMode.Create))
+                                {
+                                    new XmlSerializer(robotPoseKeys.GetType()).Serialize(stream, robotPoseKeys);
+                                }
+                                using (FileStream stream = new FileStream($"{basePath}\\robotPoseValues.xml", FileMode.Create))
+                                {
+                                    //转化
+                                    List<double[]> pose = new List<double[]>();
+                                    foreach (var poseKey in robotPoseValues)
+                                    {
+                                        pose.Add(new double[] { poseKey.x, poseKey.y, poseKey.z, poseKey.rx, poseKey.ry, poseKey.rz, poseKey.PoseType });
+                                    }
+                                    new XmlSerializer(pose.GetType()).Serialize(stream, pose);
+                                }
+                                using (FileStream stream = new FileStream($"{basePath}\\robotPoseValues", FileMode.Create))
+                                {
+                                    new BinaryFormatter().Serialize(stream, robotPoseValues);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("存图异常：") + ex.ToString(), LogType.ng);
+                            }
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("存图完成"));
+                        }
+                    }
+
+                    //等待开始信号OFF
+                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待开始信号OFF"));
+                    while (true)
+                    {
+                        bool val;
+                        if (isStartEnd)
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("收到开始信号OFF"));
+                            break;
+                        }
+
+                        Thread.Sleep(60);
+                        if (stop) return;
+                    }
+                    //收到信号后，就立刻恢复状态
+                    resetSignal();
+
+                    SocketSend(0);
+
+                }
+            }
+            catch (Exception ex)
+            {
+                ShowMessage(GlobalVarAndFunc.LanguageTranslate("流程异常：") + ex.ToString(), LogType.ng);
+            }
+            finally
+            {
+                robot.Close();
+                //io.Close();
+                //关闭激光和相机
+                foreach (var cam in cams.Values)
+                {
+                    if (cam.IsOpen)
+                    {
+                        if (cam.SetLine1Inverter(false))
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + "(" + cam.Name + ")" + GlobalVarAndFunc.LanguageTranslate("关闭激光成功"));
+                        }
+                        else
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + "(" + cam.Name + ")" + GlobalVarAndFunc.LanguageTranslate("关闭激光失败：") + cam.ErrMsg, LogType.ng);
+                        }
+                        if (cam.Close())
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + "(" + cam.Name + ")" + GlobalVarAndFunc.LanguageTranslate("关闭成功"));
+                        }
+                        else
+                        {
+                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + "(" + cam.Name + ")" + GlobalVarAndFunc.LanguageTranslate("关闭失败：") + cam.ErrMsg, LogType.ng);
+                        }
+                    }
+                }
+                try
+                {
+                    //BeginInvoke(new Action(() =>
+                    //{
+                    //    button启停.Text = GlobalVarAndFunc.LanguageTranslate("启动");
+                    //    button启停.Image = Resources._2;
+                    //}));
+
+                    mainModel.buttonRunContentControl = GlobalVarAndFunc.LanguageTranslate("启动");
+                    mainModel.buttonRunTagControl = "\uE658";
+                    //Invoke(new Action(() =>
+                    //{
+                    //    e灯颜色 = 灯颜色.红;
+                    //    label软件.Refresh();
+                    //}));
+
+                    mainModel.softwareRunLabelColorControl = labelColorEnum["red"];
+
+                }
+                catch { }
+            }
+        }
+
 
         private bool initRun(out ushort ID, out Car car, out string inVIN, out DateTime dateTime, out Dictionary<string, CamParam> camParam, out Setting set)
         {
