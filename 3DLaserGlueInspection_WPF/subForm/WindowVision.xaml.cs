@@ -144,6 +144,12 @@ namespace _3DLaserGlueInspection.subForm
             {
                 CreateRightClickMenu((System.Windows.Controls.ContextMenu)s, CopyDenoisingPara);
             };
+
+            isUseAngleOptCheck.ContextMenu = new System.Windows.Controls.ContextMenu();
+            isUseAngleOptCheck.ContextMenu.Opened += (s, e) =>
+            {
+                CreateRightClickMenu((System.Windows.Controls.ContextMenu)s, CopyAngle);
+            };
         }
 
         //void ShowImageData(int showWidth, int showHeight, Mat hXLDCont10mm)
@@ -376,6 +382,12 @@ namespace _3DLaserGlueInspection.subForm
         private void CopyOutline(ImageSet srcImageSet, ImageSet dstImageSet)
         {
             srcImageSet.轮廓检测 = dstImageSet.轮廓检测;
+            isAlter = true;
+        }
+
+        private void CopyAngle(ImageSet srcImageSet, ImageSet dstImageSet)
+        {
+            srcImageSet.isUseAngleOpt = dstImageSet.isUseAngleOpt;
             isAlter = true;
         }
 
@@ -667,7 +679,7 @@ namespace _3DLaserGlueInspection.subForm
                     cutSet.Cam3Enabled = (bool)enableCam3Check.IsChecked;
                     cutSet.Cam4Enabled = (bool)enableCam4Check.IsChecked;
 
-                    cutSet.isUseAngleOpt = (bool)isUseAngleOptCheck.IsChecked;
+                    //cutSet.isUseAngleOpt = (bool)isUseAngleOptCheck.IsChecked;
 
 
                     try
@@ -723,6 +735,8 @@ namespace _3DLaserGlueInspection.subForm
                 imageSet.离散去噪 = (bool)useDiscreteDenoisingCheck.IsChecked;
                 imageSet.分段距离 = Convert.ToDouble(discreteDenoisingDistNumericUpDown.Text);
                 imageSet.成段点数 = Convert.ToInt32(discreteDenoisingCountNumericUpDown.Text);
+
+                imageSet.isUseAngleOpt = (bool)isUseAngleOptCheck.IsChecked;
             }
             catch (Exception ex)
             {
@@ -736,8 +750,10 @@ namespace _3DLaserGlueInspection.subForm
             bool existImage = false;
             bool showPara = false;
 
+
             if (cutSetListBox.SelectedIndex >= 0 && selectCamListBox.SelectedIndex >= 0 && selectPictureListBox.SelectedIndex >= 0 && robotPoseKeys.Count > 0)
             {
+                
                 //图片更新
                 try
                 {
@@ -751,8 +767,8 @@ namespace _3DLaserGlueInspection.subForm
                         if (hImage != null)
                         {
                             //hWindowModel.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(hImage).Clone());
-                            showImageComboBox.SelectedIndex = -1;
-                            showImageComboBox.SelectedIndex = 0;
+                            //showImageComboBox.SelectedIndex = -1;
+                            //showImageComboBox.SelectedIndex = 0;
                             existImage = true;
                         }
 
@@ -1032,6 +1048,9 @@ namespace _3DLaserGlueInspection.subForm
                     useDiscreteDenoisingCheck.IsChecked = imageSet.离散去噪;
                     discreteDenoisingDistNumericUpDown.Text = imageSet.分段距离.ToString();
                     discreteDenoisingCountNumericUpDown.Text = imageSet.成段点数.ToString();
+
+                    isUseAngleOptCheck.IsChecked = imageSet.isUseAngleOpt;
+
                     LoadUpData();
                     imageSetGrid.IsEnabled = true;
                     this.imageSet = imageSet;
@@ -1058,6 +1077,33 @@ namespace _3DLaserGlueInspection.subForm
                 imageSetGrid.IsEnabled = false;
                 imageSet = null;
             }
+
+            //刷新界面
+            int showImageComboboxIndex = showImageComboBox.SelectedIndex;
+
+            if (showImageComboboxIndex == 2)
+            {
+                showImageComboBox.SelectedIndex = -1;
+                showImageComboBox.SelectedIndex = 0;
+            }
+            else 
+            {
+                showImageComboBox.SelectedIndex = -1;
+                switch (showImageComboboxIndex)
+                {
+                    case 1:
+                        runOutLineButton_Click(null,null);
+                        break;
+                    case 3:
+                        runButton_Click2(null, null);
+                        break;
+
+                }
+                showImageComboBox.SelectedIndex = showImageComboboxIndex;
+            }
+
+
+
         }
 
 
@@ -1137,7 +1183,7 @@ namespace _3DLaserGlueInspection.subForm
                     enableCam3Check.IsChecked = cutSet.Cam3Enabled;
                     enableCam4Check.IsChecked = cutSet.Cam4Enabled;
 
-                    isUseAngleOptCheck.IsChecked = cutSet.isUseAngleOpt;
+                    //isUseAngleOptCheck.IsChecked = cutSet.isUseAngleOpt;
 
                     imageCountNumericUpDown.Text = cutSet.ImageNum.ToString();
 
@@ -1939,6 +1985,11 @@ namespace _3DLaserGlueInspection.subForm
 
         private void showImageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (cutSetListBox.SelectedIndex < 0 || selectCamListBox.SelectedIndex <= 0 || selectPictureListBox.SelectedIndex < 0 || robotPoseKeys.Count < 0)
+            {
+                return;
+            }
+                
             if (showImageComboBox.SelectedIndex < 0)
             {
                 return;
@@ -2706,7 +2757,7 @@ namespace _3DLaserGlueInspection.subForm
                                             //单帧检测(使用激光坐标系)
                                             Vision.scalePoint(lightXY, cutSet, 90 - LightInCam.rx, out hXLDCont10mm);
 
-                                            if (cutSet.isUseAngleOpt)
+                                            if (imageSet.isUseAngleOpt)
                                             {
                                                 //对x方向进行矫正
                                                 double scaleX = 1;
@@ -3207,7 +3258,7 @@ namespace _3DLaserGlueInspection.subForm
 
 
 
-                            if (cutSet.isUseAngleOpt)
+                            if (imageSet.isUseAngleOpt)
                             {
                                 //涂胶角度优化
                                 //对x方向进行矫正

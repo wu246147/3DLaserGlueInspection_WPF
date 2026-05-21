@@ -30,7 +30,7 @@
             </ResourceDictionary.MergedDictionaries>
             <cvt:FloatToPercentConverter x:Key="PercentConverter" />
             <cvt:VisibilityToWidthConverter x:Key="VisibilityToWidthConverter" />
-
+            <cvt:ResultToColorConverter x:Key="ResultColor" />
         </ResourceDictionary>
 
 
@@ -74,7 +74,7 @@
                     VerticalContentAlignment="Center"
                     Background="#FF242B35"
                     BorderBrush="{x:Null}"
-                    Content="AI 3D视觉涂胶检测系统 1.5.3"
+                    Content="AI 3D视觉涂胶检测系统 1.5.4"
                     FontSize="22"
                     Foreground="#FF1679D0" Margin="0,-2,0,0" />
 
@@ -563,24 +563,10 @@
                 Height="163"
                 Margin="196,14,0,0"
                 VerticalAlignment="Top"
-                InnerRadius="30                           ">
-                <lvc:PieChart.Series>
-                    <lvc:PieSeries
-                        Title="OK"
-                        DataLabels="True"
-                        Fill="LightGreen"
-                        FontSize="14"
-                        Stroke="White"
-                        Values="1" />
-                    <lvc:PieSeries
-                        Title="NG"
-                        DataLabels="True"
-                        Fill="Red"
-                        FontSize="14"
-                        Stroke="White"
-                        Values="1" />
-                </lvc:PieChart.Series>
-            </lvc:PieChart>
+                InnerRadius="30"
+                Series="{Binding PieResultSeries}"/>
+
+
             <Border
                 Grid.Row="1"
                 BorderBrush="Gray"
@@ -643,23 +629,55 @@
                                 <DataGridTextColumn
                                     Width="*"
                                     Binding="{Binding Cam1}"
-                                    Foreground="White"
-                                    Header="相机1" />
-                                <DataGridTextColumn
+                                    Header="相机1" >
+
+                                    <DataGridTextColumn.CellStyle>
+                                        <Style TargetType="DataGridCell" BasedOn="{StaticResource DataGridCellStyle}">
+                                            <Setter Property="Foreground"
+                            Value="{Binding Cam1Result,
+                            Converter={StaticResource ResultColor}}" />
+                                        </Style>
+                                    </DataGridTextColumn.CellStyle>
+
+
+                                </DataGridTextColumn>
+                                    <DataGridTextColumn
                                     Width="*"
                                     Binding="{Binding Cam2}"
-                                    Foreground="White"
-                                    Header="相机2" />
+                                    Header="相机2" >
+                                    <DataGridTextColumn.CellStyle>
+                                        <Style TargetType="DataGridCell" BasedOn="{StaticResource DataGridCellStyle}">
+                                            <Setter Property="Foreground"
+Value="{Binding Cam2Result,
+Converter={StaticResource ResultColor}}" />
+                                        </Style>
+                                    </DataGridTextColumn.CellStyle>
+                                </DataGridTextColumn>
                                 <DataGridTextColumn
                                     Width="*"
                                     Binding="{Binding Cam3}"
-                                    Foreground="White"
-                                    Header="相机3" />
+                                    Header="相机3">
+                                    <DataGridTextColumn.CellStyle>
+                                        <Style TargetType="DataGridCell" BasedOn="{StaticResource DataGridCellStyle}">
+                                            <Setter Property="Foreground"
+Value="{Binding Cam3Result,
+Converter={StaticResource ResultColor}}" />
+                                        </Style>
+                                    </DataGridTextColumn.CellStyle>
+                                </DataGridTextColumn>           
+
                                 <DataGridTextColumn
                                     Width="*"
                                     Binding="{Binding Cam4}"
-                                    Foreground="White"
-                                    Header="相机4" />
+                                    Header="相机4" >
+                                    <DataGridTextColumn.CellStyle>
+                                        <Style TargetType="DataGridCell" BasedOn="{StaticResource DataGridCellStyle}">
+                                            <Setter Property="Foreground"
+Value="{Binding Cam4Result,
+Converter={StaticResource ResultColor}}" />
+                                        </Style>
+                                    </DataGridTextColumn.CellStyle>
+                                </DataGridTextColumn>
                             </DataGrid.Columns>
                         </DataGrid>
                     </Grid>

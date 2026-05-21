@@ -25,11 +25,17 @@ using OpenCvSharp;
 
 using static _3DLaserGlueInspection.MainWindowModel;
 using LiveCharts;
+using System.Globalization;
 
 
 
 namespace _3DLaserGlueInspection
 {
+   
+
+
+
+
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
     /// </summary>
@@ -136,10 +142,10 @@ namespace _3DLaserGlueInspection
                 if (mainThread == null || !mainThread.IsAlive)
                 {
                     model.stop = false;
-                    //mainThread = new Thread(model.MainRun);
+                    mainThread = new Thread(model.MainRun);
 
-                    //测试取像问题
-                    mainThread = new Thread(model.AcqAndRobotTest);
+                    ////测试取像问题
+                    //mainThread = new Thread(model.AcqAndRobotTest);
 
                     mainThread.Start();
                 }
@@ -166,9 +172,8 @@ namespace _3DLaserGlueInspection
             }
 
             ////测试
-
             ////PieChartResult.Series[0].Values = new ChartValues<double> { 100 };
-            //model.mainModel.OKCountControl += 1;
+            //model.mainModel.OKCountControl += 2;
             //model.mainModel.NGCountControl += 1;
 
         }
@@ -252,9 +257,6 @@ namespace _3DLaserGlueInspection
                 var _cells = _2DResultDataGrid.SelectedCells;
                 if (_cells.Any())
                 {
-                    //int rowIndex = productInfoDataGrid.Items.IndexOf(_cells.First().Item);
-                    //int columnIndex = _cells.First().Column.DisplayIndex;
-                    //string oldName = (productInfoDataGrid.Columns[1].GetCellContent(productInfoDataGrid.Items[rowIndex]) as TextBlock).Text;
                     Dictionary<int, string> CamKeyDict = new Dictionary<int, string> {
                         {0, "Cam1" } ,
                         {1, "Cam2" } ,
@@ -284,9 +286,6 @@ namespace _3DLaserGlueInspection
                             break;
                     }
 
-
-
-
                     if (strings.Length > 1)
                     {
                         if (int.TryParse(strings[0], out int segmentIndex) 
@@ -299,7 +298,7 @@ namespace _3DLaserGlueInspection
                                 model.outLineDict[camKey].Count > segmentIndex &&
                                 model.outLineDict[camKey][segmentIndex].ContainsKey(model.ImageKeys[camKey][segmentIndex][segmentSubIndex]))
                             {
-                                var cutSet = model.sets[camKey].CutSets[segmentIndex];
+                                var cutSet = model.sets[model.car.Name].CutSets[segmentIndex];
 
 
                                 Mat hXLDCont10mm = model.outLineDict[camKey][segmentIndex][model.ImageKeys[camKey][segmentIndex][segmentSubIndex]];

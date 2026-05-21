@@ -87,6 +87,10 @@ namespace _3DLaserGlueInspection
         Thread mainThread = null;
 
         CarNameIdSet cars = new CarNameIdSet();
+
+        //当前车型
+        public Car car;
+
         CamParams Params = new CamParams();
         Dictionary<string, Cam> cams = new Dictionary<string, Cam>();
         //Vision vision = new Vision();
@@ -659,7 +663,7 @@ namespace _3DLaserGlueInspection
 
                     //获取产品号
                     ushort ID = 0;
-                    Car car = new Car();
+                    car = new Car();
                     if (Read(DI.CarNumber, out ID))
                     {
                         ShowMessage(GlobalVarAndFunc.LanguageTranslate("收到车型号为") + " " + ID);
@@ -1300,7 +1304,7 @@ namespace _3DLaserGlueInspection
 
                                                                 singleFrameExistOutline = true;
                                                                 Vision.scalePoint(lightXY, cutSet, 90 - LightInCam.rx, out hXLDCont10mm);
-                                                                if (cutSet.isUseAngleOpt)
+                                                                if (imageSet.isUseAngleOpt)
                                                                 {
                                                                     //对x方向进行矫正
                                                                     double scaleX = 1;
@@ -2583,7 +2587,7 @@ namespace _3DLaserGlueInspection
                     resetSignal();
 
                     ushort ID;
-                    Car car;
+                    //Car car;
                     string inVIN;
                     DateTime dateTime;
                     Dictionary<string, CamParam> camParam;
@@ -3349,7 +3353,7 @@ namespace _3DLaserGlueInspection
                     resetSignal();
 
                     ushort ID;
-                    Car car;
+                    //Car car;
                     string inVIN;
                     DateTime dateTime;
                     Dictionary<string, CamParam> camParam;
@@ -4629,6 +4633,64 @@ namespace _3DLaserGlueInspection
 
                                             double robotAndCamAngle = int.MaxValue;
 
+                                            //坐标转换
+                                            Wpf_Replace_halcon.PoseParameters robotPose = new PoseParameters();
+                                            HMatrixTransform.mathHPose(robotPoseValues[indexRobotPose - 1],
+                                                robotPoseValues[indexRobotPose], out robotPose,
+                                                (imageKey - robotPoseKeys[indexRobotPose - 1]) /
+                                                (double)(robotPoseKeys[indexRobotPose] - robotPoseKeys[indexRobotPose - 1])
+                                                );
+                                            // 计算机器人移动距离
+                                            if (dictRobotPose.Count > 0)
+                                            {
+                                                var last = dictRobotPose.Last();
+                                                var lastRobotPose = last.Value;
+
+                                                PoseD = Math.Sqrt(Math.Pow((robotPose.x - lastRobotPose.x), 2) +
+                                                    Math.Pow((robotPose.y - lastRobotPose.y), 2) +
+                                                    Math.Pow((robotPose.z - lastRobotPose.z), 2));
+                                            }
+
+                                            //三维数据添加机器人坐标
+                                            if (Params.CamHandEyeType[camParamName] == 0)
+                                            {
+                                                //改为添加相机中心的坐标
+                                                Mat ToolToBase = new Mat();
+                                                Mat CenterToBase = new Mat();
+                                                PoseParameters centerInBase = new PoseParameters();
+                                                Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
+                                                CenterToBase = ToolToBase * Cam1ToTool * CenterToCam1;
+                                                centerInBase.PoseType = 2;
+                                                Vision.HomMat3dToPose(centerInBase.PoseType, out double centerX, out double centerY, out double centerZ, out double centerRX, out double centerRY, out double centerRZ, CenterToBase.CvPtr);
+                                                centerInBase.x = centerX;
+                                                centerInBase.y = centerY;
+                                                centerInBase.z = centerZ;
+                                                centerInBase.rx = centerRX;
+                                                centerInBase.ry = centerRY;
+                                                centerInBase.rz = centerRZ;
+                                                dictRobotPose.Add(imageKey, centerInBase);
+                                            }
+                                            else
+                                            {
+                                                //也改为添加相机中心的坐标，但是这里是法兰盘的坐标系
+                                                PoseParameters BaseInTool = Vision.PoseInv(robotPose);
+                                                Mat BaseToTool = new Mat();
+                                                PoseParameters centerInTool = new PoseParameters();
+                                                Vision.poseToHomMat3d(BaseInTool.PoseType, BaseInTool.x, BaseInTool.y, BaseInTool.z, BaseInTool.rx, BaseInTool.ry, BaseInTool.rz, BaseToTool.CvPtr);
+                                                Mat CenterToTool = new Mat();
+                                                CenterToTool = BaseToTool * Cam1ToBase * CenterToCam1;
+                                                centerInTool.PoseType = 2;
+                                                Vision.HomMat3dToPose(centerInTool.PoseType, out double centerX, out double centerY, out double centerZ, out double centerRX, out double centerRY, out double centerRZ, CenterToTool.CvPtr);
+                                                centerInTool.x = centerX;
+                                                centerInTool.y = centerY;
+                                                centerInTool.z = centerZ;
+                                                centerInTool.rx = centerRX;
+                                                centerInTool.ry = centerRY;
+                                                centerInTool.rz = centerRZ;
+                                                dictRobotPose.Add(imageKey, centerInTool);
+
+                                            }
+
 
                                             if (imageSet.轮廓检测)
                                             {
@@ -4660,23 +4722,7 @@ namespace _3DLaserGlueInspection
 
                                                 Vision.getLaserPosition(imgCut, imageSet.minThreshold, imageSet.laserMinWidth, out xy, item.Value.OffsetX + LeftX, item.Value.OffsetY + TopY);
 
-                                                //坐标转换
-                                                Wpf_Replace_halcon.PoseParameters robotPose = new PoseParameters();
-                                                HMatrixTransform.mathHPose(robotPoseValues[indexRobotPose - 1],
-                                                    robotPoseValues[indexRobotPose], out robotPose,
-                                                    (imageKey - robotPoseKeys[indexRobotPose - 1]) /
-                                                    (double)(robotPoseKeys[indexRobotPose] - robotPoseKeys[indexRobotPose - 1])
-                                                    );
-                                                // 计算机器人移动距离
-                                                if (dictRobotPose.Count > 0)
-                                                {
-                                                    var last = dictRobotPose.Last();
-                                                    var lastRobotPose = last.Value;
-
-                                                    PoseD = Math.Sqrt(Math.Pow((robotPose.x - lastRobotPose.x), 2) +
-                                                        Math.Pow((robotPose.y - lastRobotPose.y), 2) +
-                                                        Math.Pow((robotPose.z - lastRobotPose.z), 2));
-                                                }
+                                            
 
                                                 // 计算机器人与相机的夹角,必须要机器人有移动
                                                 if (dictRobotPose.Count > 0 && PoseD > 0)
@@ -4803,46 +4849,7 @@ namespace _3DLaserGlueInspection
                                                 }
 
 
-                                                //三维数据添加机器人坐标
-                                                if (Params.CamHandEyeType[camParamName] == 0)
-                                                {
-                                                    //改为添加相机中心的坐标
-                                                    Mat ToolToBase = new Mat();
-                                                    Mat CenterToBase = new Mat();
-                                                    PoseParameters centerInBase = new PoseParameters();
-                                                    Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
-                                                    CenterToBase = ToolToBase * Cam1ToTool * CenterToCam1;
-                                                    centerInBase.PoseType = 2;
-                                                    Vision.HomMat3dToPose(centerInBase.PoseType, out double centerX, out double centerY, out double centerZ, out double centerRX, out double centerRY, out double centerRZ, CenterToBase.CvPtr);
-                                                    centerInBase.x = centerX;
-                                                    centerInBase.y = centerY;
-                                                    centerInBase.z = centerZ;
-                                                    centerInBase.rx = centerRX;
-                                                    centerInBase.ry = centerRY;
-                                                    centerInBase.rz = centerRZ;
-                                                    dictRobotPose.Add(imageKey, centerInBase);
-                                                }
-                                                else
-                                                {
-                                                    //也改为添加相机中心的坐标，但是这里是法兰盘的坐标系
-                                                    PoseParameters BaseInTool = Vision.PoseInv(robotPose);
-                                                    Mat BaseToTool = new Mat();
-                                                    PoseParameters centerInTool = new PoseParameters();
-                                                    Vision.poseToHomMat3d(BaseInTool.PoseType, BaseInTool.x, BaseInTool.y, BaseInTool.z, BaseInTool.rx, BaseInTool.ry, BaseInTool.rz, BaseToTool.CvPtr);
-                                                    Mat CenterToTool = new Mat();
-                                                    CenterToTool = BaseToTool * Cam1ToBase * CenterToCam1;
-                                                    centerInTool.PoseType = 2;
-                                                    Vision.HomMat3dToPose(centerInTool.PoseType, out double centerX, out double centerY, out double centerZ, out double centerRX, out double centerRY, out double centerRZ, CenterToTool.CvPtr);
-                                                    centerInTool.x = centerX;
-                                                    centerInTool.y = centerY;
-                                                    centerInTool.z = centerZ;
-                                                    centerInTool.rx = centerRX;
-                                                    centerInTool.ry = centerRY;
-                                                    centerInTool.rz = centerRZ;
-                                                    dictRobotPose.Add(imageKey, centerInTool);
-
-                                                }
-
+                                                
                                                 //需要保证检测到有点，并且机器人已经处于移动状态
                                                 if (xy.Rows > 0 && dictRobotPose.Count > 0 && PoseD > 0)
                                                 {
@@ -4921,7 +4928,7 @@ namespace _3DLaserGlueInspection
 
                                                         singleFrameExistOutline = true;
                                                         Vision.scalePoint(lightXY, cutSet, 90 - LightInCam.rx, out hXLDCont10mm);
-                                                        if (cutSet.isUseAngleOpt)
+                                                        if (imageSet.isUseAngleOpt)
                                                         {
                                                             //对x方向进行矫正
                                                             double scaleX = 1;
@@ -4990,6 +4997,23 @@ namespace _3DLaserGlueInspection
                                                     totalResult = false;
                                                 }
 
+                                                //结果列表颜色
+                                                switch (item.Key)
+                                                {
+                                                    case "Cam1":
+                                                        mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam1Result = bResult.Result ? "OK": "NG";
+                                                        break;
+                                                    case "Cam2":
+                                                        mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam2Result = bResult.Result ? "OK" : "NG";
+                                                        break;
+                                                    case "Cam3":
+                                                        mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam3Result = bResult.Result ? "OK" : "NG";
+                                                        break;
+                                                    case "Cam4":
+                                                        mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam4Result = bResult.Result ? "OK" : "NG";
+                                                        break;
+                                                }
+
                                                 //结果统计
                                                 if (hXLDCont10mm.Rows > 0)
                                                 {
@@ -5016,45 +5040,45 @@ namespace _3DLaserGlueInspection
                                                         dictV.Add(imageKey, V);
                                                     }
 
-                                                    ////胶区域结果
-                                                    ////if (dictRegion.ContainsKey(imageKey))
-                                                    ////{
-                                                    ////    dictRegion[imageKey] = outMaxRegion;
-                                                    ////}
-                                                    ////else
-                                                    ////{
-                                                    ////    dictRegion.Add(imageKey, outMaxRegion);
-                                                    ////}
+                                                    //胶区域结果
+                                                    if (dictRegion.ContainsKey(imageKey))
+                                                    {
+                                                        dictRegion[imageKey] = outMaxRegion;
+                                                    }
+                                                    else
+                                                    {
+                                                        dictRegion.Add(imageKey, outMaxRegion);
+                                                    }
 
-                                                    ////胶最小外接矩形结果
-                                                    ////if (dictRegionRectangle2.ContainsKey(imageKey))
-                                                    ////{
-                                                    ////    dictRegionRectangle2[imageKey] = outRegionRectangle2;
-                                                    ////}
-                                                    ////else
-                                                    ////{
-                                                    ////    dictRegionRectangle2.Add(imageKey, outRegionRectangle2);
-                                                    ////}
+                                                    //胶最小外接矩形结果
+                                                    if (dictRegionRectangle2.ContainsKey(imageKey))
+                                                    {
+                                                        dictRegionRectangle2[imageKey] = outRegionRectangle2;
+                                                    }
+                                                    else
+                                                    {
+                                                        dictRegionRectangle2.Add(imageKey, outRegionRectangle2);
+                                                    }
 
-                                                    ////胶检测数据结果
-                                                    //if (dictData.ContainsKey(imageKey))
-                                                    //{
-                                                    //    dictData[imageKey] = resultData;
-                                                    //}
-                                                    //else
-                                                    //{
-                                                    //    dictData.Add(imageKey, resultData);
-                                                    //}
-                                                    ////胶检测结果
+                                                    //胶检测数据结果
+                                                    if (dictData.ContainsKey(imageKey))
+                                                    {
+                                                        dictData[imageKey] = resultData;
+                                                    }
+                                                    else
+                                                    {
+                                                        dictData.Add(imageKey, resultData);
+                                                    }
+                                                    //胶检测结果
 
-                                                    //if (dictResult.ContainsKey(imageKey))
-                                                    //{
-                                                    //    dictResult[imageKey] = bResult;
-                                                    //}
-                                                    //else
-                                                    //{
-                                                    //    dictResult.Add(imageKey, bResult);
-                                                    //}
+                                                    if (dictResult.ContainsKey(imageKey))
+                                                    {
+                                                        dictResult[imageKey] = bResult;
+                                                    }
+                                                    else
+                                                    {
+                                                        dictResult.Add(imageKey, bResult);
+                                                    }
                                                 }
 
                                                 if (imageSet._3DGlueDet)

@@ -2468,6 +2468,8 @@ namespace _3DLaserGlueInspection
         //兼容眼在手外
         public Dictionary<string, Dictionary<string, PoseParameters>> Cam1InBase = new Dictionary<string, Dictionary<string, PoseParameters>>();    //相机外参（手眼标定，眼在手外，其实都是相机1
         public Dictionary<string, Dictionary<string, Mat>> Cam1ToBase = new Dictionary<string, Dictionary<string, Mat>>();    //手眼标定的旋转矩阵（其实都是相机1的，要右乘CamToCam1才是自己的）
+
+
         public Dictionary<string, int> CamHandEyeType = new Dictionary<string, int>();    //相机手眼标定类型，0是眼在手上，1是眼在手外
 
         ////保存的参数

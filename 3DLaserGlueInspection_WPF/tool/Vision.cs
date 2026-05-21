@@ -572,7 +572,7 @@ namespace _3DLaserGlueInspection
                 Mat XY_10um;
                 scalePoint(lightXYcut, cutSet, 90 - LightInCam.rx, out XY_10um);
 
-                if (cutSet.isUseAngleOpt)
+                if (imageSet.isUseAngleOpt)
                 {
                     //对x方向进行矫正
                     double scaleX = 1;
@@ -642,7 +642,7 @@ namespace _3DLaserGlueInspection
 
 
             Vision.singleFrameDet(OutLine.CvPtr, out existGlue, out centerX, out centerY, out phi, out width, out height, out maxArea,
-                outMaxRegion.CvPtr, outRegionRectangle2.CvPtr, cutSet.isUseAngleOpt, false);
+                outMaxRegion.CvPtr, outRegionRectangle2.CvPtr, imageSet.isUseAngleOpt, false);
 
 
             //stopwatch.Stop();
@@ -1035,6 +1035,10 @@ namespace _3DLaserGlueInspection
         public bool 拐点分段 = false;
         public double 分段弧度 = 0.070;
         public double 弧度分段距离 = 2;
+
+        // 是否使用角度优化
+        public bool isUseAngleOpt = true;
+
 
         public ImageSet(int index)
         {
