@@ -120,6 +120,9 @@ namespace _3DLaserGlueInspection
         Dictionary<string, SynchronizedList<Dictionary<long, Mat>>> Images = new Dictionary<string, SynchronizedList<Dictionary<long, Mat>>>();//相机-分段-时间-图片
         SynchronizedList<int> dataGridViewImageListRowsStartPoint = new SynchronizedList<int>();
         Dictionary<string, SynchronizedList<Dictionary<long, Wpf_Replace_halcon.PoseParameters>>> Robot3DPose = new Dictionary<string, SynchronizedList<Dictionary<long, Wpf_Replace_halcon.PoseParameters>>>();//相机-分段-时间-机器位姿
+
+        Dictionary<string, SynchronizedList<Dictionary<long,Point3D>>> ResultCenter3DPoint = new Dictionary<string, SynchronizedList<Dictionary<long, Point3D>>>(); //相机-分段-时间-涂漆中点坐标
+
         Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>> Point3DXs = new Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>>();//相机-分段-时间-图片数据
         Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>> Point3DYs = new Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>>();
         Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>> Point3DZs = new Dictionary<string, SynchronizedList<Dictionary<long, List<double>>>>();
@@ -4046,8 +4049,9 @@ namespace _3DLaserGlueInspection
             }
             finally
             {
-                robot.Close();
-                //io.Close();
+                //robot.Close();
+
+
                 //关闭激光和相机
                 foreach (var cam in cams.Values)
                 {
@@ -4484,8 +4488,11 @@ namespace _3DLaserGlueInspection
                         ////暂时定间隔20ms
                         //Thread.Sleep(20);
 
-                        //加快到5ms 
-                        Thread.Sleep(5);
+                        //加快到5ms,机器人设置太快不行
+                        //Thread.Sleep(5);
+
+                        //暂时先30，后面在测试一下加快
+                        Thread.Sleep(30);
 
                         if (stop) break;
                     }
@@ -4694,16 +4701,13 @@ namespace _3DLaserGlueInspection
 
                                             if (imageSet.轮廓检测)
                                             {
-                                                //激光轮廓提取
-                                                //Mat xy = new Mat();
-                                                //Vision.getLaserPosition(dictImage[imageKey], imageSet.minThreshold, out xy, item.Value.OffsetX, item.Value.OffsetY);
+                                                //ROI裁剪
                                                 Mat xy = new Mat();
                                                 Mat imgCut = new Mat();
                                                 int LeftX = 0;
                                                 int TopY = 0;
                                                 if (imageSet.启用裁剪)
                                                 {
-                                                    //Vision.cutLight(xy, camParam, hImage, imageSet, out xyCut);
                                                     int imageWidth, imageHeight;
                                                     imageWidth = dictImage[imageKey].Cols;
                                                     imageHeight = dictImage[imageKey].Rows;
@@ -4712,29 +4716,23 @@ namespace _3DLaserGlueInspection
                                                     TopY = (int)(imageHeight * imageSet.TopY);
                                                     int cutWidth = (int)((imageSet.RightX - imageSet.LeftX) * imageWidth);
                                                     int cutHeight = (int)((imageSet.DownY - imageSet.TopY) * imageHeight);
-
                                                     imgCut = new Mat(dictImage[imageKey], new OpenCvSharp.Rect(LeftX, TopY, cutWidth, cutHeight));
                                                 }
                                                 else
                                                 {
                                                     imgCut = dictImage[imageKey].Clone();
                                                 }
-
+                                                //激光轮廓提取
                                                 Vision.getLaserPosition(imgCut, imageSet.minThreshold, imageSet.laserMinWidth, out xy, item.Value.OffsetX + LeftX, item.Value.OffsetY + TopY);
 
-                                            
-
-                                                // 计算机器人与相机的夹角,必须要机器人有移动
+                                                // 计算机器人与相机的夹角
+                                                // 必须要机器人有移动
                                                 if (dictRobotPose.Count > 0 && PoseD > 0)
                                                 {
                                                     //计算CamToTool的矩阵
-
                                                     //打包前后机器人pose
                                                     var last = dictRobotPose.Last();
                                                     var lastRobotPose = last.Value;
-
-                                                    
-
                                                     if (Params.CamHandEyeType[camParamName] == 0)
                                                     {
                                                         Mat robotPoseMat = new Mat();
@@ -4842,30 +4840,12 @@ namespace _3DLaserGlueInspection
                                                                 robotAndCamAngle = 180 - robotAndCamAngle;
                                                             }
                                                         }
-
                                                     }
-
-
                                                 }
-
-
-                                                
                                                 //需要保证检测到有点，并且机器人已经处于移动状态
                                                 if (xy.Rows > 0 && dictRobotPose.Count > 0 && PoseD > 0)
                                                 {
                                                     getOutlineResult = true;
-
-                                                    //Mat xyCut = new Mat();
-                                                    //if (imageSet.启用裁剪)
-                                                    //{
-                                                    //    Vision.cutLight(xy, item.Value, dictImage[imageKey], imageSet, out xyCut);
-                                                    //}
-                                                    //else
-                                                    //{
-                                                    //    xyCut = xy;
-                                                    //}
-                                                    //if (xy.Height > 0)
-                                                    //{
 
                                                     if (Params.CamHandEyeType[camParamName] == 0)
                                                     {
@@ -4915,11 +4895,9 @@ namespace _3DLaserGlueInspection
                                                 }
                                             }
 
+                                            // 单帧检测
                                             if (imageSet.轮廓检测)
                                             {
-                                                //if (imageSet.单帧检测)
-                                                //{
-
                                                 if (imageSet._3DGlueDet)
                                                 {
 
@@ -4996,24 +4974,6 @@ namespace _3DLaserGlueInspection
                                                 {
                                                     totalResult = false;
                                                 }
-
-                                                //结果列表颜色
-                                                switch (item.Key)
-                                                {
-                                                    case "Cam1":
-                                                        mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam1Result = bResult.Result ? "OK": "NG";
-                                                        break;
-                                                    case "Cam2":
-                                                        mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam2Result = bResult.Result ? "OK" : "NG";
-                                                        break;
-                                                    case "Cam3":
-                                                        mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam3Result = bResult.Result ? "OK" : "NG";
-                                                        break;
-                                                    case "Cam4":
-                                                        mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam4Result = bResult.Result ? "OK" : "NG";
-                                                        break;
-                                                }
-
                                                 //结果统计
                                                 if (hXLDCont10mm.Rows > 0)
                                                 {
@@ -5039,8 +4999,8 @@ namespace _3DLaserGlueInspection
                                                     {
                                                         dictV.Add(imageKey, V);
                                                     }
-
                                                     //胶区域结果
+
                                                     if (dictRegion.ContainsKey(imageKey))
                                                     {
                                                         dictRegion[imageKey] = outMaxRegion;
@@ -5049,8 +5009,8 @@ namespace _3DLaserGlueInspection
                                                     {
                                                         dictRegion.Add(imageKey, outMaxRegion);
                                                     }
-
                                                     //胶最小外接矩形结果
+
                                                     if (dictRegionRectangle2.ContainsKey(imageKey))
                                                     {
                                                         dictRegionRectangle2[imageKey] = outRegionRectangle2;
@@ -5059,7 +5019,6 @@ namespace _3DLaserGlueInspection
                                                     {
                                                         dictRegionRectangle2.Add(imageKey, outRegionRectangle2);
                                                     }
-
                                                     //胶检测数据结果
                                                     if (dictData.ContainsKey(imageKey))
                                                     {
@@ -5080,7 +5039,15 @@ namespace _3DLaserGlueInspection
                                                         dictResult.Add(imageKey, bResult);
                                                     }
                                                 }
+                                            }
 
+
+
+                                            // 结果显示
+                                            // 没必要显示每帧的检测结果，而且这样做导致影响检测速度
+                                            // 2d轨迹结果更新
+                                            if (imageSet.轮廓检测)
+                                            {
                                                 if (imageSet._3DGlueDet)
                                                 {
                                                     // 已开放
@@ -5092,17 +5059,24 @@ namespace _3DLaserGlueInspection
                                                             angless[indexImageCutProcessDict[item.Key]][indexCross], cutSet.Size, bResult.Result ? Colors.Green : Colors.Red);
                                                     }
                                                 }
-
+                                            }
+                                            //结果列表颜色
+                                            switch (item.Key)
+                                            {
+                                                case "Cam1":
+                                                    mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam1Result = bResult.Result ? "OK" : "NG";
+                                                    break;
+                                                case "Cam2":
+                                                    mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam2Result = bResult.Result ? "OK" : "NG";
+                                                    break;
+                                                case "Cam3":
+                                                    mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam3Result = bResult.Result ? "OK" : "NG";
+                                                    break;
+                                                case "Cam4":
+                                                    mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam4Result = bResult.Result ? "OK" : "NG";
+                                                    break;
                                             }
 
-                                            // 没必要显示每帧的检测结果，而且这样做导致影响检测速度
-                                            //if (singleFrameExistGlue)
-                                            //{
-                                            //    Application.Current.Dispatcher.Invoke(() =>
-                                            //    {
-                                            //        ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, hXLDCont10mm, outMaxRegion, outRegionRectangle2, resultData, bResult);
-                                            //    });
-                                            //}
                                             dictResult.Add(imageKey, bResult);
                                             dictData.Add(imageKey, resultData);
                                         }

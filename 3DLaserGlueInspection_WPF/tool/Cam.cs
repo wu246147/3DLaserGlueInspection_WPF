@@ -869,6 +869,11 @@ namespace _3DLaserGlueInspection
                 {
                     return false;
                 }
+                if (!SetGain(param.Gain))
+                {
+                    return false;
+                }
+
                 if (!SetAcquisitionFrameRate(param.Hz))
                 {
                     return false;
@@ -1182,25 +1187,39 @@ namespace _3DLaserGlueInspection
                                 return false;
                             }
 
-                            if (param.Key == "Cam3")
-                            {
-                                //TriggerStartDelay
-                                if (!SetIntValue("TriggerStartDelay", 0))
-                                {
-                                    return false;
-                                }
-                            }
-                            else
-                            {
-                                //TriggerStartDelay
-                                //int time = (int)(1 / param.Hz * 1000 * 1000 / 2);
+                            // 改为根据曝光时间来设置延迟触发时间
+                            //if (param.Key == "Cam3")
+                            //{
+                            //    //TriggerStartDelay
+                            //    if (!SetIntValue("TriggerStartDelay", 0))
+                            //    {
+                            //        return false;
+                            //    }
+                            //}
+                            //else
+                            //{
+                            //    //TriggerStartDelay
+                            //    //int time = (int)(1 / param.Hz * 1000 * 1000 / 2);
 
-                                int time = (int)500;
+                            //    int time = (int)500;
+                            //    if (!SetIntValue("TriggerStartDelay", time))
+                            //    {
+                            //        return false;
+                            //    }
+                            //}
+
+
+                            {
+                                int CamID = int.Parse(param.Key.Substring(param.Key.Length - 1, 1));
+
+                                //曝光的两倍加个50ms
+                                int time = ((int)param.Exposure * 2 + 50) * (CamID - 1);
                                 if (!SetIntValue("TriggerStartDelay", time))
                                 {
                                     return false;
                                 }
                             }
+
                             //触发延迟（us）
                             if (!SetIntValue("TriggerDelay", 0))
                             {
@@ -1377,6 +1396,39 @@ namespace _3DLaserGlueInspection
             else if (_manufacturerName == "ChinaVision")
             {
                 return GetFloatValue("ExposureTime", out value);
+            }
+            else
+            {
+                value = 0;
+                return false;
+            }
+        }
+
+        public bool SetGain(float value)
+        {
+            if (_manufacturerName == "Hikrobot")
+            {
+                return SetFloatValue("Gain", value);
+            }
+            else if (_manufacturerName == "ChinaVision")
+            {
+                return SetFloatValue("Gain", value);
+            }
+            else
+            {
+                return false;
+            }
+
+        }
+        public bool GetGain(out float value)
+        {
+            if (_manufacturerName == "Hikrobot")
+            {
+                return GetFloatValue("Gain", out value);
+            }
+            else if (_manufacturerName == "ChinaVision")
+            {
+                return GetFloatValue("Gain", out value);
             }
             else
             {
@@ -3512,6 +3564,7 @@ namespace _3DLaserGlueInspection
         public string CamName = string.Empty;
         public bool Enable = true;
         public float Exposure = 5000;
+        public float Gain = 2.5f;
         public float Hz = 10;
         public bool HzEnable = true;
         public bool ReverseX = false;

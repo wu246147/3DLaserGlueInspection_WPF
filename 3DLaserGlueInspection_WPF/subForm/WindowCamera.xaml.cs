@@ -210,6 +210,8 @@ namespace _3DLaserGlueInspection.subForm
             }
             CamNameComboBox.SelectedValue = camParam.CamName;
             exportTimeNumericUpDown.Text = Convert.ToString(camParam.Exposure);
+            gainNumericUpDown.Text = Convert.ToString(camParam.Gain);
+
             currentWidthNumericUpDown.Text = Convert.ToString(camParam.SizeWidth);
             currentHeightNumericUpDown.Text = Convert.ToString(camParam.SizeHeight);
             widthMaxNumericUpDown.Text = Convert.ToString(camParam.WidthMax);
@@ -231,6 +233,8 @@ namespace _3DLaserGlueInspection.subForm
 
             CamNameComboBox.SelectionChanged += Updata;
             exportTimeNumericUpDown.TextChanged += Updata;
+            gainNumericUpDown.TextChanged += Updata;
+
             currentWidthNumericUpDown.TextChanged += Updata;
             currentHeightNumericUpDown.TextChanged += Updata;
             widthMaxNumericUpDown.TextChanged += Updata;
@@ -255,6 +259,8 @@ namespace _3DLaserGlueInspection.subForm
 
             CamNameComboBox.SelectionChanged -= Updata;
             exportTimeNumericUpDown.TextChanged -= Updata;
+            gainNumericUpDown.TextChanged -= Updata;
+
             currentWidthNumericUpDown.TextChanged -= Updata;
             currentHeightNumericUpDown.TextChanged -= Updata;
             widthMaxNumericUpDown.TextChanged -= Updata;
@@ -283,6 +289,8 @@ namespace _3DLaserGlueInspection.subForm
                     camParam.Enable = (bool)checkBoxEnableCam.IsChecked;
                     camParam.CamName = CamNameComboBox.Items[CamNameComboBox.SelectedIndex].ToString();
                     camParam.Exposure = Convert.ToInt32(exportTimeNumericUpDown.Text);
+                    camParam.Gain = Convert.ToInt32(gainNumericUpDown.Text);
+
                     camParam.SizeWidth = Convert.ToInt32(currentWidthNumericUpDown.Text);
                     camParam.SizeHeight = Convert.ToInt32(currentHeightNumericUpDown.Text);
                     camParam.WidthMax = Convert.ToInt32(widthMaxNumericUpDown.Text);
@@ -766,6 +774,32 @@ namespace _3DLaserGlueInspection.subForm
             if (!cam.SetLine2Inverter((bool)Line2EnableCheck.IsChecked))
             {
                 ShowMessage("Line2" + GlobalVarAndFunc.LanguageTranslate("打开设置失败:") + cam.ErrMsg);
+            }
+        }
+
+        private void getGainTimeButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (cam.GetGain(out float value))
+            {
+                gainNumericUpDown.Text = Convert.ToString(value);
+                ShowMessage(GlobalVarAndFunc.LanguageTranslate("增益：") + value.ToString());
+            }
+            else
+            {
+                ShowMessage(GlobalVarAndFunc.LanguageTranslate("增益获取失败:") + cam.ErrMsg);
+            }
+        }
+
+        private void setGainTimeButton_Click(object sender, RoutedEventArgs e)
+        {
+            double value = Convert.ToDouble(gainNumericUpDown.Text);
+            if (cam.SetGain((float)value))
+            {
+                ShowMessage(GlobalVarAndFunc.LanguageTranslate("设置增益：") + gainNumericUpDown.Text);
+            }
+            else
+            {
+                ShowMessage(GlobalVarAndFunc.LanguageTranslate("增益设置失败:") + cam.ErrMsg);
             }
         }
     }
