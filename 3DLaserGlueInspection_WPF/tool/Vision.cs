@@ -491,6 +491,126 @@ namespace _3DLaserGlueInspection
                 //robotZ.Add(camXY4.At<double>(i, 2));
             }
         }
+
+        /// <summary>
+        /// 点坐标转换，从相机转为激光坐标系和机器人坐标系.眼在手上输出的是机器坐标系下的点云坐标；眼在手外输出的是法兰盘坐标系下的点云位置。
+        /// 眼在手上时，输出objToBase
+        /// 眼在手上时，输出objToTool
+        /// </summary>
+        /// <param name="lightXY"></param>
+        /// <param name="LightToCam"></param>
+        /// <param name="CamToTool"></param>
+        /// 眼在手上时，应该调用CamToTool
+        /// 眼在手外时，应该调用CamToBase
+        /// <param name="robotPose"></param>
+        /// 眼在手上时，应该调用robotPose
+        /// 眼在手外时，应该调用robotPoseInv
+        /// <param name="robotX"></param>
+        /// <param name="robotY"></param>
+        /// <param name="robotZ"></param>
+        public static void pointTransform2LightAndRobot(Mat lightXY, 
+            Mat LightToCam, Mat CamToTool, PoseParameters robotPose, out List<double> robotX, out List<double> robotY,
+            out List<double> robotZ)
+        {
+            //printPoint(lightXY, "lightXY");
+
+            //printPoint(lightXY, "lightXY");
+            Mat lightXY4 = new Mat();
+            lightXY4 = Mat.Zeros(lightXY.Rows, 4, MatType.CV_64FC1);
+            Mat ones = new Mat();
+            ones = Mat.Ones(lightXY.Rows, 1, MatType.CV_64FC1);
+            ones.CopyTo(lightXY4.Col(3));
+
+            lightXY.CopyTo(lightXY4[new OpenCvSharp.Rect(0, 0, 2, lightXY4.Rows)]);
+            //转相机坐标系
+            Mat camXY4 = new Mat();
+            //Console.WriteLine("LightToCam:");
+            affineTransPoint3d(lightXY4.CvPtr, camXY4.CvPtr, LightToCam.CvPtr, false);
+            //printPoint(LightToCam, "LightToCam");
+            //printPoint(camXY4, "camXY4");
+
+            ////转传感器坐标系
+            Mat toolXY4 = new Mat();
+            //转工具
+            //Console.WriteLine("CamToTool:");
+            affineTransPoint3d(camXY4.CvPtr, toolXY4.CvPtr, CamToTool.CvPtr, false);
+            //printPoint(CamToTool, "CamToTool");
+            //printPoint(toolXY4, "toolXY4");
+
+            //转机器人坐标
+            Mat robotXY4 = new Mat();
+            Mat ToolToRobot = new Mat();
+
+            Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToRobot.CvPtr);
+            //Console.WriteLine("ToolToRobot:");
+            Vision.affineTransPoint3d(toolXY4.CvPtr, robotXY4.CvPtr, ToolToRobot.CvPtr, false);
+            //printPoint(ToolToRobot, "ToolToRobot");
+            //printPoint(robotXY4, "robotXY4");
+
+            //List<Point2d> imagePointsList = new List<Point2d>();
+            //List<Point3d> lightPointsList = new List<Point3d>();
+            //List<Point3d> camPointsList = new List<Point3d>();
+            //List<Point3d> toolPointsList = new List<Point3d>();
+            //List<Point3d> robotXY4List = new List<Point3d>();
+
+            //tranformMatToPoint2d(imagePoint, imagePointsList);
+            //tranformMatToPoint3d(lightXY4, lightPointsList);
+            //tranformMatToPoint3d(camXY4, camPointsList);
+            //tranformMatToPoint3d(toolXY4, toolPointsList);
+            //tranformMatToPoint3d(robotXY4, robotXY4List);
+
+            robotX = new List<double>();
+            robotY = new List<double>();
+            robotZ = new List<double>();
+            for (int i = 0; i < robotXY4.Rows; i++)
+            {
+                robotX.Add(robotXY4.At<double>(i, 0));
+                robotY.Add(robotXY4.At<double>(i, 1));
+                robotZ.Add(robotXY4.At<double>(i, 2));
+
+                //robotX.Add(camXY4.At<double>(i, 0));
+                //robotY.Add(camXY4.At<double>(i, 1));
+                //robotZ.Add(camXY4.At<double>(i, 2));
+            }
+        }
+
+
+
+        /// <summary>
+        /// 在指定范围内做高斯加权平均
+        /// </summary>
+        /// <param name="points">轨迹点</param>
+        /// <param name="from">可用范围起点索引</param>
+        /// <param name="to">可用范围终点索引</param>
+        /// <param name="anchor">权重中心（最关注的点）</param>
+        /// <param name="sigma">高斯标准差</param>
+        public static Point3D GaussianSmoothInRange(
+            Point3D[] points,
+            int from,
+            int to,
+            int anchor,
+            double sigma)
+        {
+            double wx = 0, wy = 0, wz = 0, wSum = 0;
+
+            // 确保不越界
+            int start = Math.Max(from, 0);
+            int end = Math.Min(to, points.Length - 1);
+
+            for (int j = start; j <= end; j++)
+            {
+                double dist = j - anchor;  // 到权重中心的距离
+                double w = Math.Exp(-(dist * dist) / (2.0 * sigma * sigma));
+
+                wx += points[j].X * w;
+                wy += points[j].Y * w;
+                wz += points[j].Z * w;
+                wSum += w;
+            }
+
+            return new Point3D(wx / wSum, wy / wSum, wz / wSum);
+        }
+
         private static void tranformMatToPoint2d(Mat pointMat, List<Point2d> pointList)
         {
             for (int i = 0; i < pointMat.Rows; i++)
