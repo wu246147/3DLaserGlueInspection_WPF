@@ -2028,7 +2028,7 @@ namespace _3DLaserGlueInspection.subForm
                     {
                         if (!outMaxRegion.Empty() && !outRegionRectangle2.Empty())
                         {
-                            GlobalVarAndFunc.ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, cutSet, hXLDCont10mm3D, outMaxRegion, outRegionRectangle2, resultData, bResult, ref hWindowModel, ref showing, ref olockShow, 0, 0);
+                            GlobalVarAndFunc.ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, cutSet, cutSet.imageSet[selectCamListBox.SelectedIndex][selectPictureListBox.SelectedIndex], hXLDCont10mm3D, outMaxRegion, outRegionRectangle2, resultData, bResult, ref hWindowModel, ref showing, ref olockShow, 0, 0);
 
                         }
                         else

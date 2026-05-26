@@ -220,7 +220,7 @@ namespace _3DLaserGlueInspection
                 showing = false;
             }
         }
-        public static void ShowImageData(int showWidth, int showHeight, CutSet cutSet, Mat hXLDCont10mm, Mat hRegion, Mat hRegionSmallestRectangle2, Data data, BResult bResult,
+        public static void ShowImageData(int showWidth, int showHeight, CutSet cutSet,ImageSet set, Mat hXLDCont10mm, Mat hRegion, Mat hRegionSmallestRectangle2, Data data, BResult bResult,
              ref ImageControl2 imageControl, ref bool showing, ref object olockShow, double offsetX = 0, double offsetY = 0)
         {
             if (!showing)
@@ -257,25 +257,31 @@ namespace _3DLaserGlueInspection
                         if (!hRegion.Empty())
                         {
                             //Console.WriteLine($"text value :");
-                            string text = GlobalVarAndFunc.LanguageTranslate("胶高：") + $"{data.glueHeight:0.00}\r\n"
-                               + GlobalVarAndFunc.LanguageTranslate("胶宽：") + $"{data.glueWidth:0.00}\r\n"
-                               + GlobalVarAndFunc.LanguageTranslate("面积：") + $"{data.glueArea:0.00}";
+                            string text1 = GlobalVarAndFunc.LanguageTranslate("胶宽：") + $"{data.glueWidth:0.00}";
+                            string text2 = GlobalVarAndFunc.LanguageTranslate("胶高：") + $"{data.glueHeight:0.00}";
+                            string text3 = GlobalVarAndFunc.LanguageTranslate("面积：") + $"{data.glueArea:0.00}";
 
-                            //Console.WriteLine($"point :({data.column},{data.row})");
-                            //DispTextInImageHWindowControlEvent(text, Colors.Black, (int)data.column, (int)data.row);
-                            imageControl.AddTextBlock(text, Colors.White, (int)data.column + (int)(data.glueWidth / 2 * cutSet.scaleSize + offsetX),
+                            imageControl.AddTextBlock(text1, (bResult.glueWidth ? Colors.Green : Colors.Red), (int)data.column + (int)(data.glueWidth / 2 * cutSet.scaleSize + offsetX),
                                 (int)data.row + (int)(data.glueHeight / 2 * cutSet.scaleSize + offsetY));
+                            imageControl.AddTextBlock(text2, (bResult.glueHeight ? Colors.Green : Colors.Red), (int)data.column + (int)(data.glueWidth / 2 * cutSet.scaleSize + offsetX),
+                                (int)data.row + (int)(data.glueHeight / 2 * cutSet.scaleSize + offsetY + 24));
+                            imageControl.AddTextBlock(text3, (bResult.glueArea ? Colors.Green : Colors.Red), (int)data.column + (int)(data.glueWidth / 2 * cutSet.scaleSize + offsetX),
+                                (int)data.row + (int)(data.glueHeight / 2 * cutSet.scaleSize + offsetY + 48));
 
                             //Console.WriteLine($"text result :");
                             //hWindowControl.DispTextInImage(text, data.row, data.column);
-                            string textWindow1 = GlobalVarAndFunc.LanguageTranslate("胶宽：") + (bResult.glueWidth ? "OK" : "NG");
-                            string textWindow2 = GlobalVarAndFunc.LanguageTranslate("胶高：") + (bResult.glueHeight ? "OK" : "NG");
-                            string textWindow3 = GlobalVarAndFunc.LanguageTranslate("面积：") + (bResult.glueArea ? "OK" : "NG");
+                            string textWindow1 = GlobalVarAndFunc.LanguageTranslate("胶宽：") + (bResult.glueWidth ? "OK" : "NG")+" " + GlobalVarAndFunc.LanguageTranslate("检测范围") + 
+                                $": {set.widthMin}~{set.widthMax}" ;
+                            string textWindow2 = GlobalVarAndFunc.LanguageTranslate("胶高：") + (bResult.glueHeight ? "OK" : "NG") + " " + GlobalVarAndFunc.LanguageTranslate("检测范围") +
+                                $": {set.heightMin}~{set.heightMax}";
+                            string textWindow3 = GlobalVarAndFunc.LanguageTranslate("面积：") + (bResult.glueArea ? "OK" : "NG") + " " + GlobalVarAndFunc.LanguageTranslate("检测范围") +
+                                $": {set.areaMin}~{set.areaMax}";
                             string textWindow = textWindow1 + "\r\n" + textWindow2 + "\r\n" + textWindow3;
                             //Console.WriteLine($"point :({10},{10})");
                             //DispTextInImageHWindowControlEvent(textWindow, Colors.Black, 10, 10);
-                            imageControl.AddTextBlock(textWindow, Colors.White, 10, 10);
-
+                            imageControl.AddTextBlock(textWindow1, (bResult.glueWidth ? Colors.Green : Colors.Red), 10, 10);
+                            imageControl.AddTextBlock(textWindow2, (bResult.glueHeight ? Colors.Green : Colors.Red), 10, 10 + 24);
+                            imageControl.AddTextBlock(textWindow3, (bResult.glueArea ? Colors.Green : Colors.Red), 10, 10 + 48);
 
                             //Console.WriteLine($"region :");
 

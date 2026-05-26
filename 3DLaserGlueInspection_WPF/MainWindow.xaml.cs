@@ -313,7 +313,7 @@ namespace _3DLaserGlueInspection
 
 
                                     GlobalVarAndFunc.ShowImageData((int)model.displaySize[camKey][segmentIndex].Width, 
-                                        (int)model.displaySize[camKey][segmentIndex].Height, cutSet,
+                                        (int)model.displaySize[camKey][segmentIndex].Height, cutSet, cutSet.imageSet[columnIndex][segmentSubIndex],
                                         hXLDCont10mm, 
                                         hRegion, 
                                         hRegionSmallestRectangle2, 
@@ -337,6 +337,28 @@ namespace _3DLaserGlueInspection
                 System.Windows.Forms.MessageBox.Show(ex.ToString());
             }
         }
+
+
+        private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == Key.P && Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                if (simulationCheck.Visibility == Visibility.Visible)
+                {
+                    simulationCheck.Visibility = Visibility.Hidden;
+                    simulationPath.Visibility = Visibility.Hidden;
+                }
+                else
+                {
+                    simulationCheck.Visibility = Visibility.Visible;
+                    simulationPath.Visibility = Visibility.Visible;
+
+
+                }
+            }
+        }
+
+
         bool showing;
         object olockShow = new object();
 

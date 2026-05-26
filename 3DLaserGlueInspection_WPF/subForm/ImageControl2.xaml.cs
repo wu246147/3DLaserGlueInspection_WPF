@@ -414,7 +414,8 @@ namespace _3DLaserGlueInspection.subForm
             childrenImagePointsList.Add(points);
 
             //限制最大个数，不能超过3000个
-            if (canvas.Children.Count > 3000)
+            //放大一点，限制10000
+            if (canvas.Children.Count > 10000)
             {
                 canvas.Children.RemoveAt(0);
                 childrenList.RemoveAt(0);
