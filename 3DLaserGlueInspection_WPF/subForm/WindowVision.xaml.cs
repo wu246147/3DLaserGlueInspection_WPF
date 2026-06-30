@@ -150,6 +150,12 @@ namespace _3DLaserGlueInspection.subForm
             {
                 CreateRightClickMenu((System.Windows.Controls.ContextMenu)s, CopyAngle);
             };
+
+            correctionGrid.ContextMenu = new System.Windows.Controls.ContextMenu();
+            correctionGrid.ContextMenu.Opened += (s, e) =>
+            {
+                CreateRightClickMenu((System.Windows.Controls.ContextMenu)s, CopyCorrectionScaleSize);
+            };
         }
 
         //void ShowImageData(int showWidth, int showHeight, Mat hXLDCont10mm)
@@ -385,6 +391,14 @@ namespace _3DLaserGlueInspection.subForm
             isAlter = true;
         }
 
+        private void CopyCorrectionScaleSize(ImageSet srcImageSet, ImageSet dstImageSet)
+        {
+            srcImageSet.correctionScaleSizeX = dstImageSet.correctionScaleSizeX;
+            srcImageSet.correctionScaleSizeY = dstImageSet.correctionScaleSizeY;
+
+            isAlter = true;
+
+        }
         private void CopyAngle(ImageSet srcImageSet, ImageSet dstImageSet)
         {
             srcImageSet.isUseAngleOpt = dstImageSet.isUseAngleOpt;
@@ -593,10 +607,14 @@ namespace _3DLaserGlueInspection.subForm
             useCroppintCheck.Checked += UpData;
             useCroppintCheck.Unchecked += UpData;
 
-            leafRangeMinNumericUpDown.TextChanged += UpData;
-            leafRangeMaxNumericUpDown.TextChanged += UpData;
+            leftRangeMinNumericUpDown.TextChanged += UpData;
+            leftRangeMaxNumericUpDown.TextChanged += UpData;
             topRangeMinNumericUpDown.TextChanged += UpData;
             topRangeMaxNumericUpDown.TextChanged += UpData;
+
+            //correctionScaleSizeXNumericUpDown.TextChanged += UpData;
+            //correctionScaleSizeYNumericUpDown.TextChanged += UpData;
+
 
             useDiscreteDenoisingCheck.Checked += UpData;
             useDiscreteDenoisingCheck.Unchecked += UpData;
@@ -608,6 +626,9 @@ namespace _3DLaserGlueInspection.subForm
             scaleSizeNumericUpDown.TextChanged += UpData;
             isUseAngleOptCheck.Checked += UpData;
             isUseAngleOptCheck.Unchecked += UpData;
+
+            coefficientSharingCheck.Checked += UpData;
+            coefficientSharingCheck.Unchecked += UpData;
 
 
         }
@@ -650,10 +671,13 @@ namespace _3DLaserGlueInspection.subForm
             useCroppintCheck.Checked -= UpData;
             useCroppintCheck.Unchecked -= UpData;
 
-            leafRangeMinNumericUpDown.TextChanged -= UpData;
-            leafRangeMaxNumericUpDown.TextChanged -= UpData;
+            leftRangeMinNumericUpDown.TextChanged -= UpData;
+            leftRangeMaxNumericUpDown.TextChanged -= UpData;
             topRangeMinNumericUpDown.TextChanged -= UpData;
             topRangeMaxNumericUpDown.TextChanged -= UpData;
+
+            //correctionScaleSizeXNumericUpDown.TextChanged -= UpData;
+            //correctionScaleSizeYNumericUpDown.TextChanged -= UpData;
 
             useDiscreteDenoisingCheck.Checked -= UpData;
             useDiscreteDenoisingCheck.Unchecked -= UpData;
@@ -664,6 +688,9 @@ namespace _3DLaserGlueInspection.subForm
             scaleSizeNumericUpDown.TextChanged -= UpData;
             isUseAngleOptCheck.Checked -= UpData;
             isUseAngleOptCheck.Unchecked -= UpData;
+
+            coefficientSharingCheck.Checked -= UpData;
+            coefficientSharingCheck.Unchecked -= UpData;
 
         }
         void UpData(object sender, EventArgs e)
@@ -681,6 +708,7 @@ namespace _3DLaserGlueInspection.subForm
 
                     //cutSet.isUseAngleOpt = (bool)isUseAngleOptCheck.IsChecked;
 
+                    cutSet.isCoefficientSharing = (bool)coefficientSharingCheck.IsChecked;
 
                     try
                     {
@@ -694,7 +722,7 @@ namespace _3DLaserGlueInspection.subForm
 
                         cutSet.scaleSize = Convert.ToInt32(scaleSizeNumericUpDown.Text);
 
-
+                        
                     }
                     catch (Exception)
                     {
@@ -728,8 +756,8 @@ namespace _3DLaserGlueInspection.subForm
                 imageSet.areaMin = Convert.ToDouble(glueAreaMinNumericUpDown.Text);
                 imageSet.areaMax = Convert.ToDouble(glueAreaMaxNumericUpDown.Text);
                 imageSet.启用裁剪 = (bool)useCroppintCheck.IsChecked;
-                imageSet.LeftX = Convert.ToDouble(leafRangeMinNumericUpDown.Text);
-                imageSet.RightX = Convert.ToDouble(leafRangeMaxNumericUpDown.Text);
+                imageSet.LeftX = Convert.ToDouble(leftRangeMinNumericUpDown.Text);
+                imageSet.RightX = Convert.ToDouble(leftRangeMaxNumericUpDown.Text);
                 imageSet.TopY = Convert.ToDouble(topRangeMinNumericUpDown.Text);
                 imageSet.DownY = Convert.ToDouble(topRangeMaxNumericUpDown.Text);
                 imageSet.离散去噪 = (bool)useDiscreteDenoisingCheck.IsChecked;
@@ -737,6 +765,10 @@ namespace _3DLaserGlueInspection.subForm
                 imageSet.成段点数 = Convert.ToInt32(discreteDenoisingCountNumericUpDown.Text);
 
                 imageSet.isUseAngleOpt = (bool)isUseAngleOptCheck.IsChecked;
+
+                //imageSet.correctionScaleSizeX = Convert.ToDouble(correctionScaleSizeXNumericUpDown.Text);
+                //imageSet.correctionScaleSizeY = Convert.ToDouble(correctionScaleSizeYNumericUpDown.Text);
+
             }
             catch (Exception ex)
             {
@@ -1041,8 +1073,8 @@ namespace _3DLaserGlueInspection.subForm
                     glueAreaMinNumericUpDown.Text = imageSet.areaMin.ToString();
                     glueAreaMaxNumericUpDown.Text = imageSet.areaMax.ToString();
                     useCroppintCheck.IsChecked = imageSet.启用裁剪;
-                    leafRangeMinNumericUpDown.Text = imageSet.LeftX.ToString();
-                    leafRangeMaxNumericUpDown.Text = imageSet.RightX.ToString();
+                    leftRangeMinNumericUpDown.Text = imageSet.LeftX.ToString();
+                    leftRangeMaxNumericUpDown.Text = imageSet.RightX.ToString();
                     topRangeMinNumericUpDown.Text = imageSet.TopY.ToString();
                     topRangeMaxNumericUpDown.Text = imageSet.DownY.ToString();
                     useDiscreteDenoisingCheck.IsChecked = imageSet.离散去噪;
@@ -1050,6 +1082,10 @@ namespace _3DLaserGlueInspection.subForm
                     discreteDenoisingCountNumericUpDown.Text = imageSet.成段点数.ToString();
 
                     isUseAngleOptCheck.IsChecked = imageSet.isUseAngleOpt;
+
+                    correctionScaleSizeXNumericUpDown.Text = imageSet.correctionScaleSizeX.ToString();
+                    correctionScaleSizeYNumericUpDown.Text = imageSet.correctionScaleSizeY.ToString();
+
 
                     LoadUpData();
                     imageSetGrid.IsEnabled = true;
@@ -1184,6 +1220,7 @@ namespace _3DLaserGlueInspection.subForm
                     enableCam4Check.IsChecked = cutSet.Cam4Enabled;
 
                     //isUseAngleOptCheck.IsChecked = cutSet.isUseAngleOpt;
+                    coefficientSharingCheck.IsChecked = cutSet.isCoefficientSharing;
 
                     imageCountNumericUpDown.Text = cutSet.ImageNum.ToString();
 
@@ -1196,8 +1233,6 @@ namespace _3DLaserGlueInspection.subForm
                     endImageIndexNumericUpDown.Text = cutSet.EndImageIndex.ToString();
                     scaleSizeNumericUpDown.Text = cutSet.scaleSize.ToString();
 
-                    correctionScaleSizeXNumericUpDown.Text = cutSet.correctionScaleSizeX.ToString();
-                    correctionScaleSizeYNumericUpDown.Text = cutSet.correctionScaleSizeY.ToString();
 
                     //SelectedCamAndImage();
 
@@ -1985,7 +2020,7 @@ namespace _3DLaserGlueInspection.subForm
 
         private void showImageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (cutSetListBox.SelectedIndex < 0 || selectCamListBox.SelectedIndex <= 0 || selectPictureListBox.SelectedIndex < 0 || robotPoseKeys.Count < 0)
+            if (cutSetListBox.SelectedIndex < 0 || selectCamListBox.SelectedIndex < 0 || selectPictureListBox.SelectedIndex < 0 || robotPoseKeys.Count < 0)
             {
                 return;
             }
@@ -2774,8 +2809,8 @@ namespace _3DLaserGlueInspection.subForm
                                             }
                                             {
                                                 //对两个方向进行矫正
-                                                double scaleX = cutSet.correctionScaleSizeX;
-                                                double scaleY = cutSet.correctionScaleSizeY;
+                                                double scaleX = imageSet.correctionScaleSizeX;
+                                                double scaleY = imageSet.correctionScaleSizeY;
 
                                                 Mat correctionPoints = new Mat();
                                                 correctionPoints = hXLDCont10mm.Clone();
@@ -3278,8 +3313,8 @@ namespace _3DLaserGlueInspection.subForm
 
                             {
                                 //对两个方向进行矫正
-                                double scaleX = cutSet.correctionScaleSizeX;
-                                double scaleY = cutSet.correctionScaleSizeY;
+                                double scaleX = imageSet.correctionScaleSizeX;
+                                double scaleY = imageSet.correctionScaleSizeY;
 
                                 Mat correctionPoints = new Mat();
                                 correctionPoints = hXLDCont10mm.Clone();
@@ -3378,14 +3413,34 @@ namespace _3DLaserGlueInspection.subForm
                 return;
             }
 
-            cutSet.correctionScaleSizeX = actualGlueSizeX / (resultData.glueWidth / cutSet.correctionScaleSizeX);
-            cutSet.correctionScaleSizeY = actualGlueSizeY / (resultData.glueHeight / cutSet.correctionScaleSizeY);
+            if (cutSet.isCoefficientSharing)
+            {
+                double oldScaleSizeX = imageSet.correctionScaleSizeX;
+                double oldScaleSizeY = imageSet.correctionScaleSizeY;
 
+                //遍历修改
+                for (int i = 0; i < set.CutSets[cutSetListBox.SelectedIndex].imageSet[selectCamListBox.SelectedIndex].Count; i++)
+                {
+                    set.CutSets[cutSetListBox.SelectedIndex].imageSet[selectCamListBox.SelectedIndex][i].correctionScaleSizeX = actualGlueSizeX / (resultData.glueWidth / oldScaleSizeX);
+                    set.CutSets[cutSetListBox.SelectedIndex].imageSet[selectCamListBox.SelectedIndex][i].correctionScaleSizeY = actualGlueSizeY / (resultData.glueHeight / oldScaleSizeY);
 
-            correctionScaleSizeXNumericUpDown.Text = cutSet.correctionScaleSizeX.ToString();
-            correctionScaleSizeYNumericUpDown.Text = cutSet.correctionScaleSizeY.ToString();
+                }
+            }
+            else 
+            {
+                imageSet.correctionScaleSizeX = actualGlueSizeX / (resultData.glueWidth / imageSet.correctionScaleSizeX);
+                imageSet.correctionScaleSizeY = actualGlueSizeY / (resultData.glueHeight / imageSet.correctionScaleSizeY);
+            }
+
+            correctionScaleSizeXNumericUpDown.Text = imageSet.correctionScaleSizeX.ToString();
+            correctionScaleSizeYNumericUpDown.Text = imageSet.correctionScaleSizeY.ToString();
 
             System.Windows.Forms.MessageBox.Show($"矫正成功。");
+
+        }
+
+        private void coefficientSharingCheck_Checked(object sender, RoutedEventArgs e)
+        {
 
         }
     }

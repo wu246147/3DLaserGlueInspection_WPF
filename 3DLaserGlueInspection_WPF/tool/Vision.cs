@@ -709,8 +709,8 @@ namespace _3DLaserGlueInspection
                 }
                 {
                     //对两个方向进行矫正
-                    double scaleX = cutSet.correctionScaleSizeX;
-                    double scaleY = cutSet.correctionScaleSizeY;
+                    double scaleX = imageSet.correctionScaleSizeX;
+                    double scaleY = imageSet.correctionScaleSizeY;
 
                     Mat correctionPoints = new Mat();
                     correctionPoints = hXLDCont10mm.Clone();
@@ -1107,6 +1107,8 @@ namespace _3DLaserGlueInspection
         // 矫正缩放系数
         public double correctionScaleSizeX = 1;
         public double correctionScaleSizeY = 1;
+        // 是否共享矫正系数
+        public bool isCoefficientSharing = true;
 
 
         /// <summary>
@@ -1158,6 +1160,10 @@ namespace _3DLaserGlueInspection
 
         // 是否使用角度优化
         public bool isUseAngleOpt = true;
+
+        // 矫正缩放系数
+        public double correctionScaleSizeX = 1;
+        public double correctionScaleSizeY = 1;
 
 
         public ImageSet(int index)

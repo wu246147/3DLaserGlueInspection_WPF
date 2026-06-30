@@ -63,12 +63,20 @@ namespace _3DLaserGlueInspection
             InitializeComponent();
             model = new MainWindowModel();
             this.DataContext = model.mainModel;
+
+
             //打开通讯
 
             model.InitCommunicationConnection();
         }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+
+            //GlobalVarAndFunc.ReadLanguageID();
+            //GlobalVarAndFunc.LanguageDicInit();
+            //GeneralFunc.ChangeLanguateFun(typeof(FormVision), this);
+
+
             model.DispImageHWindowNumericalModelDiagramEvent += hWindowModel.SetImageSource;
             model.DispPolylineHWindowNumericalModelDiagramEvent += hWindowModel.AddPolyline;
 
@@ -177,7 +185,22 @@ namespace _3DLaserGlueInspection
             //model.mainModel.NGCountControl += 1;
 
         }
-
+        private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == Key.P && Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                if (simulationCheck.Visibility == Visibility.Visible)
+                {
+                    simulationCheck.Visibility = Visibility.Hidden;
+                    simulationPath.Visibility = Visibility.Hidden;
+                }
+                else
+                {
+                    simulationCheck.Visibility = Visibility.Visible;
+                    simulationPath.Visibility = Visibility.Visible;
+                }
+            }
+        }
 
         private void simulationPath_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -335,26 +358,6 @@ namespace _3DLaserGlueInspection
             catch (Exception ex) 
             { 
                 System.Windows.Forms.MessageBox.Show(ex.ToString());
-            }
-        }
-
-
-        private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-        {
-            if (e.Key == Key.P && Keyboard.Modifiers == ModifierKeys.Control)
-            {
-                if (simulationCheck.Visibility == Visibility.Visible)
-                {
-                    simulationCheck.Visibility = Visibility.Hidden;
-                    simulationPath.Visibility = Visibility.Hidden;
-                }
-                else
-                {
-                    simulationCheck.Visibility = Visibility.Visible;
-                    simulationPath.Visibility = Visibility.Visible;
-
-
-                }
             }
         }
 

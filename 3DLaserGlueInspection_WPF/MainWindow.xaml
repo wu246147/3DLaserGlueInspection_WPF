@@ -20,7 +20,8 @@
     WindowStartupLocation="CenterScreen"
     WindowState="Maximized"
     WindowStyle="None"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    KeyDown="Window_KeyDown">
 
     <Window.Resources>
 
@@ -74,7 +75,7 @@
                     VerticalContentAlignment="Center"
                     Background="#FF242B35"
                     BorderBrush="{x:Null}"
-                    Content="AI 3D视觉涂胶检测系统 1.6.0"
+                    Content="AI 3D视觉涂胶检测系统 1.6.1"
                     FontSize="22"
                     Foreground="#FF1679D0" Margin="0,-2,0,0" />
 
@@ -810,6 +811,7 @@ Converter={StaticResource ResultColor}}" />
                 Content="仿真"
                 Foreground="White"
                 IsChecked="False"
+                Visibility="Hidden"
                 Unchecked="simulationCheck_Click" />
             <TextBox
                 x:Name="simulationPath"
@@ -819,6 +821,7 @@ Converter={StaticResource ResultColor}}" />
                 Background="#FF2A3440"
                 Foreground="White"
                 TextChanged="simulationPath_TextChanged"
+                Visibility="Hidden"
                 TextWrapping="Wrap" />
 
         </Grid>

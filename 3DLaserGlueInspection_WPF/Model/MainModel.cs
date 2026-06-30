@@ -159,7 +159,7 @@ namespace _3DLaserGlueInspection
                     Fill         = Brushes.LightGreen,
                     FontSize     = 14,
                     Stroke       = Brushes.White,
-                    Values       = new ChartValues<double> { 1 }
+                    Values       = new ChartValues<double> { 0 }
                 },
                 new PieSeries
                 {
@@ -168,7 +168,7 @@ namespace _3DLaserGlueInspection
                     Fill         = Brushes.Red,
                     FontSize     = 14,
                     Stroke       = Brushes.White,
-                    Values       = new ChartValues<double> { 1 }
+                    Values       = new ChartValues<double> { 0 }
                 }
             };
         }

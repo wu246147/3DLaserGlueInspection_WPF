@@ -129,9 +129,9 @@
                                 <Border BorderBrush="White" BorderThickness="1" Height="83" VerticalAlignment="Top" Margin="0,33,0,0">
                                     <Grid Name="cropGrid" ShowGridLines="True" Height="85" VerticalAlignment="Top" Margin="0,-1,0,0">
                                         <Label  Content="横向范围" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,9,0,0"/>
-                                        <TextBox x:Name="leafRangeMinNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="71,11,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                        <TextBox x:Name="leftRangeMinNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="71,11,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
                                         <Label  Content="~" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,9,0,0"/>
-                                        <TextBox x:Name="leafRangeMaxNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="167,11,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                        <TextBox x:Name="leftRangeMaxNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="167,11,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
                                         <Label  Content="纵向范围" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,45,0,0"/>
                                         <TextBox x:Name="topRangeMinNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="71,47,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
                                         <Label  Content="~" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,45,0,0"/>
@@ -164,8 +164,8 @@
                             <TextBox x:Name="robotAndCamAngleNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="118,505,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="130" InputMethod.IsInputMethodEnabled="False" IsEnabled="False" />
 
                             <Border BorderBrush="White" BorderThickness="1" Height="190" Margin="5,726,5,0" VerticalAlignment="Top">
-                                <Grid ShowGridLines="True" >
-                                    <Button x:Name="correctionButton" Content="尺寸矫正" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,150,0,0" Click="correctionButton_Click"/>
+                                <Grid x:Name="correctionGrid" ShowGridLines="True" >
+                                    <Button x:Name="correctionButton" Content="尺寸矫正" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="6,150,0,0" Click="correctionButton_Click"/>
                                     <Label Content="矫正系数x" FontSize="14" Foreground="White" Margin="0,10,170,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="82"/>
                                     <Label Content="矫正系数y" FontSize="14" Foreground="White" Margin="0,45,170,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="82"/>
                                     <Label Content="实际胶宽" FontSize="14" Foreground="White" HorizontalAlignment="Left" Width="82"/>
@@ -174,6 +174,7 @@
                                     <TextBox x:Name="correctionScaleSizeYNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="112,45,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="130" InputMethod.IsInputMethodEnabled="False" IsEnabled="False" />
                                     <TextBox x:Name="actualGlueWidthNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="112,80,0,0" TextWrapping="Wrap" Text="0" Width="130" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" VerticalAlignment="Top" />
                                     <TextBox x:Name="actualGlueHeightNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="112,115,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="130" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                    <CheckBox  x:Name="coefficientSharingCheck" Content="矫正系数共用" HorizontalAlignment="Left" Margin="137,154,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" IsChecked="True" />
                                 </Grid>
                             </Border>
                             <Label  Content="最低宽度" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="10,68,0,0" VerticalAlignment="Top"/>

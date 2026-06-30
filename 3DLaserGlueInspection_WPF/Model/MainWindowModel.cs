@@ -2919,8 +2919,8 @@ namespace _3DLaserGlueInspection
                                                         }
                                                         {
                                                             //对两个方向进行矫正
-                                                            double scaleX = cutSet.correctionScaleSizeX;
-                                                            double scaleY = cutSet.correctionScaleSizeY;
+                                                            double scaleX = imageSet.correctionScaleSizeX;
+                                                            double scaleY = imageSet.correctionScaleSizeY;
 
                                                             Mat correctionPoints = new Mat();
                                                             correctionPoints = hXLDCont10mm.Clone();
