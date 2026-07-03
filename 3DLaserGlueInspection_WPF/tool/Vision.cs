@@ -884,12 +884,12 @@ namespace _3DLaserGlueInspection
                     {
                         OtherSet = new OtherSet();
                         result0 = false;
-                        _errMsg += "\r\n" + fPath + GlobalVarAndFunc.LanguageTranslate("文件格式异常");
+                        _errMsg += "\r\n" + fPath + _3DLaserGlueInspection.Resources.LanguageDict.FileFormatException;
                     }
                 }
                 else
                 {
-                    _errMsg += "\r\n" + fPath + GlobalVarAndFunc.LanguageTranslate("文件不存在");
+                    _errMsg += "\r\n" + fPath + _3DLaserGlueInspection.Resources.LanguageDict.FileDoesNotExist;
                     result0 = false;
                 }
             }
@@ -915,12 +915,12 @@ namespace _3DLaserGlueInspection
                     {
                         CutSets = new List<CutSet>();
                         result1 = false;
-                        _errMsg += "\r\n" + fPath + GlobalVarAndFunc.LanguageTranslate("文件格式异常");
+                        _errMsg += "\r\n" + fPath + _3DLaserGlueInspection.Resources.LanguageDict.FileFormatException;
                     }
                 }
                 else
                 {
-                    _errMsg += "\r\n" + fPath + GlobalVarAndFunc.LanguageTranslate("文件不存在");
+                    _errMsg += "\r\n" + fPath + _3DLaserGlueInspection.Resources.LanguageDict.FileDoesNotExist;
                     result1 = false;
                 }
             }
@@ -940,7 +940,7 @@ namespace _3DLaserGlueInspection
                 }
                 else
                 {
-                    _errMsg += "\r\n" + fPath + GlobalVarAndFunc.LanguageTranslate("文件不存在");
+                    _errMsg += "\r\n" + fPath + _3DLaserGlueInspection.Resources.LanguageDict.FileDoesNotExist;
                     result2 = false;
                 }
             }
@@ -966,12 +966,12 @@ namespace _3DLaserGlueInspection
                     {
                         XLDDatas = new List<XLDData>();
                         result3 = false;
-                        _errMsg += "\r\n" + fPath + GlobalVarAndFunc.LanguageTranslate("文件格式异常");
+                        _errMsg += "\r\n" + fPath + _3DLaserGlueInspection.Resources.LanguageDict.FileFormatException;
                     }
                 }
                 else
                 {
-                    _errMsg += "\r\n" + fPath + GlobalVarAndFunc.LanguageTranslate("文件不存在");
+                    _errMsg += "\r\n" + fPath + _3DLaserGlueInspection.Resources.LanguageDict.FileDoesNotExist;
                     result3 = false;
                 }
             }

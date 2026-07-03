@@ -1,0 +1,1247 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="log" xml:space="preserve">
+    <value>AI 3D Vision 
+Glue Inspection</value>
+  </data>
+  <data name="LanguageChangeSuccess" xml:space="preserve">
+    <value>The language switch is successful, and the interface will update after restarting the software.</value>
+  </data>
+  <data name="3DImageDisplayTaskStartupCompleted" xml:space="preserve">
+    <value>3D image display task startup completed</value>
+  </data>
+  <data name="ActualFrameRate" xml:space="preserve">
+    <value>Actual frame rate:</value>
+  </data>
+  <data name="ActualFrameRateAcquisitionFailed" xml:space="preserve">
+    <value>Actual frame rate acquisition failed:</value>
+  </data>
+  <data name="AddressFormatMismatch" xml:space="preserve">
+    <value>Address format mismatch</value>
+  </data>
+  <data name="AddressNotAssigned" xml:space="preserve">
+    <value>Address not assigned</value>
+  </data>
+  <data name="AlreadyExistsCannotBeAddedAgain" xml:space="preserve">
+    <value>Already exists, cannot be added again!</value>
+  </data>
+  <data name="Area" xml:space="preserve">
+    <value>Area:</value>
+  </data>
+  <data name="AutomaticExposureAcquisitionTime" xml:space="preserve">
+    <value>Automatic exposure acquisition time</value>
+  </data>
+  <data name="Cam" xml:space="preserve">
+    <value> Cam</value>
+  </data>
+  <data name="Cam1" xml:space="preserve">
+    <value>Cam</value>
+  </data>
+  <data name="CameraAcquisitionStoppedAcquisitionTime" xml:space="preserve">
+    <value>Camera acquisition stopped, acquisition time:</value>
+  </data>
+  <data name="CameraClose" xml:space="preserve">
+    <value>Camera close</value>
+  </data>
+  <data name="CameraConnectionCompleted" xml:space="preserve">
+    <value>Camera connection completed</value>
+  </data>
+  <data name="CameraCreationFailed" xml:space="preserve">
+    <value>Camera creation failed:</value>
+  </data>
+  <data name="CameraFailedToOpen" xml:space="preserve">
+    <value>Camera failed to open:</value>
+  </data>
+  <data name="CameraInitializationFailed" xml:space="preserve">
+    <value>Camera initialization failed</value>
+  </data>
+  <data name="CameraNotFound" xml:space="preserve">
+    <value>Camera not found</value>
+  </data>
+  <data name="CameraNotTurnedOn" xml:space="preserve">
+    <value>Camera not turned on</value>
+  </data>
+  <data name="CameraParameterLoadingFailed" xml:space="preserve">
+    <value>Camera parameter loading failed:</value>
+  </data>
+  <data name="CameraParametersLoadedSuccessfully" xml:space="preserve">
+    <value>Camera parameters loaded successfully</value>
+  </data>
+  <data name="CameraShutdownFailed" xml:space="preserve">
+    <value>Camera shutdown failed:</value>
+  </data>
+  <data name="CameraSuccessfullyOpened" xml:space="preserve">
+    <value>Camera successfully opened</value>
+  </data>
+  <data name="CameraValue" xml:space="preserve">
+    <value>,Camera value:</value>
+  </data>
+  <data name="CloseSuccessfully" xml:space="preserve">
+    <value>Close successfully</value>
+  </data>
+  <data name="ClosingFailed" xml:space="preserve">
+    <value>Closing failed:</value>
+  </data>
+  <data name="CollectionFailed" xml:space="preserve">
+    <value>Collection failed:</value>
+  </data>
+  <data name="Computer" xml:space="preserve">
+    <value>Computer</value>
+  </data>
+  <data name="ConnectionFailed" xml:space="preserve">
+    <value>Connection failed:</value>
+  </data>
+  <data name="ConnectionSuccessful" xml:space="preserve">
+    <value>Connection successful</value>
+  </data>
+  <data name="ContinueThePhotoLoop" xml:space="preserve">
+    <value>Continue the photo loop</value>
+  </data>
+  <data name="ContinuousCollectionBegins" xml:space="preserve">
+    <value>Continuous collection begins</value>
+  </data>
+  <data name="ConversionFailedFormatError" xml:space="preserve">
+    <value>Conversion failed, format error</value>
+  </data>
+  <data name="CoordinateConversionCamtotoolDoesNotExist" xml:space="preserve">
+    <value>Coordinate conversion (CamToTool) does not exist</value>
+  </data>
+  <data name="CoordinateConversionLighttocamDoesNotExist" xml:space="preserve">
+    <value>Coordinate conversion (LightToCam) does not exist</value>
+  </data>
+  <data name="CopyToAllImages" xml:space="preserve">
+    <value>Copy to All Images</value>
+  </data>
+  <data name="CopyToRangeImage" xml:space="preserve">
+    <value>Copy to Range Image</value>
+  </data>
+  <data name="CtrlRightClickToDeleteCompleteDrawing" xml:space="preserve">
+    <value>Ctrl: Right click to delete: complete drawing</value>
+  </data>
+  <data name="DoesNotSupportStrings" xml:space="preserve">
+    <value>Does not support strings</value>
+  </data>
+  <data name="Down" xml:space="preserve">
+    <value>Down</value>
+  </data>
+  <data name="DoYouWantToSaveIt" xml:space="preserve">
+    <value>Do you want to save it</value>
+  </data>
+  <data name="DoYouWantToSaveTheParameters" xml:space="preserve">
+    <value>Do you want to save the parameters?</value>
+  </data>
+  <data name="DuplicateName" xml:space="preserve">
+    <value>Duplicate name!</value>
+  </data>
+  <data name="EnableFrameRateSetting" xml:space="preserve">
+    <value>Enable frame rate setting:</value>
+  </data>
+  <data name="EnableHorizontalMirroring" xml:space="preserve">
+    <value>Enable horizontal mirroring:</value>
+  </data>
+  <data name="EnableVerticalMirroring" xml:space="preserve">
+    <value>Enable vertical mirroring:</value>
+  </data>
+  <data name="ExitThePhotoLoop" xml:space="preserve">
+    <value>Exit the photo loop</value>
+  </data>
+  <data name="ExposureSettingFailed" xml:space="preserve">
+    <value>Exposure setting failed:</value>
+  </data>
+  <data name="ExposureTime" xml:space="preserve">
+    <value>exposure  time</value>
+  </data>
+  <data name="ExposureTimeAcquisitionFailed" xml:space="preserve">
+    <value>Exposure time acquisition failed</value>
+  </data>
+  <data name="ExternalParameterLightincamDatDoesNotExist" xml:space="preserve">
+    <value>External parameter (LightInCam. dat) does not exist</value>
+  </data>
+  <data name="ExternalParameterToolincamDatDoesNotExist" xml:space="preserve">
+    <value>External parameter (ToolInCam. dat) does not exist</value>
+  </data>
+  <data name="Failed" xml:space="preserve">
+    <value>Failed:</value>
+  </data>
+  <data name="FailedToCloseSettings" xml:space="preserve">
+    <value>Failed to close settings:</value>
+  </data>
+  <data name="FailedToFindCamera" xml:space="preserve">
+    <value>Failed to find camera:</value>
+  </data>
+  <data name="FailedToObtainExposureTimeValue" xml:space="preserve">
+    <value>Failed to obtain Exposure Time value:</value>
+  </data>
+  <data name="FailedToOpenSettings" xml:space="preserve">
+    <value>Failed to open settings:</value>
+  </data>
+  <data name="FailedToRetrieveTheSetFrameRate" xml:space="preserve">
+    <value>Failed to retrieve the set frame rate:</value>
+  </data>
+  <data name="FailedToStartCollection" xml:space="preserve">
+    <value>Failed to start collection:</value>
+  </data>
+  <data name="FileDoesNotExist" xml:space="preserve">
+    <value>File does not exist</value>
+  </data>
+  <data name="FileFormatException" xml:space="preserve">
+    <value>File format exception</value>
+  </data>
+  <data name="Find" xml:space="preserve">
+    <value>Find </value>
+  </data>
+  <data name="FormatConversionCreationFailed" xml:space="preserve">
+    <value>Format conversion creation failed:</value>
+  </data>
+  <data name="FormatConversionFailed" xml:space="preserve">
+    <value>Format conversion failed</value>
+  </data>
+  <data name="FrameRateEnableSettingFailed" xml:space="preserve">
+    <value>Frame rate enable setting failed:</value>
+  </data>
+  <data name="FrameRateSettingFailed" xml:space="preserve">
+    <value>Frame rate setting failed:</value>
+  </data>
+  <data name="Get" xml:space="preserve">
+    <value>Get </value>
+  </data>
+  <data name="GetHorizontalOffsetParameterValueFail" xml:space="preserve">
+    <value>Get Horizontal offset parameter value fail:</value>
+  </data>
+  <data name="GetImageHeightFailed" xml:space="preserve">
+    <value>Get Image height failed:</value>
+  </data>
+  <data name="GetImageWidthFailed" xml:space="preserve">
+    <value>Get Image width failed:</value>
+  </data>
+  <data name="GetMaximumHeightOfImage" xml:space="preserve">
+    <value>Get Maximum height of image:</value>
+  </data>
+  <data name="GetMaximumWidthOfImage" xml:space="preserve">
+    <value>Get Maximum width of image:</value>
+  </data>
+  <data name="GetVerticalOffsetParameterValue" xml:space="preserve">
+    <value>Get Vertical offset parameter value:</value>
+  </data>
+  <data name="GlueHeight" xml:space="preserve">
+    <value>Glue H</value>
+  </data>
+  <data name="GlueWidth" xml:space="preserve">
+    <value>Glue W</value>
+  </data>
+  <data name="HorizontalOffsetParameterValue" xml:space="preserve">
+    <value>Horizontal offset parameter value:</value>
+  </data>
+  <data name="HorizontalOffsetSettingFailed" xml:space="preserve">
+    <value>Horizontal offset setting failed:</value>
+  </data>
+  <data name="ImageBmpJpgJpegPngAllFiles" xml:space="preserve">
+    <value>Image|*.bmp;*.jpg;*.jpeg;*.png|All Files|*.*</value>
+  </data>
+  <data name="ImageHeight" xml:space="preserve">
+    <value>Image height:</value>
+  </data>
+  <data name="ImageProcessingCompleted" xml:space="preserve">
+    <value>Image processing completed</value>
+  </data>
+  <data name="ImageProcessingTaskStartupCompleted" xml:space="preserve">
+    <value>Image processing task startup completed</value>
+  </data>
+  <data name="ImageSavedSuccessfully" xml:space="preserve">
+    <value>Image saved successfully</value>
+  </data>
+  <data name="ImageStorageCompleted" xml:space="preserve">
+    <value>Image storage completed</value>
+  </data>
+  <data name="ImageStorageException" xml:space="preserve">
+    <value>Image storage exception:</value>
+  </data>
+  <data name="ImageWidth" xml:space="preserve">
+    <value>Image width:</value>
+  </data>
+  <data name="InitializationSettingsFailed" xml:space="preserve">
+    <value>Initialization settings failed:</value>
+  </data>
+  <data name="InitializationSettingsSuccessful" xml:space="preserve">
+    <value>Initialization settings successful</value>
+  </data>
+  <data name="InitializeDataSuccessfully" xml:space="preserve">
+    <value>Initialize data successfully</value>
+  </data>
+  <data name="InsufficientNumberOfPhotoSegments" xml:space="preserve">
+    <value>Insufficient number of photo segments</value>
+  </data>
+  <data name="IoConnectionFailed" xml:space="preserve">
+    <value>IO connection failed:</value>
+  </data>
+  <data name="IoConnectionSuccessful" xml:space="preserve">
+    <value>IO connection successful</value>
+  </data>
+  <data name="IoParameterLoadingFailed" xml:space="preserve">
+    <value>IO parameter loading failed:</value>
+  </data>
+  <data name="IoParameterLoadingSuccessful" xml:space="preserve">
+    <value>IO parameter loading successful</value>
+  </data>
+  <data name="LaserShutdownFailed" xml:space="preserve">
+    <value>Laser shutdown failed:</value>
+  </data>
+  <data name="LaserSuccessfullyTurnedOff" xml:space="preserve">
+    <value>Laser successfully turned off</value>
+  </data>
+  <data name="LeftClickAddPointShiftSwitchMode" xml:space="preserve">
+    <value>Left click: Add point Shift: Switch mode</value>
+  </data>
+  <data name="LoadingFailed" xml:space="preserve">
+    <value>Loading failed:</value>
+  </data>
+  <data name="LoadingSuccessful" xml:space="preserve">
+    <value>Loading successful</value>
+  </data>
+  <data name="MaximumHeightOfImage" xml:space="preserve">
+    <value>Maximum height of image:</value>
+  </data>
+  <data name="MaximumWidthOfImage" xml:space="preserve">
+    <value>Maximum width of image:</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="NoCameraParameters" xml:space="preserve">
+    <value>No camera parameters</value>
+  </data>
+  <data name="NoCameraParametersExist" xml:space="preserve">
+    <value>No camera parameters exist:</value>
+  </data>
+  <data name="NoCamerasFound" xml:space="preserve">
+    <value>No cameras found</value>
+  </data>
+  <data name="NoDeletionOptionSelected" xml:space="preserve">
+    <value>No deletion option selected!</value>
+  </data>
+  <data name="NoDetectionParameters" xml:space="preserve">
+    <value>No detection parameters</value>
+  </data>
+  <data name="NoImage" xml:space="preserve">
+    <value>No Image</value>
+  </data>
+  <data name="NoImageSet" xml:space="preserve">
+    <value>No image set</value>
+  </data>
+  <data name="NoModificationSelected" xml:space="preserve">
+    <value>No modification selected!</value>
+  </data>
+  <data name="NoProductParametersExist" xml:space="preserve">
+    <value>No product parameters exist:</value>
+  </data>
+  <data name="NotEnabled" xml:space="preserve">
+    <value>Not enabled</value>
+  </data>
+  <data name="NoTrajectorySet" xml:space="preserve">
+    <value>No trajectory set</value>
+  </data>
+  <data name="OpenFailed" xml:space="preserve">
+    <value>Open failed:</value>
+  </data>
+  <data name="OpenSuccessful" xml:space="preserve">
+    <value>Open successful</value>
+  </data>
+  <data name="OutputReadySignal" xml:space="preserve">
+    <value>Output Ready signal</value>
+  </data>
+  <data name="OutputRunningSignal" xml:space="preserve">
+    <value>Output Running Signal</value>
+  </data>
+  <data name="Para" xml:space="preserve">
+    <value>Para?</value>
+  </data>
+  <data name="ParameterLoadingFailed" xml:space="preserve">
+    <value>Parameter loading failed:</value>
+  </data>
+  <data name="ParameterSavedSuccessfully" xml:space="preserve">
+    <value>Parameter saved successfully</value>
+  </data>
+  <data name="ParameterSaveFailed" xml:space="preserve">
+    <value>Parameter save failed</value>
+  </data>
+  <data name="PasswordChangedSuccessfully" xml:space="preserve">
+    <value>Password changed successfully!</value>
+  </data>
+  <data name="PasswordIncorrect" xml:space="preserve">
+    <value>Password incorrect!</value>
+  </data>
+  <data name="PleaseSelectAFile" xml:space="preserve">
+    <value>Please select a file</value>
+  </data>
+  <data name="PleaseSelectTheNumberOfSegmentsFirst" xml:space="preserve">
+    <value>Please select the number of segments first</value>
+  </data>
+  <data name="PleaseSelectTheVehicleModelFirst" xml:space="preserve">
+    <value>Please select the vehicle model first</value>
+  </data>
+  <data name="ProcessException" xml:space="preserve">
+    <value>Process exception:</value>
+  </data>
+  <data name="ProductConfigurationParameterLoadingFailed" xml:space="preserve">
+    <value>Product configuration parameter loading failed:</value>
+  </data>
+  <data name="ProductConfigurationParametersLoadedSuccessfully" xml:space="preserve">
+    <value>Product configuration parameters loaded successfully</value>
+  </data>
+  <data name="ProductIdCannotBeEmpty" xml:space="preserve">
+    <value>Product ID cannot be empty!</value>
+  </data>
+  <data name="ProductNumber" xml:space="preserve">
+    <value>Product Number:</value>
+  </data>
+  <data name="ProductParameters" xml:space="preserve">
+    <value>Product parameters</value>
+  </data>
+  <data name="Prompt" xml:space="preserve">
+    <value>Prompt</value>
+  </data>
+  <data name="ReadFailed" xml:space="preserve">
+    <value>Read failed:</value>
+  </data>
+  <data name="ReceivedEndSignalExitThePhotoLoop" xml:space="preserve">
+    <value>Received END signal, exit the photo loop</value>
+  </data>
+  <data name="ReceivedStartSignal" xml:space="preserve">
+    <value>Received start signal</value>
+  </data>
+  <data name="ReceivedTriggerSignalOff" xml:space="preserve">
+    <value>Received trigger signal OFF</value>
+  </data>
+  <data name="ReceivedTriggerSignalOn" xml:space="preserve">
+    <value>Received trigger signal ON</value>
+  </data>
+  <data name="ReceivedVehicleModelNumber" xml:space="preserve">
+    <value>Received vehicle model number:</value>
+  </data>
+  <data name="RegionalGrayscaleMean" xml:space="preserve">
+    <value>Regional grayscale mean</value>
+  </data>
+  <data name="Robot" xml:space="preserve">
+    <value>Robot</value>
+  </data>
+  <data name="RobotAttitudeAcquisitionTaskHasBeenInitiatedAndCompleted" xml:space="preserve">
+    <value>Robot attitude acquisition task has been initiated and completed</value>
+  </data>
+  <data name="RobotConnectionFailed" xml:space="preserve">
+    <value>Robot connection failed:</value>
+  </data>
+  <data name="RobotParameterLoadingFailed" xml:space="preserve">
+    <value>Robot parameter loading failed:</value>
+  </data>
+  <data name="RobotParametersLoadedSuccessfully" xml:space="preserve">
+    <value>Robot parameters loaded successfully</value>
+  </data>
+  <data name="RobotProcessingCompleted" xml:space="preserve">
+    <value>Robot processing completed</value>
+  </data>
+  <data name="RobotSuccessfullyConnected" xml:space="preserve">
+    <value>Robot successfully connected</value>
+  </data>
+  <data name="SaveFailed" xml:space="preserve">
+    <value>Save failed:</value>
+  </data>
+  <data name="SelectTheLocationToSave" xml:space="preserve">
+    <value>Select the location to save</value>
+  </data>
+  <data name="Set" xml:space="preserve">
+    <value>Set </value>
+  </data>
+  <data name="SetEnableHorizontalMirroringFail" xml:space="preserve">
+    <value>Set Enable horizontal mirroring fail:</value>
+  </data>
+  <data name="SetEnableVerticalMirroringFail" xml:space="preserve">
+    <value>Set Enable vertical mirroring fail:</value>
+  </data>
+  <data name="SetExposure" xml:space="preserve">
+    <value>Set Exposure</value>
+  </data>
+  <data name="SetFrameRate" xml:space="preserve">
+    <value>Set frame rate</value>
+  </data>
+  <data name="SetImageHeight" xml:space="preserve">
+    <value>Set Image height:</value>
+  </data>
+  <data name="SetImageHeightFail" xml:space="preserve">
+    <value>Set Image height fail:</value>
+  </data>
+  <data name="SetImageWidth" xml:space="preserve">
+    <value>Set Image width:</value>
+  </data>
+  <data name="SetImageWidthFail" xml:space="preserve">
+    <value>Set Image width fail:</value>
+  </data>
+  <data name="SetTheHorizontalOffsetParameterValue" xml:space="preserve">
+    <value>Set the horizontal offset parameter value:</value>
+  </data>
+  <data name="SetTheNumberOfInternalImageCachingNodesInTheSdkTo" xml:space="preserve">
+    <value>Set the number of internal image caching nodes in the SDK to</value>
+  </data>
+  <data name="SetTheVerticalOffsetParameterValue" xml:space="preserve">
+    <value>Set the vertical offset parameter value:</value>
+  </data>
+  <data name="SettingFailed" xml:space="preserve">
+    <value>Setting failed:</value>
+  </data>
+  <data name="SignalReadFailedRereading" xml:space="preserve">
+    <value>Signal read failed, rereading:</value>
+  </data>
+  <data name="SignalReReadingSuccessful" xml:space="preserve">
+    <value>Signal re reading successful</value>
+  </data>
+  <data name="SignalRewritingSuccessful" xml:space="preserve">
+    <value>Signal rewriting successful</value>
+  </data>
+  <data name="SignalWriteFailedRewritingInProgress" xml:space="preserve">
+    <value>Signal write failed, rewriting in progress:</value>
+  </data>
+  <data name="SimulationPathDoesNotExist" xml:space="preserve">
+    <value>Simulation path does not exist</value>
+  </data>
+  <data name="SimulationPathNotFilledIn" xml:space="preserve">
+    <value>Simulation path not filled in</value>
+  </data>
+  <data name="SingleFrameAcquisitionTime" xml:space="preserve">
+    <value>Single frame acquisition time</value>
+  </data>
+  <data name="Start" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="StartIndexIsGreaterThanEndIndex" xml:space="preserve">
+    <value>Start index is greater than end index</value>
+  </data>
+  <data name="StartingContinuousCollectionFailed" xml:space="preserve">
+    <value>Starting continuous collection failed:</value>
+  </data>
+  <data name="StartingContinuousCollectionSuccessfully" xml:space="preserve">
+    <value>Starting continuous collection successfully</value>
+  </data>
+  <data name="StartSavingImages" xml:space="preserve">
+    <value>Start saving images</value>
+  </data>
+  <data name="Stop" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="StopCollectionFailed" xml:space="preserve">
+    <value>Stop collection failed:</value>
+  </data>
+  <data name="StopCollectionSuccessfully" xml:space="preserve">
+    <value>Stop collection successfully</value>
+  </data>
+  <data name="TheFolderDoesNotExist" xml:space="preserve">
+    <value>The folder does not exist</value>
+  </data>
+  <data name="TheInternalReferenceCamparamCalDoesNotExist" xml:space="preserve">
+    <value>The internal reference (camparam. cal) does not exist</value>
+  </data>
+  <data name="TheMainThreadIsAlreadyRunning" xml:space="preserve">
+    <value>The main thread is already running</value>
+  </data>
+  <data name="TheNameIsEmpty" xml:space="preserve">
+    <value>The name is empty!</value>
+  </data>
+  <data name="TheNumberOfCameraSegmentsIsSufficient" xml:space="preserve">
+    <value>The number of camera segments is sufficient</value>
+  </data>
+  <data name="TheOriginalPasswordIsIncorrect" xml:space="preserve">
+    <value>The original password is incorrect!</value>
+  </data>
+  <data name="TheProductIdFormatIsIncorrect" xml:space="preserve">
+    <value>The product ID format is incorrect!</value>
+  </data>
+  <data name="TheProductNameAlreadyExistsAndCannotBeAddedAgain" xml:space="preserve">
+    <value>The product name already exists and cannot be added again!</value>
+  </data>
+  <data name="TheProductNameCannotBeEmpty" xml:space="preserve">
+    <value>The product name cannot be empty!</value>
+  </data>
+  <data name="TheProductNameCannotContainCharacters" xml:space="preserve">
+    <value>The product name cannot contain characters</value>
+  </data>
+  <data name="ThereIsNoVehicleModelAvailable" xml:space="preserve">
+    <value>There is no vehicle model available</value>
+  </data>
+  <data name="TheSoftwareIsRunningAreYouSureToExit" xml:space="preserve">
+    <value>The software is running, are you sure to exit?</value>
+  </data>
+  <data name="TheTwoNewPasswordsDoNotMatch" xml:space="preserve">
+    <value>The two new passwords do not match!</value>
+  </data>
+  <data name="ThisCommunicationMethodHasNoSettingInterface" xml:space="preserve">
+    <value>This communication method has no setting interface!</value>
+  </data>
+  <data name="Time" xml:space="preserve">
+    <value>Time</value>
+  </data>
+  <data name="To" xml:space="preserve">
+    <value> to </value>
+  </data>
+  <data name="TurnOffTheCamera" xml:space="preserve">
+    <value>Turn off the camera</value>
+  </data>
+  <data name="TurnOffTheReadySignal" xml:space="preserve">
+    <value>Turn off the Ready signal</value>
+  </data>
+  <data name="TurnOffTheRunningSignal" xml:space="preserve">
+    <value>Turn off the Running signal</value>
+  </data>
+  <data name="UnknownFormat" xml:space="preserve">
+    <value>Unknown format:</value>
+  </data>
+  <data name="Up" xml:space="preserve">
+    <value>Up</value>
+  </data>
+  <data name="ValueFail" xml:space="preserve">
+    <value> Value fail</value>
+  </data>
+  <data name="VerticalOffsetParameterValue" xml:space="preserve">
+    <value>Vertical offset parameter value:</value>
+  </data>
+  <data name="VerticalOffsetSettingFailed" xml:space="preserve">
+    <value>Vertical offset setting failed:</value>
+  </data>
+  <data name="WaitingForImageProcessingToComplete" xml:space="preserve">
+    <value>Waiting for image processing to complete</value>
+  </data>
+  <data name="WaitingForTheRobotToCompleteProcessing" xml:space="preserve">
+    <value>Waiting for the robot to complete processing</value>
+  </data>
+  <data name="WaitingForTheStartSignal" xml:space="preserve">
+    <value>Waiting for the start signal</value>
+  </data>
+  <data name="WaitingForTriggerSignalOff" xml:space="preserve">
+    <value>Waiting for trigger signal OFF</value>
+  </data>
+  <data name="WaitingForTriggerSignalOn" xml:space="preserve">
+    <value>Waiting for trigger signal ON</value>
+  </data>
+  <data name="WriteFailed" xml:space="preserve">
+    <value>Write failed:</value>
+  </data>
+  <data name="WritingFormatNotSupported" xml:space="preserve">
+    <value>Writing format not supported</value>
+  </data>
+  <data name="LanguageSwitchSuccessful" xml:space="preserve">
+    <value>Language switch successful.</value>
+  </data>
+  <data name="User" xml:space="preserve">
+    <value>User</value>
+  </data>
+  <data name="ChangePassWork" xml:space="preserve">
+    <value>Change password</value>
+  </data>
+  <data name="PLCSetting" xml:space="preserve">
+    <value>Upper computer settings</value>
+  </data>
+  <data name="SignalDistribution" xml:space="preserve">
+    <value>Signal_Distribution</value>
+  </data>
+  <data name="CamSetting" xml:space="preserve">
+    <value>Camera_Settings</value>
+  </data>
+  <data name="ParaSetting" xml:space="preserve">
+    <value>Parameter_Settings</value>
+  </data>
+  <data name="ProductSetting" xml:space="preserve">
+    <value>Product_Settings</value>
+  </data>
+  <data name="RobotSetting" xml:space="preserve">
+    <value>Robot settings</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Simul" xml:space="preserve">
+    <value>Simulation</value>
+  </data>
+  <data name="ProductID" xml:space="preserve">
+    <value>ProductID</value>
+  </data>
+  <data name="Result" xml:space="preserve">
+    <value>Result</value>
+  </data>
+  <data name="DetResult" xml:space="preserve">
+    <value>Det Results</value>
+  </data>
+  <data name="NG" xml:space="preserve">
+    <value>NG</value>
+  </data>
+  <data name="NotDet" xml:space="preserve">
+    <value>Not Det</value>
+  </data>
+  <data name="OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="WaitForDet" xml:space="preserve">
+    <value>Wait For Det</value>
+  </data>
+  <data name="ControlButton" xml:space="preserve">
+    <value>Control Buttons</value>
+  </data>
+  <data name="MonitoringCommunication" xml:space="preserve">
+    <value>Monitoring Communication</value>
+  </data>
+  <data name="SoftwareRun" xml:space="preserve">
+    <value>Software</value>
+  </data>
+  <data name="LogInfo" xml:space="preserve">
+    <value>Log info</value>
+  </data>
+  <data name="Info" xml:space="preserve">
+    <value>Info</value>
+  </data>
+  <data name="DetList" xml:space="preserve">
+    <value>Det List</value>
+  </data>
+  <data name="PictureList" xml:space="preserve">
+    <value>Image List</value>
+  </data>
+  <data name="ProductList" xml:space="preserve">
+    <value>Product List</value>
+  </data>
+  <data name="3DGluingDetection" xml:space="preserve">
+    <value>3D Gluing Detection</value>
+  </data>
+  <data name="3DGluingFrameDetection" xml:space="preserve">
+    <value>3D Gluing Frame Detection</value>
+  </data>
+  <data name="3DGluingInspectionResults" xml:space="preserve">
+    <value>3D Gluing Inspection Results</value>
+  </data>
+  <data name="3DPointCloudExtraction" xml:space="preserve">
+    <value>3D Point Cloud Extraction</value>
+  </data>
+  <data name="3DPointCloudResults" xml:space="preserve">
+    <value>3D Point Cloud Results</value>
+  </data>
+  <data name="ActuallyGlueHeight" xml:space="preserve">
+    <value>Actually Glue Height</value>
+  </data>
+  <data name="ActuallyGlueWidth" xml:space="preserve">
+    <value>Actually Glue Width</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="CacheImages" xml:space="preserve">
+    <value>Cache Images</value>
+  </data>
+  <data name="CameraAndMovementDirectionAngle" xml:space="preserve">
+    <value>Camera And Movement 
+Direction Angle</value>
+  </data>
+  <data name="CamName" xml:space="preserve">
+    <value>Cam Name</value>
+  </data>
+  <data name="CarType" xml:space="preserve">
+    <value>Car Type</value>
+  </data>
+  <data name="ClearCache" xml:space="preserve">
+    <value>Clear Cache</value>
+  </data>
+  <data name="CloseCam" xml:space="preserve">
+    <value>Close Cam</value>
+  </data>
+  <data name="ColorLowerLimit" xml:space="preserve">
+    <value>Min Color</value>
+  </data>
+  <data name="ColorUpperLimit" xml:space="preserve">
+    <value>Max Color</value>
+  </data>
+  <data name="CommonCorrectionCoefficient" xml:space="preserve">
+    <value>Share Correction</value>
+  </data>
+  <data name="ContAcq" xml:space="preserve">
+    <value>Cont Acq</value>
+  </data>
+  <data name="ContourDet" xml:space="preserve">
+    <value>Contour Det</value>
+  </data>
+  <data name="ContourDetectionResult" xml:space="preserve">
+    <value>Contour Detection Result</value>
+  </data>
+  <data name="CorrectionX" xml:space="preserve">
+    <value>CorrectionX</value>
+  </data>
+  <data name="CorrectionY" xml:space="preserve">
+    <value>CorrectionY</value>
+  </data>
+  <data name="CurrentPoseDetection" xml:space="preserve">
+    <value>Current Pose Detection</value>
+  </data>
+  <data name="DataDir" xml:space="preserve">
+    <value>Data Dir</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Del</value>
+  </data>
+  <data name="DetToolParaSetting" xml:space="preserve">
+    <value>Det Tool Para Setting</value>
+  </data>
+  <data name="DiscreteDenoising" xml:space="preserve">
+    <value>Discrete Denoising</value>
+  </data>
+  <data name="Enable" xml:space="preserve">
+    <value>Enable</value>
+  </data>
+  <data name="EnableCropping" xml:space="preserve">
+    <value>Enable Crop</value>
+  </data>
+  <data name="EndImageID" xml:space="preserve">
+    <value>End ImageID</value>
+  </data>
+  <data name="GetExposure" xml:space="preserve">
+    <value>Get Exposure</value>
+  </data>
+  <data name="GetFreq" xml:space="preserve">
+    <value>Get Freq</value>
+  </data>
+  <data name="GetGain" xml:space="preserve">
+    <value>Get Gain</value>
+  </data>
+  <data name="GetOffset" xml:space="preserve">
+    <value>Get Offset</value>
+  </data>
+  <data name="GetSize" xml:space="preserve">
+    <value>Get Size</value>
+  </data>
+  <data name="HandleMagnification" xml:space="preserve">
+    <value>Handle 
+Magnification</value>
+  </data>
+  <data name="HorizonFilp" xml:space="preserve">
+    <value>Horizon Filp</value>
+  </data>
+  <data name="HorizontalRange" xml:space="preserve">
+    <value>H Range</value>
+  </data>
+  <data name="ImageSavingFormat" xml:space="preserve">
+    <value>Image Saving Format</value>
+  </data>
+  <data name="Last" xml:space="preserve">
+    <value>Last</value>
+  </data>
+  <data name="MaximumSize" xml:space="preserve">
+    <value>Maximum Size</value>
+  </data>
+  <data name="MillimeterSegmentedDistance" xml:space="preserve">
+    <value>Millimeter Segmented Distance</value>
+  </data>
+  <data name="MillimeterSegmentPointNumber" xml:space="preserve">
+    <value>Millimeter Segment Point Number</value>
+  </data>
+  <data name="MinimumWidth" xml:space="preserve">
+    <value>Laser Min Width</value>
+  </data>
+  <data name="MinThre" xml:space="preserve">
+    <value>Min Thre</value>
+  </data>
+  <data name="NewFile" xml:space="preserve">
+    <value>New File</value>
+  </data>
+  <data name="Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="OpenCam" xml:space="preserve">
+    <value>Open Cam</value>
+  </data>
+  <data name="OtherSet" xml:space="preserve">
+    <value>OtherSet</value>
+  </data>
+  <data name="PhotoNum" xml:space="preserve">
+    <value>Photo Num</value>
+  </data>
+  <data name="PictureSet" xml:space="preserve">
+    <value>DetSet</value>
+  </data>
+  <data name="PublicPara" xml:space="preserve">
+    <value>Public Para</value>
+  </data>
+  <data name="Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="SaveCache" xml:space="preserve">
+    <value>Save Cache</value>
+  </data>
+  <data name="SaveCurrentImg" xml:space="preserve">
+    <value>Save Current Img</value>
+  </data>
+  <data name="SaveDir" xml:space="preserve">
+    <value>Save Dir</value>
+  </data>
+  <data name="SaveNGImg" xml:space="preserve">
+    <value>Save NG Img</value>
+  </data>
+  <data name="SaveOKImg" xml:space="preserve">
+    <value>Save OK Img</value>
+  </data>
+  <data name="SavePara" xml:space="preserve">
+    <value>Save Para</value>
+  </data>
+  <data name="SavePointCloud" xml:space="preserve">
+    <value>Save Point 
+Cloud</value>
+  </data>
+  <data name="ScanCam" xml:space="preserve">
+    <value>Scan Cam</value>
+  </data>
+  <data name="SelectCam" xml:space="preserve">
+    <value>Select Cam</value>
+  </data>
+  <data name="SelectPicture" xml:space="preserve">
+    <value>Select Picture</value>
+  </data>
+  <data name="SetFreq" xml:space="preserve">
+    <value>Set Freq</value>
+  </data>
+  <data name="SetGain" xml:space="preserve">
+    <value>Set Gain</value>
+  </data>
+  <data name="SetImage" xml:space="preserve">
+    <value>Set Image</value>
+  </data>
+  <data name="SetOffset" xml:space="preserve">
+    <value>Set Offset</value>
+  </data>
+  <data name="SetSize" xml:space="preserve">
+    <value>Set Size</value>
+  </data>
+  <data name="SetTrajectory" xml:space="preserve">
+    <value>Set Trajectory</value>
+  </data>
+  <data name="ShowHeight" xml:space="preserve">
+    <value>Show Height</value>
+  </data>
+  <data name="ShowImage" xml:space="preserve">
+    <value>Show Image</value>
+  </data>
+  <data name="ShowRange" xml:space="preserve">
+    <value>Show Range</value>
+  </data>
+  <data name="ShowSet" xml:space="preserve">
+    <value>ShowSet</value>
+  </data>
+  <data name="ShowTrajectory" xml:space="preserve">
+    <value>ShowTrajectory</value>
+  </data>
+  <data name="ShowWidth" xml:space="preserve">
+    <value>Show Width</value>
+  </data>
+  <data name="SignSize" xml:space="preserve">
+    <value>Sign Size</value>
+  </data>
+  <data name="SimRunning" xml:space="preserve">
+    <value>Sim Running</value>
+  </data>
+  <data name="SimulationImage" xml:space="preserve">
+    <value>Simulation Image</value>
+  </data>
+  <data name="SingleAcq" xml:space="preserve">
+    <value>Single Acq</value>
+  </data>
+  <data name="SingleFrameContourDet" xml:space="preserve">
+    <value>Single Frame Contour Det</value>
+  </data>
+  <data name="SingleFrameDet" xml:space="preserve">
+    <value>Single Frame Det</value>
+  </data>
+  <data name="SizeCorrection" xml:space="preserve">
+    <value>Size Correction</value>
+  </data>
+  <data name="StartImageID" xml:space="preserve">
+    <value>Start ImageID</value>
+  </data>
+  <data name="UseAngleOptimization" xml:space="preserve">
+    <value>Use Angle 
+Optimization</value>
+  </data>
+  <data name="UseCam" xml:space="preserve">
+    <value>Use Cam</value>
+  </data>
+  <data name="UsedCam" xml:space="preserve">
+    <value>Used Cam</value>
+  </data>
+  <data name="VerticalFilp" xml:space="preserve">
+    <value>Vertical Filp</value>
+  </data>
+  <data name="VerticalRange" xml:space="preserve">
+    <value>V Range</value>
+  </data>
+  <data name="CamParaName" xml:space="preserve">
+    <value>Cam Para Name</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Change" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="ChangePassWord" xml:space="preserve">
+    <value>Change PassWord</value>
+  </data>
+  <data name="Connect" xml:space="preserve">
+    <value>Connect</value>
+  </data>
+  <data name="Copy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="CopyPara" xml:space="preserve">
+    <value>Copy Para</value>
+  </data>
+  <data name="Disconnect" xml:space="preserve">
+    <value>Disconnect</value>
+  </data>
+  <data name="EndPoint" xml:space="preserve">
+    <value>EndPoint</value>
+  </data>
+  <data name="NewPassWord" xml:space="preserve">
+    <value>New PassWord</value>
+  </data>
+  <data name="OriginPassWord" xml:space="preserve">
+    <value>Origin PassWord</value>
+  </data>
+  <data name="ParaInfo" xml:space="preserve">
+    <value>Para Info</value>
+  </data>
+  <data name="PassWord" xml:space="preserve">
+    <value>PassWord</value>
+  </data>
+  <data name="PleaseInputPassWord" xml:space="preserve">
+    <value>PleaseInputPassWord</value>
+  </data>
+  <data name="ProductName" xml:space="preserve">
+    <value>Product Name</value>
+  </data>
+  <data name="Registers" xml:space="preserve">
+    <value>Registers</value>
+  </data>
+  <data name="RepeatPassWord" xml:space="preserve">
+    <value>Repeat</value>
+  </data>
+  <data name="SignalName" xml:space="preserve">
+    <value>Signal Name</value>
+  </data>
+  <data name="StartPoint" xml:space="preserve">
+    <value>StartPoint</value>
+  </data>
+  <data name="Sure" xml:space="preserve">
+    <value>Sure</value>
+  </data>
+  <data name="Val" xml:space="preserve">
+    <value>Val</value>
+  </data>
+  <data name="ServerSignalLoadedSuccessfully" xml:space="preserve">
+    <value>Server Signal Loaded Successfully</value>
+  </data>
+  <data name="TCPCommunicationServerSuccessfullyEstablished" xml:space="preserve">
+    <value>TCP Communication Server Successfully Established</value>
+  </data>
+  <data name="CoordinateConversionCamToBaseDoesNotExist" xml:space="preserve">
+    <value>External parameter (CamToBase. dat) does not exist</value>
+  </data>
+  <data name="CoordinateConversionCamToCam1DoesNotExist" xml:space="preserve">
+    <value>External parameter (CamToCam1. dat) does not exist</value>
+  </data>
+  <data name="CoordinateConversionCenterToCam1DoesNotExist" xml:space="preserve">
+    <value>External parameter (CenterToCam1. dat) does not exist</value>
+  </data>
+  <data name="ReceivedSignal" xml:space="preserve">
+    <value>Received Signal</value>
+  </data>
+  <data name="ServerSignalLoadingFailed" xml:space="preserve">
+    <value>Server Signal Loading Failed</value>
+  </data>
+  <data name="SimulatedImageTraversalCompleted" xml:space="preserve">
+    <value>SimulatedImage Traversal Completed</value>
+  </data>
+  <data name="SoftwareTriggerFailure" xml:space="preserve">
+    <value>Software Trigger Failure</value>
+  </data>
+  <data name="SoftwareTriggerSuccess" xml:space="preserve">
+    <value>Software Trigger Success</value>
+  </data>
+  <data name="TCPCommunicationServerEstablishmentFailed" xml:space="preserve">
+    <value>TCP Communication Server Establishment Failed</value>
+  </data>
+  <data name="CamInitSuccess" xml:space="preserve">
+    <value>Cam Init Success</value>
+  </data>
+  <data name="Gain" xml:space="preserve">
+    <value>Gain</value>
+  </data>
+  <data name="GetGainFail" xml:space="preserve">
+    <value>Get Gain Fail:</value>
+  </data>
+  <data name="LessCamPara" xml:space="preserve">
+    <value>Less Cam Para</value>
+  </data>
+  <data name="ReceivedAbortSignalProcessRestarts" xml:space="preserve">
+    <value>Received Abort Signal,ProcessRestarts</value>
+  </data>
+  <data name="ReceiveTheStartSignalToTurnOff" xml:space="preserve">
+    <value>Receive The Start Signal To Turn Off</value>
+  </data>
+  <data name="SetGainFail" xml:space="preserve">
+    <value>Set Gain Fail:</value>
+  </data>
+  <data name="TheDisplayedTrajectoryIsNotSetProperly" xml:space="preserve">
+    <value>The Displayed Trajectory Is No tSet Properly</value>
+  </data>
+  <data name="TheStartingAndEndingImageNumbersDisplayedAreNotSetProperly" xml:space="preserve">
+    <value>The Starting And Ending Image Numbers Displayed Are Not Set Properly</value>
+  </data>
+  <data name="WaitingForDataConversionToComplete" xml:space="preserve">
+    <value>Waiting For Data Conversion To Complete</value>
+  </data>
+  <data name="WaitingForTheCompletionOf3DImageProcessing" xml:space="preserve">
+    <value>Waiting For The Completion Of 3D Image Processing</value>
+  </data>
+  <data name="WaitingForTheStartSignalToTurnOff" xml:space="preserve">
+    <value>Waiting For The Start Signal To Turn Off</value>
+  </data>
+  <data name="DistIsZero" xml:space="preserve">
+    <value>Dist Is Zero</value>
+  </data>
+  <data name="LessRobotPose" xml:space="preserve">
+    <value>Less Robot Pose</value>
+  </data>
+  <data name="PleaseChooseDelObjFirst" xml:space="preserve">
+    <value>Please Choose Del Obj First.</value>
+  </data>
+  <data name="DetRange" xml:space="preserve">
+    <value>Det Range</value>
+  </data>
+  <data name="GetExportTimeFail" xml:space="preserve">
+    <value>Get Export Time Fail：</value>
+  </data>
+  <data name="CouldFindCam1" xml:space="preserve">
+    <value>Could Find Cam1</value>
+  </data>
+  <data name="CouldFindAnyCam1" xml:space="preserve">
+    <value>Could Find Any Cam1</value>
+  </data>
+</root>

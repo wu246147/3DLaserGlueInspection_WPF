@@ -103,7 +103,7 @@ namespace _3DLaserGlueInspection.subForm
                         }
                         else
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("读取失败:") + signal.ErrMsg);
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReadFailed+ signal.ErrMsg);
                         }
                     }
                     else if ((int)eDI < 1024)
@@ -114,7 +114,7 @@ namespace _3DLaserGlueInspection.subForm
                         }
                         else
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("读取失败:") + signal.ErrMsg);
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReadFailed+ signal.ErrMsg);
                         }
                     }
                     else if ((int)eDI < 2048)
@@ -137,7 +137,7 @@ namespace _3DLaserGlueInspection.subForm
                         }
                         else
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("读取失败:") + signal.ErrMsg);
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReadFailed+ signal.ErrMsg);
                         }
                     }
                 }
@@ -163,12 +163,12 @@ namespace _3DLaserGlueInspection.subForm
                             }
                             else
                             {
-                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("写入失败:") + signal.ErrMsg);
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WriteFailed+ signal.ErrMsg);
                             }
                         }
                         else
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("转换失败，格式有误"));
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ConversionFailedFormatError);
                         }
                     }
                     else if ((int)eDO < 1024)
@@ -318,12 +318,12 @@ namespace _3DLaserGlueInspection.subForm
         {
             if (isAlter)
             {
-                DialogResult dialogResult = System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("是否保存参数？"), GlobalVarAndFunc.LanguageTranslate("提示"), MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
+                DialogResult dialogResult = System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.DoYouWantToSaveTheParameters, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
                 if (dialogResult == System.Windows.Forms.DialogResult.Yes)
                 {
                     if (!signal.Save())
                     {
-                        System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("保存失败：") + signal.ErrMsg, GlobalVarAndFunc.LanguageTranslate("提示"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.SaveFailed + signal.ErrMsg, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         e.Cancel = true;
                         return;
                     }
@@ -348,12 +348,12 @@ namespace _3DLaserGlueInspection.subForm
                 connectButton.IsEnabled = false;
                 if (signal.Open())
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("连接成功"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ConnectionSuccessful);
                     disconnectButton.IsEnabled = true;
                 }
                 else
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("连接失败:") + signal.ErrMsg);
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ConnectionFailed + signal.ErrMsg);
                     connectButton.IsEnabled = true;
                 }
             }
@@ -364,7 +364,7 @@ namespace _3DLaserGlueInspection.subForm
             signal.Close();
             disconnectButton.IsEnabled = false;
             connectButton.IsEnabled = true;
-            ShowMessage(GlobalVarAndFunc.LanguageTranslate("关闭成功"));
+            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.CloseSuccessfully);
         }
     }
 }

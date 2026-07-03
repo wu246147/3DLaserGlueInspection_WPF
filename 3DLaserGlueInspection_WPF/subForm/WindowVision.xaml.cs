@@ -226,9 +226,9 @@ namespace _3DLaserGlueInspection.subForm
         //                if (!hRegion.Empty())
         //                {
         //                    //Console.WriteLine($"text value :");
-        //                    string text = GlobalVarAndFunc.LanguageTranslate("胶高：") + $"{data.胶高:0.00}\r\n"
-        //                       + GlobalVarAndFunc.LanguageTranslate("胶宽：") + $"{data.胶宽:0.00}\r\n"
-        //                       + GlobalVarAndFunc.LanguageTranslate("面积：") + $"{data.面积:0.00}";
+        //                    string text = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight+":" + $"{data.胶高:0.00}\r\n"
+        //                       + _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth+":" + $"{data.胶宽:0.00}\r\n"
+        //                       + _3DLaserGlueInspection.Resources.LanguageDict.Area+":" + $"{data.面积:0.00}";
 
         //                    //Console.WriteLine($"point :({data.column},{data.row})");
         //                    //DispTextInImageHWindowControlEvent(text, Colors.Black, (int)data.column, (int)data.row);
@@ -237,9 +237,9 @@ namespace _3DLaserGlueInspection.subForm
 
         //                    //Console.WriteLine($"text result :");
         //                    //hWindowControl.DispTextInImage(text, data.row, data.column);
-        //                    string textWindow1 = GlobalVarAndFunc.LanguageTranslate("胶宽：") + (bResult.胶宽 ? "OK" : "NG");
-        //                    string textWindow2 = GlobalVarAndFunc.LanguageTranslate("胶高：") + (bResult.胶高 ? "OK" : "NG");
-        //                    string textWindow3 = GlobalVarAndFunc.LanguageTranslate("面积：") + (bResult.面积 ? "OK" : "NG");
+        //                    string textWindow1 = _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth+":" + (bResult.胶宽 ? "OK" : "NG");
+        //                    string textWindow2 = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight+":" + (bResult.胶高 ? "OK" : "NG");
+        //                    string textWindow3 = _3DLaserGlueInspection.Resources.LanguageDict.Area+":" + (bResult.面积 ? "OK" : "NG");
         //                    string textWindow = textWindow1 + "\r\n" + textWindow2 + "\r\n" + textWindow3;
         //                    //Console.WriteLine($"point :({10},{10})");
         //                    //DispTextInImageHWindowControlEvent(textWindow, Colors.Black, 10, 10);
@@ -350,7 +350,7 @@ namespace _3DLaserGlueInspection.subForm
                 var dstImageSet = set.CutSets[cutSetListBox.SelectedIndex].imageSet[selectCamListBox.SelectedIndex][selectPictureListBox.SelectedIndex];
                 //复制至全部图片
                 System.Windows.Controls.MenuItem toolAll = new System.Windows.Controls.MenuItem();
-                toolAll.Header = GlobalVarAndFunc.LanguageTranslate("复制至全部图片");
+                toolAll.Header =  _3DLaserGlueInspection.Resources.LanguageDict.CopyToAllImages;
                 toolAll.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromArgb(255, 0, 0, 0));
                 toolAll.Click += (s0, e0) =>
                 {
@@ -362,7 +362,7 @@ namespace _3DLaserGlueInspection.subForm
                 contextMenuStrip.Items.Add(toolAll);
                 //复制至范围图片
                 System.Windows.Controls.MenuItem toolRange = new System.Windows.Controls.MenuItem();
-                toolRange.Header = GlobalVarAndFunc.LanguageTranslate("复制至范围图片");
+                toolRange.Header = _3DLaserGlueInspection.Resources.LanguageDict.CopyToRangeImage;
                 toolRange.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromArgb(255, 0, 0, 0));
                 toolRange.Click += (s, e) =>
                 {
@@ -475,6 +475,9 @@ namespace _3DLaserGlueInspection.subForm
             Params.Load();
 
             showImageComboBox.SelectedIndex = 0;
+
+            rubbish.Visibility = Visibility.Hidden;
+
         }
 
 
@@ -482,12 +485,12 @@ namespace _3DLaserGlueInspection.subForm
         {
             if (isAlter && set != null)
             {
-                DialogResult dialogResult = System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("是否保存") + " " + set.Name + " " + GlobalVarAndFunc.LanguageTranslate("参数？"), GlobalVarAndFunc.LanguageTranslate("提示"), System.Windows.Forms.MessageBoxButtons.YesNoCancel, System.Windows.Forms.MessageBoxIcon.Warning);
+                DialogResult dialogResult = System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.DoYouWantToSaveIt + " " + set.Name + " " + _3DLaserGlueInspection.Resources.LanguageDict.Para, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, System.Windows.Forms.MessageBoxButtons.YesNoCancel, System.Windows.Forms.MessageBoxIcon.Warning);
                 if (dialogResult == System.Windows.Forms.DialogResult.Yes)
                 {
                     if (!set.Save())
                     {
-                        System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("保存失败：") + set.ErrMsg, GlobalVarAndFunc.LanguageTranslate("提示"), System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                        System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.SaveFailed + set.ErrMsg, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                         e.Cancel = true;
                         return;
                     }
@@ -512,7 +515,7 @@ namespace _3DLaserGlueInspection.subForm
             //    var imageSets = set.CutSets[cutSetListBox.SelectedIndex].imageSet[selectCamListBox.SelectedIndex];
             //    //复制至全部图片
             //    ToolStripMenuItem toolAll = new ToolStripMenuItem();
-            //    toolAll.Text = GlobalVarAndFunc.LanguageTranslate("复制至全部图片");
+            //    toolAll.Text = _3DLaserGlueInspection.Resources.LanguageDict.复制至全部图片");
             //    toolAll.Click += (s0, e0) =>
             //    {
             //        foreach (var imageSet in imageSets)
@@ -524,7 +527,7 @@ namespace _3DLaserGlueInspection.subForm
             //    contextMenuStrip.Items.Add(toolAll);
             //    //复制至范围图片
             //    ToolStripMenuItem toolRange = new ToolStripMenuItem();
-            //    toolRange.Text = GlobalVarAndFunc.LanguageTranslate("复制至范围图片");
+            //    toolRange.Text = _3DLaserGlueInspection.Resources.LanguageDict.复制至范围图片");
             //    toolRange.Click += (s, e) =>
             //    {
             //        //FormCopy formCopy = new FormCopy(selectPictureListBox.SelectedIndex, imageSets.Count - 1);
@@ -875,7 +878,7 @@ namespace _3DLaserGlueInspection.subForm
                         if (CamParamName == null || camKey == null
                            || !Params.CamToCam1.TryGetValue(CamParamName, out var CamToCam1s) || !CamToCam1s.TryGetValue(camKey, out Mat CamToCam1))
                         {
-                            System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("缺少相机参数"));
+                            System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.LessCamPara);
                             return;
                         }
 
@@ -883,7 +886,7 @@ namespace _3DLaserGlueInspection.subForm
                         {
                             if (!Params.Cam1ToTool.TryGetValue(CamParamName, out var CamToTools) || !CamToTools.TryGetValue(camKey, out Cam1ToTool))
                             {
-                                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("缺少相机参数") +$":Cam1ToTool");
+                                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.LessCamPara +$":Cam1ToTool");
                                 return;
                             }
                             //Cam1ToTool = Params.Cam1ToTool[CamParamName][camKey];
@@ -893,12 +896,12 @@ namespace _3DLaserGlueInspection.subForm
                         {
                             if (!Params.Cam1ToBase.TryGetValue(CamParamName, out var Cam1ToBases) || !Cam1ToBases.TryGetValue(camKey, out Cam1ToBase))
                             {
-                                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("缺少相机参数") + $":Cam1ToBase");
+                                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.LessCamPara + $":Cam1ToBase");
                                 return;
                             }
                             if (!Params.CenterToCam1.TryGetValue(CamParamName, out var CenterToCam1s) || !CenterToCam1s.TryGetValue(camKey, out CenterToCam1))
                             {
-                                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("缺少相机参数") + $":CenterToCam1");
+                                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.LessCamPara + $":CenterToCam1");
                                 return;
                             }
                             //眼在手外，求Cam1ToTool,需要机器人pose才可以完成转换
@@ -1147,12 +1150,12 @@ namespace _3DLaserGlueInspection.subForm
         {
             if (isAlter && set != null)
             {
-                DialogResult dialogResult = System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("是否保存") + " " + set.Name + " " + GlobalVarAndFunc.LanguageTranslate("参数？"), GlobalVarAndFunc.LanguageTranslate("提示"), System.Windows.Forms.MessageBoxButtons.YesNo, System.Windows.Forms.MessageBoxIcon.Warning);
+                DialogResult dialogResult = System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.DoYouWantToSaveIt + " " + set.Name + " " + _3DLaserGlueInspection.Resources.LanguageDict.Para, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, System.Windows.Forms.MessageBoxButtons.YesNo, System.Windows.Forms.MessageBoxIcon.Warning);
                 if (dialogResult == System.Windows.Forms.DialogResult.Yes)
                 {
                     if (!set.Save())
                     {
-                        System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("保存失败：") + set.ErrMsg, GlobalVarAndFunc.LanguageTranslate("提示"), System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                        System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.SaveFailed + set.ErrMsg, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                         //改回原来的
                         carTypeComboBox.SelectionChanged -= new SelectionChangedEventHandler(carTypeComboBox_SelectionChanged);
                         carTypeComboBox.Text = set.Name;
@@ -1206,7 +1209,7 @@ namespace _3DLaserGlueInspection.subForm
                 selectCamListBox.Items.Clear();
                 for (int i = 0; i < 4; i++)
                 {
-                    selectCamListBox.Items.Add(GlobalVarAndFunc.LanguageTranslate("相机") + (i + 1).ToString());
+                    selectCamListBox.Items.Add(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + (i + 1).ToString());
                 }
 
                 cutSet = set.CutSets[cutSetListBox.SelectedIndex];
@@ -1418,14 +1421,14 @@ namespace _3DLaserGlueInspection.subForm
                             }
                             else
                             {
-                                System.Windows.Forms.MessageBox.Show(robotPoseKeysPath + GlobalVarAndFunc.LanguageTranslate("文件格式异常"));
+                                System.Windows.Forms.MessageBox.Show(robotPoseKeysPath + _3DLaserGlueInspection.Resources.LanguageDict.FileFormatException);
                                 return;
                             }
                         }
                     }
                     else
                     {
-                        System.Windows.Forms.MessageBox.Show(robotPoseKeysPath + GlobalVarAndFunc.LanguageTranslate("文件不存在"));
+                        System.Windows.Forms.MessageBox.Show(robotPoseKeysPath + _3DLaserGlueInspection.Resources.LanguageDict.FileDoesNotExist);
                         return;
                     }
                 }
@@ -1462,14 +1465,14 @@ namespace _3DLaserGlueInspection.subForm
                             }
                             else
                             {
-                                System.Windows.Forms.MessageBox.Show(robotPoseValuesPath + GlobalVarAndFunc.LanguageTranslate("文件格式异常"));
+                                System.Windows.Forms.MessageBox.Show(robotPoseValuesPath + _3DLaserGlueInspection.Resources.LanguageDict.FileFormatException);
                                 return;
                             }
                         }
                     }
                     else
                     {
-                        System.Windows.Forms.MessageBox.Show(robotPoseValuesPath + GlobalVarAndFunc.LanguageTranslate("文件不存在"));
+                        System.Windows.Forms.MessageBox.Show(robotPoseValuesPath + _3DLaserGlueInspection.Resources.LanguageDict.FileDoesNotExist);
                         return;
                     }
                 }
@@ -1513,7 +1516,7 @@ namespace _3DLaserGlueInspection.subForm
                                         }
                                         else
                                         {
-                                            System.Windows.Forms.MessageBox.Show(imagesPath[k] + GlobalVarAndFunc.LanguageTranslate("文件不存在"));
+                                            System.Windows.Forms.MessageBox.Show(imagesPath[k] + _3DLaserGlueInspection.Resources.LanguageDict.FileDoesNotExist);
                                         }
                                     }
                                 }
@@ -1594,12 +1597,12 @@ namespace _3DLaserGlueInspection.subForm
         {
             if (hImage == null)
             {
-                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("无图片"));
+                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoImage);
                 return;
             }
             if (cutSet == null && imageSet == null)
             {
-                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("无检测参数"));
+                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoDetectionParameters);
                 return;
             }
 
@@ -1616,7 +1619,7 @@ namespace _3DLaserGlueInspection.subForm
              || !Params.CenterToCam1.TryGetValue(CamParamName, out var CenterToCam1s) || !CenterToCam1s.TryGetValue(camKey, out var CenterToCam1))
 
             {
-                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("无相机参数"));
+                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoCameraParameters);
                 return;
             }
 
@@ -1625,7 +1628,7 @@ namespace _3DLaserGlueInspection.subForm
             {
                 if (!Params.Cam1ToTool.TryGetValue(CamParamName, out var CamToTools) || !CamToTools.TryGetValue(camKey, out Cam1ToTool))
                 {
-                    System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("缺少相机参数") + $":Cam1ToTool");
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.LessCamPara + $":Cam1ToTool");
                     return;
                 }
                 Cam1ToTool = Params.Cam1ToTool[CamParamName][camKey];
@@ -1635,7 +1638,7 @@ namespace _3DLaserGlueInspection.subForm
             {
                 if (!Params.Cam1ToBase.TryGetValue(CamParamName, out var Cam1ToBases) || !Cam1ToBases.TryGetValue(camKey, out Cam1ToBase))
                 {
-                    System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("缺少相机参数") + $":Cam1ToBase");
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.LessCamPara + $":Cam1ToBase");
                     return;
                 }
                 //眼在手外，求Cam1ToTool,需要机器人pose才可以完成转换
@@ -1770,8 +1773,8 @@ namespace _3DLaserGlueInspection.subForm
             {
                 OpenFileDialog ofd = new OpenFileDialog();
                 ofd.Multiselect = true;
-                ofd.Title = GlobalVarAndFunc.LanguageTranslate("请选择文件");
-                ofd.Filter = GlobalVarAndFunc.LanguageTranslate("图片|*.bmp;*.jpg;*.jpeg;*.png;*.tif|所有文件|*.*");
+                ofd.Title = _3DLaserGlueInspection.Resources.LanguageDict.PleaseSelectAFile;
+                ofd.Filter = _3DLaserGlueInspection.Resources.LanguageDict.ImageBmpJpgJpegPngAllFiles;
                 if (System.Windows.Forms.DialogResult.OK == ofd.ShowDialog())
                 {
                     try
@@ -1784,13 +1787,13 @@ namespace _3DLaserGlueInspection.subForm
                     }
                     catch (Exception ex)
                     {
-                        System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("设置失败：") + ex.ToString());
+                        System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.SettingFailed + ex.ToString());
                     }
                 }
             }
             else
             {
-                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("请先选择车型"));
+                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.PleaseSelectTheVehicleModelFirst);
             }
         }
 
@@ -1804,12 +1807,12 @@ namespace _3DLaserGlueInspection.subForm
                 }
                 else
                 {
-                    System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("未设置图片"));
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoImageSet);
                 }
             }
             else
             {
-                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("请先选择车型"));
+                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.PleaseSelectTheVehicleModelFirst);
             }
         }
 
@@ -1832,17 +1835,17 @@ namespace _3DLaserGlueInspection.subForm
                     }
                     else
                     {
-                        System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("未设置图片"));
+                        System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoImageSet);
                     }
                 }
                 else
                 {
-                    System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("请先选择段数"));
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.PleaseSelectTheNumberOfSegmentsFirst);
                 }
             }
             else
             {
-                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("请先选择车型"));
+                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.PleaseSelectTheVehicleModelFirst);
             }
 
         }
@@ -1879,22 +1882,22 @@ namespace _3DLaserGlueInspection.subForm
                         }
                         else
                         {
-                            System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("未设置轨迹"));
+                            System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoTrajectorySet);
                         }
                     }
                     else
                     {
-                        System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("未设置图片"));
+                        System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoImageSet);
                     }
                 }
                 else
                 {
-                    System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("请先选择段数"));
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.PleaseSelectTheNumberOfSegmentsFirst);
                 }
             }
             else
             {
-                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("请先选择车型"));
+                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.PleaseSelectTheVehicleModelFirst);
             }
         }
 
@@ -1907,7 +1910,7 @@ namespace _3DLaserGlueInspection.subForm
                     //初始显示
                     if (set.image.Empty())
                     {
-                        System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("未设置图片"));
+                        System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoImageSet);
                         return;
                     }
                     hWindowModel.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(set.image));
@@ -1918,12 +1921,12 @@ namespace _3DLaserGlueInspection.subForm
                     var XLDData = set.XLDDatas[cutSetListBox.SelectedIndex];
                     if (XLDData.ControlRows.Length <= 0)
                     {
-                        System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("未设置轨迹"));
+                        System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoTrajectorySet);
                         return;
                     }
                     if (set.CutSets[cutSetListBox.SelectedIndex].StartImageIndex > set.CutSets[cutSetListBox.SelectedIndex].EndImageIndex)
                     {
-                        System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("起点大于终点"));
+                        System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.StartIndexIsGreaterThanEndIndex);
                         return;
                     }
                     int size = set.CutSets[cutSetListBox.SelectedIndex].Size;
@@ -1977,12 +1980,12 @@ namespace _3DLaserGlueInspection.subForm
                 }
                 else
                 {
-                    System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("请先选择段数"));
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.PleaseSelectTheNumberOfSegmentsFirst);
                 }
             }
             else
             {
-                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("请先选择车型"));
+                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.PleaseSelectTheVehicleModelFirst);
             }
 
         }
@@ -2162,7 +2165,7 @@ namespace _3DLaserGlueInspection.subForm
                          || !Params.CenterToCam1.TryGetValue(CamParamName, out var CenterToCam1s) || !CenterToCam1s.TryGetValue(camKey, out var CenterToCam1))
 
                         {
-                            System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("无相机参数"));
+                            System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoCameraParameters);
                             goto showCamPoseFinish;
                         }
 
@@ -2171,7 +2174,7 @@ namespace _3DLaserGlueInspection.subForm
                         {
                             if (!Params.Cam1ToTool.TryGetValue(CamParamName, out var CamToTools) || !CamToTools.TryGetValue(camKey, out Cam1ToTool))
                             {
-                                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("缺少相机参数") + $":Cam1ToTool");
+                                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.LessCamPara + $":Cam1ToTool");
                                 goto showCamPoseFinish;
                             }
                             Cam1ToTool = Params.Cam1ToTool[CamParamName][camKey];
@@ -2181,7 +2184,7 @@ namespace _3DLaserGlueInspection.subForm
                         {
                             if (!Params.Cam1ToBase.TryGetValue(CamParamName, out var Cam1ToBases) || !Cam1ToBases.TryGetValue(camKey, out Cam1ToBase))
                             {
-                                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("缺少相机参数") + $":Cam1ToBase");
+                                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.LessCamPara + $":Cam1ToBase");
                                 goto showCamPoseFinish;
                             }
                             //眼在手外，求Cam1ToTool,需要机器人pose才可以完成转换
@@ -2411,12 +2414,12 @@ namespace _3DLaserGlueInspection.subForm
                             Mat hImage_tmp = imageDict[camTimeKey].Clone();
                             if (hImage_tmp == null)
                             {
-                                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("无图片"));
+                                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoImage);
                                 return;
                             }
                             if (cutSet == null && imageSet == null)
                             {
-                                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("无检测参数"));
+                                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoDetectionParameters);
                                 return;
                             }
 
@@ -2433,7 +2436,7 @@ namespace _3DLaserGlueInspection.subForm
                              || !Params.CenterToCam1.TryGetValue(CamParamName, out var CenterToCam1s) || !CenterToCam1s.TryGetValue(camKey, out var CenterToCam1))
 
                             {
-                        System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("无相机参数"));
+                        System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoCameraParameters);
                                 return;
                             }
 
@@ -2442,7 +2445,7 @@ namespace _3DLaserGlueInspection.subForm
                             {
                                 if (!Params.Cam1ToTool.TryGetValue(CamParamName, out var CamToTools) || !CamToTools.TryGetValue(camKey, out Cam1ToTool))
                                 {
-                                    System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("缺少相机参数") + $":Cam1ToTool");
+                                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.LessCamPara + $":Cam1ToTool");
                                     return;
                                 }
                                 Cam1ToTool = Params.Cam1ToTool[CamParamName][camKey];
@@ -2452,7 +2455,7 @@ namespace _3DLaserGlueInspection.subForm
                             {
                                 if (!Params.Cam1ToBase.TryGetValue(CamParamName, out var Cam1ToBases) || !Cam1ToBases.TryGetValue(camKey, out Cam1ToBase))
                                 {
-                                    System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("缺少相机参数") + $":Cam1ToBase");
+                                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.LessCamPara + $":Cam1ToBase");
                                     return;
                                 }
                                 //眼在手外，求Cam1ToTool,需要机器人pose才可以完成转换
@@ -3121,17 +3124,17 @@ namespace _3DLaserGlueInspection.subForm
         {
             if (hImage == null)
             {
-                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("无图片"));
+                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoImage);
                 return;
             }
             if (cutSet == null && imageSet == null)
             {
-                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("无检测参数"));
+                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoDetectionParameters);
                 return;
             }
             if (currentRobotPose == null || lastRobotPose == null)
             {
-                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("无机器人位姿"));
+                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.LessRobotPose);
                 return;
             }
 
@@ -3146,7 +3149,7 @@ namespace _3DLaserGlueInspection.subForm
 
             if (PoseD == 0)
             {
-                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("位移距离为0"));
+                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.DistIsZero);
                 return;
             }
 
@@ -3163,7 +3166,7 @@ namespace _3DLaserGlueInspection.subForm
              || !Params.CenterToCam1.TryGetValue(CamParamName, out var CenterToCam1s) || !CenterToCam1s.TryGetValue(camKey, out var CenterToCam1))
 
             {
-                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("无相机参数"));
+                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoCameraParameters);
                 return;
             }
 
@@ -3172,7 +3175,7 @@ namespace _3DLaserGlueInspection.subForm
             {
                 if (!Params.Cam1ToTool.TryGetValue(CamParamName, out var CamToTools) || !CamToTools.TryGetValue(camKey, out Cam1ToTool))
                 {
-                    System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("缺少相机参数") + $":Cam1ToTool");
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.LessCamPara + $":Cam1ToTool");
                     return;
                 }
                 Cam1ToTool = Params.Cam1ToTool[CamParamName][camKey];
@@ -3182,7 +3185,7 @@ namespace _3DLaserGlueInspection.subForm
             {
                 if (!Params.Cam1ToBase.TryGetValue(CamParamName, out var Cam1ToBases) || !Cam1ToBases.TryGetValue(camKey, out Cam1ToBase))
                 {
-                    System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("缺少相机参数") + $":Cam1ToBase");
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.LessCamPara + $":Cam1ToBase");
                     return;
                 }
                 //眼在手外，求Cam1ToTool,需要机器人pose才可以完成转换

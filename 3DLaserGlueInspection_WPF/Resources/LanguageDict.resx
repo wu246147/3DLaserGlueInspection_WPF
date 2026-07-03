@@ -1,0 +1,1244 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="3DGluingDetection" xml:space="preserve">
+    <value>3D涂胶检测</value>
+  </data>
+  <data name="3DGluingFrameDetection" xml:space="preserve">
+    <value>3D涂胶单帧检测</value>
+  </data>
+  <data name="3DGluingInspectionResults" xml:space="preserve">
+    <value>3D涂胶检测结果</value>
+  </data>
+  <data name="3DImageDisplayTaskStartupCompleted" xml:space="preserve">
+    <value>三维图像显示任务启动完成</value>
+  </data>
+  <data name="3DPointCloudExtraction" xml:space="preserve">
+    <value>3D点云提取</value>
+  </data>
+  <data name="3DPointCloudResults" xml:space="preserve">
+    <value>3D点云结果</value>
+  </data>
+  <data name="ActualFrameRate" xml:space="preserve">
+    <value>实际帧率：</value>
+  </data>
+  <data name="ActualFrameRateAcquisitionFailed" xml:space="preserve">
+    <value>实际帧率获取失败:</value>
+  </data>
+  <data name="ActuallyGlueHeight" xml:space="preserve">
+    <value>实际胶高</value>
+  </data>
+  <data name="ActuallyGlueWidth" xml:space="preserve">
+    <value>实际胶宽</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>添加</value>
+  </data>
+  <data name="AddressFormatMismatch" xml:space="preserve">
+    <value>地址格式不匹配</value>
+  </data>
+  <data name="AddressNotAssigned" xml:space="preserve">
+    <value>地址未分配</value>
+  </data>
+  <data name="AlreadyExistsCannotBeAddedAgain" xml:space="preserve">
+    <value>已存在，不能重复添加！</value>
+  </data>
+  <data name="Area" xml:space="preserve">
+    <value>面积</value>
+  </data>
+  <data name="AutomaticExposureAcquisitionTime" xml:space="preserve">
+    <value>自动曝光采集时间</value>
+  </data>
+  <data name="CacheImages" xml:space="preserve">
+    <value>缓存图片</value>
+  </data>
+  <data name="Cam" xml:space="preserve">
+    <value>个相机</value>
+  </data>
+  <data name="Cam1" xml:space="preserve">
+    <value>相机</value>
+  </data>
+  <data name="CameraAcquisitionStoppedAcquisitionTime" xml:space="preserve">
+    <value>相机采集停止,采集时间：</value>
+  </data>
+  <data name="CameraAndMovementDirectionAngle" xml:space="preserve">
+    <value>相机与移动
+方向夹角°</value>
+  </data>
+  <data name="CameraClose" xml:space="preserve">
+    <value>相机关闭</value>
+  </data>
+  <data name="CameraConnectionCompleted" xml:space="preserve">
+    <value>相机连接完成</value>
+  </data>
+  <data name="CameraCreationFailed" xml:space="preserve">
+    <value>相机创建失败:</value>
+  </data>
+  <data name="CameraFailedToOpen" xml:space="preserve">
+    <value>相机打开失败:</value>
+  </data>
+  <data name="CameraInitializationFailed" xml:space="preserve">
+    <value>相机初始化失败</value>
+  </data>
+  <data name="CameraNotFound" xml:space="preserve">
+    <value>未找到相机</value>
+  </data>
+  <data name="CameraNotTurnedOn" xml:space="preserve">
+    <value>相机未打开</value>
+  </data>
+  <data name="CameraParameterLoadingFailed" xml:space="preserve">
+    <value>相机参数加载失败：</value>
+  </data>
+  <data name="CameraParametersLoadedSuccessfully" xml:space="preserve">
+    <value>相机参数加载成功</value>
+  </data>
+  <data name="CameraShutdownFailed" xml:space="preserve">
+    <value>关闭相机失败：</value>
+  </data>
+  <data name="CameraSuccessfullyOpened" xml:space="preserve">
+    <value>相机打开成功</value>
+  </data>
+  <data name="CameraValue" xml:space="preserve">
+    <value>，相机值：</value>
+  </data>
+  <data name="CamName" xml:space="preserve">
+    <value>相机名称</value>
+  </data>
+  <data name="CamParaName" xml:space="preserve">
+    <value>相机参数名</value>
+  </data>
+  <data name="CamSetting" xml:space="preserve">
+    <value>相机设置</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="CarType" xml:space="preserve">
+    <value>车型</value>
+  </data>
+  <data name="Change" xml:space="preserve">
+    <value>修改</value>
+  </data>
+  <data name="ChangePassWord" xml:space="preserve">
+    <value>修改密码</value>
+  </data>
+  <data name="ChangePassWork" xml:space="preserve">
+    <value>修改密码</value>
+  </data>
+  <data name="ClearCache" xml:space="preserve">
+    <value>清除缓存</value>
+  </data>
+  <data name="CloseCam" xml:space="preserve">
+    <value>关闭相机</value>
+  </data>
+  <data name="CloseSuccessfully" xml:space="preserve">
+    <value>关闭成功</value>
+  </data>
+  <data name="ClosingFailed" xml:space="preserve">
+    <value>关闭失败：</value>
+  </data>
+  <data name="CollectionFailed" xml:space="preserve">
+    <value>采集失败：</value>
+  </data>
+  <data name="ColorLowerLimit" xml:space="preserve">
+    <value>颜色下限</value>
+  </data>
+  <data name="ColorUpperLimit" xml:space="preserve">
+    <value>颜色上限</value>
+  </data>
+  <data name="CommonCorrectionCoefficient" xml:space="preserve">
+    <value>矫正系数共用</value>
+  </data>
+  <data name="Computer" xml:space="preserve">
+    <value>上位机</value>
+  </data>
+  <data name="Connect" xml:space="preserve">
+    <value>连接</value>
+  </data>
+  <data name="ConnectionFailed" xml:space="preserve">
+    <value>连接失败:</value>
+  </data>
+  <data name="ConnectionSuccessful" xml:space="preserve">
+    <value>连接成功</value>
+  </data>
+  <data name="ContAcq" xml:space="preserve">
+    <value>连续采集</value>
+  </data>
+  <data name="ContinueThePhotoLoop" xml:space="preserve">
+    <value>继续拍照循环</value>
+  </data>
+  <data name="ContinuousCollectionBegins" xml:space="preserve">
+    <value>连续采集开始</value>
+  </data>
+  <data name="ContourDet" xml:space="preserve">
+    <value>轮廓检测</value>
+  </data>
+  <data name="ContourDetectionResult" xml:space="preserve">
+    <value>轮廓检测结果</value>
+  </data>
+  <data name="ControlButton" xml:space="preserve">
+    <value>控制按键</value>
+  </data>
+  <data name="ConversionFailedFormatError" xml:space="preserve">
+    <value>转换失败，格式有误</value>
+  </data>
+  <data name="CoordinateConversionCamtotoolDoesNotExist" xml:space="preserve">
+    <value>坐标转换(CamToTool)不存在</value>
+  </data>
+  <data name="CoordinateConversionLighttocamDoesNotExist" xml:space="preserve">
+    <value>坐标转换(LightToCam)不存在</value>
+  </data>
+  <data name="Copy" xml:space="preserve">
+    <value>复制</value>
+  </data>
+  <data name="CopyPara" xml:space="preserve">
+    <value>复制参数</value>
+  </data>
+  <data name="CopyToAllImages" xml:space="preserve">
+    <value>复制至全部图片</value>
+  </data>
+  <data name="CopyToRangeImage" xml:space="preserve">
+    <value>复制至范围图片</value>
+  </data>
+  <data name="CorrectionX" xml:space="preserve">
+    <value>矫正系数x</value>
+  </data>
+  <data name="CorrectionY" xml:space="preserve">
+    <value>矫正系数y</value>
+  </data>
+  <data name="CtrlRightClickToDeleteCompleteDrawing" xml:space="preserve">
+    <value>Ctrl:删除点 右键:完成绘制</value>
+  </data>
+  <data name="CurrentPoseDetection" xml:space="preserve">
+    <value>当前检测位姿</value>
+  </data>
+  <data name="DataDir" xml:space="preserve">
+    <value>数据地址</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="DetList" xml:space="preserve">
+    <value>检测列表</value>
+  </data>
+  <data name="DetResult" xml:space="preserve">
+    <value>检测结果</value>
+  </data>
+  <data name="DetToolParaSetting" xml:space="preserve">
+    <value>检测工具参数设置</value>
+  </data>
+  <data name="Disconnect" xml:space="preserve">
+    <value>断开</value>
+  </data>
+  <data name="DiscreteDenoising" xml:space="preserve">
+    <value>离散去噪</value>
+  </data>
+  <data name="DoesNotSupportStrings" xml:space="preserve">
+    <value>不支持字符串</value>
+  </data>
+  <data name="Down" xml:space="preserve">
+    <value>下</value>
+  </data>
+  <data name="DoYouWantToSaveIt" xml:space="preserve">
+    <value>是否保存</value>
+  </data>
+  <data name="DoYouWantToSaveTheParameters" xml:space="preserve">
+    <value>是否保存参数？</value>
+  </data>
+  <data name="DuplicateName" xml:space="preserve">
+    <value>名称重复！</value>
+  </data>
+  <data name="Enable" xml:space="preserve">
+    <value>使能</value>
+  </data>
+  <data name="EnableCropping" xml:space="preserve">
+    <value>启用裁剪</value>
+  </data>
+  <data name="EnableFrameRateSetting" xml:space="preserve">
+    <value>设置帧率使能：</value>
+  </data>
+  <data name="EnableHorizontalMirroring" xml:space="preserve">
+    <value>设置水平镜像使能：</value>
+  </data>
+  <data name="EnableVerticalMirroring" xml:space="preserve">
+    <value>设置垂直镜像使能：</value>
+  </data>
+  <data name="EndImageID" xml:space="preserve">
+    <value>终点图像序号</value>
+  </data>
+  <data name="EndPoint" xml:space="preserve">
+    <value>终点</value>
+  </data>
+  <data name="ExitThePhotoLoop" xml:space="preserve">
+    <value>退出拍照循环</value>
+  </data>
+  <data name="ExposureSettingFailed" xml:space="preserve">
+    <value>曝光设置失败:</value>
+  </data>
+  <data name="ExposureTime" xml:space="preserve">
+    <value>曝光时间</value>
+  </data>
+  <data name="ExposureTimeAcquisitionFailed" xml:space="preserve">
+    <value>曝光时间获取失败:</value>
+  </data>
+  <data name="ExternalParameterLightincamDatDoesNotExist" xml:space="preserve">
+    <value>外参(LightInCam.dat)不存在</value>
+  </data>
+  <data name="ExternalParameterToolincamDatDoesNotExist" xml:space="preserve">
+    <value>外参(ToolInCam.dat)不存在</value>
+  </data>
+  <data name="Failed" xml:space="preserve">
+    <value>失败：</value>
+  </data>
+  <data name="FailedToCloseSettings" xml:space="preserve">
+    <value>关闭设置失败:</value>
+  </data>
+  <data name="FailedToFindCamera" xml:space="preserve">
+    <value>寻找相机失败：</value>
+  </data>
+  <data name="FailedToObtainExposureTimeValue" xml:space="preserve">
+    <value>获取ExposureTime值失败：</value>
+  </data>
+  <data name="FailedToOpenSettings" xml:space="preserve">
+    <value>打开设置失败:</value>
+  </data>
+  <data name="FailedToRetrieveTheSetFrameRate" xml:space="preserve">
+    <value>设置的帧率获取失败:</value>
+  </data>
+  <data name="FailedToStartCollection" xml:space="preserve">
+    <value>开始采集失败：</value>
+  </data>
+  <data name="FileDoesNotExist" xml:space="preserve">
+    <value>文件不存在</value>
+  </data>
+  <data name="FileFormatException" xml:space="preserve">
+    <value>文件格式异常</value>
+  </data>
+  <data name="Find" xml:space="preserve">
+    <value>找到</value>
+  </data>
+  <data name="FormatConversionCreationFailed" xml:space="preserve">
+    <value>格式转换创建失败:</value>
+  </data>
+  <data name="FormatConversionFailed" xml:space="preserve">
+    <value>格式转换失败</value>
+  </data>
+  <data name="FrameRateEnableSettingFailed" xml:space="preserve">
+    <value>帧率使能设置失败:</value>
+  </data>
+  <data name="FrameRateSettingFailed" xml:space="preserve">
+    <value>帧率设置失败:</value>
+  </data>
+  <data name="Get" xml:space="preserve">
+    <value>获取</value>
+  </data>
+  <data name="GetExposure" xml:space="preserve">
+    <value>获取曝光</value>
+  </data>
+  <data name="GetFreq" xml:space="preserve">
+    <value>获取频率</value>
+  </data>
+  <data name="GetGain" xml:space="preserve">
+    <value>获取增益</value>
+  </data>
+  <data name="GetHorizontalOffsetParameterValueFail" xml:space="preserve">
+    <value>水平偏移获取失败:</value>
+  </data>
+  <data name="GetImageHeightFailed" xml:space="preserve">
+    <value>图像高度获取失败:</value>
+  </data>
+  <data name="GetImageWidthFailed" xml:space="preserve">
+    <value>图像宽度获取失败:</value>
+  </data>
+  <data name="GetMaximumHeightOfImage" xml:space="preserve">
+    <value>图像最大高度获取失败:</value>
+  </data>
+  <data name="GetMaximumWidthOfImage" xml:space="preserve">
+    <value>图像最大宽度获取失败:</value>
+  </data>
+  <data name="GetOffset" xml:space="preserve">
+    <value>获取偏移</value>
+  </data>
+  <data name="GetSize" xml:space="preserve">
+    <value>获取尺寸</value>
+  </data>
+  <data name="GetVerticalOffsetParameterValue" xml:space="preserve">
+    <value>垂直偏移获取失败:</value>
+  </data>
+  <data name="GlueHeight" xml:space="preserve">
+    <value>胶高</value>
+  </data>
+  <data name="GlueWidth" xml:space="preserve">
+    <value>胶宽</value>
+  </data>
+  <data name="HandleMagnification" xml:space="preserve">
+    <value>处理放大倍数</value>
+  </data>
+  <data name="HorizonFilp" xml:space="preserve">
+    <value>水平镜像</value>
+  </data>
+  <data name="HorizontalOffsetParameterValue" xml:space="preserve">
+    <value>水平偏移参数值：</value>
+  </data>
+  <data name="HorizontalOffsetSettingFailed" xml:space="preserve">
+    <value>水平偏移设置失败:</value>
+  </data>
+  <data name="HorizontalRange" xml:space="preserve">
+    <value>横向范围</value>
+  </data>
+  <data name="ImageBmpJpgJpegPngAllFiles" xml:space="preserve">
+    <value>图片|*.bmp;*.jpg;*.jpeg;*.png|所有文件|*.*</value>
+  </data>
+  <data name="ImageHeight" xml:space="preserve">
+    <value>图像高度：</value>
+  </data>
+  <data name="ImageProcessingCompleted" xml:space="preserve">
+    <value>图像处理完成</value>
+  </data>
+  <data name="ImageProcessingTaskStartupCompleted" xml:space="preserve">
+    <value>图像处理任务启动完成</value>
+  </data>
+  <data name="ImageSavedSuccessfully" xml:space="preserve">
+    <value>图片保存成功</value>
+  </data>
+  <data name="ImageSavingFormat" xml:space="preserve">
+    <value>图片保存格式</value>
+  </data>
+  <data name="ImageStorageCompleted" xml:space="preserve">
+    <value>存图完成</value>
+  </data>
+  <data name="ImageStorageException" xml:space="preserve">
+    <value>存图异常：</value>
+  </data>
+  <data name="ImageWidth" xml:space="preserve">
+    <value>图像宽度：</value>
+  </data>
+  <data name="Info" xml:space="preserve">
+    <value>信息</value>
+  </data>
+  <data name="InitializationSettingsFailed" xml:space="preserve">
+    <value>初始化设置失败：</value>
+  </data>
+  <data name="InitializationSettingsSuccessful" xml:space="preserve">
+    <value>初始化设置成功</value>
+  </data>
+  <data name="InitializeDataSuccessfully" xml:space="preserve">
+    <value>初始化数据成功</value>
+  </data>
+  <data name="InsufficientNumberOfPhotoSegments" xml:space="preserve">
+    <value>拍照段数不足</value>
+  </data>
+  <data name="IoConnectionFailed" xml:space="preserve">
+    <value>IO连接失败：</value>
+  </data>
+  <data name="IoConnectionSuccessful" xml:space="preserve">
+    <value>IO连接成功</value>
+  </data>
+  <data name="IoParameterLoadingFailed" xml:space="preserve">
+    <value>IO参数加载失败：</value>
+  </data>
+  <data name="IoParameterLoadingSuccessful" xml:space="preserve">
+    <value>IO参数加载成功</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>语言</value>
+  </data>
+  <data name="LanguageChangeSuccess" xml:space="preserve">
+    <value>语言切换成功，请重启软件切换界面语言。</value>
+  </data>
+  <data name="LanguageSwitchSuccessful" xml:space="preserve">
+    <value>语言切换成功。</value>
+  </data>
+  <data name="LaserShutdownFailed" xml:space="preserve">
+    <value>关闭激光失败：</value>
+  </data>
+  <data name="LaserSuccessfullyTurnedOff" xml:space="preserve">
+    <value>关闭激光成功</value>
+  </data>
+  <data name="Last" xml:space="preserve">
+    <value>上一个</value>
+  </data>
+  <data name="LeftClickAddPointShiftSwitchMode" xml:space="preserve">
+    <value>左键:添加点 Shift:切换模式</value>
+  </data>
+  <data name="LoadingFailed" xml:space="preserve">
+    <value>加载失败：</value>
+  </data>
+  <data name="LoadingSuccessful" xml:space="preserve">
+    <value>加载成功</value>
+  </data>
+  <data name="log" xml:space="preserve">
+    <value>AI 3D视觉涂胶检测系统</value>
+  </data>
+  <data name="LogInfo" xml:space="preserve">
+    <value>日志信息</value>
+  </data>
+  <data name="MaximumHeightOfImage" xml:space="preserve">
+    <value>图像最大高度：</value>
+  </data>
+  <data name="MaximumSize" xml:space="preserve">
+    <value>最大尺寸</value>
+  </data>
+  <data name="MaximumWidthOfImage" xml:space="preserve">
+    <value>图像最大宽度：</value>
+  </data>
+  <data name="MillimeterSegmentedDistance" xml:space="preserve">
+    <value>毫米分段距离</value>
+  </data>
+  <data name="MillimeterSegmentPointNumber" xml:space="preserve">
+    <value>毫米成段点数</value>
+  </data>
+  <data name="MinimumWidth" xml:space="preserve">
+    <value>最低宽度</value>
+  </data>
+  <data name="MinThre" xml:space="preserve">
+    <value>最低阈值</value>
+  </data>
+  <data name="MonitoringCommunication" xml:space="preserve">
+    <value>监控通讯</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="NewFile" xml:space="preserve">
+    <value>新建</value>
+  </data>
+  <data name="NewPassWord" xml:space="preserve">
+    <value>新密码</value>
+  </data>
+  <data name="Next" xml:space="preserve">
+    <value>下一个</value>
+  </data>
+  <data name="NG" xml:space="preserve">
+    <value>异常</value>
+  </data>
+  <data name="NoCameraParameters" xml:space="preserve">
+    <value>没有相机参数</value>
+  </data>
+  <data name="NoCameraParametersExist" xml:space="preserve">
+    <value>不存在相机参数：</value>
+  </data>
+  <data name="NoCamerasFound" xml:space="preserve">
+    <value>未找到任何相机</value>
+  </data>
+  <data name="NoDeletionOptionSelected" xml:space="preserve">
+    <value>未选择删除项！</value>
+  </data>
+  <data name="NoDetectionParameters" xml:space="preserve">
+    <value>无检测参数</value>
+  </data>
+  <data name="NoImage" xml:space="preserve">
+    <value>无图片</value>
+  </data>
+  <data name="NoImageSet" xml:space="preserve">
+    <value>未设置图片</value>
+  </data>
+  <data name="NoModificationSelected" xml:space="preserve">
+    <value>未选择修改项！</value>
+  </data>
+  <data name="NoProductParametersExist" xml:space="preserve">
+    <value>不存在产品参数：</value>
+  </data>
+  <data name="NotDet" xml:space="preserve">
+    <value>不检</value>
+  </data>
+  <data name="NotEnabled" xml:space="preserve">
+    <value>未启用</value>
+  </data>
+  <data name="NoTrajectorySet" xml:space="preserve">
+    <value>未设置轨迹</value>
+  </data>
+  <data name="OK" xml:space="preserve">
+    <value>正常</value>
+  </data>
+  <data name="Open" xml:space="preserve">
+    <value>打开</value>
+  </data>
+  <data name="OpenCam" xml:space="preserve">
+    <value>打开相机</value>
+  </data>
+  <data name="OpenFailed" xml:space="preserve">
+    <value>打开失败：</value>
+  </data>
+  <data name="OpenSuccessful" xml:space="preserve">
+    <value>打开成功</value>
+  </data>
+  <data name="OriginPassWord" xml:space="preserve">
+    <value>原密码</value>
+  </data>
+  <data name="OtherSet" xml:space="preserve">
+    <value>其他设置</value>
+  </data>
+  <data name="OutputReadySignal" xml:space="preserve">
+    <value>输出Ready信号</value>
+  </data>
+  <data name="OutputRunningSignal" xml:space="preserve">
+    <value>输出Running信号</value>
+  </data>
+  <data name="Para" xml:space="preserve">
+    <value>参数？</value>
+  </data>
+  <data name="ParaInfo" xml:space="preserve">
+    <value>参数信息</value>
+  </data>
+  <data name="ParameterLoadingFailed" xml:space="preserve">
+    <value>参数加载失败：</value>
+  </data>
+  <data name="ParameterSavedSuccessfully" xml:space="preserve">
+    <value>参数保存成功</value>
+  </data>
+  <data name="ParameterSaveFailed" xml:space="preserve">
+    <value>参数保存失败</value>
+  </data>
+  <data name="ParaSetting" xml:space="preserve">
+    <value>参数设置</value>
+  </data>
+  <data name="PassWord" xml:space="preserve">
+    <value>密码</value>
+  </data>
+  <data name="PasswordChangedSuccessfully" xml:space="preserve">
+    <value>密码修改成功！</value>
+  </data>
+  <data name="PasswordIncorrect" xml:space="preserve">
+    <value>密码错误！</value>
+  </data>
+  <data name="PhotoNum" xml:space="preserve">
+    <value>拍照数量</value>
+  </data>
+  <data name="PictureList" xml:space="preserve">
+    <value>图片列表</value>
+  </data>
+  <data name="PictureSet" xml:space="preserve">
+    <value>图片设置</value>
+  </data>
+  <data name="PLCSetting" xml:space="preserve">
+    <value>上位机设置</value>
+  </data>
+  <data name="PleaseInputPassWord" xml:space="preserve">
+    <value>请输入密码</value>
+  </data>
+  <data name="PleaseSelectAFile" xml:space="preserve">
+    <value>请选择文件</value>
+  </data>
+  <data name="PleaseSelectTheNumberOfSegmentsFirst" xml:space="preserve">
+    <value>请先选择段数</value>
+  </data>
+  <data name="PleaseSelectTheVehicleModelFirst" xml:space="preserve">
+    <value>请先选择车型</value>
+  </data>
+  <data name="ProcessException" xml:space="preserve">
+    <value>流程异常：</value>
+  </data>
+  <data name="ProductConfigurationParameterLoadingFailed" xml:space="preserve">
+    <value>产品配置参数加载失败：</value>
+  </data>
+  <data name="ProductConfigurationParametersLoadedSuccessfully" xml:space="preserve">
+    <value>产品配置参数加载成功</value>
+  </data>
+  <data name="ProductID" xml:space="preserve">
+    <value>产品号</value>
+  </data>
+  <data name="ProductIdCannotBeEmpty" xml:space="preserve">
+    <value>产品ID不能为空！</value>
+  </data>
+  <data name="ProductList" xml:space="preserve">
+    <value>产品列表</value>
+  </data>
+  <data name="ProductName" xml:space="preserve">
+    <value>产品名称</value>
+  </data>
+  <data name="ProductNumber" xml:space="preserve">
+    <value>产品号</value>
+  </data>
+  <data name="ProductParameters" xml:space="preserve">
+    <value>产品参数</value>
+  </data>
+  <data name="ProductSetting" xml:space="preserve">
+    <value>产品设置</value>
+  </data>
+  <data name="Prompt" xml:space="preserve">
+    <value>提示</value>
+  </data>
+  <data name="PublicPara" xml:space="preserve">
+    <value>公共参数</value>
+  </data>
+  <data name="ReadFailed" xml:space="preserve">
+    <value>读取失败:</value>
+  </data>
+  <data name="ReceivedEndSignalExitThePhotoLoop" xml:space="preserve">
+    <value>收到END信号,退出拍照循环</value>
+  </data>
+  <data name="ReceivedStartSignal" xml:space="preserve">
+    <value>收到开始信号</value>
+  </data>
+  <data name="ReceivedTriggerSignalOff" xml:space="preserve">
+    <value>收到触发信号OFF</value>
+  </data>
+  <data name="ReceivedTriggerSignalOn" xml:space="preserve">
+    <value>收到触发信号ON</value>
+  </data>
+  <data name="ReceivedVehicleModelNumber" xml:space="preserve">
+    <value>收到车型号为</value>
+  </data>
+  <data name="Refresh" xml:space="preserve">
+    <value>获取更新</value>
+  </data>
+  <data name="RegionalGrayscaleMean" xml:space="preserve">
+    <value>区域灰度均值</value>
+  </data>
+  <data name="Registers" xml:space="preserve">
+    <value>地址</value>
+  </data>
+  <data name="RepeatPassWord" xml:space="preserve">
+    <value>重复密码</value>
+  </data>
+  <data name="Result" xml:space="preserve">
+    <value>结果</value>
+  </data>
+  <data name="Robot" xml:space="preserve">
+    <value>机器人</value>
+  </data>
+  <data name="RobotAttitudeAcquisitionTaskHasBeenInitiatedAndCompleted" xml:space="preserve">
+    <value>机器人姿态获取任务启动完成</value>
+  </data>
+  <data name="RobotConnectionFailed" xml:space="preserve">
+    <value>机器人连接失败：</value>
+  </data>
+  <data name="RobotParameterLoadingFailed" xml:space="preserve">
+    <value>机器人参数加载失败：</value>
+  </data>
+  <data name="RobotParametersLoadedSuccessfully" xml:space="preserve">
+    <value>机器人参数加载成功</value>
+  </data>
+  <data name="RobotProcessingCompleted" xml:space="preserve">
+    <value>机器人处理完成</value>
+  </data>
+  <data name="RobotSetting" xml:space="preserve">
+    <value>机器人设置</value>
+  </data>
+  <data name="RobotSuccessfullyConnected" xml:space="preserve">
+    <value>机器人连接成功</value>
+  </data>
+  <data name="SaveCache" xml:space="preserve">
+    <value>保存缓存</value>
+  </data>
+  <data name="SaveCurrentImg" xml:space="preserve">
+    <value>保存当前图片</value>
+  </data>
+  <data name="SaveDir" xml:space="preserve">
+    <value>保存路径</value>
+  </data>
+  <data name="SaveFailed" xml:space="preserve">
+    <value>保存失败：</value>
+  </data>
+  <data name="SaveNGImg" xml:space="preserve">
+    <value>保存NG图片</value>
+  </data>
+  <data name="SaveOKImg" xml:space="preserve">
+    <value>保存OK图片</value>
+  </data>
+  <data name="SavePara" xml:space="preserve">
+    <value>保存参数</value>
+  </data>
+  <data name="SavePointCloud" xml:space="preserve">
+    <value>保存点云图</value>
+  </data>
+  <data name="ScanCam" xml:space="preserve">
+    <value>扫描相机</value>
+  </data>
+  <data name="SelectCam" xml:space="preserve">
+    <value>选用相机</value>
+  </data>
+  <data name="SelectPicture" xml:space="preserve">
+    <value>选用图片</value>
+  </data>
+  <data name="SelectTheLocationToSave" xml:space="preserve">
+    <value>选择要保存的位置</value>
+  </data>
+  <data name="Set" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="SetEnableHorizontalMirroringFail" xml:space="preserve">
+    <value>水平镜像使能设置失败:</value>
+  </data>
+  <data name="SetEnableVerticalMirroringFail" xml:space="preserve">
+    <value>垂直镜像使能设置失败:</value>
+  </data>
+  <data name="SetExposure" xml:space="preserve">
+    <value>设置曝光</value>
+  </data>
+  <data name="SetFrameRate" xml:space="preserve">
+    <value>设置帧率</value>
+  </data>
+  <data name="SetFreq" xml:space="preserve">
+    <value>设置频率</value>
+  </data>
+  <data name="SetGain" xml:space="preserve">
+    <value>设置增益</value>
+  </data>
+  <data name="SetImage" xml:space="preserve">
+    <value>设置图片</value>
+  </data>
+  <data name="SetImageHeight" xml:space="preserve">
+    <value>设置图像高度：</value>
+  </data>
+  <data name="SetImageHeightFail" xml:space="preserve">
+    <value>图像高度设置失败:</value>
+  </data>
+  <data name="SetImageWidth" xml:space="preserve">
+    <value>设置图像宽度：</value>
+  </data>
+  <data name="SetImageWidthFail" xml:space="preserve">
+    <value>图像宽度设置失败:</value>
+  </data>
+  <data name="SetOffset" xml:space="preserve">
+    <value>设置偏移</value>
+  </data>
+  <data name="SetSize" xml:space="preserve">
+    <value>设置尺寸</value>
+  </data>
+  <data name="SetTheHorizontalOffsetParameterValue" xml:space="preserve">
+    <value>设置水平偏移参数值：</value>
+  </data>
+  <data name="SetTheNumberOfInternalImageCachingNodesInTheSdkTo" xml:space="preserve">
+    <value>设置设置SDK内部图像缓存节点个数为</value>
+  </data>
+  <data name="SetTheVerticalOffsetParameterValue" xml:space="preserve">
+    <value>设置垂直偏移参数值：</value>
+  </data>
+  <data name="SettingFailed" xml:space="preserve">
+    <value>设置失败：</value>
+  </data>
+  <data name="SetTrajectory" xml:space="preserve">
+    <value>设置轨迹</value>
+  </data>
+  <data name="ShowHeight" xml:space="preserve">
+    <value>显示高度</value>
+  </data>
+  <data name="ShowImage" xml:space="preserve">
+    <value>显示图片</value>
+  </data>
+  <data name="ShowRange" xml:space="preserve">
+    <value>显示范围</value>
+  </data>
+  <data name="ShowSet" xml:space="preserve">
+    <value>显示设置</value>
+  </data>
+  <data name="ShowTrajectory" xml:space="preserve">
+    <value>显示轨迹</value>
+  </data>
+  <data name="ShowWidth" xml:space="preserve">
+    <value>显示宽度</value>
+  </data>
+  <data name="SignalDistribution" xml:space="preserve">
+    <value>信号分配</value>
+  </data>
+  <data name="SignalName" xml:space="preserve">
+    <value>信号名称</value>
+  </data>
+  <data name="SignalReadFailedRereading" xml:space="preserve">
+    <value>信号读取失败，重读中:</value>
+  </data>
+  <data name="SignalReReadingSuccessful" xml:space="preserve">
+    <value>信号重读成功</value>
+  </data>
+  <data name="SignalRewritingSuccessful" xml:space="preserve">
+    <value>信号重写成功</value>
+  </data>
+  <data name="SignalWriteFailedRewritingInProgress" xml:space="preserve">
+    <value>信号写入失败，重写中:</value>
+  </data>
+  <data name="SignSize" xml:space="preserve">
+    <value>标识大小</value>
+  </data>
+  <data name="SimRunning" xml:space="preserve">
+    <value>模拟运行</value>
+  </data>
+  <data name="Simul" xml:space="preserve">
+    <value>仿真</value>
+  </data>
+  <data name="SimulationImage" xml:space="preserve">
+    <value>仿真图片</value>
+  </data>
+  <data name="SimulationPathDoesNotExist" xml:space="preserve">
+    <value>仿真路径不存在</value>
+  </data>
+  <data name="SimulationPathNotFilledIn" xml:space="preserve">
+    <value>仿真路径未填写</value>
+  </data>
+  <data name="SingleAcq" xml:space="preserve">
+    <value>单帧采集</value>
+  </data>
+  <data name="SingleFrameAcquisitionTime" xml:space="preserve">
+    <value>单帧采集时间</value>
+  </data>
+  <data name="SingleFrameContourDet" xml:space="preserve">
+    <value>单帧轮廓检测</value>
+  </data>
+  <data name="SingleFrameDet" xml:space="preserve">
+    <value>单帧检测</value>
+  </data>
+  <data name="SizeCorrection" xml:space="preserve">
+    <value>尺寸矫正</value>
+  </data>
+  <data name="SoftwareRun" xml:space="preserve">
+    <value>软件运行</value>
+  </data>
+  <data name="Start" xml:space="preserve">
+    <value>启动</value>
+  </data>
+  <data name="StartImageID" xml:space="preserve">
+    <value>起点图像序号</value>
+  </data>
+  <data name="StartIndexIsGreaterThanEndIndex" xml:space="preserve">
+    <value>起点大于终点</value>
+  </data>
+  <data name="StartingContinuousCollectionFailed" xml:space="preserve">
+    <value>开始连续采集失败：</value>
+  </data>
+  <data name="StartingContinuousCollectionSuccessfully" xml:space="preserve">
+    <value>开始连续采集成功</value>
+  </data>
+  <data name="StartPoint" xml:space="preserve">
+    <value>起点</value>
+  </data>
+  <data name="StartSavingImages" xml:space="preserve">
+    <value>开始存图</value>
+  </data>
+  <data name="Stop" xml:space="preserve">
+    <value>停止</value>
+  </data>
+  <data name="StopCollectionFailed" xml:space="preserve">
+    <value>停止采集失败：</value>
+  </data>
+  <data name="StopCollectionSuccessfully" xml:space="preserve">
+    <value>停止采集成功</value>
+  </data>
+  <data name="Sure" xml:space="preserve">
+    <value>确定</value>
+  </data>
+  <data name="TheFolderDoesNotExist" xml:space="preserve">
+    <value>文件夹不存在</value>
+  </data>
+  <data name="TheInternalReferenceCamparamCalDoesNotExist" xml:space="preserve">
+    <value>内参(camparam.cal)不存在</value>
+  </data>
+  <data name="TheMainThreadIsAlreadyRunning" xml:space="preserve">
+    <value>主线程已经运行中</value>
+  </data>
+  <data name="TheNameIsEmpty" xml:space="preserve">
+    <value>名称为空！</value>
+  </data>
+  <data name="TheNumberOfCameraSegmentsIsSufficient" xml:space="preserve">
+    <value>拍照段数足够</value>
+  </data>
+  <data name="TheOriginalPasswordIsIncorrect" xml:space="preserve">
+    <value>原密码错误！</value>
+  </data>
+  <data name="TheProductIdFormatIsIncorrect" xml:space="preserve">
+    <value>产品ID格式不正确！</value>
+  </data>
+  <data name="TheProductNameAlreadyExistsAndCannotBeAddedAgain" xml:space="preserve">
+    <value>产品名称已存在，不能重复添加！</value>
+  </data>
+  <data name="TheProductNameCannotBeEmpty" xml:space="preserve">
+    <value>产品名称不能为空！</value>
+  </data>
+  <data name="TheProductNameCannotContainCharacters" xml:space="preserve">
+    <value>产品名称不能包含字符</value>
+  </data>
+  <data name="ThereIsNoVehicleModelAvailable" xml:space="preserve">
+    <value>不存在车型</value>
+  </data>
+  <data name="TheSoftwareIsRunningAreYouSureToExit" xml:space="preserve">
+    <value>软件正在运行中，确定退出？</value>
+  </data>
+  <data name="TheTwoNewPasswordsDoNotMatch" xml:space="preserve">
+    <value>两次新密码不一致！</value>
+  </data>
+  <data name="ThisCommunicationMethodHasNoSettingInterface" xml:space="preserve">
+    <value>该通讯方式无设置界面！</value>
+  </data>
+  <data name="Time" xml:space="preserve">
+    <value>时间</value>
+  </data>
+  <data name="To" xml:space="preserve">
+    <value>为</value>
+  </data>
+  <data name="TurnOffTheCamera" xml:space="preserve">
+    <value>关闭相机</value>
+  </data>
+  <data name="TurnOffTheReadySignal" xml:space="preserve">
+    <value>关闭Ready信号</value>
+  </data>
+  <data name="TurnOffTheRunningSignal" xml:space="preserve">
+    <value>关闭Running信号</value>
+  </data>
+  <data name="UnknownFormat" xml:space="preserve">
+    <value>未知格式:</value>
+  </data>
+  <data name="Up" xml:space="preserve">
+    <value>上</value>
+  </data>
+  <data name="UseAngleOptimization" xml:space="preserve">
+    <value>是否使用
+角度优化</value>
+  </data>
+  <data name="UseCam" xml:space="preserve">
+    <value>启用相机</value>
+  </data>
+  <data name="UsedCam" xml:space="preserve">
+    <value>相机启用情况</value>
+  </data>
+  <data name="User" xml:space="preserve">
+    <value>用户</value>
+  </data>
+  <data name="Val" xml:space="preserve">
+    <value>值</value>
+  </data>
+  <data name="ValueFail" xml:space="preserve">
+    <value>值失败：</value>
+  </data>
+  <data name="VerticalFilp" xml:space="preserve">
+    <value>垂直镜像</value>
+  </data>
+  <data name="VerticalOffsetParameterValue" xml:space="preserve">
+    <value>垂直偏移参数值：</value>
+  </data>
+  <data name="VerticalOffsetSettingFailed" xml:space="preserve">
+    <value>垂直偏移设置失败:</value>
+  </data>
+  <data name="VerticalRange" xml:space="preserve">
+    <value>纵向范围</value>
+  </data>
+  <data name="WaitForDet" xml:space="preserve">
+    <value>待检</value>
+  </data>
+  <data name="WaitingForImageProcessingToComplete" xml:space="preserve">
+    <value>等待图像处理完成</value>
+  </data>
+  <data name="WaitingForTheRobotToCompleteProcessing" xml:space="preserve">
+    <value>等待机器人处理完成</value>
+  </data>
+  <data name="WaitingForTheStartSignal" xml:space="preserve">
+    <value>等待开始信号</value>
+  </data>
+  <data name="WaitingForTriggerSignalOff" xml:space="preserve">
+    <value>等待触发信号OFF</value>
+  </data>
+  <data name="WaitingForTriggerSignalOn" xml:space="preserve">
+    <value>等待触发信号ON</value>
+  </data>
+  <data name="WriteFailed" xml:space="preserve">
+    <value>写入失败:</value>
+  </data>
+  <data name="WritingFormatNotSupported" xml:space="preserve">
+    <value>写入格式不支持</value>
+  </data>
+  <data name="ServerSignalLoadedSuccessfully" xml:space="preserve">
+    <value>服务器信号加载成功</value>
+  </data>
+  <data name="TCPCommunicationServerSuccessfullyEstablished" xml:space="preserve">
+    <value>TCP通讯服务器建立成功</value>
+  </data>
+  <data name="CoordinateConversionCamToBaseDoesNotExist" xml:space="preserve">
+    <value>坐标转换(CamToBase)不存在</value>
+  </data>
+  <data name="CoordinateConversionCamToCam1DoesNotExist" xml:space="preserve">
+    <value>坐标转换(CamToCam1)不存在</value>
+  </data>
+  <data name="CoordinateConversionCenterToCam1DoesNotExist" xml:space="preserve">
+    <value>坐标转换(CenterToCam1)不存在</value>
+  </data>
+  <data name="ReceivedSignal" xml:space="preserve">
+    <value>收到信号</value>
+  </data>
+  <data name="ServerSignalLoadingFailed" xml:space="preserve">
+    <value>服务器信号加载失败</value>
+  </data>
+  <data name="SimulatedImageTraversalCompleted" xml:space="preserve">
+    <value>仿真图片遍历完</value>
+  </data>
+  <data name="SoftwareTriggerFailure" xml:space="preserve">
+    <value>软触发失败</value>
+  </data>
+  <data name="SoftwareTriggerSuccess" xml:space="preserve">
+    <value>软触发成功</value>
+  </data>
+  <data name="TCPCommunicationServerEstablishmentFailed" xml:space="preserve">
+    <value>TCP通讯服务器建立失败</value>
+  </data>
+  <data name="CamInitSuccess" xml:space="preserve">
+    <value>相机初始化成功</value>
+  </data>
+  <data name="Gain" xml:space="preserve">
+    <value>增益</value>
+  </data>
+  <data name="GetGainFail" xml:space="preserve">
+    <value>增益获取失败:</value>
+  </data>
+  <data name="LessCamPara" xml:space="preserve">
+    <value>缺少相机参数</value>
+  </data>
+  <data name="ReceivedAbortSignalProcessRestarts" xml:space="preserve">
+    <value>收到Abort信号,流程重新开始</value>
+  </data>
+  <data name="ReceiveTheStartSignalToTurnOff" xml:space="preserve">
+    <value>收到开始信号OFF</value>
+  </data>
+  <data name="SetGainFail" xml:space="preserve">
+    <value>增益设置失败:</value>
+  </data>
+  <data name="TheDisplayedTrajectoryIsNotSetProperly" xml:space="preserve">
+    <value>显示的轨迹没有设置好</value>
+  </data>
+  <data name="TheStartingAndEndingImageNumbersDisplayedAreNotSetProperly" xml:space="preserve">
+    <value>显示的起点图像序号和结束图像序号没有设置好</value>
+  </data>
+  <data name="WaitingForDataConversionToComplete" xml:space="preserve">
+    <value>等待数据转换完成</value>
+  </data>
+  <data name="WaitingForTheCompletionOf3DImageProcessing" xml:space="preserve">
+    <value>等待3d图像处理完成</value>
+  </data>
+  <data name="WaitingForTheStartSignalToTurnOff" xml:space="preserve">
+    <value>等待开始信号OFF</value>
+  </data>
+  <data name="CouldFindAnyCam1" xml:space="preserve">
+    <value>无法找到任何Cam1</value>
+  </data>
+  <data name="CouldFindCam1" xml:space="preserve">
+    <value>无法找到Cam1</value>
+  </data>
+  <data name="DistIsZero" xml:space="preserve">
+    <value>位移距离为0</value>
+  </data>
+  <data name="LessRobotPose" xml:space="preserve">
+    <value>无机器人位姿</value>
+  </data>
+  <data name="PleaseChooseDelObjFirst" xml:space="preserve">
+    <value>请先选择删除对象。</value>
+  </data>
+  <data name="DetRange" xml:space="preserve">
+    <value>检测范围</value>
+  </data>
+  <data name="GetExportTimeFail" xml:space="preserve">
+    <value>获取曝光失败：</value>
+  </data>
+</root>

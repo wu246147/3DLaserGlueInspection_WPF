@@ -6,9 +6,9 @@
         xmlns:local="clr-namespace:_3DLaserGlueInspection.subForm"
         xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         xmlns:cvt="clr-namespace:RAIVASCS.Converter"
-
+        xmlns:resx="clr-namespace:_3DLaserGlueInspection.Resources"
         mc:Ignorable="d"
-        Title="相机设置" Height="900
+        Title="{x:Static resx:LanguageDict.CamSetting}" Height="900
         " Width="1024" Closing="Window_Closing" Loaded="WindowCamera_Loaded">
 
     <Window.Resources>
@@ -31,7 +31,7 @@
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="303*"/>
-            <ColumnDefinition Width="300
+            <ColumnDefinition Width="350
                               "/>
         </Grid.ColumnDefinitions>
         <local:ImageControl2 x:Name="hWindowModel" Margin="5,5,5,5" Grid.Column="0" Grid.Row="0" />
@@ -43,62 +43,62 @@
               ItemsSource="{Binding LogRecords}" ColumnHeaderStyle="{StaticResource DataGridColumnHeaderStyle}" 
               CellStyle="{StaticResource DataGridCellStyle}" RowStyle="{StaticResource LogDataGridRowStyle}" Grid.ColumnSpan="2" >
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="时间" Binding="{Binding LogTime, StringFormat=\{0:yyyy-MM-dd HH:mm:ss\}}" Width="200" Foreground="White"/>
+                    <DataGridTextColumn Header="{x:Static resx:LanguageDict.Time}" Binding="{Binding LogTime, StringFormat=\{0:yyyy-MM-dd HH:mm:ss\}}" Width="200" Foreground="White"/>
                     <!--<DataGridTextColumn Header="信息" Binding="{Binding LogInfo}" Width="*" Foreground="White"/>-->
-                    <DataGridTemplateColumn CellTemplate="{StaticResource TextDataTemplate}"  Header="信息" Width="*"/>
+                    <DataGridTemplateColumn CellTemplate="{StaticResource TextDataTemplate}"  Header="{x:Static resx:LanguageDict.Info}" Width="*"/>
 
                 </DataGrid.Columns>
             </DataGrid>
         </Grid>
         <Grid Grid.Column="1" Grid.Row="1"  Background="#FF2A3440" Margin="5,5,5,5">
-            <Button x:Name="saveCurrentImgButton" Content="保存当前图片" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="34" Width="95" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="162,25,0,0" Click="saveCurrentImgButton_Click"/>
-            <Button x:Name="clearCacheButton" Content="清除缓存"     FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="34" Width="70" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="162,129,0,0" Click="clearCacheButton_Click"/>
-            <Button x:Name="saveCacheButton" Content="保存缓存"     FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="34" Width="70" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="31,129,0,0" Click="saveCacheButton_Click"/>
-            <Button x:Name="saveParaButton" Content="保存参数"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="34" Width="70" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="31,25,0,0" Click="saveParaButton_Click" />
-            <CheckBox x:Name="cacheImgCheck" Content="缓存图片" HorizontalAlignment="Left" Margin="31,0,0,0" VerticalAlignment="Center" FontSize="14" Foreground="White"/>
-            <Label x:Name="imageCountLabel" Content="--" FontSize="14" Foreground="White" HorizontalAlignment="Left" Width="66" Margin="162,0,0,0"  />
+            <Button x:Name="saveCurrentImgButton" Content="{x:Static resx:LanguageDict.SaveCurrentImg}" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="34" Width="148" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="182,25,0,0" Click="saveCurrentImgButton_Click"/>
+            <Button x:Name="clearCacheButton" Content="{x:Static resx:LanguageDict.ClearCache}"     FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="34" Width="148" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="182,129,0,0" Click="clearCacheButton_Click"/>
+            <Button x:Name="saveCacheButton" Content="{x:Static resx:LanguageDict.SaveCache}"     FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="34" Width="158" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="12,129,0,0" Click="saveCacheButton_Click"/>
+            <Button x:Name="saveParaButton" Content="{x:Static resx:LanguageDict.SavePara}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="34" Width="158" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="12,25,0,0" Click="saveParaButton_Click" />
+            <CheckBox x:Name="cacheImgCheck" Content="{x:Static resx:LanguageDict.CacheImages}" HorizontalAlignment="Left" Margin="31,0,0,0" VerticalAlignment="Center" FontSize="14" Foreground="White"/>
+            <Label x:Name="imageCountLabel" Content="--" FontSize="14" Foreground="White" HorizontalAlignment="Left" Width="66" Margin="188,0,0,0"  />
 
         </Grid>
         <Grid x:Name="paraGrip" Grid.Column="1" Grid.Row="0"  Background="#FF2A3440" Margin="5,40,5,5">
-            <Button  x:Name="closeCamButton" Content="关闭相机"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="70" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="197,99,0,0" Click="closeCamButton_Click" />
-            <CheckBox x:Name="checkBoxEnableCam" Content="启用相机" HorizontalAlignment="Left" Margin="16,45,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White"/>
-            <ComboBox x:Name="CamNameComboBox" FontSize="14" BorderBrush="#FFDDDDDD" Background="#FF263851" HorizontalAlignment="Left" Margin="104,68,0,0" VerticalAlignment="Top" Width="163" />
+            <Button  x:Name="closeCamButton" Content="{x:Static resx:LanguageDict.CloseCam}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="100" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="235,99,0,0" Click="closeCamButton_Click" />
+            <CheckBox x:Name="checkBoxEnableCam" Content="{x:Static resx:LanguageDict.UseCam}" HorizontalAlignment="Left" Margin="16,45,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White"/>
+            <ComboBox x:Name="CamNameComboBox" FontSize="14" BorderBrush="#FFDDDDDD" Background="#FF263851" HorizontalAlignment="Left" Margin="127,69,0,0" VerticalAlignment="Top" Width="203" />
             <Label  Content="相机名称：" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="10,66,0,0" VerticalAlignment="Top"/>
-            <TextBox x:Name="exportTimeNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="16,175,0,0" TextWrapping="Wrap" Text="10000" VerticalAlignment="Top" Width="70" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-            <Button  x:Name="openCamButton" Content="打开相机"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="70" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="104,99,0,0" Click="openCamButton_Click" />
-            <Button x:Name="scanCamButton" Content="扫描相机"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="70" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="16,99,0,0" Click="scanCamButton_Click" />
-            <Button  x:Name="getExportTimeButton" Content="获取曝光"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="70" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="104,175,0,0" Click="getExportTimeButton_Click" />
-            <Button  x:Name="setExportTimeButton" Content="设置曝光"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="70" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="197,175,0,0" Click="setExportTimeButton_Click" />
-            <Button  x:Name="stopCheckButton" Content="停止采集"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="70" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="197,137,0,0" Click="stopCheckButton_Click" />
-            <Button  x:Name="continuousCheckButton" Content="连续采集"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="70" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="104,137,0,0" Click="continuousCheckButton_Click" />
-            <Button  x:Name="singleCheckButton" Content="单帧采集"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="70" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="16,137,0,0" Click="singleCheckButton_Click" />
-            <CheckBox  x:Name="verticalMirror" Content="垂直镜像" HorizontalAlignment="Center" Margin="0,250,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Checked="verticalMirror_Checked" Unchecked="verticalMirror_Checked"/>
-            <CheckBox  x:Name="horizontalMirror" Content="水平镜像" HorizontalAlignment="Left" Margin="16,250,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Checked="horizontalMirror_Checked" Unchecked="horizontalMirror_Checked"/>
-            <Label  Content="最大尺寸：" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="10,271,0,0" VerticalAlignment="Top"/>
-            <TextBox x:Name="heightMaxNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="104,304,0,0" TextWrapping="Wrap" Text="480" VerticalAlignment="Top" Width="70" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-            <TextBox x:Name="widthMaxNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="16,304,0,0" TextWrapping="Wrap" Text="640" VerticalAlignment="Top" Width="70" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-            <Label  Content="*" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="88,0,0,0"/>
-            <Button x:Name="getMaxSizeButton" Content="获取更新"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="70" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="197,304,0,0" Click="getMaxSizeButton_Click" />
-            <Label   Content="尺寸设置：" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="10,333,0,0" VerticalAlignment="Top"/>
-            <TextBox x:Name="currentHeightNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="104,365,0,0" TextWrapping="Wrap" Text="480" VerticalAlignment="Top" Width="70" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-            <TextBox x:Name="currentWidthNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="16,365,0,0" TextWrapping="Wrap" Text="640" VerticalAlignment="Top" Width="70" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+            <TextBox x:Name="exportTimeNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="10,175,0,0" TextWrapping="Wrap" Text="10000" VerticalAlignment="Top" Width="100" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+            <Button  x:Name="openCamButton" Content="{x:Static resx:LanguageDict.OpenCam}"      FontSize="14" Foreground="White"    HorizontalAlignment="Center" VerticalAlignment="Top" Height="24" Width="100" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="0,99,0,0"  Click="openCamButton_Click" />
+            <Button x:Name="scanCamButton" Content="{x:Static resx:LanguageDict.ScanCam}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="100" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,99,0,0" Click="scanCamButton_Click" />
+            <Button  x:Name="getExportTimeButton" Content="{x:Static resx:LanguageDict.GetExposure}"      FontSize="14" Foreground="White"    HorizontalAlignment="Center" VerticalAlignment="Top" Height="24" Width="100" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="0,175,0,0" Click="getExportTimeButton_Click" />
+            <Button  x:Name="setExportTimeButton" Content="{x:Static resx:LanguageDict.SetExposure}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="100" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="235,175,0,0" Click="setExportTimeButton_Click" />
+            <Button  x:Name="stopCheckButton" Content="{x:Static resx:LanguageDict.Stop}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="100" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="235,137,0,0" Click="stopCheckButton_Click" />
+            <Button  x:Name="continuousCheckButton" Content="{x:Static resx:LanguageDict.ContAcq}"      FontSize="14" Foreground="White"    HorizontalAlignment="Center" VerticalAlignment="Top" Height="24" Width="100" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="0,137,0,0" Click="continuousCheckButton_Click" />
+            <Button  x:Name="singleCheckButton" Content="{x:Static resx:LanguageDict.SingleAcq}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="100" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,137,0,0" Click="singleCheckButton_Click" />
+            <CheckBox  x:Name="verticalMirror" Content="{x:Static resx:LanguageDict.VerticalFilp}" HorizontalAlignment="Left" Margin="186,250,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Checked="verticalMirror_Checked" Unchecked="verticalMirror_Checked"/>
+            <CheckBox  x:Name="horizontalMirror" Content="{x:Static resx:LanguageDict.HorizonFilp}" HorizontalAlignment="Left" Margin="10,250,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Checked="horizontalMirror_Checked" Unchecked="horizontalMirror_Checked"/>
+            <Label  Content="{x:Static resx:LanguageDict.MaximumSize}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="4,271,0,0" VerticalAlignment="Top"/>
+            <TextBox x:Name="heightMaxNumericUpDown" FontSize="14"  HorizontalAlignment="Center" Margin="0,304,0,0" TextWrapping="Wrap" Text="480" VerticalAlignment="Top" Width="100" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+            <TextBox x:Name="widthMaxNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="10,304,0,0" TextWrapping="Wrap" Text="640" VerticalAlignment="Top" Width="100" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+            <Label  Content="*" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="88,306,0,0" VerticalAlignment="Top"/>
+            <Button x:Name="getMaxSizeButton" Content="{x:Static resx:LanguageDict.Refresh}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="100" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="235,304,0,0" Click="getMaxSizeButton_Click" />
+            <Label   Content="{x:Static resx:LanguageDict.SetSize}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="4,333,0,0" VerticalAlignment="Top"/>
+            <TextBox x:Name="currentHeightNumericUpDown" FontSize="14"  HorizontalAlignment="Center" Margin="0,365,0,0" TextWrapping="Wrap" Text="480" VerticalAlignment="Top" Width="100" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+            <TextBox x:Name="currentWidthNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="10,365,0,0" TextWrapping="Wrap" Text="640" VerticalAlignment="Top" Width="100" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
             <Label  Content="*" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="88,366,0,0" VerticalAlignment="Top"/>
-            <Button  x:Name="setCurrentSizeButton" Content="设置尺寸"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="70" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="197,365,0,0" Click="setCurrentSizeButton_Click" />
-            <Button  x:Name="getCurrentSizeButton" Content="获取尺寸"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="70" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="104,336,0,0" Click="getCurrentSizeButton_Click" />
-            <Label  Content="偏移设置：" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="10,393,0,0" VerticalAlignment="Top"/>
-            <TextBox x:Name="currentOffsetYNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="104,426,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="70" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-            <TextBox x:Name="currentOffsetXNumericUpDown"  FontSize="14"  HorizontalAlignment="Left" Margin="16,426,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="70" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+            <Button  x:Name="setCurrentSizeButton" Content="{x:Static resx:LanguageDict.SetSize}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="100" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="235,365,0,0" Click="setCurrentSizeButton_Click" />
+            <Button  x:Name="getCurrentSizeButton" Content="{x:Static resx:LanguageDict.GetSize}"      FontSize="14" Foreground="White"    HorizontalAlignment="Center" VerticalAlignment="Top" Height="24" Width="100" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="0,336,0,0" Click="getCurrentSizeButton_Click" />
+            <Label  Content="{x:Static resx:LanguageDict.SetOffset}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="4,393,0,0" VerticalAlignment="Top"/>
+            <TextBox x:Name="currentOffsetYNumericUpDown" FontSize="14"  HorizontalAlignment="Center" Margin="0,426,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="100" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+            <TextBox x:Name="currentOffsetXNumericUpDown"  FontSize="14"  HorizontalAlignment="Left" Margin="10,426,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="100" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
             <Label  Content="*" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="88,427,0,0" VerticalAlignment="Top"/>
-            <Button x:Name="setCurrentOffsetButton" Content="设置偏移"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="70" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="197,426,0,0" Click="setCurrentOffsetButton_Click" />
-            <Button x:Name="getCurrentOffsetButton" Content="获取偏移"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="70" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="104,396,0,0" Click="getCurrentOffsetButton_Click" />
-            <Label  Content="频率设置：" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="10,453,0,0" VerticalAlignment="Top"/>
-            <TextBox x:Name="currentFPSNumericUpDown"  FontSize="14"  HorizontalAlignment="Left" Margin="16,486,0,0" TextWrapping="Wrap" Text="0.0" VerticalAlignment="Top" Width="70" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-            <Button  x:Name="setCurrentFPSButton" Content="设置频率"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="70" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="197,486,0,0" Click="setCurrentFPSButton_Click" />
-            <Button  x:Name="getCurrentFPSButton" Content="获取频率"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="70" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="104,456,0,0" Click="getCurrentFPSButton_Click" />
-            <CheckBox x:Name="useFPSCheck"  Content="使能" HorizontalAlignment="Left" Margin="107,490,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Checked="useFPSCheck_Checked" Unchecked="useFPSCheck_Checked"/>
-            <Label  Content="图片保存格式：" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="16,524,0,0" VerticalAlignment="Top"/>
-            <ComboBox x:Name="saveImgTypeComboBox" FontSize="14"  BorderBrush="#FFDDDDDD" Background="#FF263851" HorizontalAlignment="Left" Margin="124,527,0,0" VerticalAlignment="Top" Width="143"/>
-            <Grid Name="selectCamGrid" Margin="0,5,0,0" HorizontalAlignment="Center" VerticalAlignment="Top" Height="36">
+            <Button x:Name="setCurrentOffsetButton" Content="{x:Static resx:LanguageDict.SetOffset}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="100" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="235,426,0,0" Click="setCurrentOffsetButton_Click" />
+            <Button x:Name="getCurrentOffsetButton" Content="{x:Static resx:LanguageDict.GetOffset}"      FontSize="14" Foreground="White"    HorizontalAlignment="Center" VerticalAlignment="Top" Height="24" Width="100" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="0,396,0,0" Click="getCurrentOffsetButton_Click" />
+            <Label  Content="{x:Static resx:LanguageDict.SetFrameRate}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="4,453,0,0" VerticalAlignment="Top"/>
+            <TextBox x:Name="currentFPSNumericUpDown"  FontSize="14"  HorizontalAlignment="Left" Margin="10,486,0,0" TextWrapping="Wrap" Text="0.0" VerticalAlignment="Top" Width="100" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+            <Button  x:Name="setCurrentFPSButton" Content="{x:Static resx:LanguageDict.SetFrameRate}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="100" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="235,486,0,0" Click="setCurrentFPSButton_Click" />
+            <Button  x:Name="getCurrentFPSButton" Content="{x:Static resx:LanguageDict.GetFreq}"      FontSize="14" Foreground="White"    HorizontalAlignment="Center" VerticalAlignment="Top" Height="24" Width="100" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="0,456,0,0" Click="getCurrentFPSButton_Click" />
+            <CheckBox x:Name="useFPSCheck"  Content="{x:Static resx:LanguageDict.Enable}" HorizontalAlignment="Left" Margin="133,490,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Checked="useFPSCheck_Checked" Unchecked="useFPSCheck_Checked"/>
+            <Label  Content="{x:Static resx:LanguageDict.ImageSavingFormat}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="10,524,0,0" VerticalAlignment="Top"/>
+            <ComboBox x:Name="saveImgTypeComboBox" FontSize="14"  BorderBrush="#FFDDDDDD" Background="#FF263851" HorizontalAlignment="Left" Margin="10,557,0,0" VerticalAlignment="Top" Width="143"/>
+            <Grid Name="selectCamGrid" Margin="0,5,0,0" HorizontalAlignment="Center" VerticalAlignment="Top" Height="36" Width="320">
                 <Border BorderThickness="1">
                     <Border.BorderBrush>
                         <VisualBrush>
@@ -111,7 +111,7 @@
                     </Border.BorderBrush>
 
                 </Border>
-                <Label  Content="相机：" FontSize="14" Foreground="White"  HorizontalAlignment="Left"/>
+                <Label  Content="{x:Static resx:LanguageDict.Cam1}" FontSize="14" Foreground="White"  HorizontalAlignment="Left"/>
 
                 <RadioButton x:Name="radioButtonCam1" Content="1" FontSize="14" Foreground="White" Height="16" Margin="57,7,195,4" Checked="RadioButton_Cam_CheckedChanged" Unchecked="RadioButton_Cam_CheckedChanged"/>
                 <RadioButton x:Name="radioButtonCam2" Content="2" FontSize="14" Foreground="White" Height="16" Margin="110,7,142,4" Checked="RadioButton_Cam_CheckedChanged" Unchecked="RadioButton_Cam_CheckedChanged"/>
@@ -119,16 +119,16 @@
                 <RadioButton x:Name="radioButtonCam4" Content="4" FontSize="14" Foreground="White" Height="16" Margin="216,7,36,4" Checked="RadioButton_Cam_CheckedChanged" Unchecked="RadioButton_Cam_CheckedChanged"/>
             </Grid>
             <CheckBox x:Name="Line1EnableCheck" Content="Line1" HorizontalAlignment="Center" Margin="0,45,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Checked="Line1EnableCheck_Checked" Unchecked="Line1EnableCheck_Checked"/>
-            <CheckBox x:Name="Line2EnableCheck" Content="Line2" HorizontalAlignment="Left" Margin="197,45,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Checked="Line2EnableCheck_Checked" Unchecked="Line2EnableCheck_Checked"/>
-            <TextBox x:Name="gainNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="16,215,0,0" TextWrapping="Wrap" Text="2.5" VerticalAlignment="Top" Width="70" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-            <Button  x:Name="getGainTimeButton" Content="获取增益"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="70" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="104,215,0,0" Click="getGainTimeButton_Click" />
-            <Button  x:Name="setGainTimeButton" Content="设置增益"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="70" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="197,215,0,0" Click="setGainTimeButton_Click" />
+            <CheckBox x:Name="Line2EnableCheck" Content="Line2" HorizontalAlignment="Left" Margin="240,46,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Checked="Line2EnableCheck_Checked" Unchecked="Line2EnableCheck_Checked"/>
+            <TextBox x:Name="gainNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="10,215,0,0" TextWrapping="Wrap" Text="2.5" VerticalAlignment="Top" Width="100" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+            <Button  x:Name="getGainTimeButton" Content="{x:Static resx:LanguageDict.GetGain}"      FontSize="14" Foreground="White"    HorizontalAlignment="Center" VerticalAlignment="Top" Height="24" Width="100" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="0,215,0,0" Click="getGainTimeButton_Click" />
+            <Button  x:Name="setGainTimeButton" Content="{x:Static resx:LanguageDict.SetGain}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="100" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="235,215,0,0" Click="setGainTimeButton_Click" />
 
 
         </Grid>
-        <Button x:Name="newCamParaButton" Content="新建"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="58" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="16,6,0,0" Grid.Column="1" Click="newCamParaButton_Click" />
-        <Label  Content="名称：" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="85,2,0,0" VerticalAlignment="Top" Grid.Column="1"/>
-        <ComboBox x:Name="newCamParaNameComboBox" FontSize="14"  BorderBrush="#FFDDDDDD" Background="#FF263851" HorizontalAlignment="Left" Margin="130,7,0,0" VerticalAlignment="Top" Width="110" Grid.Column="1"/>
+        <Button x:Name="newCamParaButton" Content="{x:Static resx:LanguageDict.NewFile}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="100" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="20,10,0,0" Grid.Column="1" Click="newCamParaButton_Click" />
+        <Label  Content="{x:Static resx:LanguageDict.Name}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="146,8,0,0" VerticalAlignment="Top" Grid.Column="1"/>
+        <ComboBox x:Name="newCamParaNameComboBox" FontSize="14"  BorderBrush="#FFDDDDDD" Background="#FF263851" HorizontalAlignment="Left" Margin="230,10,0,0" VerticalAlignment="Top" Width="100" Grid.Column="1"/>
 
 
     </Grid>

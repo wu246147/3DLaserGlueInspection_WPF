@@ -41,7 +41,7 @@ namespace _3DLaserGlueInspection.subForm
                         Directory.CreateDirectory("Data");
                     }
                     File.WriteAllText("Data\\User", NewPassword);
-                    tipLabel.Content = GlobalVarAndFunc.LanguageTranslate("密码修改成功！");
+                    tipLabel.Content = _3DLaserGlueInspection.Resources.LanguageDict.PasswordChangedSuccessfully;
                     Password = NewPassword;
                 }
                 catch (Exception ex)
@@ -51,7 +51,7 @@ namespace _3DLaserGlueInspection.subForm
             }
             else
             {
-                tipLabel.Content = GlobalVarAndFunc.LanguageTranslate("两次新密码不一致！");
+                tipLabel.Content = _3DLaserGlueInspection.Resources.LanguageDict.TheTwoNewPasswordsDoNotMatch;
             }
         }
 
@@ -64,7 +64,7 @@ namespace _3DLaserGlueInspection.subForm
             }
             else
             {
-                tipLabel.Content = GlobalVarAndFunc.LanguageTranslate("原密码错误！");
+                tipLabel.Content = _3DLaserGlueInspection.Resources.LanguageDict.TheOriginalPasswordIsIncorrect;
             }
         }
 

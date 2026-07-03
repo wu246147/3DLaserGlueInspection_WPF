@@ -114,7 +114,7 @@ namespace _3DLaserGlueInspection
         string camCommunicationLabelColor = "Gray";
         string softwareRunLabelColor = "Gray";
 
-        string buttonRunContent = GlobalVarAndFunc.LanguageTranslate("启动");
+        string buttonRunContent = _3DLaserGlueInspection.Resources.LanguageDict.Start;
         string buttonRunTag = "\ue658";
 
         ObservableCollection<ImageResultRecord> _imageResultRecords = new ObservableCollection<ImageResultRecord>();

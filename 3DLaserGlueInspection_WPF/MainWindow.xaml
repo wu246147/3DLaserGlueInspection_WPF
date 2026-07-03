@@ -8,6 +8,7 @@
     xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:subForm="clr-namespace:_3DLaserGlueInspection.subForm"
+    xmlns:resx="clr-namespace:_3DLaserGlueInspection.Resources"
     Title="MainWindow"
     Width="1108"
     Height="1040.4"
@@ -75,7 +76,8 @@
                     VerticalContentAlignment="Center"
                     Background="#FF242B35"
                     BorderBrush="{x:Null}"
-                    Content="AI 3D视觉涂胶检测系统 1.6.1"
+                    Content="{x:Static resx:LanguageDict.log}" 
+                    ContentStringFormat="{}{0} 1.6.1"
                     FontSize="22"
                     Foreground="#FF1679D0" Margin="0,-2,0,0" />
 
@@ -125,7 +127,8 @@
             <Label
                 Margin="20,0,0,0"
                 HorizontalAlignment="Left"
-                Content="产品型号："
+                Content="{x:Static resx:LanguageDict.ProductID }"
+                ContentStringFormat="{}{0} :"
                 FontSize="14"
                 Foreground="#FFFDFEFF"
                 RenderTransformOrigin="0.025,1.242" />
@@ -133,7 +136,8 @@
                 Grid.Column="1"
                 Margin="20,0,0,0"
                 HorizontalAlignment="Left"
-                Content="名称："
+                Content="{x:Static resx:LanguageDict.Name }"
+                ContentStringFormat="{}{0} :"
                 FontSize="14"
                 Foreground="#FFFDFEFF" />
             <Label
@@ -147,28 +151,29 @@
                 Grid.Column="3"
                 Margin="20,0,0,0"
                 HorizontalAlignment="Left"
-                Content="时间："
+                Content="{x:Static resx:LanguageDict.Time }"
+                ContentStringFormat="{}{0} :"
                 FontSize="14"
                 Foreground="#FFFDFEFF" />
             <Label
                 Grid.Column="4"
                 Margin="20,0,0,0"
                 HorizontalAlignment="Left"
-                Content="检测结果:"
+                Content="{x:Static resx:LanguageDict.DetResult }"
+                ContentStringFormat="{}{0} :"
                 FontSize="14"
                 Foreground="#FFFDFEFF" Grid.ColumnSpan="2" />
 
             <Label
                 x:Name="LabelProductID"
-                Margin="84,0,0,0"
                 HorizontalAlignment="Left"
                 Content="{Binding productIDControl}"
                 FontSize="14"
-                Foreground="#FFFDFEFF" />
+                Foreground="#FFFDFEFF" Margin="99,0,0,0" />
             <Label
                 x:Name="LabelName"
                 Grid.Column="1"
-                Margin="66,0,0,0"
+                Margin="79,0,0,0"
                 HorizontalAlignment="Left"
                 Content="{Binding nameControl}"
                 FontSize="14"
@@ -206,7 +211,7 @@
         <!--  View bar  -->
         <Grid Margin="10,178,330,245" Background="#FF2A3440">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="120" />
+                <ColumnDefinition Width="160" />
                 <ColumnDefinition Width="583*" />
                 <ColumnDefinition Width="584*" />
             </Grid.ColumnDefinitions>
@@ -280,28 +285,28 @@
                 Margin="58,63,0,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Content="待检"
+                Content="{x:Static resx:LanguageDict.WaitForDet }"
                 FontSize="14"
                 Foreground="White" />
             <Label
                 Margin="58,303,0,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Content="不检"
+                Content="{x:Static resx:LanguageDict.NotDet }"
                 FontSize="14"
                 Foreground="White" />
             <Label
                 Margin="58,224,0,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Content="异常"
+                Content="{x:Static resx:LanguageDict.NG }"
                 FontSize="14"
                 Foreground="White" />
             <Label
                 Margin="58,141,0,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Content="正常"
+                Content="{x:Static resx:LanguageDict.OK }"
                 FontSize="14"
                 Foreground="White" />
             <Grid
@@ -352,7 +357,7 @@
                 <Label
                     Margin="35,0,0,0"
                     HorizontalAlignment="Left"
-                    Content="控制按键"
+                    Content="{x:Static resx:LanguageDict.ControlButton }"
                     FontSize="14"
                     Foreground="White" />
                 <!--<TextBlock Text="{Binding buttonRunTagControl}" FontSize="22"
@@ -454,7 +459,7 @@
                     Margin="35,2,0,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
-                    Content="控通讯监"
+                    Content="{x:Static resx:LanguageDict.MonitoringCommunication }"
                     FontSize="14"
                     Foreground="White" />
                 <Label
@@ -462,7 +467,7 @@
                     Margin="0,122,0,0"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Top"
-                    Content="机器人"
+                    Content="{x:Static resx:LanguageDict.Robot }"
                     FontSize="14"
                     Foreground="White" />
                 <Label
@@ -470,7 +475,7 @@
                     Margin="213,122,0,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
-                    Content="软件运行"
+                    Content="{x:Static resx:LanguageDict.SoftwareRun }"
                     FontSize="14"
                     Foreground="White" />
                 <Label
@@ -478,7 +483,7 @@
                     Margin="43,122,0,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
-                    Content="相机"
+                    Content="{x:Static resx:LanguageDict.Cam1 }"
                     FontSize="14"
                     Foreground="White" />
             </Grid>
@@ -508,7 +513,7 @@
                     Margin="35,2,0,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
-                    Content="日志信息"
+                    Content="{x:Static resx:LanguageDict.LogInfo}"
                     FontSize="14"
                     Foreground="White" />
                 <DataGrid
@@ -533,12 +538,12 @@
                             Width="100"
                             Binding="{Binding LogTime, StringFormat=\{0:yyyy-MM-dd HH:mm:ss\}}"
                             Foreground="White"
-                            Header="时间" />
+                            Header="{x:Static resx:LanguageDict.Time}" />
                         <!--<DataGridTextColumn Header="信息" Binding="{Binding LogInfo}" Width="*" Foreground="White"/>-->
                         <DataGridTemplateColumn
                             Width="*"
                             CellTemplate="{StaticResource TextDataTemplate}"
-                            Header="信息" />
+                            Header="{x:Static resx:LanguageDict.Info}" />
 
                     </DataGrid.Columns>
                 </DataGrid>
@@ -590,7 +595,7 @@
                 Height="38"
                 Margin="35,0,0,0"
                 HorizontalAlignment="Left"
-                Content="检测列表"
+                Content="{x:Static resx:LanguageDict.DetList}"
                 FontSize="14"
                 Foreground="White" />
             <TabControl
@@ -604,7 +609,7 @@
                     Background="#FF2A3440"
                     FontSize="14"
                     Foreground="White"
-                    Header="图片列表"
+                    Header="{x:Static resx:LanguageDict.PictureList}"
                     Template="{StaticResource TabItemTemplate}">
                     <Grid Background="#FF2A3440">
                         <DataGrid
@@ -630,7 +635,8 @@
                                 <DataGridTextColumn
                                     Width="*"
                                     Binding="{Binding Cam1}"
-                                    Header="相机1" >
+                                    Header="{x:Static resx:LanguageDict.Cam1}"
+                                    HeaderStringFormat="{}{0} 1" >
 
                                     <DataGridTextColumn.CellStyle>
                                         <Style TargetType="DataGridCell" BasedOn="{StaticResource DataGridCellStyle}">
@@ -642,10 +648,11 @@
 
 
                                 </DataGridTextColumn>
-                                    <DataGridTextColumn
+                                <DataGridTextColumn
                                     Width="*"
                                     Binding="{Binding Cam2}"
-                                    Header="相机2" >
+                                    Header="{x:Static resx:LanguageDict.Cam1}"
+                                    HeaderStringFormat="{}{0} 2">
                                     <DataGridTextColumn.CellStyle>
                                         <Style TargetType="DataGridCell" BasedOn="{StaticResource DataGridCellStyle}">
                                             <Setter Property="Foreground"
@@ -657,7 +664,8 @@ Converter={StaticResource ResultColor}}" />
                                 <DataGridTextColumn
                                     Width="*"
                                     Binding="{Binding Cam3}"
-                                    Header="相机3">
+                                    Header="{x:Static resx:LanguageDict.Cam1}"
+                                    HeaderStringFormat="{}{0} 3">
                                     <DataGridTextColumn.CellStyle>
                                         <Style TargetType="DataGridCell" BasedOn="{StaticResource DataGridCellStyle}">
                                             <Setter Property="Foreground"
@@ -665,12 +673,13 @@ Value="{Binding Cam3Result,
 Converter={StaticResource ResultColor}}" />
                                         </Style>
                                     </DataGridTextColumn.CellStyle>
-                                </DataGridTextColumn>           
+                                </DataGridTextColumn>
 
                                 <DataGridTextColumn
                                     Width="*"
                                     Binding="{Binding Cam4}"
-                                    Header="相机4" >
+                                    Header="{x:Static resx:LanguageDict.Cam1}"
+                                    HeaderStringFormat="{}{0} 4" >
                                     <DataGridTextColumn.CellStyle>
                                         <Style TargetType="DataGridCell" BasedOn="{StaticResource DataGridCellStyle}">
                                             <Setter Property="Foreground"
@@ -687,7 +696,7 @@ Converter={StaticResource ResultColor}}" />
                     Background="#FF2A3440"
                     FontSize="14"
                     Foreground="White"
-                    Header="产品列表"
+                    Header="{x:Static resx:LanguageDict.ProductList}"
                     Template="{StaticResource TabItemTemplate}">
                     <Grid Background="#FF2A3440">
                         <DataGrid
@@ -712,17 +721,17 @@ Converter={StaticResource ResultColor}}" />
                                     Width="150"
                                     Binding="{Binding CarDetTime, StringFormat=\{0:yyyy-MM-dd HH:mm:ss\}}"
                                     Foreground="White"
-                                    Header="时间" />
+                                    Header="{x:Static resx:LanguageDict.Time}" />
                                 <DataGridTextColumn
                                     Width="*"
                                     Binding="{Binding CarID}"
                                     Foreground="White"
-                                    Header="产品号" />
+                                    Header="{x:Static resx:LanguageDict.ProductID}" />
                                 <DataGridTextColumn
                                     Width="*"
                                     Binding="{Binding CarResult}"
                                     Foreground="White"
-                                    Header="结果" />
+                                    Header="{x:Static resx:LanguageDict.Result}" />
 
                             </DataGrid.Columns>
                         </DataGrid>
@@ -746,7 +755,7 @@ Converter={StaticResource ResultColor}}" />
                 Margin="10,33,0,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Content="产量："
+                Content="Total："
                 FontSize="14"
                 Foreground="White" />
             <Label
@@ -778,7 +787,7 @@ Converter={StaticResource ResultColor}}" />
                 Margin="9,135,0,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Content="NG数："
+                Content="NG："
                 FontSize="14"
                 Foreground="White" />
             <Label
@@ -787,7 +796,7 @@ Converter={StaticResource ResultColor}}" />
                 Margin="10,83,0,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Content="OK数："
+                Content="OK："
                 FontSize="14"
                 Foreground="White" />
             <Label
@@ -808,7 +817,7 @@ Converter={StaticResource ResultColor}}" />
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
                 Click="simulationCheck_Click"
-                Content="仿真"
+                Content="{x:Static resx:LanguageDict.Simul}"
                 Foreground="White"
                 IsChecked="False"
                 Visibility="Hidden"
@@ -834,33 +843,42 @@ Converter={StaticResource ResultColor}}" />
                 Margin="25,0,0,0"
                 HorizontalAlignment="Left"
                 Background="#FF3C4451"
-                Foreground="#FFFDFEFF">
+                Foreground="#FFFDFEFF" Height="48">
+                
+                <Menu.Resources>
+                    <!-- 设置横向菜单项的 Padding -->
+                    <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                        <Setter Property="Padding" Value="15,6"/>
+                    </Style>
+                </Menu.Resources>
+
                 <MenuItem
                     x:Name="menuItem_custom"
-                    Height="30"
-                    Header="用户">
+                    Height="50"
+                    
+                    Header="{x:Static resx:LanguageDict.User}">
                     <MenuItem
                         x:Name="MenuItem_changePasswordSetting"
                         BorderBrush="#00000000"
                         BorderThickness="0"
                         Click="MenuItem_changePasswordSetting_Click"
                         Foreground="Black"
-                        Header="修改密码" />
+                        Header="{x:Static resx:LanguageDict.ChangePassWork}" />
                 </MenuItem>
-                <MenuItem x:Name="MenuItem_signalSetting" Header="信号设置">
+                <MenuItem x:Name="MenuItem_signalSetting" Header="{x:Static resx:LanguageDict.SignalDistribution}" Height="50">
                     <MenuItem
                         x:Name="MenuItem_signalDistributionSetting"
                         BorderBrush="#00000000"
                         BorderThickness="0"
                         Foreground="Black"
-                        Header="信号分配"
+                        Header="{x:Static resx:LanguageDict.SignalDistribution}"
                         Visibility="Collapsed" />
                     <MenuItem
                         x:Name="MenuItem_computerSetting"
                         BorderBrush="#00000000"
                         BorderThickness="0"
                         Foreground="Black"
-                        Header="上位机设置"
+                        Header="{x:Static resx:LanguageDict.PLCSetting}"
                         Visibility="Collapsed" />
                     <MenuItem
                         x:Name="MenuItem_robotSetting"
@@ -868,36 +886,36 @@ Converter={StaticResource ResultColor}}" />
                         BorderThickness="0"
                         Click="MenuItem_robotSetting_signalSetting_Click"
                         Foreground="Black"
-                        Header="机器人设置" />
+                        Header="{x:Static resx:LanguageDict.RobotSetting}" />
                 </MenuItem>
                 <MenuItem
                     x:Name="MenuItem_camSetting"
                     Click="MenuItem_camSetting_Click"
-                    Header="相机设置" />
+                    Header="{x:Static resx:LanguageDict.CamSetting}" Height="50"/>
                 <MenuItem
                     x:Name="MenuItem_productSetting"
                     Click="MenuItem_productSetting_Click"
-                    Header="产品设置" />
+                    Header="{x:Static resx:LanguageDict.ProductSetting}" Height="50"/>
                 <MenuItem
                     x:Name="MenuItem_paraSetting"
                     Click="MenuItem_paraSetting_Click"
-                    Header="参数设置" />
+                    Header="{x:Static resx:LanguageDict.ParaSetting}" Height="50"/>
                 <MenuItem
                     x:Name="MenuItem_languageSetting"
                     BorderBrush="#FF3C4451"
-                    Header="语言">
+                    Header="{x:Static resx:LanguageDict.Language}" Height="50">
                     <MenuItem
                         x:Name="MenuItem_chineseLanguage"
                         BorderBrush="#00000000"
                         BorderThickness="0"
                         Foreground="Black"
-                        Header="中文" />
+                        Header="中文" IsCheckable="True" Click="MenuItem_chineseLanguage_Click"/>
                     <MenuItem
                         x:Name="MenuItem_englishLanguage"
                         BorderBrush="#00000000"
                         BorderThickness="0"
                         Foreground="Black"
-                        Header="英文" />
+                        Header="English"  IsCheckable="True" Click="MenuItem_englishLanguage_Click"  />
                 </MenuItem>
             </Menu>
         </Grid>

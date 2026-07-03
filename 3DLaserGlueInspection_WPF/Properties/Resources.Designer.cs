@@ -59,5 +59,14 @@ namespace _3DLaserGlueInspection.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   查找类似 语言切换成功。 的本地化字符串。
+        /// </summary>
+        internal static string 语言切换成功 {
+            get {
+                return ResourceManager.GetString("语言切换成功", resourceCulture);
+            }
+        }
     }
 }

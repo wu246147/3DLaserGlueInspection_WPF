@@ -100,14 +100,14 @@ namespace _3DLaserGlueInspection
                     {
                         Cars = new Dictionary<Guid, Car>();
                         result = false;
-                        _errMsg = fPath + GlobalVarAndFunc.LanguageTranslate("文件格式异常");
+                        _errMsg = fPath + _3DLaserGlueInspection.Resources.LanguageDict.FileFormatException;
                     }
                 }
                 else
                 {
                     Cars = new Dictionary<Guid, Car>();
                     result = false;
-                    _errMsg = fPath + GlobalVarAndFunc.LanguageTranslate("文件不存在");
+                    _errMsg = fPath + _3DLaserGlueInspection.Resources.LanguageDict.FileDoesNotExist;
                 }
             }
             catch (Exception ex)

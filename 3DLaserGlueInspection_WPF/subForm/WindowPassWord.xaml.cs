@@ -41,7 +41,7 @@ namespace _3DLaserGlueInspection.subForm
             }
             else
             {
-                tipLabel.Content = GlobalVarAndFunc.LanguageTranslate("密码错误！");
+                tipLabel.Content = _3DLaserGlueInspection.Resources.LanguageDict.PasswordIncorrect;
             }
         }
 

@@ -13,5 +13,10 @@ namespace _3DLaserGlueInspection
     /// </summary>
     public partial class App : Application
     {
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            GlobalVarAndFunc.InitLanguage();
+            base.OnStartup(e);
+        }
     }
 }

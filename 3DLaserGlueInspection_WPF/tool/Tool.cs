@@ -15,6 +15,7 @@ using OpenCvSharp;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using _3DLaserGlueInspection.subForm;
+using System.Windows;
 
 namespace _3DLaserGlueInspection
 {
@@ -92,69 +93,87 @@ namespace _3DLaserGlueInspection
     public static class GlobalVarAndFunc
     {
 
+        public static void SwitchLanguage(string cultureName)
+        {
+            // 保存选择到本地
+            //这里要现在项目里添加这个变量。项目 → 右键 → 属性 → 左侧找到"设置"
+            GlobalVarAndFunc.LANGUAGE_ID = cultureName;
+            WriteLanguageID();
 
-        public static int LANGUAGE_ID = 1; //0默认中文，1英文
+            // 语言切换
+            InitLanguage();
+            // 弹窗提醒重启后，切换语言
+            var result = MessageBox.Show(
+                Resources.LanguageDict.LanguageChangeSuccess,
+                "Warn",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
 
-        private static Dictionary<string, string> LANGUAGE_DIC ;
-
+            // // 重启应用，使 x:Static 重新按新语言加载
+            //Process.Start(Application.ResourceAssembly.Location);
+            //Application.Current.Shutdown();
+            //
+        }
+        public static string LANGUAGE_ID = "zh-CN"; //zh-CN默认中文，en-US英文
 
         public static void ReadLanguageID()
         {
             string fPath = "Data\\LanguageID";
             if (File.Exists(fPath))
             {
-                LANGUAGE_ID = int.Parse(File.ReadAllText(fPath));
+                LANGUAGE_ID = File.ReadAllText(fPath);
             }
         }
 
-        public static void LanguageDicInit()
+        public static void WriteLanguageID()
         {
-            if (LANGUAGE_ID == 0)
+            if (!Directory.Exists("Data"))
             {
-                LANGUAGE_DIC = null;
+                Directory.CreateDirectory("Data");
             }
-            else if (LANGUAGE_ID == 1)
+            File.WriteAllText("Data\\LanguageID", GlobalVarAndFunc.LANGUAGE_ID);
+        }
+
+
+        /// <summary>
+        /// 启动时恢复上次的语言设置
+        /// </summary>
+        public static void InitLanguage()
+        {
+            ReadLanguageID();
+            if (!string.IsNullOrEmpty(LANGUAGE_ID))
             {
-                string jsonFilePath = "Data\\LanguageDictEN.json";
-                if (File.Exists(jsonFilePath))
-                {
-                    string json = File.ReadAllText(jsonFilePath,Encoding.UTF8);
-                    LANGUAGE_DIC = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
-                }
-                else
-                {
-                    LANGUAGE_DIC = null;
-                    //MessageBox.Show("Not Exist Data\\LanguageDictEN file.", "Warning", MessageBoxButtons.OKCancel);
-                }
+                Thread.CurrentThread.CurrentCulture = new CultureInfo(LANGUAGE_ID);
+                Thread.CurrentThread.CurrentUICulture = new CultureInfo(LANGUAGE_ID);
             }
         }
 
         public static string LanguageTranslate(string info)
         {
-            string translate;
-            if (LANGUAGE_ID == 0)
-            {
-                translate = info;
-            }
-            else
-            {
-                if (LANGUAGE_DIC != null)
-                { 
-                    if (LANGUAGE_DIC.ContainsKey(info))
-                    {
-                        translate = LANGUAGE_DIC[info];
-                    }
-                    else
-                    {
-                        translate = info;
-                    }
-                }
-                else
-                {
-                    translate = info;
-                }
+            string translate="";
+            //if (LANGUAGE_ID == 0)
+            //{
+            //    translate = info;
+            //}
+            //else
+            //{
+            //    if (LANGUAGE_DIC != null)
+            //    { 
+            //        if (LANGUAGE_DIC.ContainsKey(info))
+            //        {
+            //            translate = LANGUAGE_DIC[info];
+            //        }
+            //        else
+            //        {
+            //            translate = info;
+            //        }
+            //    }
+            //    else
+            //    {
+            //        translate = info;
+            //    }
 
-            }
+            //}
             return translate;
         }
 
@@ -257,9 +276,9 @@ namespace _3DLaserGlueInspection
                         if (!hRegion.Empty())
                         {
                             //Console.WriteLine($"text value :");
-                            string text1 = GlobalVarAndFunc.LanguageTranslate("胶宽：") + $"{data.glueWidth:0.00}";
-                            string text2 = GlobalVarAndFunc.LanguageTranslate("胶高：") + $"{data.glueHeight:0.00}";
-                            string text3 = GlobalVarAndFunc.LanguageTranslate("面积：") + $"{data.glueArea:0.00}";
+                            string text1 = _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth+":" + $"{data.glueWidth:0.00}";
+                            string text2 = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight+":" + $"{data.glueHeight:0.00}";
+                            string text3 = _3DLaserGlueInspection.Resources.LanguageDict.Area+":" + $"{data.glueArea:0.00}";
 
                             imageControl.AddTextBlock(text1, (bResult.glueWidth ? Colors.Green : Colors.Red), (int)data.column + (int)(data.glueWidth / 2 * cutSet.scaleSize + offsetX),
                                 (int)data.row + (int)(data.glueHeight / 2 * cutSet.scaleSize + offsetY));
@@ -270,11 +289,11 @@ namespace _3DLaserGlueInspection
 
                             //Console.WriteLine($"text result :");
                             //hWindowControl.DispTextInImage(text, data.row, data.column);
-                            string textWindow1 = GlobalVarAndFunc.LanguageTranslate("胶宽：") + (bResult.glueWidth ? "OK" : "NG")+" " + GlobalVarAndFunc.LanguageTranslate("检测范围") + 
+                            string textWindow1 = _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth+":" + (bResult.glueWidth ? "OK" : "NG")+" " + _3DLaserGlueInspection.Resources.LanguageDict.DetRange + 
                                 $": {set.widthMin}~{set.widthMax}" ;
-                            string textWindow2 = GlobalVarAndFunc.LanguageTranslate("胶高：") + (bResult.glueHeight ? "OK" : "NG") + " " + GlobalVarAndFunc.LanguageTranslate("检测范围") +
+                            string textWindow2 = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight+":" + (bResult.glueHeight ? "OK" : "NG") + " " + _3DLaserGlueInspection.Resources.LanguageDict.DetRange +
                                 $": {set.heightMin}~{set.heightMax}";
-                            string textWindow3 = GlobalVarAndFunc.LanguageTranslate("面积：") + (bResult.glueArea ? "OK" : "NG") + " " + GlobalVarAndFunc.LanguageTranslate("检测范围") +
+                            string textWindow3 = _3DLaserGlueInspection.Resources.LanguageDict.Area+":" + (bResult.glueArea ? "OK" : "NG") + " " + _3DLaserGlueInspection.Resources.LanguageDict.DetRange +
                                 $": {set.areaMin}~{set.areaMax}";
                             string textWindow = textWindow1 + "\r\n" + textWindow2 + "\r\n" + textWindow3;
                             //Console.WriteLine($"point :({10},{10})");

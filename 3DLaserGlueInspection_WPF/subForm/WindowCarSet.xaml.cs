@@ -126,7 +126,7 @@ namespace _3DLaserGlueInspection.subForm
             }
             catch (Exception ex)
             {
-                System.Windows.Forms.MessageBox.Show(ex.ToString(), GlobalVarAndFunc.LanguageTranslate("提示"), System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+                System.Windows.Forms.MessageBox.Show(ex.ToString(), _3DLaserGlueInspection.Resources.LanguageDict.Prompt, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
                 return;
             }
         }
@@ -153,7 +153,7 @@ namespace _3DLaserGlueInspection.subForm
         {
             if (isAlter)
             {
-                DialogResult r = System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("是否保存参数？"), GlobalVarAndFunc.LanguageTranslate("提示"), System.Windows.Forms.MessageBoxButtons.YesNoCancel, System.Windows.Forms.MessageBoxIcon.Warning);
+                DialogResult r = System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.DoYouWantToSaveTheParameters, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, System.Windows.Forms.MessageBoxButtons.YesNoCancel, System.Windows.Forms.MessageBoxIcon.Warning);
                 if (r == System.Windows.Forms.DialogResult.Cancel)
                 {
                     e.Cancel = true;
@@ -188,17 +188,17 @@ namespace _3DLaserGlueInspection.subForm
                 string productName = projectNameTextBox.Text;
                 if (productName == string.Empty)
                 {
-                    System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("产品名称不能为空！"), GlobalVarAndFunc.LanguageTranslate("提示"), System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.TheProductNameCannotBeEmpty, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                     return;
                 }
                 if (-1 != productName.IndexOfAny(new char[] { '\\', '/', ':', '*', '?', '"', '<', '>', '|' }))
                 {
-                    System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("产品名称不能包含字符") + "\\/:*?\"<>|", GlobalVarAndFunc.LanguageTranslate("提示"), System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.TheProductNameCannotContainCharacters + "\\/:*?\"<>|", _3DLaserGlueInspection.Resources.LanguageDict.Prompt, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                     return;
                 }
                 if (projectIDTextBox.Text == string.Empty)
                 {
-                    System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("产品ID不能为空！"), GlobalVarAndFunc.LanguageTranslate("提示"), System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.ProductIdCannotBeEmpty, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                     return;
                 }
                 List<int> productIds = new List<int>();
@@ -207,7 +207,7 @@ namespace _3DLaserGlueInspection.subForm
                 {
                     if (!int.TryParse(strings[i], out int productId))
                     {
-                        System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("产品ID格式不正确！"), GlobalVarAndFunc.LanguageTranslate("提示"), System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                        System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.TheProductIdFormatIsIncorrect, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                         return;
                     }
                     else
@@ -217,7 +217,7 @@ namespace _3DLaserGlueInspection.subForm
                 }
                 if (productIds.Count == 0)
                 {
-                    System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("产品ID不能为空！"), GlobalVarAndFunc.LanguageTranslate("提示"), System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.ProductIdCannotBeEmpty, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                     return;
                 }
 
@@ -226,14 +226,14 @@ namespace _3DLaserGlueInspection.subForm
                 {
                     if (item.Name == productName)
                     {
-                        System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("产品名称已存在，不能重复添加！"), GlobalVarAndFunc.LanguageTranslate("提示"), System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                        System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.TheProductNameAlreadyExistsAndCannotBeAddedAgain, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                         return;
                     }
                     foreach (var productId in productIds)
                     {
                         if (item.IDs.Contains(productId))
                         {
-                            System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("产品ID") + productId + GlobalVarAndFunc.LanguageTranslate("已存在，不能重复添加！"), GlobalVarAndFunc.LanguageTranslate("提示"), System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                            System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.ProductID + productId + _3DLaserGlueInspection.Resources.LanguageDict.AlreadyExistsCannotBeAddedAgain, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                             return;
                         }
                     }
@@ -249,7 +249,7 @@ namespace _3DLaserGlueInspection.subForm
             }
             catch (Exception ex)
             {
-                System.Windows.Forms.MessageBox.Show(ex.ToString(), GlobalVarAndFunc.LanguageTranslate("提示"), System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+                System.Windows.Forms.MessageBox.Show(ex.ToString(), _3DLaserGlueInspection.Resources.LanguageDict.Prompt, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
                 return;
             }
         }
@@ -263,24 +263,24 @@ namespace _3DLaserGlueInspection.subForm
 
                 if (!_cells.Any())
                 {
-                    System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("未选择修改项！"), GlobalVarAndFunc.LanguageTranslate("提示"), System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoModificationSelected, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                     return;
                 }
                 //检验格式
                 string newName = projectNameTextBox.Text;
                 if (newName == string.Empty)
                 {
-                    System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("产品名称不能为空！"), GlobalVarAndFunc.LanguageTranslate("提示"), System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.TheProductNameCannotBeEmpty, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                     return;
                 }
                 if (-1 != newName.IndexOfAny(new char[] { '\\', '/', ':', '*', '?', '"', '<', '>', '|' }))
                 {
-                    System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("产品名称不能包含字符") + "\\/:*?\"<>|", GlobalVarAndFunc.LanguageTranslate("提示"), System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.TheProductNameCannotContainCharacters + "\\/:*?\"<>|", _3DLaserGlueInspection.Resources.LanguageDict.Prompt, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                     return;
                 }
                 if (projectIDTextBox.Text == string.Empty)
                 {
-                    System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("产品ID不能为空！"), GlobalVarAndFunc.LanguageTranslate("提示"), System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.ProductIdCannotBeEmpty, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                     return;
                 }
                 List<int> newIds = new List<int>();
@@ -289,7 +289,7 @@ namespace _3DLaserGlueInspection.subForm
                 {
                     if (!int.TryParse(strings[i], out int productId))
                     {
-                        System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("产品ID格式不正确！"), GlobalVarAndFunc.LanguageTranslate("提示"), System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                        System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.TheProductIdFormatIsIncorrect, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                         return;
                     }
                     else
@@ -299,7 +299,7 @@ namespace _3DLaserGlueInspection.subForm
                 }
                 if (newIds.Count == 0)
                 {
-                    System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("产品ID不能为空！"), GlobalVarAndFunc.LanguageTranslate("提示"), System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.ProductIdCannotBeEmpty, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                     return;
                 }
 
@@ -334,14 +334,14 @@ namespace _3DLaserGlueInspection.subForm
                     }
                     if (NewCars[item].Name == newName)
                     {
-                        System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("产品名称已存在，不能重复添加！"), GlobalVarAndFunc.LanguageTranslate("提示"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.TheProductNameAlreadyExistsAndCannotBeAddedAgain, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;
                     }
                     foreach (var productId in newIds)
                     {
                         if (NewCars[item].IDs != null && NewCars[item].IDs.Contains(productId))
                         {
-                            System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("产品ID") + productId + GlobalVarAndFunc.LanguageTranslate("已存在，不能重复添加！"), GlobalVarAndFunc.LanguageTranslate("提示"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.ProductID + productId + _3DLaserGlueInspection.Resources.LanguageDict.AlreadyExistsCannotBeAddedAgain, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                             return;
                         }
                     }
@@ -352,11 +352,13 @@ namespace _3DLaserGlueInspection.subForm
                 NewCars[key].IDs = newIds;
                 NewCars[key].CamParamName = camParaNameComboBox.SelectedValue.ToString();
 
+                isAlter = true;
+
                 ShowCurrItem(rowIndex);
             }
             catch (Exception ex)
             {
-                System.Windows.Forms.MessageBox.Show(ex.ToString(), GlobalVarAndFunc.LanguageTranslate("提示"), System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+                System.Windows.Forms.MessageBox.Show(ex.ToString(), _3DLaserGlueInspection.Resources.LanguageDict.Prompt, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
                 return;
             }
         }
@@ -367,7 +369,7 @@ namespace _3DLaserGlueInspection.subForm
             {
                 if (productInfoDataGrid.CurrentCell== null)
                 {
-                    System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("未选择删除项！"), GlobalVarAndFunc.LanguageTranslate("提示"), System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoDeletionOptionSelected, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                     return;
                 }
                 var _cells = productInfoDataGrid.SelectedCells;
@@ -399,15 +401,15 @@ namespace _3DLaserGlueInspection.subForm
                 }
                 else
                 {
-                    System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("请先选择删除对象。"),
-                        GlobalVarAndFunc.LanguageTranslate("提示"), System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.PleaseChooseDelObjFirst,
+                        _3DLaserGlueInspection.Resources.LanguageDict.Prompt, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
                     return;
                 }
                 
             }
             catch (Exception ex)
             {
-                System.Windows.Forms.MessageBox.Show(ex.ToString(), GlobalVarAndFunc.LanguageTranslate("提示"), System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+                System.Windows.Forms.MessageBox.Show(ex.ToString(), _3DLaserGlueInspection.Resources.LanguageDict.Prompt, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
                 return;
             }
         }

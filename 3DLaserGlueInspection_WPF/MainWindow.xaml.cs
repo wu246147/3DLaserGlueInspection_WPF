@@ -26,7 +26,7 @@ using OpenCvSharp;
 using static _3DLaserGlueInspection.MainWindowModel;
 using LiveCharts;
 using System.Globalization;
-
+using _3DLaserGlueInspection.Resources;
 
 
 namespace _3DLaserGlueInspection
@@ -68,6 +68,16 @@ namespace _3DLaserGlueInspection
             //打开通讯
 
             model.InitCommunicationConnection();
+
+            //语言选择确定
+            if (GlobalVarAndFunc.LANGUAGE_ID == "zh-CN")
+            {
+                MenuItem_chineseLanguage.IsChecked = true;
+            }
+            else
+            {
+                MenuItem_englishLanguage.IsChecked = true;
+            }
         }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -132,18 +142,18 @@ namespace _3DLaserGlueInspection
         private void ButtonRun_Click(object sender, RoutedEventArgs e)
         {
             //正常启动
-            if ((string)ButtonRun.Content == GlobalVarAndFunc.LanguageTranslate("启动"))
+            if ((string)ButtonRun.Content == _3DLaserGlueInspection.Resources.LanguageDict.Start)
             {
                 if (model.simulation)
                 {
                     if (model.simulationPath == "")
                     {
-                        model.ShowMessage(GlobalVarAndFunc.LanguageTranslate("仿真路径未填写"), LogType.warn);
+                        model.ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.SimulationPathNotFilledIn, LogType.warn);
                         return;
                     }
                     else if (!Directory.Exists(model.simulationPath))
                     {
-                        model.ShowMessage(GlobalVarAndFunc.LanguageTranslate("仿真路径不存在"), LogType.warn);
+                        model.ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.SimulationPathDoesNotExist, LogType.warn);
                         return;
                     }
                 }
@@ -159,12 +169,12 @@ namespace _3DLaserGlueInspection
                 }
                 else
                 {
-                    model.ShowMessage(GlobalVarAndFunc.LanguageTranslate("主线程已经运行中"), LogType.warn);
+                    model.ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.TheMainThreadIsAlreadyRunning, LogType.warn);
                 }
-                //ButtonRun.Content = GlobalVarAndFunc.LanguageTranslate("停止");
+                //ButtonRun.Content = _3DLaserGlueInspection.Resources.LanguageDict.停止");
                 //button启停.Image = Resources._3;
 
-                model.mainModel.buttonRunContentControl = GlobalVarAndFunc.LanguageTranslate("停止");
+                model.mainModel.buttonRunContentControl = _3DLaserGlueInspection.Resources.LanguageDict.Stop;
                 model.mainModel.buttonRunTagControl = "\uE67A";
 
             }
@@ -175,7 +185,7 @@ namespace _3DLaserGlueInspection
 
                 }
                 model.stop = true;
-                model.mainModel.buttonRunContentControl = GlobalVarAndFunc.LanguageTranslate("启动");
+                model.mainModel.buttonRunContentControl = _3DLaserGlueInspection.Resources.LanguageDict.Start;
                 model.mainModel.buttonRunTagControl = "\uE658";
             }
 
@@ -365,6 +375,22 @@ namespace _3DLaserGlueInspection
         bool showing;
         object olockShow = new object();
 
+        private void MenuItem_chineseLanguage_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem_chineseLanguage.IsChecked = true;
+            MenuItem_englishLanguage.IsChecked = false;
+
+            GlobalVarAndFunc.SwitchLanguage("zh-CN");
+        }
+
+        private void MenuItem_englishLanguage_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem_chineseLanguage.IsChecked = false;
+            MenuItem_englishLanguage.IsChecked = true;
+
+            GlobalVarAndFunc.SwitchLanguage("en-US");
+        }
+
         //void ShowImageData(int showWidth, int showHeight, Mat hXLDCont10mm)
         //{
         //    if (!showing)
@@ -449,18 +475,18 @@ namespace _3DLaserGlueInspection
         //                    //DispPolygonjHWindowControlEvent(regionSmallestRectangle2Points, Colors.Blue, "margin");
         //                    hWindowModel.AddPolygon(regionSmallestRectangle2Points, Colors.Blue, "margin");
 
-        //                    string text = GlobalVarAndFunc.LanguageTranslate("胶高：") + $"{data.胶高:0.00}\r\n"
-        //                       + GlobalVarAndFunc.LanguageTranslate("胶宽：") + $"{data.胶宽:0.00}\r\n"
-        //                       + GlobalVarAndFunc.LanguageTranslate("面积：") + $"{data.面积:0.00}";
+        //                    string text = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight+":" + $"{data.胶高:0.00}\r\n"
+        //                       + _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth+":" + $"{data.胶宽:0.00}\r\n"
+        //                       + _3DLaserGlueInspection.Resources.LanguageDict.Area+":" + $"{data.面积:0.00}";
 
 
         //                    //DispTextInImageHWindowControlEvent(text, Colors.Black, (int)data.column, (int)data.row);
         //                    hWindowModel.AddTextBlock(text, Colors.Black, (int)data.column, (int)data.row);
 
         //                    //hWindowControl.DispTextInImage(text, data.row, data.column);
-        //                    string textWindow1 = GlobalVarAndFunc.LanguageTranslate("胶宽：") + (bResult.胶宽 ? "OK" : "NG");
-        //                    string textWindow2 = GlobalVarAndFunc.LanguageTranslate("胶高：") + (bResult.胶高 ? "OK" : "NG");
-        //                    string textWindow3 = GlobalVarAndFunc.LanguageTranslate("面积：") + (bResult.面积 ? "OK" : "NG");
+        //                    string textWindow1 = _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth+":" + (bResult.胶宽 ? "OK" : "NG");
+        //                    string textWindow2 = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight+":" + (bResult.胶高 ? "OK" : "NG");
+        //                    string textWindow3 = _3DLaserGlueInspection.Resources.LanguageDict.Area+":" + (bResult.面积 ? "OK" : "NG");
         //                    string textWindow = textWindow1 + "\r\n" + textWindow2 + "\r\n" + textWindow3;
 
         //                    //DispTextInImageHWindowControlEvent(textWindow, Colors.Black, 10, 10);

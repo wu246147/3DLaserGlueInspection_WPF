@@ -45,7 +45,7 @@ namespace _3DLaserGlueInspection.subForm
         {
             if (projectNameTextBox.Text.Trim() == string.Empty)
             {
-                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("名称为空！"), GlobalVarAndFunc.LanguageTranslate("提示"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.TheNameIsEmpty, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             if (CheckName != null)
@@ -54,7 +54,7 @@ namespace _3DLaserGlueInspection.subForm
                 {
                     if (projectNameTextBox.Text.Trim() == item)
                     {
-                        System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("名称重复！"), GlobalVarAndFunc.LanguageTranslate("提示"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.DuplicateName, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;
                     }
                 }
@@ -72,7 +72,7 @@ namespace _3DLaserGlueInspection.subForm
         {
             if (projectNameTextBox.Text.Trim() == string.Empty)
             {
-                System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("名称为空！"), GlobalVarAndFunc.LanguageTranslate("提示"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.TheNameIsEmpty, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             if (CheckName != null)
@@ -81,7 +81,7 @@ namespace _3DLaserGlueInspection.subForm
                 {
                     if (projectNameTextBox.Text.Trim() == item)
                     {
-                        System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("名称重复！"), GlobalVarAndFunc.LanguageTranslate("提示"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.DuplicateName, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;
                     }
                 }

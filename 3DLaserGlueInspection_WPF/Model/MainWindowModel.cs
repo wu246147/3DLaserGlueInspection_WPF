@@ -270,18 +270,18 @@ namespace _3DLaserGlueInspection
                     //绑定委托与事件
                     Server.reserveInfoSignal += ProcessInfo;
 
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("服务器信号加载成功"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ServerSignalLoadedSuccessfully);
 
                     //开始监听
                     Server.StartListen();
 
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("TCP通讯服务器建立成功!"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.TCPCommunicationServerSuccessfullyEstablished + "!");
 
                     return;
                 }
                 else
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("服务器信号加载失败"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ServerSignalLoadingFailed);
 
                 }
 
@@ -290,7 +290,7 @@ namespace _3DLaserGlueInspection
 
             catch (Exception ex)
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("TCP通讯服务器建立失败"));
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.TCPCommunicationServerEstablishmentFailed);
 
                 return;
             }
@@ -304,7 +304,7 @@ namespace _3DLaserGlueInspection
             Thread cameraThread;
             try
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("收到信号：")+info);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedSignal + "："+info);
 
                 //string[] tempReceivedParts;
                 //tempReceivedParts = info.Split(',');
@@ -314,8 +314,11 @@ namespace _3DLaserGlueInspection
                     var doc = XDocument.Parse(info);
                     var root = doc.Root;
 
+                    //车型
                     int programId = int.Parse(root.Element("PROGRAM_ID").Value);
+                    //指令
                     int commandId = int.Parse(root.Element("COMMAND_ID").Value);
+                    //指令值
                     int pointId = int.Parse(root.Element("POINT_ID").Value);
 
 
@@ -457,16 +460,16 @@ namespace _3DLaserGlueInspection
                 #region 加载参数
                 if (Params.Load())
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机参数加载成功"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.CameraParametersLoadedSuccessfully);
                 }
                 else
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机参数加载失败：") + Params.ErrMsg, LogType.ng);
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.CameraParameterLoadingFailed + Params.ErrMsg, LogType.ng);
                     return;
                 }
                 if (cars.Load())
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("产品配置参数加载成功"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ProductConfigurationParametersLoadedSuccessfully);
                     sets.Clear();
                     bool bLoad = true;
                     foreach (var item in cars.Cars.Values)
@@ -474,11 +477,11 @@ namespace _3DLaserGlueInspection
                         Setting set = new Setting(item.Name);
                         if (set.Load())
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("产品参数") + " " + item.Name + " " + GlobalVarAndFunc.LanguageTranslate("加载成功"));
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ProductParameters + " " + item.Name + " " + _3DLaserGlueInspection.Resources.LanguageDict.LoadingSuccessful);
                         }
                         else
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("产品参数") + " " + item.Name + " " + GlobalVarAndFunc.LanguageTranslate("加载失败：") + set.ErrMsg, LogType.ng);
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ProductParameters + " " + item.Name + " " + _3DLaserGlueInspection.Resources.LanguageDict.LoadingFailed + set.ErrMsg, LogType.ng);
                             bLoad = false;
                         }
                         sets.Add(item.Name, set);
@@ -490,25 +493,25 @@ namespace _3DLaserGlueInspection
                 }
                 else
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("产品配置参数加载失败：") + cars.ErrMsg, LogType.ng);
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ProductConfigurationParameterLoadingFailed + cars.ErrMsg, LogType.ng);
                     return;
                 }
                 if (robot.Load())
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("机器人参数加载成功"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.RobotParametersLoadedSuccessfully);
                 }
                 else
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("机器人参数加载失败：") + robot.ErrMsg, LogType.ng);
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.RobotParameterLoadingFailed + robot.ErrMsg, LogType.ng);
                     return;
                 }
                 //if (io.Load())
                 //{
-                //    ShowMessage(GlobalVarAndFunc.LanguageTranslate("IO参数加载成功"));
+                //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.IO参数加载成功"));
                 //}
                 //else
                 //{
-                //    ShowMessage(GlobalVarAndFunc.LanguageTranslate("IO参数加载失败：") + io.ErrMsg, LogType.ng);
+                //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.IOParameterLoadingFailed + io.ErrMsg, LogType.ng);
                 //    return;
                 //}
                 #endregion
@@ -519,13 +522,13 @@ namespace _3DLaserGlueInspection
                 {
                     if (robot.Open())
                     {
-                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("机器人连接成功"));
+                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.RobotSuccessfullyConnected);
 
                         mainModel.robotCommunicationLabelColorControl = labelColorEnum["green"];
                     }
                     else
                     {
-                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("机器人连接失败：") + robot.ErrMsg, LogType.ng);
+                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.RobotConnectionFailed + robot.ErrMsg, LogType.ng);
 
                         mainModel.robotCommunicationLabelColorControl = labelColorEnum["red"];
 
@@ -534,11 +537,11 @@ namespace _3DLaserGlueInspection
                 }
                 //if (io.Open())
                 //{
-                //    ShowMessage(GlobalVarAndFunc.LanguageTranslate("IO连接成功"));
+                //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.IO连接成功"));
                 //}
                 //else
                 //{
-                //    ShowMessage(GlobalVarAndFunc.LanguageTranslate("IO连接失败：") + io.ErrMsg, LogType.ng);
+                //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.IO连接Failed + io.ErrMsg, LogType.ng);
                 //    return;
                 //}
                 #endregion
@@ -555,16 +558,16 @@ namespace _3DLaserGlueInspection
                     //if (!Write(DO.Ready, true)) return;
 
 
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("输出Ready信号"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.OutputReadySignal);
 
                     //等待开始信号
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待开始信号"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForTheStartSignal);
                     while (true)
                     {
                         bool val;
                         if (isStart)
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("收到开始信号"));
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedStartSignal);
                             break;
                         }
 
@@ -603,7 +606,7 @@ namespace _3DLaserGlueInspection
                     {
                         bool bEnd = false;
                         //等触发信号ON
-                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待触发信号ON"));
+                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForTriggerSignalOn);
                         while (true)
                         {
                             if (stop)
@@ -613,18 +616,18 @@ namespace _3DLaserGlueInspection
 
                             if (isPGON)
                             {
-                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("收到触发信号ON"));
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedTriggerSignalOn);
                                 break;
                             }
                             if (isEND)
                             {
-                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("收到END信号,退出拍照循环"), LogType.warn);
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedEndSignalExitThePhotoLoop, LogType.warn);
                                 bEnd = true;
                                 break;
                             }
                             if (isAbort)
                             {
-                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("收到Abort信号,流程重新开始"), LogType.warn);
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedAbortSignalProcessRestarts, LogType.warn);
                                 bAbort = true;
                                 break;
                             }
@@ -790,19 +793,19 @@ namespace _3DLaserGlueInspection
                                                 bool rt2 = cam.TriggerSoftwareExecute();
                                                 if (rt2)
                                                 {
-                                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("软触发成功"));
+                                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + item.Key + ":" + item.Value.CamName + _3DLaserGlueInspection.Resources.LanguageDict.SoftwareTriggerSuccess);
                                                 }
                                                 else
                                                 {
-                                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("软触发失败"));
+                                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + item.Key + ":" + item.Value.CamName + _3DLaserGlueInspection.Resources.LanguageDict.SoftwareTriggerSuccess);
                                                 }
 
                                             }
-                                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("开始连续采集成功"));
+                                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + item.Key + ":" + item.Value.CamName + _3DLaserGlueInspection.Resources.LanguageDict.StartingContinuousCollectionSuccessfully);
                                         }
                                         else
                                         {
-                                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("开始连续采集失败：") + cams[item.Value.CamName].ErrMsg, LogType.ng);
+                                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + item.Key + ":" + item.Value.CamName + _3DLaserGlueInspection.Resources.LanguageDict.StartingContinuousCollectionFailed + cams[item.Value.CamName].ErrMsg, LogType.ng);
                                         }
                                     }
                                     else
@@ -910,7 +913,7 @@ namespace _3DLaserGlueInspection
                                                     Thread.Sleep(1);
                                                 }
 
-                                                ShowMessage(item.Key + GlobalVarAndFunc.LanguageTranslate("仿真图片遍历完"));
+                                                ShowMessage(item.Key + _3DLaserGlueInspection.Resources.LanguageDict.SimulatedImageTraversalCompleted);
 
                                             });
 
@@ -926,26 +929,26 @@ namespace _3DLaserGlueInspection
                         //if (!Write(DO.Triggering, true)) return;
 
                         //等触发信号OFF
-                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待触发信号OFF"));
+                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForTriggerSignalOff);
                         while (true)
                         {
                             if (stop) return;
 
                             if (isPGONEnd == true)
                             {
-                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("收到触发信号OFF"));
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedTriggerSignalOff);
                                 break;
                             }
 
                             if (isEND == true)
                             {
-                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("收到END信号,退出拍照循环"), LogType.warn);
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedEndSignalExitThePhotoLoop, LogType.warn);
                                 bEnd = true;
                                 break;
                             }
                             if (isAbort == true)
                             {
-                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("收到Abort信号,流程重新开始"), LogType.warn);
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedAbortSignalProcessRestarts, LogType.warn);
                                 bAbort = true;
                                 break;
                             }
@@ -954,7 +957,7 @@ namespace _3DLaserGlueInspection
                         //收到信号后，就立刻恢复状态
                         resetSignal();
 
-                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待数据转换完成"));
+                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForDataConversionToComplete);
 
                         if (!simulation)
                         {
@@ -965,11 +968,11 @@ namespace _3DLaserGlueInspection
                                 {
                                     if (!cams[item.Value.CamName].IsGrabbing || cams[item.Value.CamName].StopGrabbing())
                                     {
-                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("停止采集成功"));
+                                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + $" ({item.Key}:{item.Value.CamName})" + _3DLaserGlueInspection.Resources.LanguageDict.StopCollectionSuccessfully);
                                     }
                                     else
                                     {
-                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("停止采集失败：") + cams[item.Value.CamName].ErrMsg, LogType.ng);
+                                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + $" ({item.Key}:{item.Value.CamName})" + _3DLaserGlueInspection.Resources.LanguageDict.StopCollectionFailed + cams[item.Value.CamName].ErrMsg, LogType.ng);
                                     }
                                 }
                             }
@@ -998,12 +1001,12 @@ namespace _3DLaserGlueInspection
                         //判断段数是否足够
                         if (indexImageCut + 1 >= set.CutSets.Count)
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("拍照段数足够") + $"({indexImageCut + 1}/{set.CutSets.Count})，" + GlobalVarAndFunc.LanguageTranslate("退出拍照循环"));
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.TheNumberOfCameraSegmentsIsSufficient + $"({indexImageCut + 1}/{set.CutSets.Count})，" + _3DLaserGlueInspection.Resources.LanguageDict.ExitThePhotoLoop);
                             break;
                         }
                         else
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("拍照段数不足") + $"({indexImageCut + 1}/{set.CutSets.Count})，" + GlobalVarAndFunc.LanguageTranslate("继续拍照循环"));
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.InsufficientNumberOfPhotoSegments + $"({indexImageCut + 1}/{set.CutSets.Count})，" + _3DLaserGlueInspection.Resources.LanguageDict.ContinueThePhotoLoop);
                         }
                     }
 
@@ -1013,17 +1016,17 @@ namespace _3DLaserGlueInspection
                     bRobotRun = false;
 
                     //等待机器人处理完成
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待机器人处理完成"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForTheRobotToCompleteProcessing);
                     while (!taskRobot.IsCompleted)
                     {
                         Thread.Sleep(10);
                         if (stop) return;
                     }
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("机器人处理完成"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.RobotProcessingCompleted);
 
 
                     //等待图像处理完成
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待图像处理完成"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForImageProcessingToComplete);
                     foreach (var item in tasks.Values)
                     {
                         while (!item.IsCompleted)
@@ -1043,14 +1046,14 @@ namespace _3DLaserGlueInspection
                     //}
 
                     //等待3d处理完成
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待3d图像处理完成"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForTheCompletionOf3DImageProcessing);
 
                     //while (!taskPoint3D.IsCompleted)
                     //{
                     //    Thread.Sleep(10);
                     //    if (stop) return;
                     //}
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("图像处理完成"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ImageProcessingCompleted);
 
                     //保存检测结果文件
                     if (true && simulation)
@@ -1113,7 +1116,7 @@ namespace _3DLaserGlueInspection
                     {
                         if ((totalResult && set.OtherSet.SaveOKImage) || (!totalResult && set.OtherSet.SaveNGImage))
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("开始存图"));
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.StartSavingImages);
                             try
                             {
                                 string OKNG = totalResult ? "OK" : "NG";
@@ -1158,9 +1161,9 @@ namespace _3DLaserGlueInspection
                             }
                             catch (Exception ex)
                             {
-                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("存图异常：") + ex.ToString(), LogType.ng);
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ImageStorageException + ex.ToString(), LogType.ng);
                             }
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("存图完成"));
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ImageStorageCompleted);
                         }
                     }
 
@@ -1180,13 +1183,13 @@ namespace _3DLaserGlueInspection
 
 
                     //等待开始信号OFF
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待开始信号OFF"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForTheStartSignalToTurnOff);
                     while (true)
                     {
                         bool val;
                         if (isStartEnd)
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("收到开始信号OFF"));
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceiveTheStartSignalToTurnOff);
                             break;
                         }
 
@@ -1202,7 +1205,7 @@ namespace _3DLaserGlueInspection
             }
             catch (Exception ex)
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("流程异常：") + ex.ToString(), LogType.ng);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ProcessException + ex.ToString(), LogType.ng);
             }
             finally
             {
@@ -1215,19 +1218,19 @@ namespace _3DLaserGlueInspection
                     {
                         if (cam.SetLine1Inverter(false))
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + "(" + cam.Name + ")" + GlobalVarAndFunc.LanguageTranslate("关闭激光成功"));
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.LaserSuccessfullyTurnedOff);
                         }
                         else
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + "(" + cam.Name + ")" + GlobalVarAndFunc.LanguageTranslate("关闭激光失败：") + cam.ErrMsg, LogType.ng);
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.LaserShutdownFailed + cam.ErrMsg, LogType.ng);
                         }
                         if (cam.Close())
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + "(" + cam.Name + ")" + GlobalVarAndFunc.LanguageTranslate("关闭成功"));
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.CloseSuccessfully);
                         }
                         else
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + "(" + cam.Name + ")" + GlobalVarAndFunc.LanguageTranslate("关闭失败：") + cam.ErrMsg, LogType.ng);
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.ClosingFailed + cam.ErrMsg, LogType.ng);
                         }
                     }
                 }
@@ -1235,11 +1238,11 @@ namespace _3DLaserGlueInspection
                 {
                     //BeginInvoke(new Action(() =>
                     //{
-                    //    button启停.Text = GlobalVarAndFunc.LanguageTranslate("启动");
+                    //    button启停.Text = _3DLaserGlueInspection.Resources.LanguageDict.启动");
                     //    button启停.Image = Resources._2;
                     //}));
 
-                    mainModel.buttonRunContentControl = GlobalVarAndFunc.LanguageTranslate("启动");
+                    mainModel.buttonRunContentControl = _3DLaserGlueInspection.Resources.LanguageDict.Start;
                     mainModel.buttonRunTagControl = "\uE658";
                     //Invoke(new Action(() =>
                     //{
@@ -1264,16 +1267,16 @@ namespace _3DLaserGlueInspection
                 #region 加载参数
                 if (Params.Load())
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机参数加载成功"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.CameraParametersLoadedSuccessfully);
                 }
                 else
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机参数加载失败：") + Params.ErrMsg, LogType.ng);
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.CameraParameterLoadingFailed + Params.ErrMsg, LogType.ng);
                     return;
                 }
                 if (cars.Load())
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("产品配置参数加载成功"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ProductConfigurationParametersLoadedSuccessfully);
                     sets.Clear();
                     bool bLoad = true;
                     foreach (var item in cars.Cars.Values)
@@ -1281,11 +1284,11 @@ namespace _3DLaserGlueInspection
                         Setting set = new Setting(item.Name);
                         if (set.Load())
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("产品参数") + " " + item.Name + " " + GlobalVarAndFunc.LanguageTranslate("加载成功"));
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ProductParameters + " " + item.Name + " " + _3DLaserGlueInspection.Resources.LanguageDict.LoadingSuccessful);
                         }
                         else
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("产品参数") + " " + item.Name + " " + GlobalVarAndFunc.LanguageTranslate("加载失败：") + set.ErrMsg, LogType.ng);
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ProductParameters + " " + item.Name + " " + _3DLaserGlueInspection.Resources.LanguageDict.LoadingFailed + set.ErrMsg, LogType.ng);
                             bLoad = false;
                         }
                         sets.Add(item.Name, set);
@@ -1297,16 +1300,16 @@ namespace _3DLaserGlueInspection
                 }
                 else
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("产品配置参数加载失败：") + cars.ErrMsg, LogType.ng);
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ProductConfigurationParameterLoadingFailed + cars.ErrMsg, LogType.ng);
                     return;
                 }
                 if (robot.Load())
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("机器人参数加载成功"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.RobotParametersLoadedSuccessfully);
                 }
                 else
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("机器人参数加载失败：") + robot.ErrMsg, LogType.ng);
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.RobotParameterLoadingFailed + robot.ErrMsg, LogType.ng);
                     return;
                 }
 
@@ -1318,13 +1321,13 @@ namespace _3DLaserGlueInspection
                 {
                     if (robot.Open())
                     {
-                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("机器人连接成功"));
+                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.RobotSuccessfullyConnected);
 
                         mainModel.robotCommunicationLabelColorControl = labelColorEnum["green"];
                     }
                     else
                     {
-                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("机器人连接失败：") + robot.ErrMsg, LogType.ng);
+                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.RobotConnectionFailed + robot.ErrMsg, LogType.ng);
 
                         mainModel.robotCommunicationLabelColorControl = labelColorEnum["red"];
 
@@ -1340,16 +1343,16 @@ namespace _3DLaserGlueInspection
                 while (!stop)
                 {
 
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("输出Ready信号"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.OutputReadySignal);
 
                     //等待开始信号
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待开始信号"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForTheStartSignal);
                     while (true)
                     {
                         bool val;
                         if (isStart)
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("收到开始信号"));
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedStartSignal);
                             break;
                         }
 
@@ -1394,7 +1397,7 @@ namespace _3DLaserGlueInspection
                     }
                     if (!isExist)
                     {
-                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("不存在车型") + " " + ID, LogType.ng);
+                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ThereIsNoVehicleModelAvailable + " " + ID, LogType.ng);
                         return ;
                     }
 
@@ -1414,12 +1417,12 @@ namespace _3DLaserGlueInspection
                     string camParamName = car.CamParamName;
                     if (!Params.Param.TryGetValue(camParamName, out camParam))
                     {
-                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("不存在相机参数：") + camParamName, LogType.ng);
+                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.NoCameraParametersExist + camParamName, LogType.ng);
                         return ;
                     }
                     if (!sets.TryGetValue(car.Name, out set))
                     {
-                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("不存在产品参数：") + car.Name, LogType.ng);
+                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.NoProductParametersExist + car.Name, LogType.ng);
                         return ;
                     }
                     if (stop) return ;
@@ -1440,7 +1443,7 @@ namespace _3DLaserGlueInspection
                     {
                         if (set.XLDDatas[i].ControlRows.Length < 2)
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("显示的轨迹没有设置好。"));
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.TheDisplayedTrajectoryIsNotSetProperly);
                             return ;
 
                         }
@@ -1457,7 +1460,7 @@ namespace _3DLaserGlueInspection
                         }
                         else
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("显示的起点图像序号和结束图像序号没有设置好。"));
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.TheStartingAndEndingImageNumbersDisplayedAreNotSetProperly);
 
                             return ;
                         }
@@ -1482,11 +1485,11 @@ namespace _3DLaserGlueInspection
                                 {
                                     if (cam.OpenBySN(item.Value.CamName))
                                     {
-                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("打开成功"));
+                                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + $" ({item.Key}:{item.Value.CamName})" + _3DLaserGlueInspection.Resources.LanguageDict.OpenSuccessful);
                                     }
                                     else
                                     {
-                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("打开失败：") + cam.ErrMsg, LogType.ng);
+                                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + $" ({item.Key}:{item.Value.CamName})" + _3DLaserGlueInspection.Resources.LanguageDict.OpenFailed + cam.ErrMsg, LogType.ng);
                                         //Invoke(new Action(() =>
                                         //{
                                         //    e灯颜色 = 灯颜色.红;
@@ -1499,21 +1502,21 @@ namespace _3DLaserGlueInspection
                                 }
                                 if (cam.InitSet(item.Value, false))
                                 {
-                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("初始化设置成功"));
+                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + $" ({item.Key}:{item.Value.CamName})" + _3DLaserGlueInspection.Resources.LanguageDict.InitializationSettingsSuccessful);
                                 }
                                 else
                                 {
-                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("初始化设置失败：") + cam.ErrMsg, LogType.ng);
+                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + $" ({item.Key}:{item.Value.CamName})" + _3DLaserGlueInspection.Resources.LanguageDict.InitializationSettingsFailed + cam.ErrMsg, LogType.ng);
                                     //return;
                                 }
                             }
                         }
                         else
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + " " + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("未启用"));
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + " " + item.Value.CamName + _3DLaserGlueInspection.Resources.LanguageDict.NotEnabled);
                         }
                     }
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机连接完成"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.CameraConnectionCompleted);
                     mainModel.camCommunicationLabelColorControl = labelColorEnum["green"];
 
 
@@ -1530,7 +1533,7 @@ namespace _3DLaserGlueInspection
                             displaySize.Add(item.Key, new SynchronizedList<System.Windows.Size>());
                         }
                     }
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("初始化数据成功"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.InitializeDataSuccessfully);
 
                     indexImageCut = -1;//指示正在图像采集段数
                     totalResult = true;
@@ -1565,7 +1568,7 @@ namespace _3DLaserGlueInspection
                         }
 
                     });
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("机器人姿态获取任务启动完成"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.RobotAttitudeAcquisitionTaskHasBeenInitiatedAndCompleted);
 
                     //回复开始ON信号
                     if (true)
@@ -1586,7 +1589,7 @@ namespace _3DLaserGlueInspection
                     {
                         bool bEnd = false;
                         //等触发信号ON
-                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待触发信号ON"));
+                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForTriggerSignalOn);
                         while (true)
                         {
                             if (stop)
@@ -1596,18 +1599,18 @@ namespace _3DLaserGlueInspection
 
                             if (isPGON)
                             {
-                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("收到触发信号ON"));
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedTriggerSignalOn);
                                 break;
                             }
                             if (isEND)
                             {
-                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("收到END信号,退出拍照循环"), LogType.warn);
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedEndSignalExitThePhotoLoop, LogType.warn);
                                 bEnd = true;
                                 break;
                             }
                             if (isAbort)
                             {
-                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("收到Abort信号,流程重新开始"), LogType.warn);
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedAbortSignalProcessRestarts, LogType.warn);
                                 bAbort = true;
                                 break;
                             }
@@ -1668,19 +1671,19 @@ namespace _3DLaserGlueInspection
                                                 bool rt2 = cam.TriggerSoftwareExecute();
                                                 if (rt2)
                                                 {
-                                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("软触发成功"));
+                                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + item.Key + ":" + item.Value.CamName + _3DLaserGlueInspection.Resources.LanguageDict.SoftwareTriggerSuccess);
                                                 }
                                                 else
                                                 {
-                                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("软触发失败"));
+                                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + item.Key + ":" + item.Value.CamName + _3DLaserGlueInspection.Resources.LanguageDict.SoftwareTriggerFailure);
                                                 }
 
                                             }
-                                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("开始连续采集成功"));
+                                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + item.Key + ":" + item.Value.CamName + _3DLaserGlueInspection.Resources.LanguageDict.StartingContinuousCollectionSuccessfully);
                                         }
                                         else
                                         {
-                                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + item.Key + ":" + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("开始连续采集失败：") + cams[item.Value.CamName].ErrMsg, LogType.ng);
+                                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + item.Key + ":" + item.Value.CamName + _3DLaserGlueInspection.Resources.LanguageDict.StartingContinuousCollectionFailed + cams[item.Value.CamName].ErrMsg, LogType.ng);
                                         }
                                     }
                                     
@@ -1693,26 +1696,26 @@ namespace _3DLaserGlueInspection
                         //if (!Write(DO.Triggering, true)) return;
 
                         //等触发信号OFF
-                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待触发信号OFF"));
+                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForTriggerSignalOff);
                         while (true)
                         {
                             if (stop) return;
 
                             if (isPGONEnd == true)
                             {
-                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("收到触发信号OFF"));
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedTriggerSignalOff);
                                 break;
                             }
 
                             if (isEND == true)
                             {
-                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("收到END信号,退出拍照循环"), LogType.warn);
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedEndSignalExitThePhotoLoop, LogType.warn);
                                 bEnd = true;
                                 break;
                             }
                             if (isAbort == true)
                             {
-                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("收到Abort信号,流程重新开始"), LogType.warn);
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedAbortSignalProcessRestarts, LogType.warn);
                                 bAbort = true;
                                 break;
                             }
@@ -1721,7 +1724,7 @@ namespace _3DLaserGlueInspection
                         //收到信号后，就立刻恢复状态
                         resetSignal();
 
-                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待数据转换完成"));
+                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForDataConversionToComplete);
 
                         if (!simulation)
                         {
@@ -1732,11 +1735,11 @@ namespace _3DLaserGlueInspection
                                 {
                                     if (!cams[item.Value.CamName].IsGrabbing || cams[item.Value.CamName].StopGrabbing())
                                     {
-                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("停止采集成功"));
+                                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + $" ({item.Key}:{item.Value.CamName})" + _3DLaserGlueInspection.Resources.LanguageDict.StopCollectionSuccessfully);
                                     }
                                     else
                                     {
-                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("停止采集失败：") + cams[item.Value.CamName].ErrMsg, LogType.ng);
+                                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + $" ({item.Key}:{item.Value.CamName})" + _3DLaserGlueInspection.Resources.LanguageDict.StopCollectionFailed + cams[item.Value.CamName].ErrMsg, LogType.ng);
                                     }
                                 }
                             }
@@ -1765,12 +1768,12 @@ namespace _3DLaserGlueInspection
                         //判断段数是否足够
                         if (indexImageCut + 1 >= set.CutSets.Count)
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("拍照段数足够") + $"({indexImageCut + 1}/{set.CutSets.Count})，" + GlobalVarAndFunc.LanguageTranslate("退出拍照循环"));
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.TheNumberOfCameraSegmentsIsSufficient + $"({indexImageCut + 1}/{set.CutSets.Count})，" + _3DLaserGlueInspection.Resources.LanguageDict.ExitThePhotoLoop);
                             break;
                         }
                         else
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("拍照段数不足") + $"({indexImageCut + 1}/{set.CutSets.Count})，" + GlobalVarAndFunc.LanguageTranslate("继续拍照循环"));
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.InsufficientNumberOfPhotoSegments + $"({indexImageCut + 1}/{set.CutSets.Count})，" + _3DLaserGlueInspection.Resources.LanguageDict.ContinueThePhotoLoop);
                         }
                     }
 
@@ -1780,17 +1783,17 @@ namespace _3DLaserGlueInspection
                     bRobotRun = false;
 
                     //等待机器人处理完成
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待机器人处理完成"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForTheRobotToCompleteProcessing);
                     while (!taskRobot.IsCompleted)
                     {
                         Thread.Sleep(10);
                         if (stop) return;
                     }
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("机器人处理完成"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.RobotProcessingCompleted);
 
 
                     //等待图像处理完成
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待图像处理完成"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForImageProcessingToComplete);
                     foreach (var item in tasks.Values)
                     {
                         while (!item.IsCompleted)
@@ -1810,14 +1813,14 @@ namespace _3DLaserGlueInspection
                     //}
 
                     //等待3d处理完成
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待3d图像处理完成"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForTheCompletionOf3DImageProcessing);
 
                     //while (!taskPoint3D.IsCompleted)
                     //{
                     //    Thread.Sleep(10);
                     //    if (stop) return;
                     //}
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("图像处理完成"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ImageProcessingCompleted);
 
                     //保存检测结果文件
                     if (true && simulation)
@@ -1880,7 +1883,7 @@ namespace _3DLaserGlueInspection
                     {
                         if ((totalResult && set.OtherSet.SaveOKImage) || (!totalResult && set.OtherSet.SaveNGImage))
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("开始存图"));
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.StartSavingImages);
                             try
                             {
                                 string OKNG = totalResult ? "OK" : "NG";
@@ -1925,20 +1928,20 @@ namespace _3DLaserGlueInspection
                             }
                             catch (Exception ex)
                             {
-                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("存图异常：") + ex.ToString(), LogType.ng);
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ImageStorageException + ex.ToString(), LogType.ng);
                             }
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("存图完成"));
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ImageStorageCompleted);
                         }
                     }
 
                     //等待开始信号OFF
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("等待开始信号OFF"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForTheStartSignalToTurnOff);
                     while (true)
                     {
                         bool val;
                         if (isStartEnd)
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("收到开始信号OFF"));
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceiveTheStartSignalToTurnOff);
                             break;
                         }
 
@@ -1954,7 +1957,7 @@ namespace _3DLaserGlueInspection
             }
             catch (Exception ex)
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("流程异常：") + ex.ToString(), LogType.ng);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ProcessException + ex.ToString(), LogType.ng);
             }
             finally
             {
@@ -1968,19 +1971,19 @@ namespace _3DLaserGlueInspection
                     {
                         if (cam.SetLine1Inverter(false))
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + "(" + cam.Name + ")" + GlobalVarAndFunc.LanguageTranslate("关闭激光成功"));
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.LaserSuccessfullyTurnedOff);
                         }
                         else
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + "(" + cam.Name + ")" + GlobalVarAndFunc.LanguageTranslate("关闭激光失败：") + cam.ErrMsg, LogType.ng);
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.LaserShutdownFailed + cam.ErrMsg, LogType.ng);
                         }
                         if (cam.Close())
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + "(" + cam.Name + ")" + GlobalVarAndFunc.LanguageTranslate("关闭成功"));
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.CloseSuccessfully);
                         }
                         else
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + "(" + cam.Name + ")" + GlobalVarAndFunc.LanguageTranslate("关闭失败：") + cam.ErrMsg, LogType.ng);
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.ClosingFailed + cam.ErrMsg, LogType.ng);
                         }
                     }
                 }
@@ -1988,11 +1991,11 @@ namespace _3DLaserGlueInspection
                 {
                     //BeginInvoke(new Action(() =>
                     //{
-                    //    button启停.Text = GlobalVarAndFunc.LanguageTranslate("启动");
+                    //    button启停.Text = _3DLaserGlueInspection.Resources.LanguageDict.启动");
                     //    button启停.Image = Resources._2;
                     //}));
 
-                    mainModel.buttonRunContentControl = GlobalVarAndFunc.LanguageTranslate("启动");
+                    mainModel.buttonRunContentControl = _3DLaserGlueInspection.Resources.LanguageDict.Start;
                     mainModel.buttonRunTagControl = "\uE658";
                     //Invoke(new Action(() =>
                     //{
@@ -2034,7 +2037,7 @@ namespace _3DLaserGlueInspection
             }
             if (!isExist)
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("不存在车型") + " " + ID, LogType.ng);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ThereIsNoVehicleModelAvailable + " " + ID, LogType.ng);
                 return false; 
             }
 
@@ -2054,12 +2057,12 @@ namespace _3DLaserGlueInspection
             string camParamName = car.CamParamName;
             if (!Params.Param.TryGetValue(camParamName, out camParam))
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("不存在相机参数：") + camParamName, LogType.ng);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.NoCameraParametersExist + camParamName, LogType.ng);
                 return false;
             }
             if (!sets.TryGetValue(car.Name, out set))
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("不存在产品参数：") + car.Name, LogType.ng);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.NoProductParametersExist + car.Name, LogType.ng);
                 return false;
             }
             if (stop) return false;
@@ -2080,7 +2083,7 @@ namespace _3DLaserGlueInspection
             {
                 if (set.XLDDatas[i].ControlRows.Length < 2)
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("显示的轨迹没有设置好。"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.TheDisplayedTrajectoryIsNotSetProperly);
                     return false; 
 
                 }
@@ -2097,7 +2100,7 @@ namespace _3DLaserGlueInspection
                 }
                 else
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("显示的起点图像序号和结束图像序号没有设置好。"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.TheStartingAndEndingImageNumbersDisplayedAreNotSetProperly);
 
                     return false;
                 }
@@ -2122,11 +2125,11 @@ namespace _3DLaserGlueInspection
                         {
                             if (cam.OpenBySN(item.Value.CamName))
                             {
-                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("打开成功"));
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + $" ({item.Key}:{item.Value.CamName})" + _3DLaserGlueInspection.Resources.LanguageDict.OpenSuccessful);
                             }
                             else
                             {
-                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("打开失败：") + cam.ErrMsg, LogType.ng);
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + $" ({item.Key}:{item.Value.CamName})" + _3DLaserGlueInspection.Resources.LanguageDict.OpenFailed + cam.ErrMsg, LogType.ng);
                                 //Invoke(new Action(() =>
                                 //{
                                 //    e灯颜色 = 灯颜色.红;
@@ -2139,21 +2142,21 @@ namespace _3DLaserGlueInspection
                         }
                         if (cam.InitSet(item.Value, false))
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("初始化设置成功"));
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + $" ({item.Key}:{item.Value.CamName})" + _3DLaserGlueInspection.Resources.LanguageDict.InitializationSettingsSuccessful);
                         }
                         else
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("初始化设置失败：") + cam.ErrMsg, LogType.ng);
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + $" ({item.Key}:{item.Value.CamName})" + _3DLaserGlueInspection.Resources.LanguageDict.InitializationSettingsFailed + cam.ErrMsg, LogType.ng);
                             //return;
                         }
                     }
                 }
                 else
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + " " + item.Value.CamName + GlobalVarAndFunc.LanguageTranslate("未启用"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + " " + item.Value.CamName + _3DLaserGlueInspection.Resources.LanguageDict.NotEnabled);
                 }
             }
-            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机连接完成"));
+            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.CameraConnectionCompleted);
             mainModel.camCommunicationLabelColorControl = labelColorEnum["green"];
 
 
@@ -2180,7 +2183,7 @@ namespace _3DLaserGlueInspection
                                             }
                                             else
                                             {
-                                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("坐标转换(CamToTool)不存在"), LogType.ng);
+                                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + $" ({item.Key}:{item.Value.CamName})" + _3DLaserGlueInspection.Resources.LanguageDict.CoordinateConversionCamtotoolDoesNotExist, LogType.ng);
                                                 return false;
                                             }
                                         }
@@ -2192,7 +2195,7 @@ namespace _3DLaserGlueInspection
                                             }
                                             else
                                             {
-                                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("坐标转换(CamToBase)不存在"), LogType.ng);
+                                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + $" ({item.Key}:{item.Value.CamName})" + _3DLaserGlueInspection.Resources.LanguageDict.CoordinateConversionCamToBaseDoesNotExist, LogType.ng);
                                                 return false;
                                             }
                                         }
@@ -2200,14 +2203,14 @@ namespace _3DLaserGlueInspection
                                     }
                                     else
                                     {
-                                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("坐标转换(CenterToCam1)不存在"), LogType.ng);
+                                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + $" ({item.Key}:{item.Value.CamName})" + _3DLaserGlueInspection.Resources.LanguageDict.CoordinateConversionCenterToCam1DoesNotExist, LogType.ng);
                                         return false;
                                     }
 
                                 }
                                 else
                                 {
-                                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("多相机转换(CamToCam1)不存在"), LogType.ng);
+                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + $" ({item.Key}:{item.Value.CamName})" + _3DLaserGlueInspection.Resources.LanguageDict.CoordinateConversionCamToCam1DoesNotExist, LogType.ng);
                                     return false;
                                 }
 
@@ -2215,19 +2218,19 @@ namespace _3DLaserGlueInspection
                             }
                             else
                             {
-                                ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("坐标转换(LightToCam)不存在"), LogType.ng);
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + $" ({item.Key}:{item.Value.CamName})" + _3DLaserGlueInspection.Resources.LanguageDict.CoordinateConversionLighttocamDoesNotExist, LogType.ng);
                                 return false;
                             }
                         }
                         else
                         {
-                            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("外参(LightInCam.dat)不存在"), LogType.ng);
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + $" ({item.Key}:{item.Value.CamName})" + _3DLaserGlueInspection.Resources.LanguageDict.ExternalParameterLightincamDatDoesNotExist, LogType.ng);
                             return false;
                         }
                     }
                     else
                     {
-                        ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机") + $" ({item.Key}:{item.Value.CamName})" + GlobalVarAndFunc.LanguageTranslate("内参(camparam.cal)不存在"), LogType.ng);
+                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + $" ({item.Key}:{item.Value.CamName})" + _3DLaserGlueInspection.Resources.LanguageDict.TheInternalReferenceCamparamCalDoesNotExist, LogType.ng);
                         return false;
                     }
 
@@ -2269,7 +2272,7 @@ namespace _3DLaserGlueInspection
                     displaySize.Add(item.Key, new SynchronizedList<System.Windows.Size>());
                 }
             }
-            ShowMessage(GlobalVarAndFunc.LanguageTranslate("初始化数据成功"));
+            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.InitializeDataSuccessfully);
 
             indexImageCut = -1;//指示正在图像采集段数
             totalResult = true;
@@ -2308,14 +2311,14 @@ namespace _3DLaserGlueInspection
                                 }
                                 else
                                 {
-                                    ShowMessage(robotPoseKeysPath + GlobalVarAndFunc.LanguageTranslate("文件格式异常"));
+                                    ShowMessage(robotPoseKeysPath + _3DLaserGlueInspection.Resources.LanguageDict.FileFormatException);
                                     return;
                                 }
                             }
                         }
                         else
                         {
-                            ShowMessage(robotPoseKeysPath + GlobalVarAndFunc.LanguageTranslate("文件不存在"));
+                            ShowMessage(robotPoseKeysPath + _3DLaserGlueInspection.Resources.LanguageDict.FileDoesNotExist);
                             return;
                         }
                     }
@@ -2352,14 +2355,14 @@ namespace _3DLaserGlueInspection
                                 }
                                 else
                                 {
-                                    System.Windows.Forms.MessageBox.Show(robotPoseValuesPath + GlobalVarAndFunc.LanguageTranslate("文件格式异常"));
+                                    System.Windows.Forms.MessageBox.Show(robotPoseValuesPath + _3DLaserGlueInspection.Resources.LanguageDict.FileFormatException);
                                     return;
                                 }
                             }
                         }
                         else
                         {
-                            ShowMessage(robotPoseValuesPath + GlobalVarAndFunc.LanguageTranslate("文件不存在"));
+                            ShowMessage(robotPoseValuesPath + _3DLaserGlueInspection.Resources.LanguageDict.FileDoesNotExist);
                             return;
                         }
                     }
@@ -2411,7 +2414,7 @@ namespace _3DLaserGlueInspection
                     }
                 }
             });
-            ShowMessage(GlobalVarAndFunc.LanguageTranslate("机器人姿态获取任务启动完成"));
+            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.RobotAttitudeAcquisitionTaskHasBeenInitiatedAndCompleted);
 
             bool bTaskRun = true;
             //启动图像处理任务
@@ -3187,13 +3190,13 @@ namespace _3DLaserGlueInspection
                     })));
                 }
             }
-            ShowMessage(GlobalVarAndFunc.LanguageTranslate("图像处理任务启动完成"));
+            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ImageProcessingTaskStartupCompleted);
 
             ////输出运行中信号
             //if (!Write(DO.Running, true)) return;
-            //ShowMessage(GlobalVarAndFunc.LanguageTranslate("输出Running信号"));
+            //ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.输出Running信号"));
             //if (!Write(DO.Ready, false)) return;
-            //ShowMessage(GlobalVarAndFunc.LanguageTranslate("关闭Ready信号"));
+            //ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.关闭Ready信号"));
 
             return true;
         }
@@ -3329,7 +3332,7 @@ namespace _3DLaserGlueInspection
                 {
                     if (b失败过)
                     {
-                        ShowMessage($"{di}" + GlobalVarAndFunc.LanguageTranslate("信号重读成功"));
+                        ShowMessage($"{di}" + _3DLaserGlueInspection.Resources.LanguageDict.SignalReReadingSuccessful);
                     }
                     return true;
                 }
@@ -3337,7 +3340,7 @@ namespace _3DLaserGlueInspection
                 {
                     if (!b失败过)
                     {
-                        ShowMessage($"{di}" + GlobalVarAndFunc.LanguageTranslate("信号读取失败，重读中:") + io.ErrMsg, LogType.warn);
+                        ShowMessage($"{di}" + _3DLaserGlueInspection.Resources.LanguageDict.SignalReadFailedRereading + io.ErrMsg, LogType.warn);
                         b失败过 = true;
                     }
                     if (!io.IsOpen)
@@ -3359,7 +3362,7 @@ namespace _3DLaserGlueInspection
                 {
                     if (b失败过)
                     {
-                        ShowMessage($"{dO}" + GlobalVarAndFunc.LanguageTranslate("信号重读成功"));
+                        ShowMessage($"{dO}" + _3DLaserGlueInspection.Resources.LanguageDict.SignalReReadingSuccessful);
                     }
                     return true;
                 }
@@ -3367,7 +3370,7 @@ namespace _3DLaserGlueInspection
                 {
                     if (!b失败过)
                     {
-                        ShowMessage($"{dO}" + GlobalVarAndFunc.LanguageTranslate("信号读取失败，重读中:") + io.ErrMsg, LogType.warn);
+                        ShowMessage($"{dO}" + _3DLaserGlueInspection.Resources.LanguageDict.SignalReadFailedRereading + io.ErrMsg, LogType.warn);
                         b失败过 = true;
                     }
                     if (!io.IsOpen)
@@ -3389,7 +3392,7 @@ namespace _3DLaserGlueInspection
                 {
                     if (b失败过)
                     {
-                        ShowMessage($"{di}" + GlobalVarAndFunc.LanguageTranslate("信号重读成功"));
+                        ShowMessage($"{di}" + _3DLaserGlueInspection.Resources.LanguageDict.SignalReReadingSuccessful);
                     }
                     return true;
                 }
@@ -3397,7 +3400,7 @@ namespace _3DLaserGlueInspection
                 {
                     if (!b失败过)
                     {
-                        ShowMessage($"{di}" + GlobalVarAndFunc.LanguageTranslate("信号读取失败，重读中:") + io.ErrMsg, LogType.warn);
+                        ShowMessage($"{di}" + _3DLaserGlueInspection.Resources.LanguageDict.SignalReadFailedRereading + io.ErrMsg, LogType.warn);
                         b失败过 = true;
                     }
                     if (!io.IsOpen)
@@ -3419,7 +3422,7 @@ namespace _3DLaserGlueInspection
                 {
                     if (b失败过)
                     {
-                        ShowMessage($"{dO}" + GlobalVarAndFunc.LanguageTranslate("信号重读成功"));
+                        ShowMessage($"{dO}" + _3DLaserGlueInspection.Resources.LanguageDict.SignalReReadingSuccessful);
                     }
                     return true;
                 }
@@ -3427,7 +3430,7 @@ namespace _3DLaserGlueInspection
                 {
                     if (!b失败过)
                     {
-                        ShowMessage($"{dO}" + GlobalVarAndFunc.LanguageTranslate("信号读取失败，重读中:") + io.ErrMsg, LogType.warn);
+                        ShowMessage($"{dO}" + _3DLaserGlueInspection.Resources.LanguageDict.SignalReadFailedRereading + io.ErrMsg, LogType.warn);
                         b失败过 = true;
                     }
                     if (!io.IsOpen)
@@ -3449,7 +3452,7 @@ namespace _3DLaserGlueInspection
                 {
                     if (b失败过)
                     {
-                        ShowMessage($"{dO}" + GlobalVarAndFunc.LanguageTranslate("信号重写成功"));
+                        ShowMessage($"{dO}" + _3DLaserGlueInspection.Resources.LanguageDict.SignalReReadingSuccessful);
                     }
                     return true;
                 }
@@ -3457,7 +3460,7 @@ namespace _3DLaserGlueInspection
                 {
                     if (!b失败过)
                     {
-                        ShowMessage($"{dO}" + GlobalVarAndFunc.LanguageTranslate("信号写入失败，重写中:") + io.ErrMsg, LogType.warn);
+                        ShowMessage($"{dO}" + _3DLaserGlueInspection.Resources.LanguageDict.SignalReadFailedRereading + io.ErrMsg, LogType.warn);
                         b失败过 = true;
                     }
                     if (!io.IsOpen)
@@ -3626,16 +3629,16 @@ namespace _3DLaserGlueInspection
 
                             DispPolygonjHWindowControlEvent(regionSmallestRectangle2Points, Colors.Blue, "margin");
 
-                            string text = GlobalVarAndFunc.LanguageTranslate("胶高：") + $"{data.glueHeight:0.00}\r\n"
-                               + GlobalVarAndFunc.LanguageTranslate("胶宽：") + $"{data.glueWidth:0.00}\r\n"
-                               + GlobalVarAndFunc.LanguageTranslate("面积：") + $"{data.glueArea:0.00}";
+                            string text = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight + $"：{data.glueHeight:0.00}\r\n"
+                               + _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth + $"：{data.glueWidth:0.00}\r\n"
+                               + _3DLaserGlueInspection.Resources.LanguageDict.Area+ $"：{data.glueArea:0.00}";
                             DispTextInImageHWindowControlEvent(text, Colors.White, (int)data.column + (int)(data.glueWidth / 2 * cutSet.scaleSize + offsetX),
                                 (int)data.row + (int)(data.glueHeight / 2 * cutSet.scaleSize + offsetY));
 
                             //hWindowControl.DispTextInImage(text, data.row, data.column);
-                            string textWindow1 = GlobalVarAndFunc.LanguageTranslate("胶宽：") + (bResult.glueWidth ? "OK" : "NG");
-                            string textWindow2 = GlobalVarAndFunc.LanguageTranslate("胶高：") + (bResult.glueHeight ? "OK" : "NG");
-                            string textWindow3 = GlobalVarAndFunc.LanguageTranslate("面积：") + (bResult.glueArea ? "OK" : "NG");
+                            string textWindow1 = _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth +"："+ (bResult.glueWidth ? "OK" : "NG");
+                            string textWindow2 = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight + "：" + (bResult.glueHeight ? "OK" : "NG");
+                            string textWindow3 = _3DLaserGlueInspection.Resources.LanguageDict.Area + "：" + (bResult.glueArea ? "OK" : "NG");
                             string textWindow = textWindow1 + "\r\n" + textWindow2 + "\r\n" + textWindow3;
                             DispTextInImageHWindowControlEvent(textWindow, Colors.White, 10, 10);
 

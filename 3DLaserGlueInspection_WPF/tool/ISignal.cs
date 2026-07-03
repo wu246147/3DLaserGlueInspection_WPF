@@ -276,7 +276,7 @@ namespace _3DLaserGlueInspection
 
         public void ShowForm()
         {
-            //System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("该通讯方式无设置界面！"));
+            //System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.该通讯方式无设置界面！"));
         }
 
         public bool Load()
@@ -363,7 +363,7 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = GlobalVarAndFunc.LanguageTranslate("写入格式不支持");
+                _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.WritingFormatNotSupported;
                 return false;
             }
             return true;

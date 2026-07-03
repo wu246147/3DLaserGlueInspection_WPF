@@ -55,7 +55,7 @@ namespace _3DLaserGlueInspection
             int nRet = MvCamera.MV_CC_EnumDevices_NET(MvCamera.MV_GIGE_DEVICE | MvCamera.MV_USB_DEVICE, ref m_pDeviceList);
             if (MvCamera.MV_OK != nRet)
             {
-                _errMsg = GlobalVarAndFunc.LanguageTranslate("寻找相机失败：") + Convert.ToString(nRet, 16);
+                _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.FailedToFindCamera + Convert.ToString(nRet, 16);
                 names = null;
                 SNs = null;
                 DeviceList = null;
@@ -108,7 +108,7 @@ namespace _3DLaserGlueInspection
                 }
                 else
                 {
-                    _errMsg = GlobalVarAndFunc.LanguageTranslate("未找到任何相机");
+                    _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.CouldFindAnyCam1;
                     return false;
                 }
             }
@@ -139,12 +139,12 @@ namespace _3DLaserGlueInspection
                             return Open(DeviceList[i]);
                         }
                     }
-                    _errMsg = GlobalVarAndFunc.LanguageTranslate("未找到相机") + name;
+                    _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.CouldFindCam1 + name;
                     return false;
                 }
                 else
                 {
-                    _errMsg = GlobalVarAndFunc.LanguageTranslate("未找到任何相机");
+                    _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.CouldFindAnyCam1;
                     return false;
                 }
             }
@@ -174,12 +174,12 @@ namespace _3DLaserGlueInspection
                             return Open(DeviceList[i]);
                         }
                     }
-                    _errMsg = GlobalVarAndFunc.LanguageTranslate("未找到相机") + sn;
+                    _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.CouldFindCam1 + sn;
                     return false;
                 }
                 else
                 {
-                    _errMsg = GlobalVarAndFunc.LanguageTranslate("未找到任何相机");
+                    _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.CouldFindAnyCam1;
                     return false;
                 }
             }
@@ -199,7 +199,7 @@ namespace _3DLaserGlueInspection
             int nRet = MV_CC_CreateDevice_NET(ref device);
             if (MvCamera.MV_OK != nRet)
             {
-                _errMsg = GlobalVarAndFunc.LanguageTranslate("相机创建失败:") + Convert.ToString(nRet, 16);
+                _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.CameraCreationFailed + Convert.ToString(nRet, 16);
                 return false;
             }
 
@@ -207,7 +207,7 @@ namespace _3DLaserGlueInspection
             nRet = MV_CC_OpenDevice_NET();
             if (MvCamera.MV_OK != nRet)
             {
-                _errMsg = GlobalVarAndFunc.LanguageTranslate("相机打开失败:") + Convert.ToString(nRet, 16);
+                _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.CameraFailedToOpen + Convert.ToString(nRet, 16);
                 return false;
             }
 
@@ -240,7 +240,7 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = GlobalVarAndFunc.LanguageTranslate("关闭相机失败：") + Convert.ToString(nRet, 16);
+                _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.CameraShutdownFailed + Convert.ToString(nRet, 16);
                 return false;
             }
         }
@@ -259,7 +259,7 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = GlobalVarAndFunc.LanguageTranslate("开始采集失败：") + Convert.ToString(nRet, 16);
+                _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.FailedToStartCollection + Convert.ToString(nRet, 16);
                 return false;
             }
         }
@@ -278,7 +278,7 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = GlobalVarAndFunc.LanguageTranslate("停止采集失败：") + Convert.ToString(nRet, 16);
+                _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.StopCollectionFailed + Convert.ToString(nRet, 16);
                 return false;
             }
         }
@@ -329,7 +329,7 @@ namespace _3DLaserGlueInspection
                     int nRet = MV_CC_ConvertPixelType_NET(ref stPixelConvertParam);//格式转换
                     if (MvCamera.MV_OK != nRet)
                     {
-                        _errMsg = GlobalVarAndFunc.LanguageTranslate("格式转换失败");
+                        _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.FormatConversionFailed;
                         mImage = null;
                         return false;
                     }
@@ -344,7 +344,7 @@ namespace _3DLaserGlueInspection
                 }
                 catch (Exception ex)
                 {
-                    _errMsg = GlobalVarAndFunc.LanguageTranslate("格式转换创建失败:") + ex.ToString();
+                    _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.FormatConversionCreationFailed + ex.ToString();
                     mImage = null;
                     return false;
                 }
@@ -375,7 +375,7 @@ namespace _3DLaserGlueInspection
                     int nRet = MV_CC_ConvertPixelType_NET(ref stPixelConvertParam);//格式转换
                     if (MvCamera.MV_OK != nRet)
                     {
-                        _errMsg = GlobalVarAndFunc.LanguageTranslate("格式转换失败");
+                        _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.FormatConversionFailed;
                         mImage = null;
                         return false;
                     }
@@ -392,14 +392,14 @@ namespace _3DLaserGlueInspection
                 }
                 catch (Exception ex)
                 {
-                    _errMsg = GlobalVarAndFunc.LanguageTranslate("格式转换创建失败:") + ex.ToString();
+                    _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.FormatConversionCreationFailed + ex.ToString();
                     mImage = null;
                     return false;
                 }
             }
             else
             {
-                _errMsg = GlobalVarAndFunc.LanguageTranslate("未知格式:") + pFrameInfo.enPixelType;
+                _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.UnknownFormat + pFrameInfo.enPixelType;
                 mImage = null;
                 return false;
             }
@@ -447,14 +447,14 @@ namespace _3DLaserGlueInspection
                     }
                     else
                     {
-                        _errMsg = GlobalVarAndFunc.LanguageTranslate("采集失败：") + Convert.ToString(nRet, 16);
+                        _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.CollectionFailed + Convert.ToString(nRet, 16);
                         return false;
                     }
                 }
             }
             else
             {
-                _errMsg = GlobalVarAndFunc.LanguageTranslate("相机未打开");
+                _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.CameraNotTurnedOn;
                 return false;
             }
         }
@@ -509,14 +509,14 @@ namespace _3DLaserGlueInspection
                     }
                     else
                     {
-                        _errMsg = GlobalVarAndFunc.LanguageTranslate("采集失败：") + Convert.ToString(nRet, 16);
+                        _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.CollectionFailed + Convert.ToString(nRet, 16);
                         return false;
                     }
                 }
             }
             else
             {
-                _errMsg = GlobalVarAndFunc.LanguageTranslate("相机未打开");
+                _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.CameraNotTurnedOn;
                 return false;
             }
         }
@@ -545,7 +545,7 @@ namespace _3DLaserGlueInspection
                 int nRet = MV_CC_GetFloatValue_NET("ExposureTime", ref pstValue);
                 if (MvCamera.MV_OK != nRet)
                 {
-                    _errMsg = GlobalVarAndFunc.LanguageTranslate("获取ExposureTime值失败：") + Convert.ToString(nRet, 16);
+                    _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.GetExportTimeFail + Convert.ToString(nRet, 16);
                     return false;
                 }
                 float 最小曝光 = pstValue.fMin;
@@ -692,7 +692,7 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = GlobalVarAndFunc.LanguageTranslate("相机未打开");
+                _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.CameraNotTurnedOn;
                 return false;
             }
         }
@@ -744,7 +744,7 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = GlobalVarAndFunc.LanguageTranslate("相机未打开");
+                _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.CameraNotTurnedOn;
                 return false;
             }
         }
@@ -1841,7 +1841,8 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = GlobalVarAndFunc.LanguageTranslate("设置设置SDK内部图像缓存节点个数为") + num + GlobalVarAndFunc.LanguageTranslate("失败：") + Convert.ToString(nRet, 16);
+                _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.SetTheNumberOfInternalImageCachingNodesInTheSdkTo +
+                    num + _3DLaserGlueInspection.Resources.LanguageDict.Failed + Convert.ToString(nRet, 16);
                 return false;
             }
         }
@@ -1857,7 +1858,7 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = GlobalVarAndFunc.LanguageTranslate("软触发失败：") + Convert.ToString(nRet, 16);
+                _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.SoftwareTriggerFailure + Convert.ToString(nRet, 16);
                 return false;
             }
         }
@@ -1871,7 +1872,7 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = GlobalVarAndFunc.LanguageTranslate("设置") + strKey + GlobalVarAndFunc.LanguageTranslate("为") + value.ToString() + GlobalVarAndFunc.LanguageTranslate("失败：") + Convert.ToString(nRet, 16);
+                _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.Set + strKey + _3DLaserGlueInspection.Resources.LanguageDict.To + value.ToString() + _3DLaserGlueInspection.Resources.LanguageDict.Failed + Convert.ToString(nRet, 16);
                 return false;
             }
         }
@@ -1884,7 +1885,7 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = GlobalVarAndFunc.LanguageTranslate("设置") + strKey + GlobalVarAndFunc.LanguageTranslate("为") + value.ToString() + GlobalVarAndFunc.LanguageTranslate("失败：") + Convert.ToString(nRet, 16);
+                _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.Set + strKey + _3DLaserGlueInspection.Resources.LanguageDict.To + value.ToString() + _3DLaserGlueInspection.Resources.LanguageDict.Failed + Convert.ToString(nRet, 16);
                 return false;
             }
         }
@@ -1897,7 +1898,7 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = GlobalVarAndFunc.LanguageTranslate("设置") + strKey + GlobalVarAndFunc.LanguageTranslate("为") + value.ToString() + GlobalVarAndFunc.LanguageTranslate("失败：") + Convert.ToString(nRet, 16);
+                _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.Set + strKey + _3DLaserGlueInspection.Resources.LanguageDict.To + value.ToString() + _3DLaserGlueInspection.Resources.LanguageDict.Failed + Convert.ToString(nRet, 16);
                 return false;
             }
         }
@@ -1910,7 +1911,7 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = GlobalVarAndFunc.LanguageTranslate("设置") + strKey + GlobalVarAndFunc.LanguageTranslate("为") + value.ToString() + GlobalVarAndFunc.LanguageTranslate("失败：") + Convert.ToString(nRet, 16);
+                _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.Set + strKey + _3DLaserGlueInspection.Resources.LanguageDict.To + value.ToString() + _3DLaserGlueInspection.Resources.LanguageDict.Failed + Convert.ToString(nRet, 16);
                 return false;
             }
         }
@@ -1926,7 +1927,7 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = GlobalVarAndFunc.LanguageTranslate("获取") + strKey + GlobalVarAndFunc.LanguageTranslate("值失败：") + Convert.ToString(nRet, 16);
+                _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.Get + strKey + _3DLaserGlueInspection.Resources.LanguageDict.Failed + Convert.ToString(nRet, 16);
                 return false;
             }
         }
@@ -1941,7 +1942,7 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = GlobalVarAndFunc.LanguageTranslate("获取") + strKey + GlobalVarAndFunc.LanguageTranslate("值失败：") + Convert.ToString(nRet, 16);
+                _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.Get + strKey + _3DLaserGlueInspection.Resources.LanguageDict.Failed + Convert.ToString(nRet, 16);
                 return false;
             }
         }
@@ -1956,7 +1957,7 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = GlobalVarAndFunc.LanguageTranslate("获取") + strKey + GlobalVarAndFunc.LanguageTranslate("值失败：") + Convert.ToString(nRet, 16);
+                _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.Get + strKey + _3DLaserGlueInspection.Resources.LanguageDict.Failed + Convert.ToString(nRet, 16);
                 return false;
             }
         }
@@ -1971,7 +1972,7 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = GlobalVarAndFunc.LanguageTranslate("获取") + strKey + GlobalVarAndFunc.LanguageTranslate("值失败：") + Convert.ToString(nRet, 16);
+                _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.Get + strKey + _3DLaserGlueInspection.Resources.LanguageDict.Failed + Convert.ToString(nRet, 16);
                 return false;
             }
         }
@@ -2596,14 +2597,14 @@ namespace _3DLaserGlueInspection
                                     {
                                         Param[name].Add(camKey, new CamParam());
                                         result = false;
-                                        _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("文件格式异常");
+                                        _errMsg = paramPath + _3DLaserGlueInspection.Resources.LanguageDict.FileFormatException;
                                     }
                                 }
                             }
                             else
                             {
                                 result = false;
-                                _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("文件不存在");
+                                _errMsg = paramPath + _3DLaserGlueInspection.Resources.LanguageDict.FileDoesNotExist;
                             }
                         }
                         catch (Exception ex)
@@ -2666,7 +2667,7 @@ namespace _3DLaserGlueInspection
                             else
                             {
                                 result2 = false;
-                                _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("文件不存在");
+                                _errMsg = paramPath + _3DLaserGlueInspection.Resources.LanguageDict.FileDoesNotExist;
                             }
                         }
                         catch (Exception ex)
@@ -2728,7 +2729,7 @@ namespace _3DLaserGlueInspection
                             else
                             {
                                 result3 = false;
-                                _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("文件不存在");
+                                _errMsg = paramPath + _3DLaserGlueInspection.Resources.LanguageDict.FileDoesNotExist;
                             }
                         }
                         catch (Exception ex)
@@ -2810,7 +2811,7 @@ namespace _3DLaserGlueInspection
                                 else
                                 {
                                     result5 = false;
-                                    _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("文件不存在");
+                                    _errMsg = paramPath + _3DLaserGlueInspection.Resources.LanguageDict.FileDoesNotExist;
                                 }
                             }
                             catch (Exception ex)
@@ -2876,7 +2877,7 @@ namespace _3DLaserGlueInspection
                                 else
                                 {
                                     result5 = false;
-                                    _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("文件不存在");
+                                    _errMsg = paramPath + _3DLaserGlueInspection.Resources.LanguageDict.FileDoesNotExist;
                                 }
                             }
                             catch (Exception ex)
@@ -2944,7 +2945,7 @@ namespace _3DLaserGlueInspection
                             else
                             {
                                 result7 = false;
-                                _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("文件不存在");
+                                _errMsg = paramPath + _3DLaserGlueInspection.Resources.LanguageDict.FileDoesNotExist;
                             }
                         }
                         catch (Exception ex)
@@ -3005,7 +3006,7 @@ namespace _3DLaserGlueInspection
                             else
                             {
                                 result8 = false;
-                                _errMsg = paramPath + GlobalVarAndFunc.LanguageTranslate("文件不存在");
+                                _errMsg = paramPath + _3DLaserGlueInspection.Resources.LanguageDict.FileDoesNotExist;
                             }
                         }
                         catch (Exception ex)
@@ -3172,7 +3173,7 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = camSetPath + GlobalVarAndFunc.LanguageTranslate("文件夹不存在");
+                _errMsg = camSetPath + _3DLaserGlueInspection.Resources.LanguageDict.TheFolderDoesNotExist;
                 results = false;
             }
 
