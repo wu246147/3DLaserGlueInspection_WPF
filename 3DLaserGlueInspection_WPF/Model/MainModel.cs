@@ -1,4 +1,4 @@
-﻿using _3DLaserGlueInspection;
+using _3DLaserGlueInspection;
 using LiveCharts.Wpf;
 using LiveCharts;
 using RAIVASCS.Common;

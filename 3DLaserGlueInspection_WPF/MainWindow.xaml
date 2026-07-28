@@ -630,7 +630,9 @@
                             SelectedCellsChanged="_2DResultDataGrid_SelectedCellsChanged"
                             SelectionMode="Single"
                             SelectionUnit ="Cell"
-                            VerticalScrollBarVisibility="Auto">
+                            VerticalScrollBarVisibility="Auto"
+                            CanUserSortColumns="False"
+                            >
                             <DataGrid.Columns>
                                 <DataGridTextColumn
                                     Width="*"
@@ -715,7 +717,9 @@ Converter={StaticResource ResultColor}}" />
                             IsReadOnly="True"
                             ItemsSource="{Binding CarResultRecords}"
                             RowStyle="{StaticResource LogDataGridRowStyle}"
-                            VerticalScrollBarVisibility="Auto">
+                            VerticalScrollBarVisibility="Auto"
+                            CanUserSortColumns="False"
+                            >
                             <DataGrid.Columns>
                                 <DataGridTextColumn
                                     Width="150"

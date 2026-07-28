@@ -1,4 +1,4 @@
-﻿using _3DLaserGlueInspection;
+using _3DLaserGlueInspection;
 using System;
 using System.Collections.Generic;
 using System.IO;

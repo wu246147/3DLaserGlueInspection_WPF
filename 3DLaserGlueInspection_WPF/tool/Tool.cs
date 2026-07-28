@@ -273,6 +273,21 @@ namespace _3DLaserGlueInspection
                         //DispPolylinejHWindowControlEvent(points, Colors.Gray);
                         imageControl.AddPolyline(points, Colors.Gray);
 
+
+                        string textWindow1 = _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth + ":" + (bResult.glueWidth ? "OK" : "NG") + " " + _3DLaserGlueInspection.Resources.LanguageDict.DetRange +
+                               $": {set.widthMin}~{set.widthMax}";
+                        string textWindow2 = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight + ":" + (bResult.glueHeight ? "OK" : "NG") + " " + _3DLaserGlueInspection.Resources.LanguageDict.DetRange +
+                            $": {set.heightMin}~{set.heightMax}";
+                        string textWindow3 = _3DLaserGlueInspection.Resources.LanguageDict.Area + ":" + (bResult.glueArea ? "OK" : "NG") + " " + _3DLaserGlueInspection.Resources.LanguageDict.DetRange +
+                            $": {set.areaMin}~{set.areaMax}";
+                        string textWindow = textWindow1 + "\r\n" + textWindow2 + "\r\n" + textWindow3;
+                        //Console.WriteLine($"point :({10},{10})");
+                        //DispTextInImageHWindowControlEvent(textWindow, Colors.Black, 10, 10);
+                        imageControl.AddTextBlock(textWindow1, (bResult.glueWidth ? Colors.Green : Colors.Red), 10, 10);
+                        imageControl.AddTextBlock(textWindow2, (bResult.glueHeight ? Colors.Green : Colors.Red), 10, 10 + 24);
+                        imageControl.AddTextBlock(textWindow3, (bResult.glueArea ? Colors.Green : Colors.Red), 10, 10 + 48);
+
+
                         if (!hRegion.Empty())
                         {
                             //Console.WriteLine($"text value :");
@@ -289,18 +304,7 @@ namespace _3DLaserGlueInspection
 
                             //Console.WriteLine($"text result :");
                             //hWindowControl.DispTextInImage(text, data.row, data.column);
-                            string textWindow1 = _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth+":" + (bResult.glueWidth ? "OK" : "NG")+" " + _3DLaserGlueInspection.Resources.LanguageDict.DetRange + 
-                                $": {set.widthMin}~{set.widthMax}" ;
-                            string textWindow2 = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight+":" + (bResult.glueHeight ? "OK" : "NG") + " " + _3DLaserGlueInspection.Resources.LanguageDict.DetRange +
-                                $": {set.heightMin}~{set.heightMax}";
-                            string textWindow3 = _3DLaserGlueInspection.Resources.LanguageDict.Area+":" + (bResult.glueArea ? "OK" : "NG") + " " + _3DLaserGlueInspection.Resources.LanguageDict.DetRange +
-                                $": {set.areaMin}~{set.areaMax}";
-                            string textWindow = textWindow1 + "\r\n" + textWindow2 + "\r\n" + textWindow3;
-                            //Console.WriteLine($"point :({10},{10})");
-                            //DispTextInImageHWindowControlEvent(textWindow, Colors.Black, 10, 10);
-                            imageControl.AddTextBlock(textWindow1, (bResult.glueWidth ? Colors.Green : Colors.Red), 10, 10);
-                            imageControl.AddTextBlock(textWindow2, (bResult.glueHeight ? Colors.Green : Colors.Red), 10, 10 + 24);
-                            imageControl.AddTextBlock(textWindow3, (bResult.glueArea ? Colors.Green : Colors.Red), 10, 10 + 48);
+                           
 
                             //Console.WriteLine($"region :");
 

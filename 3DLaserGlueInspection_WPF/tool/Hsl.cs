@@ -1,4 +1,4 @@
-﻿using HslCommunication;
+using HslCommunication;
 using HslCommunication.Core;
 using HslCommunication.Profinet.Melsec;
 using HslCommunication.Profinet.Omron;

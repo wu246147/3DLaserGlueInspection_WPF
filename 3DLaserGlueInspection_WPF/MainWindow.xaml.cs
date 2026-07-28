@@ -37,7 +37,7 @@ namespace _3DLaserGlueInspection
 
 
     /// <summary>
-    /// MainWindow.xaml µÄ½»»¥Âß¼­
+    /// MainWindow.xaml çš„äº¤äº’é€»è¾‘
     /// </summary>
     public partial class MainWindow : System.Windows.Window
     {
@@ -48,7 +48,7 @@ namespace _3DLaserGlueInspection
         JAKARobot robot = new JAKARobot();
 
 
-        //readonly UserHWindowControl hWindowÊıÄ£Í¼ = new UserHWindowControl();
+        //readonly UserHWindowControl hWindowæ•°æ¨¡å›¾ = new UserHWindowControl();
         //readonly UserHWindowControl hWindowControl = new UserHWindowControl();
         //readonly Wpf_halcon.ImageControl2 hWindowModel = new Wpf_halcon.ImageControl2();
         //readonly Wpf_halcon.ImageControl2 hWindowControl = new Wpf_halcon.ImageControl2();
@@ -65,11 +65,11 @@ namespace _3DLaserGlueInspection
             this.DataContext = model.mainModel;
 
 
-            //´ò¿ªÍ¨Ñ¶
+            //æ‰“å¼€é€šè®¯
 
             model.InitCommunicationConnection();
 
-            //ÓïÑÔÑ¡ÔñÈ·¶¨
+            //è¯­è¨€é€‰æ‹©ç¡®å®š
             if (GlobalVarAndFunc.LANGUAGE_ID == "zh-CN")
             {
                 MenuItem_chineseLanguage.IsChecked = true;
@@ -141,7 +141,7 @@ namespace _3DLaserGlueInspection
 
         private void ButtonRun_Click(object sender, RoutedEventArgs e)
         {
-            //Õı³£Æô¶¯
+            //æ­£å¸¸å¯åŠ¨
             if ((string)ButtonRun.Content == _3DLaserGlueInspection.Resources.LanguageDict.Start)
             {
                 if (model.simulation)
@@ -162,7 +162,7 @@ namespace _3DLaserGlueInspection
                     model.stop = false;
                     mainThread = new Thread(model.MainRun);
 
-                    ////²âÊÔÈ¡ÏñÎÊÌâ
+                    ////æµ‹è¯•å–åƒé—®é¢˜
                     //mainThread = new Thread(model.AcqAndRobotTest);
 
                     mainThread.Start();
@@ -171,8 +171,8 @@ namespace _3DLaserGlueInspection
                 {
                     model.ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.TheMainThreadIsAlreadyRunning, LogType.warn);
                 }
-                //ButtonRun.Content = _3DLaserGlueInspection.Resources.LanguageDict.Í£Ö¹");
-                //buttonÆôÍ£.Image = Resources._3;
+                //ButtonRun.Content = _3DLaserGlueInspection.Resources.LanguageDict.åœæ­¢");
+                //buttonå¯åœ.Image = Resources._3;
 
                 model.mainModel.buttonRunContentControl = _3DLaserGlueInspection.Resources.LanguageDict.Stop;
                 model.mainModel.buttonRunTagControl = "\uE67A";
@@ -189,7 +189,7 @@ namespace _3DLaserGlueInspection
                 model.mainModel.buttonRunTagControl = "\uE658";
             }
 
-            ////²âÊÔ
+            ////æµ‹è¯•
             ////PieChartResult.Series[0].Values = new ChartValues<double> { 100 };
             //model.mainModel.OKCountControl += 2;
             //model.mainModel.NGCountControl += 1;
@@ -231,7 +231,7 @@ namespace _3DLaserGlueInspection
 
         private void MenuItem_robotSetting_signalSetting_Click(object sender, RoutedEventArgs e)
         {
-            //ÃÜÂëÑéÖ¤£¬Î´ÆôÓÃ
+            //å¯†ç éªŒè¯ï¼Œæœªå¯ç”¨
             WindowPassWord formPassword = new WindowPassWord();
             if ((bool)formPassword.ShowDialog())
                 robot.ShowForm();
@@ -403,7 +403,7 @@ namespace _3DLaserGlueInspection
         //                Mat mat = new Mat();
         //                mat = Mat.Zeros((int)(showHeight * Vision.scaleSize), (int)(showWidth * Vision.scaleSize), MatType.CV_8UC3);
         //                hWindowModel.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));
-        //                //DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//À©»­²¼
+        //                //DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//æ‰©ç”»å¸ƒ
         //                PointCollection points = new PointCollection();
         //                for (int i = 0; i < hXLDCont10mm.Rows; i++)
         //                {
@@ -435,7 +435,7 @@ namespace _3DLaserGlueInspection
         //                Mat mat = new Mat();
         //                mat = Mat.Zeros((int)(showHeight * Vision.scaleSize), (int)(showWidth * Vision.scaleSize), MatType.CV_8UC3);
 
-        //                //DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//À©»­²¼
+        //                //DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//æ‰©ç”»å¸ƒ
         //                hWindowModel.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));
 
         //                PointCollection points = new PointCollection();
@@ -475,18 +475,18 @@ namespace _3DLaserGlueInspection
         //                    //DispPolygonjHWindowControlEvent(regionSmallestRectangle2Points, Colors.Blue, "margin");
         //                    hWindowModel.AddPolygon(regionSmallestRectangle2Points, Colors.Blue, "margin");
 
-        //                    string text = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight+":" + $"{data.½º¸ß:0.00}\r\n"
-        //                       + _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth+":" + $"{data.½º¿í:0.00}\r\n"
-        //                       + _3DLaserGlueInspection.Resources.LanguageDict.Area+":" + $"{data.Ãæ»ı:0.00}";
+        //                    string text = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight+":" + $"{data.èƒ¶é«˜:0.00}\r\n"
+        //                       + _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth+":" + $"{data.èƒ¶å®½:0.00}\r\n"
+        //                       + _3DLaserGlueInspection.Resources.LanguageDict.Area+":" + $"{data.é¢ç§¯:0.00}";
 
 
         //                    //DispTextInImageHWindowControlEvent(text, Colors.Black, (int)data.column, (int)data.row);
         //                    hWindowModel.AddTextBlock(text, Colors.Black, (int)data.column, (int)data.row);
 
         //                    //hWindowControl.DispTextInImage(text, data.row, data.column);
-        //                    string textWindow1 = _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth+":" + (bResult.½º¿í ? "OK" : "NG");
-        //                    string textWindow2 = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight+":" + (bResult.½º¸ß ? "OK" : "NG");
-        //                    string textWindow3 = _3DLaserGlueInspection.Resources.LanguageDict.Area+":" + (bResult.Ãæ»ı ? "OK" : "NG");
+        //                    string textWindow1 = _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth+":" + (bResult.èƒ¶å®½ ? "OK" : "NG");
+        //                    string textWindow2 = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight+":" + (bResult.èƒ¶é«˜ ? "OK" : "NG");
+        //                    string textWindow3 = _3DLaserGlueInspection.Resources.LanguageDict.Area+":" + (bResult.é¢ç§¯ ? "OK" : "NG");
         //                    string textWindow = textWindow1 + "\r\n" + textWindow2 + "\r\n" + textWindow3;
 
         //                    //DispTextInImageHWindowControlEvent(textWindow, Colors.Black, 10, 10);

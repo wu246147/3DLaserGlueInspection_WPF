@@ -45,17 +45,17 @@ namespace TCPIP
         }
         public DataExchange tmp = new DataExchange();
         public delegate void DelDataArrived(DataExchange tmp);
-        public event DelDataArrived OnDataArrivedEvent;  //ÊÕµ½Êı¾İÊÂ¼ş
-        public event DelDataArrived OnDiscoveredDeviceEvent;  //·¢ÏÖÉè±¸ÊÂ¼ş
+        public event DelDataArrived OnDataArrivedEvent;  //æ”¶åˆ°æ•°æ®äº‹ä»¶
+        public event DelDataArrived OnDiscoveredDeviceEvent;  //å‘ç°è®¾å¤‡äº‹ä»¶
 
-        private readonly object _lock = new object(); // ÓÃÓÚÏß³Ì°²È«
+        private readonly object _lock = new object(); // ç”¨äºçº¿ç¨‹å®‰å…¨
         private bool _isListening = false;
 
         public string ErrMsg => _errMsg;
         string _errMsg;
 
         /// <summary>
-        /// IPµØÖ·ºÍPort¿Ú
+        /// IPåœ°å€å’ŒPortå£
         /// </summary>
         private IPEndPoint _IpAndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9050);
         public IPEndPoint ipAndPoint
@@ -91,14 +91,14 @@ namespace TCPIP
                         }
                         else
                         {
-                            _errMsg = paramPath + "ÎÄ¼ş¸ñÊ½Òì³£";
+                            _errMsg = paramPath + "æ–‡ä»¶æ ¼å¼å¼‚å¸¸";
                             result = false;
                         }
                     }
                 }
                 else
                 {
-                    _errMsg = paramPath + "ÎÄ¼ş²»´æÔÚ";
+                    _errMsg = paramPath + "æ–‡ä»¶ä¸å­˜åœ¨";
                     result = false;
                 }
             }
@@ -142,7 +142,7 @@ namespace TCPIP
         }
 
         /// <summary>
-        /// ¸ºÔğ¼àÌıµÄSocket¶ÔÏó
+        /// è´Ÿè´£ç›‘å¬çš„Socketå¯¹è±¡
         /// </summary>
         private Socket _MySocket;
         public Socket mySocket
@@ -152,7 +152,7 @@ namespace TCPIP
         }
 
         /// <summary>
-        /// ¸ºÔğÊÕ·¢Êı¾İµÄSocket¶ÔÏó
+        /// è´Ÿè´£æ”¶å‘æ•°æ®çš„Socketå¯¹è±¡
         /// </summary>
         private Socket _ConnectSocket;
         public Socket ConnectSocket
@@ -161,44 +161,44 @@ namespace TCPIP
             set { _ConnectSocket = value; }
         }
         /// <summary>
-        /// ·şÎñÆ÷¿ªÊ¼¼àÌı
+        /// æœåŠ¡å™¨å¼€å§‹ç›‘å¬
         /// </summary>
-        // Ë½ÓĞ·½·¨£¬ÓÃÓÚ´´½¨Ò»¸ö³ÖĞøµÄ½ÓÊÜÑ­»·
+        // ç§æœ‰æ–¹æ³•ï¼Œç”¨äºåˆ›å»ºä¸€ä¸ªæŒç»­çš„æ¥å—å¾ªç¯
         private void StartAcceptLoop()
         {
             try
             {
-                // ¿ªÊ¼Ò»¸öÒì²½½ÓÊÜ²Ù×÷
+                // å¼€å§‹ä¸€ä¸ªå¼‚æ­¥æ¥å—æ“ä½œ
                 mySocket.BeginAccept(new AsyncCallback(AcceptCallback), null);
             }
             catch (ObjectDisposedException)
             {
-                // µ± mySocket ±»¹Ø±ÕÊ±£¬BeginAccept »áÅ×³ö´ËÒì³££¬ÕâÊÇÕı³£µÄÍ£Ö¹·½Ê½
-                Console.WriteLine("¼àÌıÒÑÍ£Ö¹¡£");
+                // å½“ mySocket è¢«å…³é—­æ—¶ï¼ŒBeginAccept ä¼šæŠ›å‡ºæ­¤å¼‚å¸¸ï¼Œè¿™æ˜¯æ­£å¸¸çš„åœæ­¢æ–¹å¼
+                Console.WriteLine("ç›‘å¬å·²åœæ­¢ã€‚");
             }
             catch (Exception ex)
             {
-                // ´¦ÀíÆäËû¿ÉÄÜµÄÒì³£
-                Console.WriteLine($"¿ªÊ¼¼àÌıÊ±·¢Éú´íÎó: {ex.Message}");
-                // ¸ù¾İĞèÇó£¬¿ÉÒÔÑ¡ÔñÔÚÕâÀïÍ£Ö¹»ò³¢ÊÔÖØĞÂ¿ªÊ¼¼àÌı
+                // å¤„ç†å…¶ä»–å¯èƒ½çš„å¼‚å¸¸
+                Console.WriteLine($"å¼€å§‹ç›‘å¬æ—¶å‘ç”Ÿé”™è¯¯: {ex.Message}");
+                // æ ¹æ®éœ€æ±‚ï¼Œå¯ä»¥é€‰æ‹©åœ¨è¿™é‡Œåœæ­¢æˆ–å°è¯•é‡æ–°å¼€å§‹ç›‘å¬
             }
         }
 
-        // ½ÓÊÜ²Ù×÷µÄ»Øµ÷º¯Êı
+        // æ¥å—æ“ä½œçš„å›è°ƒå‡½æ•°
         private void AcceptCallback(IAsyncResult ar)
         {
             try
             {
-                // 1. Íê³É½ÓÊÜ²Ù×÷£¬²¢»ñÈ¡Óë¿Í»§¶ËÍ¨ĞÅµÄĞÂSocket
+                // 1. å®Œæˆæ¥å—æ“ä½œï¼Œå¹¶è·å–ä¸å®¢æˆ·ç«¯é€šä¿¡çš„æ–°Socket
                 Socket clientSocket = mySocket.EndAccept(ar);
-                Console.WriteLine($"ĞÂ¿Í»§¶ËÒÑÁ¬½Ó: {clientSocket.RemoteEndPoint}");
+                Console.WriteLine($"æ–°å®¢æˆ·ç«¯å·²è¿æ¥: {clientSocket.RemoteEndPoint}");
 
-                //// 2. ´¦ÀíÕâ¸öĞÂÁ¬½ÓµÄ¿Í»§¶Ë
-                ////    ×¢Òâ£ºÕâÀïÎÒÃÇ²»ÔÙ½«¿Í»§¶ËSocket´æµ½Àà¼¶±ğµÄ±äÁ¿(this.ConnectSocket)ÖĞ£¬
-                ////    ¶øÊÇÖ±½Ó´«µİ¸ø´¦ÀíÈÎÎñ£¬ÕâÑù¿ÉÒÔÖ§³Ö¶à¸ö¿Í»§¶ËÍ¬Ê±Á¬½Ó¡£
+                //// 2. å¤„ç†è¿™ä¸ªæ–°è¿æ¥çš„å®¢æˆ·ç«¯
+                ////    æ³¨æ„ï¼šè¿™é‡Œæˆ‘ä»¬ä¸å†å°†å®¢æˆ·ç«¯Socketå­˜åˆ°ç±»çº§åˆ«çš„å˜é‡(this.ConnectSocket)ä¸­ï¼Œ
+                ////    è€Œæ˜¯ç›´æ¥ä¼ é€’ç»™å¤„ç†ä»»åŠ¡ï¼Œè¿™æ ·å¯ä»¥æ”¯æŒå¤šä¸ªå®¢æˆ·ç«¯åŒæ—¶è¿æ¥ã€‚
                 //if (OnDiscoveredDeviceEvent != null)
                 //{
-                //    // ¼ÙÉè tmp ÊÇÒ»¸öÄú¶¨ÒåµÄ¶ÔÏó
+                //    // å‡è®¾ tmp æ˜¯ä¸€ä¸ªæ‚¨å®šä¹‰çš„å¯¹è±¡
                 //    var tmp = new YourDeviceType();
                 //    tmp.ip = clientSocket.RemoteEndPoint;
                 //    OnDiscoveredDeviceEvent(tmp);
@@ -206,35 +206,35 @@ namespace TCPIP
 
                 this.ConnectSocket = clientSocket;
           
-                // Æô¶¯Ò»¸öĞÂÈÎÎñÀ´´¦Àí¸Ã¿Í»§¶ËµÄÊı¾İ½ÓÊÕ£¬ÕâÑù²»»á×èÈû½ÓÊÜÑ­»·
+                // å¯åŠ¨ä¸€ä¸ªæ–°ä»»åŠ¡æ¥å¤„ç†è¯¥å®¢æˆ·ç«¯çš„æ•°æ®æ¥æ”¶ï¼Œè¿™æ ·ä¸ä¼šé˜»å¡æ¥å—å¾ªç¯
                 _ = Task.Run(() => ReceiveDataFromClient(clientSocket));
 
-                // 3. ¡¾¹Ø¼ü²½Öè¡¿´¦ÀíÍêµ±Ç°¿Í»§¶Ëºó£¬Á¢¼´ÔÙ´Îµ÷ÓÃ StartAcceptLoop()
-                //    ÒÔ±ã·şÎñÆ÷¿ÉÒÔ¼ÌĞø½ÓÊÜÏÂÒ»¸ö¿Í»§¶ËÁ¬½Ó¡£
+                // 3. ã€å…³é”®æ­¥éª¤ã€‘å¤„ç†å®Œå½“å‰å®¢æˆ·ç«¯åï¼Œç«‹å³å†æ¬¡è°ƒç”¨ StartAcceptLoop()
+                //    ä»¥ä¾¿æœåŠ¡å™¨å¯ä»¥ç»§ç»­æ¥å—ä¸‹ä¸€ä¸ªå®¢æˆ·ç«¯è¿æ¥ã€‚
                 StartAcceptLoop();
             }
             catch (ObjectDisposedException)
             {
-                // ¼àÌıSocket±»¹Ø±Õ£¬Í£Ö¹½ÓÊÜÑ­»·
-                Console.WriteLine("¼àÌıSocketÒÑ¹Ø±Õ£¬Í£Ö¹½ÓÊÜĞÂÁ¬½Ó¡£");
+                // ç›‘å¬Socketè¢«å…³é—­ï¼Œåœæ­¢æ¥å—å¾ªç¯
+                Console.WriteLine("ç›‘å¬Socketå·²å…³é—­ï¼Œåœæ­¢æ¥å—æ–°è¿æ¥ã€‚");
             }
             catch (Exception ex)
             {
-                // ÔÚ½ÓÊÜ¿Í»§¶ËÊ±·¢Éú´íÎó
-                Console.WriteLine($"½ÓÊÜ¿Í»§¶ËÊ±·¢Éú´íÎó: {ex.Message}");
-                // ¼´Ê¹³ö´í£¬Ò²³¢ÊÔ¼ÌĞø¼àÌıÏÂÒ»¸ö¿Í»§¶Ë
+                // åœ¨æ¥å—å®¢æˆ·ç«¯æ—¶å‘ç”Ÿé”™è¯¯
+                Console.WriteLine($"æ¥å—å®¢æˆ·ç«¯æ—¶å‘ç”Ÿé”™è¯¯: {ex.Message}");
+                // å³ä½¿å‡ºé”™ï¼Œä¹Ÿå°è¯•ç»§ç»­ç›‘å¬ä¸‹ä¸€ä¸ªå®¢æˆ·ç«¯
                 StartAcceptLoop();
             }
         }
 
 
-        //Î¯ÍĞ
+        //å§”æ‰˜
         public event Action<string> reserveInfoSignal;
 
-        //¿ªÊ¼¼àÌı
+        //å¼€å§‹ç›‘å¬
         public void StartListen()
         {
-            // È·±£Ö»ÓĞÒ»¸ö¼àÌıÏß³ÌÔÚÔËĞĞ
+            // ç¡®ä¿åªæœ‰ä¸€ä¸ªç›‘å¬çº¿ç¨‹åœ¨è¿è¡Œ
             lock (_lock)
             {
                 if (_isListening) return;
@@ -244,12 +244,12 @@ namespace TCPIP
                 mySocket.Bind(ipAndPoint);
                 mySocket.Listen(10);
 
-                // Æô¶¯µÚÒ»¸ö½ÓÊÜ²Ù×÷
+                // å¯åŠ¨ç¬¬ä¸€ä¸ªæ¥å—æ“ä½œ
                 StartAcceptLoop();
             }
         }
 
-        // Äú¿ÉÄÜ»¹ĞèÒªÒ»¸öÍ£Ö¹¼àÌıµÄ·½·¨
+        // æ‚¨å¯èƒ½è¿˜éœ€è¦ä¸€ä¸ªåœæ­¢ç›‘å¬çš„æ–¹æ³•
         public void StopListen()
         {
             lock (_lock)
@@ -259,7 +259,7 @@ namespace TCPIP
                     _isListening = false;
                     if (mySocket != null)
                     {
-                        mySocket.Close(); // Õâ»áµ¼ÖÂ BeginAccept Å×³ö ObjectDisposedException£¬´Ó¶øÍ£Ö¹Ñ­»·
+                        mySocket.Close(); // è¿™ä¼šå¯¼è‡´ BeginAccept æŠ›å‡º ObjectDisposedExceptionï¼Œä»è€Œåœæ­¢å¾ªç¯
                         mySocket = null;
                     }
                 }
@@ -293,7 +293,7 @@ namespace TCPIP
             });
         }
         /// <summary>
-        /// ·¢ËÍÊı¾İ¸ø¿Í»§¶Ë
+        /// å‘é€æ•°æ®ç»™å®¢æˆ·ç«¯
         /// </summary>
         /// <param name="Msg"></param>
         public void Send(string Msg)
@@ -344,13 +344,13 @@ namespace TCPIP
         {
             try
             {
-                // ·½·¨1£ºÉèÖÃ¶ÌÊ±Poll
+                // æ–¹æ³•1ï¼šè®¾ç½®çŸ­æ—¶Poll
                 bool part1 = ConnectSocket.Poll(1000, SelectMode.SelectRead);
                 bool part2 = (ConnectSocket.Available == 0);
                 if (part1 && part2)
                     return false;
 
-                //// ·½·¨2£º¼ì²éSocketÑ¡Ïî
+                //// æ–¹æ³•2ï¼šæ£€æŸ¥Socketé€‰é¡¹
                 //byte[] outValue = new byte[1];
                 //ConnectSocket.GetSocketOption(SocketOptionLevel.Socket,
                 //                             SocketOptionName.Error,

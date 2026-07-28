@@ -2066,12 +2066,16 @@ namespace _3DLaserGlueInspection.subForm
                     {
                         if (!outMaxRegion.Empty() && !outRegionRectangle2.Empty())
                         {
-                            GlobalVarAndFunc.ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, cutSet, cutSet.imageSet[selectCamListBox.SelectedIndex][selectPictureListBox.SelectedIndex], hXLDCont10mm3D, outMaxRegion, outRegionRectangle2, resultData, bResult, ref hWindowModel, ref showing, ref olockShow, 0, 0);
+                            GlobalVarAndFunc.ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, cutSet, cutSet.imageSet[selectCamListBox.SelectedIndex][selectPictureListBox.SelectedIndex], 
+                                hXLDCont10mm3D, outMaxRegion, outRegionRectangle2, resultData, bResult, ref hWindowModel, ref showing, ref olockShow, 0, 0);
 
                         }
                         else
                         {
-                            GlobalVarAndFunc.ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, cutSet, hXLDCont10mm3D, ref hWindowModel, ref showing, ref olockShow, 0, 0);
+                            //GlobalVarAndFunc.ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, cutSet, hXLDCont10mm3D, ref hWindowModel, ref showing, ref olockShow, 0, 0);
+
+                            GlobalVarAndFunc.ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, cutSet, cutSet.imageSet[selectCamListBox.SelectedIndex][selectPictureListBox.SelectedIndex],
+                               hXLDCont10mm3D, outMaxRegion, outRegionRectangle2, resultData, bResult, ref hWindowModel, ref showing, ref olockShow, 0, 0);
                         }
                     }
                     else
@@ -3241,7 +3245,7 @@ namespace _3DLaserGlueInspection.subForm
 
                     //修改，让相机拍照偏移值为0，测试用
                     //Vision.getLaserPosition(imgCut, imageSet.minThreshold, out xy,  LeftX,  TopY);
-                    Vision.getLaserPosition(imgCut, imageSet.minThreshold, imageSet.laserMinWidth, out xy, camParam.OffsetX + LeftX, camParam.OffsetY + TopY);
+                     Vision.getLaserPosition(imgCut, imageSet.minThreshold, imageSet.laserMinWidth, out xy, camParam.OffsetX + LeftX, camParam.OffsetY + TopY);
 
 
                     ////添加

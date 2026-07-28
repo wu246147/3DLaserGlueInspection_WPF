@@ -13,15 +13,15 @@ namespace Wpf_Replace_halcon
     {
         public CameraParameters Clone() { return (CameraParameters)this.MemberwiseClone(); }
 
-        public string CameraModel { get; set; } = "area_scan_division";  // Èç"area_scan_division"
-        public double Focus { get; set; } = 0.008;        // ½¹¾à£¨µ¥Î»£ºÃ×£©
-        public double Kappa { get; set; } = 0;          // ¾¶Ïò»û±äÏµÊı (µ¥Î»£ºm^-2)
-        public double Sx { get; set; } = 5.2e-06;            // ´«¸ĞÆ÷ÉÏÁ½¸öÏàÁÚµ¥ÔªÖ®¼äµÄË®Æ½¾àÀë£¨m/ÏñËØ£©
-        public double Sy { get; set; } = 5.2e-06;          // ´«¸ĞÆ÷ÉÏÁ½¸öÏàÁÚµ¥ÔªÖ®¼äµÄ´¹Ö±¾àÀë£¨m/ÏñËØ£©
-        public double Cx { get; set; } = 640;          // Ö÷µãX×ø±ê£¨ÏñËØ£©
-        public double Cy { get; set; } = 512;    // Ö÷µãY×ø±ê£¨ÏñËØ£©
-        public int ImageWidth { get; set; } = 1280;     // Í¼Ïñ¿í¶È 
-        public int ImageHeight { get; set; } = 1024;    // Í¼Ïñ¸ß¶È 
+        public string CameraModel { get; set; } = "area_scan_division";  // å¦‚"area_scan_division"
+        public double Focus { get; set; } = 0.008;        // ç„¦è·ï¼ˆå•ä½ï¼šç±³ï¼‰
+        public double Kappa { get; set; } = 0;          // å¾„å‘ç•¸å˜ç³»æ•° (å•ä½ï¼šm^-2)
+        public double Sx { get; set; } = 5.2e-06;            // ä¼ æ„Ÿå™¨ä¸Šä¸¤ä¸ªç›¸é‚»å•å…ƒä¹‹é—´çš„æ°´å¹³è·ç¦»ï¼ˆm/åƒç´ ï¼‰
+        public double Sy { get; set; } = 5.2e-06;          // ä¼ æ„Ÿå™¨ä¸Šä¸¤ä¸ªç›¸é‚»å•å…ƒä¹‹é—´çš„å‚ç›´è·ç¦»ï¼ˆm/åƒç´ ï¼‰
+        public double Cx { get; set; } = 640;          // ä¸»ç‚¹Xåæ ‡ï¼ˆåƒç´ ï¼‰
+        public double Cy { get; set; } = 512;    // ä¸»ç‚¹Yåæ ‡ï¼ˆåƒç´ ï¼‰
+        public int ImageWidth { get; set; } = 1280;     // å›¾åƒå®½åº¦ 
+        public int ImageHeight { get; set; } = 1024;    // å›¾åƒé«˜åº¦ 
     }
 
     [Serializable]
@@ -109,11 +109,11 @@ namespace Wpf_Replace_halcon
             outputPoseParameters.y = inputPoseParameters1.y + (inputPoseParameters2.y - inputPoseParameters1.y) * s;
             outputPoseParameters.z = inputPoseParameters1.z + (inputPoseParameters2.z - inputPoseParameters1.z) * s;
 
-            if (inputPoseParameters1.rx > 0 && inputPoseParameters2.rx < 0)
+            if (inputPoseParameters1.rx > 0 && inputPoseParameters2.rx < 0 && Math.Abs(inputPoseParameters1.rx- inputPoseParameters2.rx)>180)
             {
                 outputPoseParameters.rx = inputPoseParameters1.rx + (inputPoseParameters2.rx + 360 - inputPoseParameters1.rx) * s;
             }
-            else if (inputPoseParameters1.rx < 0 && inputPoseParameters2.rx > 0)
+            else if (inputPoseParameters1.rx < 0 && inputPoseParameters2.rx > 0 && Math.Abs(inputPoseParameters1.rx - inputPoseParameters2.rx) > 180)
             {
                 outputPoseParameters.rx = inputPoseParameters1.rx + (inputPoseParameters2.rx - 360 - inputPoseParameters1.rx) * s;
             }
@@ -123,11 +123,11 @@ namespace Wpf_Replace_halcon
             }
 
 
-            if (inputPoseParameters1.ry > 0 && inputPoseParameters2.ry < 0)
+            if (inputPoseParameters1.ry > 0 && inputPoseParameters2.ry < 0 && Math.Abs(inputPoseParameters1.ry - inputPoseParameters2.ry) > 180)
             {
                 outputPoseParameters.ry = inputPoseParameters1.ry + (inputPoseParameters2.ry + 360 - inputPoseParameters1.ry) * s;
             }
-            else if (inputPoseParameters1.ry < 0 && inputPoseParameters2.ry > 0)
+            else if (inputPoseParameters1.ry < 0 && inputPoseParameters2.ry > 0 && Math.Abs(inputPoseParameters1.ry - inputPoseParameters2.ry) > 180)
             {
                 outputPoseParameters.ry = inputPoseParameters1.ry + (inputPoseParameters2.ry - 360 - inputPoseParameters1.ry) * s;
             }
@@ -137,11 +137,11 @@ namespace Wpf_Replace_halcon
             }
 
 
-            if (inputPoseParameters1.rz > 0 && inputPoseParameters2.rz < 0)
+            if (inputPoseParameters1.rz > 0 && inputPoseParameters2.rz < 0 && Math.Abs(inputPoseParameters1.rz - inputPoseParameters2.rz) > 180)
             {
                 outputPoseParameters.rz = inputPoseParameters1.rz + (inputPoseParameters2.rz + 360 - inputPoseParameters1.rz) * s;
             }
-            else if (inputPoseParameters1.rz < 0 && inputPoseParameters2.rz > 0)
+            else if (inputPoseParameters1.rz < 0 && inputPoseParameters2.rz > 0 && Math.Abs(inputPoseParameters1.rz - inputPoseParameters2.rz) > 180)
             {
                 outputPoseParameters.rz = inputPoseParameters1.rz + (inputPoseParameters2.rz - 360 - inputPoseParameters1.rz) * s;
             }
@@ -155,10 +155,10 @@ namespace Wpf_Replace_halcon
         }
 
         ///// <summary>
-        ///// Î»×Ë×ª×ª»»¾ØÕó
+        ///// ä½å§¿è½¬è½¬æ¢çŸ©é˜µ
         ///// </summary>
-        ///// <param name="poseParameters">Î»×Ë²ÎÊı</param>
-        ///// <param name="mat">·µ»Ø4*3µÄÍâ²Î¾ØÕó</param>
+        ///// <param name="poseParameters">ä½å§¿å‚æ•°</param>
+        ///// <param name="mat">è¿”å›4*3çš„å¤–å‚çŸ©é˜µ</param>
         ///// <returns></returns>
         //static public int poseToHomMat3d(PoseParameters poseParameters, out Mat mat)
         //{
@@ -220,7 +220,7 @@ namespace Wpf_Replace_halcon
 
         //    //Point3f[] points = { new Point3f(1, 2, 3), new Point3f(4, 5, 6) };
 
-        //    //// Ö´ĞĞ±ä»» 
+        //    //// æ‰§è¡Œå˜æ¢ 
         //    //Mat pointsMat2 = new Mat(2, 3, MatType.CV_32FC1);
 
         //    transformXs = new double[xs.Length];

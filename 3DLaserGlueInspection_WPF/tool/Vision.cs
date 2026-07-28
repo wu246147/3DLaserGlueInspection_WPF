@@ -772,7 +772,8 @@ namespace _3DLaserGlueInspection
 
             //Console.WriteLine($"singleFrameDet use time:{useTime}ms");
 
-
+            bResult = new BResult();
+            resultData = new Data();
             if (maxArea > 0)
             {
                 //stopwatch = new Stopwatch();
@@ -786,7 +787,10 @@ namespace _3DLaserGlueInspection
                 //useTime = elapsedTime.TotalMilliseconds;
                 //Console.WriteLine($"judgeGlueResult use time:{useTime}");
             }
-
+            else
+            {
+                bResult.Result = false;
+            }
 
 
         }
@@ -1199,10 +1203,10 @@ namespace _3DLaserGlueInspection
     [Serializable]
     public class Data
     {
-        public double row, column;
-        public double glueHeight;
-        public double glueWidth;
-        public double glueArea;
+        public double row = -1, column = -1;
+        public double glueHeight = -1;
+        public double glueWidth = -1;
+        public double glueArea = -1;
 
         // 深复制
         public Data Clone()
@@ -1220,9 +1224,9 @@ namespace _3DLaserGlueInspection
     [Serializable]
     public class BResult
     {
-        public bool glueHeight;
-        public bool glueWidth;
-        public bool glueArea;
+        public bool glueHeight ;
+        public bool glueWidth ;
+        public bool glueArea ;
         /// <summary>
         /// 总结果
         /// </summary>

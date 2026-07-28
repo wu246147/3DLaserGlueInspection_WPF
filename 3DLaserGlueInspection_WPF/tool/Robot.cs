@@ -32,32 +32,32 @@ namespace _3DLaserGlueInspection
         bool IsOpen { get; }
 
         /// <summary>
-        /// »ñÈ¡×îºóÒ»´Î´íÎóĞÅÏ¢
+        /// è·å–æœ€åä¸€æ¬¡é”™è¯¯ä¿¡æ¯
         /// </summary>
         /// <returns></returns>
         string ErrMsg { get; }
         /// <summary>
-        /// ¼ÓÔØ²ÎÊı
+        /// åŠ è½½å‚æ•°
         /// </summary>
         /// <returns></returns>
         bool Load();
         /// <summary>
-        /// ±£´æ²ÎÊı
+        /// ä¿å­˜å‚æ•°
         /// </summary>
         /// <returns></returns>
         bool Save();
         /// <summary>
-        /// ´ò¿ª£¨Á¬½Ó£©
+        /// æ‰“å¼€ï¼ˆè¿æ¥ï¼‰
         /// </summary>
         /// <returns></returns>
         bool Open();
         /// <summary>
-        /// ¹Ø±Õ£¨¶Ï¿ª£©
+        /// å…³é—­ï¼ˆæ–­å¼€ï¼‰
         /// </summary>
         /// <returns></returns>
         bool Close();
         /// <summary>
-        /// »ñÈ¡×ø±ê
+        /// è·å–åæ ‡
         /// </summary>
         /// <param name="hPose"></param>
         /// <returns></returns>
@@ -89,7 +89,7 @@ namespace _3DLaserGlueInspection
         YRCHighEthernet yrc = new YRCHighEthernet();
         public YRCRobot() { }
 
-        public bool Read×ø±ê(out string[] value)
+        public bool Readåæ ‡(out string[] value)
         {
             OperateResult<byte[]> operateResult = yrc.ReadCommand(117, 101, 0, 1, null);
             if (operateResult.IsSuccess)
@@ -109,9 +109,9 @@ namespace _3DLaserGlueInspection
                 return false;
             }
         }
-        public bool Read×ø±ê(out PoseParameters hPose)
+        public bool Readåæ ‡(out PoseParameters hPose)
         {
-            OperateResult<string[]> read = yrc.ReadPose();//¹Ø½Ú×ø±ê
+            OperateResult<string[]> read = yrc.ReadPose();//å…³èŠ‚åæ ‡
             if (read.IsSuccess)
             {
                 double x = double.Parse(read.Content[0]) / 1000;
@@ -230,7 +230,7 @@ namespace _3DLaserGlueInspection
             }
         }
         /// <summary>
-        /// ¶ÁÈ¡Êä³öĞÅºÅDO1~DO128
+        /// è¯»å–è¾“å‡ºä¿¡å·DO1~DO128
         /// </summary>
         /// <param name="index">1~128</param>
         /// <param name="value"></param>
@@ -244,7 +244,7 @@ namespace _3DLaserGlueInspection
             return operateResult.IsSuccess;
         }
         /// <summary>
-        /// ¶ÁÈ¡ÊäÈëĞÅºÅDI1~DI128
+        /// è¯»å–è¾“å…¥ä¿¡å·DI1~DI128
         /// </summary>
         /// <param name="index">1~128</param>
         /// <param name="value"></param>
@@ -258,7 +258,7 @@ namespace _3DLaserGlueInspection
             return operateResult.IsSuccess;
         }
         /// <summary>
-        /// Ğ´ÈëÊäÈëĞÅºÅDI1~DI128
+        /// å†™å…¥è¾“å…¥ä¿¡å·DI1~DI128
         /// </summary>
         /// <param name="index">1~128</param>
         /// <param name="value"></param>
@@ -271,7 +271,7 @@ namespace _3DLaserGlueInspection
             return operateResult.IsSuccess;
         }
         /// <summary>
-        /// ¶ÁÈ¡Êä³öĞÅºÅAO1~AO32
+        /// è¯»å–è¾“å‡ºä¿¡å·AO1~AO32
         /// </summary>
         /// <param name="index">1~32</param>
         /// <param name="value"></param>
@@ -285,7 +285,7 @@ namespace _3DLaserGlueInspection
             return operateResult.IsSuccess;
         }
         /// <summary>
-        /// ¶ÁÈ¡Êä³öĞÅºÅAI1~AI32
+        /// è¯»å–è¾“å‡ºä¿¡å·AI1~AI32
         /// </summary>
         /// <param name="index">1~32</param>
         /// <param name="value"></param>
@@ -299,7 +299,7 @@ namespace _3DLaserGlueInspection
             return operateResult.IsSuccess;
         }
         /// <summary>
-        /// Ğ´ÈëÊäÈëĞÅºÅAI1~AI32
+        /// å†™å…¥è¾“å…¥ä¿¡å·AI1~AI32
         /// </summary>
         /// <param name="index">1~32</param>
         /// <param name="value"></param>
@@ -312,7 +312,7 @@ namespace _3DLaserGlueInspection
             return operateResult.IsSuccess;
         }
         /// <summary>
-        /// ¶ÁÈ¡Êä³öĞÅºÅAO33~AO64
+        /// è¯»å–è¾“å‡ºä¿¡å·AO33~AO64
         /// </summary>
         /// <param name="index">33~64</param>
         /// <param name="value"></param>
@@ -326,7 +326,7 @@ namespace _3DLaserGlueInspection
             return operateResult.IsSuccess;
         }
         /// <summary>
-        /// ¶ÁÈ¡Êä³öĞÅºÅAI33~AI64
+        /// è¯»å–è¾“å‡ºä¿¡å·AI33~AI64
         /// </summary>
         /// <param name="index">33~64</param>
         /// <param name="value"></param>
@@ -340,7 +340,7 @@ namespace _3DLaserGlueInspection
             return operateResult.IsSuccess;
         }
         /// <summary>
-        /// Ğ´ÈëÊäÈëĞÅºÅAI33~AI64
+        /// å†™å…¥è¾“å…¥ä¿¡å·AI33~AI64
         /// </summary>
         /// <param name="index">33~64</param>
         /// <param name="value"></param>
@@ -464,8 +464,8 @@ namespace _3DLaserGlueInspection
         {
             modbus.IpAddress = param.IpAddress;
             modbus.Port = param.Port;
-            modbus.ConnectTimeOut = 5000;     // Á¬½Ó³¬Ê±£¬µ¥Î»ºÁÃë
-            modbus.ReceiveTimeOut = 3000;     // ½ÓÊÕ³¬Ê±£¬µ¥Î»ºÁÃë
+            modbus.ConnectTimeOut = 5000;     // è¿æ¥è¶…æ—¶ï¼Œå•ä½æ¯«ç§’
+            modbus.ReceiveTimeOut = 3000;     // æ¥æ”¶è¶…æ—¶ï¼Œå•ä½æ¯«ç§’
             modbus.Station = 1;
             modbus.AddressStartWithZero = true;
             modbus.IsCheckMessageId = true;
@@ -803,8 +803,8 @@ namespace _3DLaserGlueInspection
         {
             robot.IpAddress = param.IpAddress;
             robot.Port = param.Port;
-            robot.ConnectTimeOut = 5000;     // Á¬½Ó³¬Ê±£¬µ¥Î»ºÁÃë
-            robot.ReceiveTimeOut = 3000;     // ½ÓÊÕ³¬Ê±£¬µ¥Î»ºÁÃë
+            robot.ConnectTimeOut = 5000;     // è¿æ¥è¶…æ—¶ï¼Œå•ä½æ¯«ç§’
+            robot.ReceiveTimeOut = 3000;     // æ¥æ”¶è¶…æ—¶ï¼Œå•ä½æ¯«ç§’
             //robot.Station = 1;
             //robot.AddressStartWithZero = true;
             //robot.IsCheckMessageId = true;
@@ -1097,14 +1097,14 @@ namespace _3DLaserGlueInspection
                         }
                         else
                         {
-                            _errMsg = paramPath + "ÎÄ¼ş¸ñÊ½Òì³£";
+                            _errMsg = paramPath + "æ–‡ä»¶æ ¼å¼å¼‚å¸¸";
                             result = false;
                         }
                     }
                 }
                 else
                 {
-                    _errMsg = paramPath + "ÎÄ¼ş²»´æÔÚ";
+                    _errMsg = paramPath + "æ–‡ä»¶ä¸å­˜åœ¨";
                     result = false;
                 }
             }
@@ -1128,7 +1128,7 @@ namespace _3DLaserGlueInspection
                     if (ios == null)
                     {
                         result = false;
-                        _errMsg = paramPath + "ÎÄ¼ş¸ñÊ½Òì³£";
+                        _errMsg = paramPath + "æ–‡ä»¶æ ¼å¼å¼‚å¸¸";
                     }
                     else
                     {
@@ -1138,7 +1138,7 @@ namespace _3DLaserGlueInspection
                 else
                 {
                     result = false;
-                    _errMsg = paramPath + "ÎÄ¼ş²»´æÔÚ";
+                    _errMsg = paramPath + "æ–‡ä»¶ä¸å­˜åœ¨";
                 }
             }
             catch (Exception ex)
@@ -1187,8 +1187,8 @@ namespace _3DLaserGlueInspection
         {
             robot.IpAddress = param.IpAddress;
             robot.Port = param.Port;
-            robot.ConnectTimeOut = 5000;     // Á¬½Ó³¬Ê±£¬µ¥Î»ºÁÃë
-            robot.ReceiveTimeOut = 3000;     // ½ÓÊÕ³¬Ê±£¬µ¥Î»ºÁÃë
+            robot.ConnectTimeOut = 5000;     // è¿æ¥è¶…æ—¶ï¼Œå•ä½æ¯«ç§’
+            robot.ReceiveTimeOut = 3000;     // æ¥æ”¶è¶…æ—¶ï¼Œå•ä½æ¯«ç§’
             //robot.Station = 1;
             //robot.AddressStartWithZero = true;
             //robot.IsCheckMessageId = true;
@@ -1227,7 +1227,7 @@ namespace _3DLaserGlueInspection
 
         public bool Read(DI eDI, out bool value)
         {
-            _errMsg = "²»Ö§³Öbool";
+            _errMsg = "ä¸æ”¯æŒbool";
             value = false;
             return false;
         }
@@ -1242,7 +1242,7 @@ namespace _3DLaserGlueInspection
                 string ioAddress = ioDict[ioName].Address.Trim();
                 if (!string.IsNullOrEmpty(ioAddress))
                 {
-                    _errMsg = "²»Ö§³Öbool";
+                    _errMsg = "ä¸æ”¯æŒbool";
                     value = false;
                     return false;
 
@@ -1256,7 +1256,7 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = ioName + "µØÖ·Î´·ÖÅä";
+                _errMsg = ioName + "åœ°å€æœªåˆ†é…";
             }
             value = false;
             return false;
@@ -1277,7 +1277,7 @@ namespace _3DLaserGlueInspection
                 string ioAddress = ioDict[ioName].Address.Trim();
                 if (!string.IsNullOrEmpty(ioAddress))
                 {
-                    _errMsg = "²»Ö§³Öint";
+                    _errMsg = "ä¸æ”¯æŒint";
                     value = 0;
                     return false;
 
@@ -1291,7 +1291,7 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = ioName + "µØÖ·Î´·ÖÅä";
+                _errMsg = ioName + "åœ°å€æœªåˆ†é…";
             }
             value = 0;
             return false;
@@ -1307,7 +1307,7 @@ namespace _3DLaserGlueInspection
                 {
                     lock (iolock)
                     {
-                        _errMsg = "²»Ö§³ÖĞ´Èë";
+                        _errMsg = "ä¸æ”¯æŒå†™å…¥";
                         value = false;
                         return false;
                     }
@@ -1319,7 +1319,7 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = eDO.ToString() + "µØÖ·Î´·ÖÅä";
+                _errMsg = eDO.ToString() + "åœ°å€æœªåˆ†é…";
             }
             return false;
         }
