@@ -144,6 +144,9 @@ namespace _3DLaserGlueInspection.subForm
 
             vtkActor actor = vtkActor.New();
             actor.SetMapper(mapper);
+            // 调大点云显示
+            //actor.GetProperty().SetPointSize(3);  // ← 这里调大
+            actor.GetProperty().SetPointSize(1);  // ← 这里调大
 
 
             vtkRenderer render = vtkRenderWindowControl.RenderWindow.GetRenderers().GetFirstRenderer();

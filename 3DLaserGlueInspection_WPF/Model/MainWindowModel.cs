@@ -2,6 +2,7 @@
 //using HalconDotNet;
 using HelixToolkit.Wpf;
 using HslCommunication.Core.Net;
+using LiveCharts.Configurations;
 using LiveCharts.Wpf;
 using OpenCvSharp;
 using RAIVASCS.Common;
@@ -112,6 +113,10 @@ namespace _3DLaserGlueInspection
         Stopwatch watch = new Stopwatch();
         bool bRobotRun = true;//控制机器人线程是否运行
 
+
+        Dictionary<string, SynchronizedList<Dictionary<long, Wpf_Replace_halcon.PoseParameters>>> CamCenter3DPoseDict = 
+            new Dictionary<string, SynchronizedList<Dictionary<long, Wpf_Replace_halcon.PoseParameters>>>();//相机中心位姿（眼在手上时是相对机器人坐标系，眼在手外时是相对于产品坐标系）  相机-分段-时间-机器位姿
+
         SynchronizedList<long> robotPoseKeys = new SynchronizedList<long>();
         SynchronizedList<Wpf_Replace_halcon.PoseParameters> robotPoseValues = new SynchronizedList<Wpf_Replace_halcon.PoseParameters>();
         Task taskRobot = null;
@@ -139,6 +144,8 @@ namespace _3DLaserGlueInspection
 
         Dictionary<string, Task> tasks = new Dictionary<string, Task>();//相机-处理任务
 
+        Task taskShow2D = null;
+
         Task taskPoint3D = null;
         Task taskShow3D = null;
 
@@ -146,7 +153,10 @@ namespace _3DLaserGlueInspection
 
         int displayIntervalID = 4;
 
-        public Dictionary<string, int> indexImageCutProcessDict = new Dictionary<string, int>(); // 表示正在图像处理的段数
+        public Dictionary<string, int> indexImageCutProcessDict = new Dictionary<string, int>(); // 表示正在图像处理的段数,用于图像处理
+        public Dictionary<string, int> indexResultShowDict = new Dictionary<string, int>(); // 表示正在图像处理的段数,用于图像处理
+
+
         bool totalResult = true;
 
         public bool simulation = false;
@@ -658,6 +668,9 @@ namespace _3DLaserGlueInspection
                                 var dictRobotPose = new Dictionary<long, PoseParameters>();
                                 Robot3DPose[item.Key].Add(dictRobotPose);
 
+                                var dictCamCenter3DPose = new Dictionary<long, PoseParameters>();
+                                CamCenter3DPoseDict[item.Key].Add(dictCamCenter3DPose);
+
                                 var dictResultCenter3DPoint = new Dictionary<long, Point3D>();
                                 ResultCenter3DPoint[item.Key].Add(dictResultCenter3DPoint);
                                 
@@ -701,13 +714,8 @@ namespace _3DLaserGlueInspection
                                             {
                                                 if (dictImageKey.Count < set.CutSets[segmentIndex].ImageNum)
                                                 {
-                                                    dictImage.Add(key, image);
-                                                    dictImageKey.Add(key);
-                                                    var dictImageKeyCount = dictImageKey.Count;
-
-                                                    double fps = dictImageKey.Count * 1000.0 * 1000.0 / key;
-                                                    //Console.WriteLine("fps:{0}", fps);
-
+                                                    //先更新界面，要不容易出现更新慢而结果显示出问题
+                                                    var dictImageKeyCount = dictImageKey.Count + 1;
                                                     System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                                                     {
                                                         lock (olockDataGridViewImageList)
@@ -778,9 +786,18 @@ namespace _3DLaserGlueInspection
                                                                 }
                                                             }
                                                         }
-                                                    }
+                                                    }));
 
-                                               ));
+
+                                                    //再添加图片到队列
+                                                    dictImage.Add(key, image);
+                                                    dictImageKey.Add(key);
+                                                    
+
+                                                    double fps = dictImageKey.Count * 1000.0 * 1000.0 / key;
+                                                    //Console.WriteLine("fps:{0}", fps);
+
+                                                    
                                                 }
                                             }
                                         }));
@@ -826,10 +843,8 @@ namespace _3DLaserGlueInspection
                                                             {
                                                                 Mat image = new Mat(filePaths[i], ImreadModes.Unchanged);
 
-                                                                dictImage.Add(key, image);
-                                                                dictImageKey.Add(key);
-                                                                var dictImageKeyCount = dictImageKey.Count;
-
+                                                                //先更新界面，要不容易出现更新慢而结果显示出问题
+                                                                var dictImageKeyCount = dictImageKey.Count + 1;
                                                                 System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                                                                 {
 
@@ -903,6 +918,13 @@ namespace _3DLaserGlueInspection
                                                                     }
 
                                                                 }));
+
+
+                                                                //再添加图片到队列
+                                                                dictImage.Add(key, image);
+                                                                dictImageKey.Add(key);
+                                                                
+
                                                             }
                                                             catch (Exception ex)
                                                             {
@@ -1167,7 +1189,7 @@ namespace _3DLaserGlueInspection
                         }
                     }
 
-                    ////临时测试，保存涂胶坐标
+                    ////保存涂胶坐标
                     //{
                     //    using (FileStream stream = new FileStream($"./resultCenterPointValues.xml", FileMode.Create))
                     //    {
@@ -1802,6 +1824,16 @@ namespace _3DLaserGlueInspection
                             if (stop) return;
                         }
                     }
+
+                    //等待2d结果显示完毕
+                    ShowMessage("等待2d结果显示完毕");
+                    while (!taskShow2D.IsCompleted)
+                    {
+                        Thread.Sleep(10);
+                        if (stop) return;
+                    }
+
+
                     RefreshOFFEvent();
                     RefreshPointsEvent();
 
@@ -2089,14 +2121,30 @@ namespace _3DLaserGlueInspection
                 }
                 if (set.CutSets[i].EndImageIndex > set.CutSets[i].StartImageIndex)
                 {
-                    int setCount = set.CutSets[i].EndImageIndex - set.CutSets[i].StartImageIndex + 1;
-                    if (setCount < 1) setCount = 1;
-                    Vision.XLDDataDivide(set.XLDDatas[i], setCount, out rowss[i], out colss[i], out angless[i]);
 
-                    for (int j = 0; j < setCount; j++)
+                    if (set.mapper.isCalib())
                     {
-                        hWindowNumericalModelDiagramDispCross(rowss[i][j], colss[i][j], angless[i][j], set.CutSets[i].Size, Colors.Blue);
+                        var pts2D = set.mapper.getMapping2DPoint();
+
+                        for (int j = 0; j < pts2D.Count; j++)
+                        {
+                            //暂时默认绘制45度角的交叉图标
+                            hWindowNumericalModelDiagramDispCross( pts2D[j][1], pts2D[j][0], 45, set.CutSets[i].Size, Colors.Blue);
+                        }
                     }
+                    else
+                    {
+                        int setCount = set.CutSets[i].EndImageIndex - set.CutSets[i].StartImageIndex + 1;
+                        if (setCount < 1) setCount = 1;
+                        Vision.XLDDataDivide(set.XLDDatas[i], setCount, out rowss[i], out colss[i], out angless[i]);
+
+                        for (int j = 0; j < setCount; j++)
+                        {
+                            hWindowNumericalModelDiagramDispCross(rowss[i][j], colss[i][j], angless[i][j], set.CutSets[i].Size, Colors.Blue);
+                        }
+                    }
+
+                   
                 }
                 else
                 {
@@ -2242,6 +2290,10 @@ namespace _3DLaserGlueInspection
                     var dictRobotPose = new SynchronizedList<Dictionary<long, PoseParameters>>();
                     Robot3DPose.Add(item.Key, dictRobotPose);
 
+                    var dictCamCenter3DPose = new SynchronizedList<Dictionary<long, PoseParameters>>();
+                    CamCenter3DPoseDict.Add(item.Key, dictCamCenter3DPose);
+                    
+
                     var dictResultCenter3DPoint = new SynchronizedList<Dictionary<long, Point3D>>();
                     ResultCenter3DPoint.Add(item.Key, dictResultCenter3DPoint);
 
@@ -2268,6 +2320,8 @@ namespace _3DLaserGlueInspection
                     glueResultDict.Add(item.Key, dictResult);
 
                     indexImageCutProcessDict.Add(item.Key, 0);
+
+                    indexResultShowDict.Add(item.Key, 0);
 
                     displaySize.Add(item.Key, new SynchronizedList<System.Windows.Size>());
                 }
@@ -2470,6 +2524,9 @@ namespace _3DLaserGlueInspection
                             var dictRobotPose = Robot3DPose[item.Key][indexImageCutProcessDict[item.Key]];
                             var dictResultCenter3DPoint = ResultCenter3DPoint[item.Key][indexImageCutProcessDict[item.Key]];
 
+                            var dictCamCenter3DPose = CamCenter3DPoseDict[item.Key][indexImageCutProcessDict[item.Key]];
+
+
                             var dictX = Point3DXs[item.Key][indexImageCutProcessDict[item.Key]];
                             var dictY = Point3DYs[item.Key][indexImageCutProcessDict[item.Key]];
                             var dictZ = Point3DZs[item.Key][indexImageCutProcessDict[item.Key]];
@@ -2592,6 +2649,7 @@ namespace _3DLaserGlueInspection
                                                 centerInBase.ry = centerRY;
                                                 centerInBase.rz = centerRZ;
                                                 //dictRobotPose.Add(imageKey, centerInBase);
+                                                dictCamCenter3DPose.Add(imageKey, centerInBase);
                                             }
                                             else
                                             {
@@ -2611,6 +2669,8 @@ namespace _3DLaserGlueInspection
                                                 centerInTool.ry = centerRY;
                                                 centerInTool.rz = centerRZ;
                                                 //dictRobotPose.Add(imageKey, centerInTool);
+                                                dictCamCenter3DPose.Add(imageKey, centerInTool);
+
 
                                             }
                                             dictRobotPose.Add(imageKey, robotPose);
@@ -2653,192 +2713,13 @@ namespace _3DLaserGlueInspection
                                                     //var last = dictRobotPose.Skip(dictRobotPose.Count - 2).First();
                                                     var last = dictRobotPose.Skip(dictRobotPose.Count - intervalCount - 1).First();
                                                     var lastRobotPose = last.Value;
-                                                    if (Params.CamHandEyeType[camParamName] == 0)
-                                                    {
-                                                        Mat robotPoseMat = new Mat();
-                                                        robotPoseMat = Mat.Zeros(2, 7, MatType.CV_64FC1);
-                                                        robotPoseMat.At<double>(0, 0) = lastRobotPose.x;
-                                                        robotPoseMat.At<double>(0, 1) = lastRobotPose.y;
-                                                        robotPoseMat.At<double>(0, 2) = lastRobotPose.z;
-                                                        robotPoseMat.At<double>(0, 3) = lastRobotPose.rx;
-                                                        robotPoseMat.At<double>(0, 4) = lastRobotPose.ry;
-                                                        robotPoseMat.At<double>(0, 5) = lastRobotPose.rz;
-                                                        robotPoseMat.At<double>(0, 6) = lastRobotPose.PoseType;
 
-                                                        robotPoseMat.At<double>(1, 0) = robotPose.x;
-                                                        robotPoseMat.At<double>(1, 1) = robotPose.y;
-                                                        robotPoseMat.At<double>(1, 2) = robotPose.z;
-                                                        robotPoseMat.At<double>(1, 3) = robotPose.rx;
-                                                        robotPoseMat.At<double>(1, 4) = robotPose.ry;
-                                                        robotPoseMat.At<double>(1, 5) = robotPose.rz;
-                                                        robotPoseMat.At<double>(1, 6) = robotPose.PoseType;
+                                                    robotAndCamAngle = Vision.GetRobotAndCamAngle(Params.CamHandEyeType[camParamName], CamToCam1, CenterToCam1, Cam1ToBase, CamToTool, robotPose, lastRobotPose);
 
-                                                        Mat ToolToBase = new Mat();
-                                                        Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
-                                                        CamToBase = ToolToBase * CamToTool;
-
-                                                        Vision.robotAndCamVectorAngle(robotPoseMat.CvPtr, CamToBase.CvPtr, 2, 0, out robotAndCamAngle);
-                                                        //大于90的，都取缩小后的值
-                                                        if (robotAndCamAngle > 90)
-                                                        {
-                                                            robotAndCamAngle = 180 - robotAndCamAngle;
-                                                        }
-                                                    }
-                                                    else
-                                                    {
-                                                        Mat camInTools = new Mat();
-                                                        camInTools = Mat.Zeros(2, 7, MatType.CV_64FC1);
-
-                                                        //这里直接使用Cam2Tool，后面可以使用Center2Tool
-                                                        //轨迹的前一个点，要转成center2Tool
-                                                        {
-                                                            Mat ToolToBase = new Mat();
-                                                            Mat BaseToTool = new Mat();
-                                                            Mat CenterToTool = new Mat();
-                                                            Vision.poseToHomMat3d(lastRobotPose.PoseType, lastRobotPose.x, lastRobotPose.y, lastRobotPose.z,
-                                                                lastRobotPose.rx, lastRobotPose.ry, lastRobotPose.rz, ToolToBase.CvPtr);
-
-                                                            BaseToTool = ToolToBase.Inv();
-
-                                                            CenterToTool = BaseToTool * Cam1ToBase * CenterToCam1;
-
-                                                            double x, y, z, rx, ry, rz;
-                                                            Vision.HomMat3dToPose(2, out x, out y, out z, out rx, out ry, out rz, CenterToTool.CvPtr);
-
-                                                            camInTools.At<double>(0, 0) = x;
-                                                            camInTools.At<double>(0, 1) = y;
-                                                            camInTools.At<double>(0, 2) = z;
-                                                            camInTools.At<double>(0, 3) = rx;
-                                                            camInTools.At<double>(0, 4) = ry;
-                                                            camInTools.At<double>(0, 5) = rz;
-                                                            camInTools.At<double>(0, 6) = 2;
-
-                                                        }
-                                                        //轨迹的后一个点，要转成center2Tool
-                                                        {
-                                                            Mat ToolToBase = new Mat();
-                                                            Mat BaseToTool = new Mat();
-                                                            Mat CenterToTool = new Mat();
-                                                            Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z,
-                                                                robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
-
-                                                            BaseToTool = ToolToBase.Inv();
-
-                                                            CenterToTool = BaseToTool * Cam1ToBase * CenterToCam1;
-
-                                                            double x, y, z, rx, ry, rz;
-                                                            Vision.HomMat3dToPose(2, out x, out y, out z, out rx, out ry, out rz, CenterToTool.CvPtr);
-
-                                                            camInTools.At<double>(1, 0) = x;
-                                                            camInTools.At<double>(1, 1) = y;
-                                                            camInTools.At<double>(1, 2) = z;
-                                                            camInTools.At<double>(1, 3) = rx;
-                                                            camInTools.At<double>(1, 4) = ry;
-                                                            camInTools.At<double>(1, 5) = rz;
-                                                            camInTools.At<double>(1, 6) = 2;
-
-                                                        }
-
-                                                        //检测的相机位姿
-                                                        {
-                                                            //眼在手外，求Cam1ToTool,需要机器人pose才可以完成转换
-                                                            //Mat BaseToTool = robotPoseMat.Inv();
-                                                            Mat ToolToBase = new Mat();
-                                                            Mat BaseToTool = new Mat();
-                                                            Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
-                                                            BaseToTool = ToolToBase.Inv();
-
-                                                            CamToTool = BaseToTool * Cam1ToBase * CamToCam1;
-
-                                                            Vision.robotAndCamVectorAngle(camInTools.CvPtr, CamToTool.CvPtr, 2, 0, out robotAndCamAngle);
-
-                                                            //眼在手外，要减180度
-                                                            robotAndCamAngle = 180 - robotAndCamAngle;
-                                                            //大于90的，都取缩小后的值
-                                                            if (robotAndCamAngle > 90)
-                                                            {
-                                                                robotAndCamAngle = 180 - robotAndCamAngle;
-                                                            }
-                                                        }
-                                                    }
-                                                    Console.WriteLine($"imageKey:{imageKey}");
-                                                    Console.WriteLine($"robotAndCamAngle:{robotAndCamAngle}");
+                                                    //Console.WriteLine($"imageKey:{imageKey}");
+                                                    //Console.WriteLine($"robotAndCamAngle:{robotAndCamAngle}");
 
                                                 }
-                                                #endregion
-
-                                                #region 使用胶的中心坐标，计算夹角
-                                                //// 必须要有10个以上涂胶中心
-                                                //int intervalCount = 20;
-                                                //int smoothCount = 4;
-                                                //if (dictResultCenter3DPoint.Count > intervalCount && PoseD > 0)
-                                                //{
-                                                //    //计算CamToTool的矩阵
-                                                //    //打包前后机器人pose
-                                                //    //var last = dictResultCenter3DPoint.Last();
-                                                //    //var lastResultCenter3DPoint = last.Value;
-                                                //    //var currentResultCenter3DPoint = dictResultCenter3DPoint.Skip(dictResultCenter3DPoint.Count - intervalCount - 1).First().Value;
-
-                                                //    Point3D[] points = dictResultCenter3DPoint.Values.ToArray();
-                                                //    var lastResultCenter3DPoint = Vision.GaussianSmoothInRange(points, dictResultCenter3DPoint.Count - 1 - intervalCount, 
-                                                //        dictResultCenter3DPoint.Count - 1, dictResultCenter3DPoint.Count - 1, smoothCount);
-                                                //    var currentResultCenter3DPoint = Vision.GaussianSmoothInRange(points, dictResultCenter3DPoint.Count - 1 - intervalCount,
-                                                //        dictResultCenter3DPoint.Count - 1, dictResultCenter3DPoint.Count - 1 - intervalCount, smoothCount);
-
-                                                //    Mat ResultCenterMat = new Mat();
-                                                //    ResultCenterMat = Mat.Zeros(2, 7, MatType.CV_64FC1);
-                                                //    ResultCenterMat.At<double>(0, 0) = lastResultCenter3DPoint.X;
-                                                //    ResultCenterMat.At<double>(0, 1) = lastResultCenter3DPoint.Y;
-                                                //    ResultCenterMat.At<double>(0, 2) = lastResultCenter3DPoint.Z;
-                                                //    ResultCenterMat.At<double>(0, 3) = 0;
-                                                //    ResultCenterMat.At<double>(0, 4) = 0;
-                                                //    ResultCenterMat.At<double>(0, 5) = 0;
-                                                //    ResultCenterMat.At<double>(0, 6) = 2;
-
-                                                //    ResultCenterMat.At<double>(1, 0) = currentResultCenter3DPoint.X;
-                                                //    ResultCenterMat.At<double>(1, 1) = currentResultCenter3DPoint.Y;
-                                                //    ResultCenterMat.At<double>(1, 2) = currentResultCenter3DPoint.Z;
-                                                //    ResultCenterMat.At<double>(1, 3) = 0;
-                                                //    ResultCenterMat.At<double>(1, 4) = 0;
-                                                //    ResultCenterMat.At<double>(1, 5) = 0;
-                                                //    ResultCenterMat.At<double>(1, 6) = 2;
-                                                //    if (Params.CamHandEyeType[camParamName] == 0)
-                                                //    {
-
-
-                                                //        Mat ToolToBase = new Mat();
-                                                //        Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
-                                                //        CamToBase = ToolToBase * CamToTool;
-
-                                                //        Vision.robotAndCamVectorAngle(ResultCenterMat.CvPtr, CamToBase.CvPtr, 2, 0, out robotAndCamAngle);
-                                                //        //大于90的，都取缩小后的值
-                                                //        if (robotAndCamAngle > 90)
-                                                //        {
-                                                //            robotAndCamAngle = 180 - robotAndCamAngle;
-                                                //        }
-                                                //    }
-                                                //    else
-                                                //    {
-                                                //        //眼在手外，求Cam1ToTool,需要机器人pose才可以完成转换
-                                                //        Mat ToolToBase = new Mat();
-                                                //        Mat BaseToTool = new Mat();
-                                                //        Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
-                                                //        BaseToTool = ToolToBase.Inv();
-
-                                                //        CamToTool = BaseToTool * Cam1ToBase * CamToCam1;
-
-                                                //        Vision.robotAndCamVectorAngle(ResultCenterMat.CvPtr, CamToTool.CvPtr, 2, 0, out robotAndCamAngle);
-
-                                                //        //大于90的，都取缩小后的值
-                                                //        if (robotAndCamAngle > 90)
-                                                //        {
-                                                //            robotAndCamAngle = 180 - robotAndCamAngle;
-                                                //        }
-                                                //    }
-
-                                                //    Console.WriteLine($"imageKey:{imageKey}");
-                                                //    Console.WriteLine($"robotAndCamAngle2:{robotAndCamAngle}");
-                                                //}
                                                 #endregion
 
                                                 //需要保证检测到有点，并且机器人已经处于移动状态
@@ -2861,7 +2742,8 @@ namespace _3DLaserGlueInspection
 
                                                     //如果还没到开始id，则跳过显示
                                                     int indexCross = indexImage - cutSet.StartImageIndex;
-                                                    if (indexCross >= 0 && indexCross < angless[indexImageCutProcessDict[item.Key]].Count)
+                                                    int setCount = set_copy.CutSets[indexImageCutProcessDict[item.Key]].EndImageIndex - set_copy.CutSets[indexImageCutProcessDict[item.Key]].StartImageIndex + 1;
+                                                    if (indexCross >= 0 && indexCross < setCount)
                                                     {
                                                         //间隔显示，减少显示时间
                                                         if (indexCross % displayIntervalID == 0)
@@ -2874,13 +2756,8 @@ namespace _3DLaserGlueInspection
 
                                                                 colorScale.Add(color);
                                                             }
-                                                            //Application.Current.Dispatcher.Invoke(() =>
-                                                            //{
                                                             //显示点云
                                                             Disp3DPointControlEvent(robotX, robotY, robotZ, colorScale);
-
-                                                            //Console.WriteLine($"indexCross:{indexCross}");
-                                                            //});
                                                         }
 
                                                     }
@@ -2956,94 +2833,6 @@ namespace _3DLaserGlueInspection
 
                                                             //计算涂胶体积
                                                             V = resultData.glueArea * PoseD;
-
-                                                            #region 计算胶3d中点坐标
-                                                            //double resultCenter2dX = resultData.column;
-                                                            //double resultCenter2dY = resultData.row;
-                                                            //List<double> resultCenter3dX, resultCenter3dY, resultCenter3dZ;
-
-                                                            //// 先把2d坐标变回来
-                                                            //{
-                                                            //    //除以矫正
-                                                            //    {
-                                                            //        double scaleX = cutSet.correctionScaleSizeX;
-                                                            //        double scaleY = cutSet.correctionScaleSizeY;
-
-                                                            //        resultCenter2dX/=scaleX;
-                                                            //        resultCenter2dY/=scaleY;
-                                                            //    }
-                                                            //    //除以夹角矫正
-                                                            //    if (imageSet.isUseAngleOpt)
-                                                            //    {
-                                                            //        double scaleX = 1;
-                                                            //        scaleX = Math.Cos(robotAndCamAngle / 180 * Math.PI);
-                                                            //        resultCenter2dX/= scaleX;
-                                                            //    }
-                                                            //    //y方向矫正、光平面的
-                                                            //    {
-                                                            //        //XY_10um = new Mat(lightXYcut.Size(), lightXYcut.Type());
-                                                            //        ////X
-                                                            //        //Cv2.Multiply(lightXYcut.Col(0), new Scalar(1000 * cutSet.scaleSize), XY_10um.Col(0));
-                                                            //        //Cv2.Add(XY_10um.Col(0), new Scalar(cutSet.ShowWidth * cutSet.scaleSize / 2), XY_10um.Col(0));
-                                                            //        ////Y
-                                                            //        //Cv2.Multiply(lightXYcut.Col(1), new Scalar(1000 * cutSet.scaleSize * Math.Cos(lightAngle / 180 * Math.PI)), XY_10um.Col(1));
-                                                            //        //Cv2.Add(XY_10um.Col(1), new Scalar(cutSet.ShowHeight * cutSet.scaleSize / 2), XY_10um.Col(1));
-
-
-                                                            //        resultCenter2dX -= cutSet.scaleSize * cutSet.ShowWidth / 2;
-                                                            //        resultCenter2dX /= cutSet.scaleSize * 1000 ;
-
-
-                                                            //        double scaleY = Math.Cos((90 - LightInCam.rx) / 180 * Math.PI);
-                                                            //        resultCenter2dY -= cutSet.scaleSize * cutSet.ShowHeight / 2;
-                                                            //        resultCenter2dY /= (cutSet.scaleSize * scaleY * 1000);
-                                                            //    }
-                                                            //}
-                                                            ////转3d坐标
-                                                            //{
-                                                            //    Mat resultCenter2d = Mat.Zeros(1, 2, MatType.CV_64FC1);
-                                                            //    resultCenter2d.At<double>(0, 0) = resultCenter2dX;
-                                                            //    resultCenter2d.At<double>(0, 1) = resultCenter2dY;
-
-                                                            //    //double x = lightXY.At<double>(0, 0);
-                                                            //    //double y = lightXY.At<double>(0, 1);
-
-                                                            //    //double x2 = hXLDCont10mm.At<double>(0, 0);
-                                                            //    //double y2 = hXLDCont10mm.At<double>(0, 1);
-
-                                                            //    //Vision.scalePoint(lightXY, cutSet, 90 - LightInCam.rx, out Mat hXLDCont10mmTest);
-
-                                                            //    //double x3 = hXLDCont10mmTest.At<double>(0, 0);
-                                                            //    //double y3 = hXLDCont10mmTest.At<double>(0, 1);
-
-                                                            //    //resultCenter2d.At<double>(0, 0) = lightXY.At<double>(0, 0);
-                                                            //    //resultCenter2d.At<double>(0, 1) = lightXY.At<double>(0, 1);
-
-
-                                                            //    if (Params.CamHandEyeType[camParamName] == 0)
-                                                            //    {
-                                                            //        Vision.pointTransform2LightAndRobot(resultCenter2d,  LightToCam, CamToTool,
-                                                            //    robotPose, out resultCenter3dX, out resultCenter3dY, out resultCenter3dZ);
-                                                            //    }
-                                                            //    else
-                                                            //    {
-                                                            //        //搞个robot的逆pose，后面再专门打包个算法搞逆pose
-                                                            //        PoseParameters BaseInTool = Vision.PoseInv(robotPose);
-
-                                                            //        Vision.pointTransform2LightAndRobot(resultCenter2d, LightToCam, CamToBase,
-                                                            //            BaseInTool, out resultCenter3dX, out resultCenter3dY, out resultCenter3dZ);
-
-                                                            //    }
-
-                                                            //}
-                                                            //// 记录结果
-                                                            //resultCenterPoint.X = resultCenter3dX[0];
-                                                            //resultCenterPoint.Y = resultCenter3dY[0];
-                                                            //resultCenterPoint.Z = resultCenter3dZ[0];
-
-                                                            #endregion
-
-
                                                         }
                                                         else
                                                         {
@@ -3101,24 +2890,6 @@ namespace _3DLaserGlueInspection
                                                     {
                                                         dictRegionRectangle2.Add(imageKey, outRegionRectangle2);
                                                     }
-                                                    //胶检测数据结果
-                                                    if (dictData.ContainsKey(imageKey))
-                                                    {
-                                                        dictData[imageKey] = resultData;
-                                                    }
-                                                    else
-                                                    {
-                                                        dictData.Add(imageKey, resultData);
-                                                    }
-                                                    //胶检测结果
-                                                    if (dictResult.ContainsKey(imageKey))
-                                                    {
-                                                        dictResult[imageKey] = bResult;
-                                                    }
-                                                    else
-                                                    {
-                                                        dictResult.Add(imageKey, bResult);
-                                                    }
                                                     // 胶3d坐标中心记录
                                                     if (dictResultCenter3DPoint.ContainsKey(imageKey))
                                                     {
@@ -3132,43 +2903,27 @@ namespace _3DLaserGlueInspection
                                             }
 
 
+                                            //胶检测结果
+                                            if (dictResult.ContainsKey(imageKey))
+                                            {
+                                                dictResult[imageKey] = bResult;
+                                            }
+                                            else
+                                            {
+                                                dictResult.Add(imageKey, bResult);
+                                            }
+                                            if (dictData.ContainsKey(imageKey))
+                                            {
+                                                dictData[imageKey] = resultData;
+                                            }
+                                            else
+                                            {
+                                                dictData.Add(imageKey, resultData);
+                                            }
 
                                             // 结果显示
-                                            // 没必要显示每帧的检测结果，而且这样做导致影响检测速度
-                                            // 2d轨迹结果更新
-                                            if (imageSet.轮廓检测)
-                                            {
-                                                if (imageSet._3DGlueDet)
-                                                {
-                                                    // 已开放
-                                                    int indexCross = indexImage - cutSet.StartImageIndex;
-                                                    if (indexCross >= 0 && indexCross < angless[indexImageCutProcessDict[item.Key]].Count)
-                                                    {
-                                                        hWindowNumericalModelDiagramDispCross(rowss[indexImageCutProcessDict[item.Key]][indexCross],
-                                                            colss[indexImageCutProcessDict[item.Key]][indexCross],
-                                                            angless[indexImageCutProcessDict[item.Key]][indexCross], cutSet.Size, bResult.Result ? Colors.Green : Colors.Red);
-                                                    }
-                                                }
-                                            }
-                                            //结果列表颜色
-                                            switch (item.Key)
-                                            {
-                                                case "Cam1":
-                                                    mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam1Result = bResult.Result ? "OK" : "NG";
-                                                    break;
-                                                case "Cam2":
-                                                    mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam2Result = bResult.Result ? "OK" : "NG";
-                                                    break;
-                                                case "Cam3":
-                                                    mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam3Result = bResult.Result ? "OK" : "NG";
-                                                    break;
-                                                case "Cam4":
-                                                    mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam4Result = bResult.Result ? "OK" : "NG";
-                                                    break;
-                                            }
 
-                                            dictResult.Add(imageKey, bResult);
-                                            dictData.Add(imageKey, resultData);
+                               
                                         }
                                         else
                                         {
@@ -3177,7 +2932,7 @@ namespace _3DLaserGlueInspection
                                     }
                                     catch (Exception ex)
                                     {
-
+                                        Console.WriteLine($"ex:{ex.Message}");
                                     }
                                     indexImage++;
                                 }
@@ -3190,6 +2945,263 @@ namespace _3DLaserGlueInspection
                     })));
                 }
             }
+
+
+            //初始化
+            foreach (var item in camParam)
+            {
+                if (item.Value.Enable)
+                {
+                    indexResultShowDict[item.Key] = 0;
+                }
+            }
+            Dictionary<string, CamParam> camParamTmp = camParam;
+            var mapper = set.mapper;
+            var cutSets = set.CutSets;
+
+            //启动每帧的拍照结果显示任务
+            taskShow2D = Task.Run((Action)(() =>
+            {
+
+
+
+                //var dictCamCenter3DPose = CamCenter3DPoseDict[item.Key][indexImageCutProcessDict[item.Key]];
+
+                //var dictResult = glueResultDict[item.Key][indexImageCutProcessDict[item.Key]];
+
+
+
+                while (true)//分段循环
+                {
+                    int indexImage = 0;
+                    bool bRun = true;
+                    while (bRun)//段内循环
+                    {
+
+                        bool bAdd = false;
+                        long imageKey = 0;
+                        if (glueResultDict[camParamTmp.Keys.ToArray()[0]].Count > indexResultShowDict[camParamTmp.Keys.ToArray()[0]] &&
+                        glueResultDict[camParamTmp.Keys.ToArray()[0]][indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Count > indexImage)//有新增结果,因为相机1一定会启用，这里用相机1来判断
+                        {
+                            //判断是否所有相机结果都出来了
+                            bool isAllFinish = true;
+                            foreach (var item in camParamTmp)
+                            {
+                                bool CamEnabled = item.Key == "Cam1" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam1Enabled :
+                                    item.Key == "Cam2" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam2Enabled :
+                                    item.Key == "Cam3" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam3Enabled :
+                                    cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam4Enabled;
+
+                                if (CamEnabled)
+                                {
+                                    if (glueResultDict[item.Key][indexResultShowDict[item.Key]].Count <= indexImage)
+                                    {
+                                        isAllFinish = false;
+                                    }
+                                }
+                            }
+
+                            if (isAllFinish)//有新增姿态
+                            {
+
+                                bAdd = true;
+                            }
+                            else
+                            {
+                                if (!bRobotRun)//退出条件
+                                {
+                                    return;
+                                }
+                                Thread.Sleep(10);
+                            }
+                        }
+                        else//没有新增图片
+                        {
+                            //判断是否所有相机都跑完了
+                            bool isAllFinish = true;
+                            foreach (var item in camParamTmp)
+                            {
+                                bool CamEnabled = item.Key == "Cam1" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam1Enabled :
+                                   item.Key == "Cam2" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam2Enabled :
+                                   item.Key == "Cam3" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam3Enabled :
+                                    cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam4Enabled;
+
+                                if (CamEnabled)
+                                {
+                                    if (indexImageCut <= indexResultShowDict[item.Key])
+                                    {
+                                        isAllFinish = false;
+                                    }
+                                }
+                            }
+                            if (isAllFinish)//进入下一段条件
+                            {
+                                foreach (var item in camParamTmp)
+                                {
+                                    bool CamEnabled = item.Key == "Cam1" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam1Enabled :
+                                     item.Key == "Cam2" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam2Enabled :
+                                     item.Key == "Cam3" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam3Enabled :
+                                      cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam4Enabled;
+
+                                    if (CamEnabled)
+                                    {
+                                        indexResultShowDict[item.Key]++;
+                                    }
+                                }
+                                bRun = false;
+                            }
+                            else
+                            {
+                                if (!bRobotRun)//退出条件
+                                {
+                                    return;
+                                }
+                            }
+                            Thread.Sleep(10);
+                        }
+
+                        if (bAdd)
+                        {
+                            //更新结果列表
+                            foreach (var item in camParamTmp)
+                            {
+                                bool CamEnabled = item.Key == "Cam1" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam1Enabled :
+                                   item.Key == "Cam2" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam2Enabled :
+                                   item.Key == "Cam3" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam3Enabled :
+                                    cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam4Enabled;
+
+                                if (CamEnabled)
+                                {
+                                    var dictImageKey = ImageKeys[item.Key][indexResultShowDict[item.Key]];
+
+                                    imageKey = dictImageKey[indexImage];
+                                    var bResult = glueResultDict[item.Key][indexResultShowDict[item.Key]][imageKey];
+
+                                    //加个延迟显示
+                                    while (mainModel.ImageResultRecords.Count<= dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage)
+                                    {
+                                        if (!bRobotRun)//退出条件
+                                        {
+                                            return;
+                                        }
+                                        Thread.Sleep(10);
+                                    }
+
+                                    //结果列表颜色
+                                    switch (item.Key)
+                                    {
+                                        case "Cam1":
+                                            mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam1Result = bResult.Result ? "OK" : "NG";
+                                            break;
+                                        case "Cam2":
+                                            mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam2Result = bResult.Result ? "OK" : "NG";
+                                            break;
+                                        case "Cam3":
+                                            mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam3Result = bResult.Result ? "OK" : "NG";
+                                            break;
+                                        case "Cam4":
+                                            mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam4Result = bResult.Result ? "OK" : "NG";
+                                            break;
+                                    }
+                                }
+                            }
+                            
+
+
+                            // 更新2d轨迹
+                            bool showResult = true;//显示结果，根据当前帧的所有相机检测结果来判断
+
+                            double row = 0, col = 0, angle = 0;
+                            //添加结果判断和显示功能
+                            var cutSet = set_copy.CutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]];
+
+                            foreach (var item in camParamTmp)
+                            {
+
+                                bool CamEnabled = item.Key == "Cam1" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam1Enabled :
+                                   item.Key == "Cam2" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam2Enabled :
+                                   item.Key == "Cam3" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam3Enabled :
+                                    cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam4Enabled;
+
+                                if (CamEnabled)
+                                {
+                                    //判断结果
+                                    var dictImageKey = ImageKeys[item.Key][indexResultShowDict[item.Key]];
+
+                                    imageKey = dictImageKey[indexImage];
+                                    if (!glueResultDict[item.Key][indexResultShowDict[item.Key]][imageKey].Result)
+                                    {
+                                        showResult = false;
+                                        break;
+                                    }
+
+                                }
+                            }
+
+                            int indexCross = indexImage - cutSet.StartImageIndex;
+                            int setCount = set_copy.CutSets[indexImageCutProcessDict[camParamTmp.Keys.ToArray()[0]]].EndImageIndex - 
+                            set_copy.CutSets[indexImageCutProcessDict[camParamTmp.Keys.ToArray()[0]]].StartImageIndex + 1;
+
+                            if (indexCross >= 0 && indexCross < setCount)
+                            {
+                                if (mapper.isCalib())
+                                {
+                                    foreach (var item in camParamTmp)
+                                    {
+                                        bool CamEnabled = item.Key == "Cam1" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam1Enabled :
+                                   item.Key == "Cam2" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam2Enabled :
+                                   item.Key == "Cam3" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam3Enabled :
+                                    cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam4Enabled;
+
+                                        if (CamEnabled)
+                                        {
+
+                                            var dictImageKey = ImageKeys[item.Key][indexResultShowDict[item.Key]];
+
+                                            imageKey = dictImageKey[indexImage];
+
+                                            var dictCamCenter3DPose = CamCenter3DPoseDict[item.Key][indexResultShowDict[item.Key]][imageKey];
+
+                                            double[] _3dPose = new double[3] { dictCamCenter3DPose.x, dictCamCenter3DPose.y, dictCamCenter3DPose.z, };
+                                            double[] _2dPoint = mapper.To2D(_3dPose);
+
+                                            row = _2dPoint[1];
+                                            col = _2dPoint[0];
+                                            angle = 45;
+                                        }
+                                    }
+
+
+                                }
+                                else
+                                {
+                                    row = rowss[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]][indexCross];
+                                    col = colss[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]][indexCross];
+                                    angle = angless[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]][indexCross];
+
+                                }
+                            }
+
+                            hWindowNumericalModelDiagramDispCross(row, col,
+                                        angle, cutSet.Size, showResult ? Colors.Green : Colors.Red);
+
+                            indexImage++;
+
+                        }
+                        if (!bTaskRun) return;
+                        if (stop) return;
+                    }
+
+                    if (!bTaskRun) return;
+                    if (stop) return;
+                }
+
+
+
+            }));
+
+
+
             ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ImageProcessingTaskStartupCompleted);
 
             ////输出运行中信号
@@ -3201,6 +3213,7 @@ namespace _3DLaserGlueInspection
             return true;
         }
 
+      
         private void clearData()
         {
             #region 清除数据
@@ -3250,6 +3263,7 @@ namespace _3DLaserGlueInspection
             Images.Clear();
             dataGridViewImageListRowsStartPoint.Clear();
             Robot3DPose.Clear();
+            CamCenter3DPoseDict.Clear();
 
             ResultCenter3DPoint.Clear();
 
@@ -3264,6 +3278,9 @@ namespace _3DLaserGlueInspection
             glueDataDict.Clear();
             glueResultDict.Clear();
             indexImageCutProcessDict.Clear();
+
+            indexResultShowDict.Clear();
+
             displaySize.Clear();
             tasks.Clear();
             #endregion

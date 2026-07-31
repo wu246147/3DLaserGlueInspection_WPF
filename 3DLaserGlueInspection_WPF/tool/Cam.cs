@@ -2506,7 +2506,7 @@ namespace _3DLaserGlueInspection
 
         public Dictionary<string, Dictionary<string, PoseParameters>> CamInCam1 = new Dictionary<string, Dictionary<string, PoseParameters>>();    //转相机坐标系的外参
 
-        public Dictionary<string, Dictionary<string, PoseParameters>> CenterInCam1 = new Dictionary<string, Dictionary<string, PoseParameters>>();    //转涂胶中心坐标系的外参
+        public Dictionary<string, Dictionary<string, PoseParameters>> CenterInCam1 = new Dictionary<string, Dictionary<string, PoseParameters>>();    //转涂胶中心坐标系的外参 。根据相机1和3的关系计算的，因为这里主要是要坐标，因此角度是直接用了相机3相对于相机1的角度。如果只有1个相机，可以直接设置位单位矩阵
 
         //计算的参数
         public Dictionary<string, Dictionary<string, Mat>> LightToCam = new Dictionary<string, Dictionary<string, Mat>>();    //光平面旋转矩阵

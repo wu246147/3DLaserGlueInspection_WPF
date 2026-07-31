@@ -1592,6 +1592,15 @@ namespace _3DLaserGlueInspection.Resources {
         }
         
         /// <summary>
+        ///   查找类似 映射轨迹 的本地化字符串。
+        /// </summary>
+        public static string MappingTrajectory {
+            get {
+                return ResourceManager.GetString("MappingTrajectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 图像最大高度： 的本地化字符串。
         /// </summary>
         public static string MaximumHeightOfImage {
@@ -3028,6 +3037,15 @@ namespace _3DLaserGlueInspection.Resources {
         public static string TCPCommunicationServerSuccessfullyEstablished {
             get {
                 return ResourceManager.GetString("TCPCommunicationServerSuccessfullyEstablished", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 测试 的本地化字符串。
+        /// </summary>
+        public static string Test {
+            get {
+                return ResourceManager.GetString("Test", resourceCulture);
             }
         }
         

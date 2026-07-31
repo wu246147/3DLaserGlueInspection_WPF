@@ -12,10 +12,321 @@ using OpenCvSharp;
 using Wpf_Replace_halcon;
 using System.Xml.Serialization;
 using System.Diagnostics;
+using Newtonsoft.Json;
 
+using _3DLaserGlueInspection.subForm;
 
 namespace _3DLaserGlueInspection
 {
+    using Newtonsoft.Json;
+
+    public class ProjectionMapperPersistence
+    {
+        public static void SaveToFile(double[,] matrix, string filePath)
+        {
+            int rows = matrix.GetLength(0);
+            int cols = matrix.GetLength(1);
+
+            double[][] jagged = new double[rows][];
+            for (int i = 0; i < rows; i++)
+            {
+                jagged[i] = new double[cols];
+                for (int j = 0; j < cols; j++)
+                    jagged[i][j] = matrix[i, j];
+            }
+
+            string json = JsonConvert.SerializeObject(jagged, Formatting.Indented);
+            File.WriteAllText(filePath, json);
+        }
+
+        public static double[,] LoadFromFile(string filePath)
+        {
+            string json = File.ReadAllText(filePath);
+            double[][] jagged = JsonConvert.DeserializeObject<double[][]>(json);
+
+            int rows = jagged.Length;
+            int cols = jagged[0].Length;
+            double[,] matrix = new double[rows, cols];
+
+            for (int i = 0; i < rows; i++)
+                for (int j = 0; j < cols; j++)
+                    matrix[i, j] = jagged[i][j];
+
+            return matrix;
+        }
+    }
+
+    /// <summary>
+    /// 基于轨迹弧长参数化的 3D→2D 映射。
+    /// 不拟合投影矩阵，不需要中间点一一对应，只要求首尾对应。
+    /// </summary>
+    public class ProjectionMapper
+    {
+        private List<double[]> _pts3D;   // 3D 轨迹点
+        private List<double[]> _pts2D;   // 2D 轨迹点
+        private double[] _t3D;           // 3D 弧长参数 [0,1]
+        private double[] _t2D;           // 2D 弧长参数 [0,1]
+        private bool _ready;
+
+        // ══════════════════════════════════════════════════════
+        //  公开方法
+        // ══════════════════════════════════════════════════════
+
+        public List<double[]> get3DPoint()
+        {
+            return _pts3D;
+        }
+
+        public List<double[]> getMapping2DPoint()
+        {
+            if(!_ready)
+                throw new InvalidOperationException("请先调用 Calibrate()");
+            return To2D(_pts3D);
+        }
+
+
+        public List<double[]> get2DPoint()
+        {
+            return _pts2D;
+        }
+
+
+        public bool isCalib()
+        {
+            return _ready;
+        }
+
+        /// <summary>
+        /// 标定：传入 3D 轨迹和 2D 轨迹（首尾自动对应）。
+        /// </summary>
+        public void Calibrate(List<double[]> pose3D, double[] controlRows, double[] controlCols)
+        {
+            if (pose3D == null || pose3D.Count < 2)
+                throw new ArgumentException("pose3D 至少需要 2 个点");
+            if (controlRows == null || controlCols == null || controlRows.Length < 2)
+                throw new ArgumentException("controlRows/controlCols 至少需要 2 个点");
+            if (controlRows.Length != controlCols.Length)
+                throw new ArgumentException("controlRows 与 controlCols 长度不一致");
+
+            // 构建 2D 点列表 (x, y) = (col, row)
+            _pts2D = new List<double[]>(controlRows.Length);
+            for (int i = 0; i < controlRows.Length; i++)
+                _pts2D.Add(new double[] { controlCols[i], controlRows[i] });
+
+            _pts3D = new List<double[]>(pose3D);
+
+            // 分别做弧长参数化
+            _t3D = ComputeArcLength(_pts3D);
+            _t2D = ComputeArcLength(_pts2D);
+
+            _ready = true;
+        }
+
+
+        /// <summary>
+        /// 将一个 3D 点映射到 2D 坐标。
+        /// 通过在 3D 轨迹上找最近点获取弧长参数，再在 2D 轨迹上插值。
+        /// </summary>
+        public double[] To2D(double[] point3D)
+        {
+            if (!_ready)
+                throw new InvalidOperationException("请先调用 Calibrate()");
+            if (point3D == null || point3D.Length < 3)
+                throw new ArgumentException("point3D 至少包含 3 个元素");
+
+            // 1. 在 3D 轨迹上找最近点，得到弧长参数 t
+            int nearestIdx = FindNearestIndex(point3D, _pts3D);
+            double t = _t3D[nearestIdx];
+
+            // 2. 用 t 在 2D 轨迹上插值
+            return Interpolate2D(t, _t2D, _pts2D);
+        }
+
+        /// <summary>
+        /// 批量映射。
+        /// </summary>
+        public List<double[]> To2D(List<double[]> points3D)
+        {
+            var result = new List<double[]>(points3D.Count);
+            foreach (var p in points3D)
+                result.Add(To2D(p));
+            return result;
+        }
+
+        // ══════════════════════════════════════════════════════
+        //  序列化（Newtonsoft.Json）
+        // ══════════════════════════════════════════════════════
+
+        /// <summary>
+        /// 保存标定数据到文件。
+        /// </summary>
+        public bool SaveToFile(string filePath)
+        {
+            try
+            {
+                if (!_ready)
+                    return false;
+
+                var data = new MapperData
+                {
+                    Pts3D = _pts3D,
+                    Pts2D = _pts2D,
+                    T3D = _t3D,
+                    T2D = _t2D
+                };
+
+                string json = JsonConvert.SerializeObject(data, Formatting.Indented);
+                File.WriteAllText(filePath, json);
+                }
+            catch (Exception ex)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 从文件恢复标定数据。
+        /// </summary>
+        public bool LoadFromFile(string filePath)
+        {
+            try
+            {
+                string json = File.ReadAllText(filePath);
+                var data = JsonConvert.DeserializeObject<MapperData>(json);
+
+                _pts3D = data.Pts3D;
+                _pts2D = data.Pts2D;
+                _t3D = data.T3D;
+                _t2D = data.T2D;
+                _ready = true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        // ══════════════════════════════════════════════════════
+        //  内部方法
+        // ══════════════════════════════════════════════════════
+
+        /// <summary>
+        /// 计算点序列的归一化弧长参数 [0, 1]。
+        /// </summary>
+        private double[] ComputeArcLength(List<double[]> pts)
+        {
+            int n = pts.Count;
+            double[] cum = new double[n];
+            int dim = Math.Min(pts[0].Length, 3);
+
+            for (int i = 1; i < n; i++)
+            {
+                double sumSq = 0.0;
+                for (int d = 0; d < dim; d++)
+                {
+                    double diff = pts[i][d] - pts[i - 1][d];
+                    sumSq += diff * diff;
+                }
+                cum[i] = cum[i - 1] + Math.Sqrt(sumSq);
+            }
+
+            double total = cum[n - 1];
+            double[] t = new double[n];
+
+            if (total < 1e-12)
+            {
+                // 所有点重合，均匀分布
+                for (int i = 0; i < n; i++)
+                    t[i] = (n > 1) ? (double)i / (n - 1) : 0.0;
+            }
+            else
+            {
+                for (int i = 0; i < n; i++)
+                    t[i] = cum[i] / total;
+            }
+
+            return t;
+        }
+
+        /// <summary>
+        /// 在点序列上按弧长参数 t 线性插值。
+        /// </summary>
+        private double[] Interpolate2D(double t, double[] tVals, List<double[]> pts)
+        {
+            int n = tVals.Length;
+
+            // 边界处理
+            if (t <= tVals[0])
+                return new double[] { pts[0][0], pts[0][1] };
+            if (t >= tVals[n - 1])
+                return new double[] { pts[n - 1][0], pts[n - 1][1] };
+
+            // 查找 t 所在的区间 [tVals[i], tVals[i+1]]
+            for (int i = 0; i < n - 1; i++)
+            {
+                if (t >= tVals[i] && t <= tVals[i + 1])
+                {
+                    double segLen = tVals[i + 1] - tVals[i];
+                    double alpha = (segLen < 1e-12) ? 0.0 : (t - tVals[i]) / segLen;
+
+                    return new double[]
+                    {
+                    pts[i][0] + alpha * (pts[i + 1][0] - pts[i][0]),
+                    pts[i][1] + alpha * (pts[i + 1][1] - pts[i][1])
+                    };
+                }
+            }
+
+            return new double[] { pts[n - 1][0], pts[n - 1][1] };
+        }
+
+        /// <summary>
+        /// 在点列表中找距 query 最近的点，返回索引。
+        /// </summary>
+        private int FindNearestIndex(double[] query, List<double[]> pts)
+        {
+            int bestIdx = 0;
+            double bestDist = double.MaxValue;
+
+            for (int i = 0; i < pts.Count; i++)
+            {
+                double dist = DistanceSq(query, pts[i]);
+                if (dist < bestDist)
+                {
+                    bestDist = dist;
+                    bestIdx = i;
+                }
+            }
+            return bestIdx;
+        }
+
+        private double DistanceSq(double[] a, double[] b)
+        {
+            int dim = Math.Min(a.Length, b.Length);
+            double sum = 0.0;
+            for (int d = 0; d < dim; d++)
+            {
+                double diff = a[d] - b[d];
+                sum += diff * diff;
+            }
+            return sum;
+        }
+
+        // ══════════════════════════════════════════════════════
+        //  序列化数据结构
+        // ══════════════════════════════════════════════════════
+
+        private class MapperData
+        {
+            public List<double[]> Pts3D { get; set; }
+            public List<double[]> Pts2D { get; set; }
+            public double[] T3D { get; set; }
+            public double[] T2D { get; set; }
+        }
+    }
+
     public class Vision
     {
         private const string DllName = "dll\\RaivasAlgTransform.dll"; // Replace with the actual DLL 
@@ -94,9 +405,153 @@ namespace _3DLaserGlueInspection
         ///
         public static extern int robotAndCamVectorAngle(IntPtr robotPose, IntPtr Cam2Tool, int axisType, int planeType, out double angle);
 
+        /// <summary>
+        /// 输入机器人前后帧的位姿，以及一些相机参数，算出机器人前后的移动方向与相机姿态的夹角
+        /// </summary>
+        /// <param name="CamHandEyeType"></param>
+        /// <param name="CamToCam1"></param>
+        /// <param name="CenterToCam1"></param>
+        /// <param name="Cam1ToBase"></param>
+        /// <param name="CamToTool"></param>
+        /// <param name="robotPose"></param>
+        /// <param name="lastRobotPose"></param>
+        /// <returns></returns>
+        public static double GetRobotAndCamAngle(int CamHandEyeType, Mat CamToCam1, Mat CenterToCam1, Mat Cam1ToBase, Mat CamToTool, PoseParameters robotPose, PoseParameters lastRobotPose, User3DShowControl_V user3DShowControl_V = null)
+        {
+            double robotAndCamAngle;
+            if (CamHandEyeType == 0)
+            {
+                Mat robotPoseMat = Mat.Zeros(2, 7, MatType.CV_64FC1);
+                robotPoseMat.At<double>(0, 0) = lastRobotPose.x;
+                robotPoseMat.At<double>(0, 1) = lastRobotPose.y;
+                robotPoseMat.At<double>(0, 2) = lastRobotPose.z;
+                robotPoseMat.At<double>(0, 3) = lastRobotPose.rx;
+                robotPoseMat.At<double>(0, 4) = lastRobotPose.ry;
+                robotPoseMat.At<double>(0, 5) = lastRobotPose.rz;
+                robotPoseMat.At<double>(0, 6) = lastRobotPose.PoseType;
+
+                robotPoseMat.At<double>(1, 0) = robotPose.x;
+                robotPoseMat.At<double>(1, 1) = robotPose.y;
+                robotPoseMat.At<double>(1, 2) = robotPose.z;
+                robotPoseMat.At<double>(1, 3) = robotPose.rx;
+                robotPoseMat.At<double>(1, 4) = robotPose.ry;
+                robotPoseMat.At<double>(1, 5) = robotPose.rz;
+                robotPoseMat.At<double>(1, 6) = robotPose.PoseType;
+
+                Mat ToolToBase = new Mat();
+                Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
+
+                Mat CamToBase = ToolToBase * CamToTool;
+
+                Vision.robotAndCamVectorAngle(robotPoseMat.CvPtr, CamToBase.CvPtr, 2, 0, out robotAndCamAngle);
+                //大于90的，都取缩小后的值
+                if (robotAndCamAngle > 90)
+                {
+                    robotAndCamAngle = 180 - robotAndCamAngle;
+                }
+            }
+            else
+            {
+                Mat camInTools = Mat.Zeros(2, 7, MatType.CV_64FC1);
+                //这里直接使用Cam2Tool，后面可以使用Center2Tool
+                //轨迹的前一个点，要转成center2Tool
+                {
+                    Mat ToolToBase = new Mat();
+                    Mat BaseToTool;
+                    Mat CenterToTool;
+                    Vision.poseToHomMat3d(lastRobotPose.PoseType, lastRobotPose.x, lastRobotPose.y, lastRobotPose.z,
+                        lastRobotPose.rx, lastRobotPose.ry, lastRobotPose.rz, ToolToBase.CvPtr);
+
+                    BaseToTool = ToolToBase.Inv();
+
+                    CenterToTool = BaseToTool * Cam1ToBase * CenterToCam1;
+
+                    double x, y, z, rx, ry, rz;
+                    Vision.HomMat3dToPose(2, out x, out y, out z, out rx, out ry, out rz, CenterToTool.CvPtr);
+
+                    camInTools.At<double>(0, 0) = x;
+                    camInTools.At<double>(0, 1) = y;
+                    camInTools.At<double>(0, 2) = z;
+                    camInTools.At<double>(0, 3) = rx;
+                    camInTools.At<double>(0, 4) = ry;
+                    camInTools.At<double>(0, 5) = rz;
+                    camInTools.At<double>(0, 6) = 2;
+
+                }
+                //轨迹的后一个点，要转成center2Tool
+                {
+                    Mat ToolToBase = new Mat();
+                    Mat BaseToTool ;
+                    Mat CenterToTool ;
+                    Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z,
+                        robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
+
+                    BaseToTool = ToolToBase.Inv();
+
+                    CenterToTool = BaseToTool * Cam1ToBase * CenterToCam1;
+
+                    double x, y, z, rx, ry, rz;
+                    Vision.HomMat3dToPose(2, out x, out y, out z, out rx, out ry, out rz, CenterToTool.CvPtr);
+
+                    camInTools.At<double>(1, 0) = x;
+                    camInTools.At<double>(1, 1) = y;
+                    camInTools.At<double>(1, 2) = z;
+                    camInTools.At<double>(1, 3) = rx;
+                    camInTools.At<double>(1, 4) = ry;
+                    camInTools.At<double>(1, 5) = rz;
+                    camInTools.At<double>(1, 6) = 2;
+
+                }
+
+                //检测的相机位姿
+                {
+                    //眼在手外，求Cam1ToTool,需要机器人pose才可以完成转换
+                    //Mat BaseToTool = robotPoseMat.Inv();
+                    Mat ToolToBase = new Mat();
+                    Mat BaseToTool;
+                    Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
+                    BaseToTool = ToolToBase.Inv();
+
+                    CamToTool = BaseToTool * Cam1ToBase * CamToCam1;
+
+                    Vision.robotAndCamVectorAngle(camInTools.CvPtr, CamToTool.CvPtr, 2, 0, out robotAndCamAngle);
+
+                    //显示结果
+                    if (user3DShowControl_V != null)
+                    {
+                        user3DShowControl_V.ClearPointCloud();
+                        user3DShowControl_V.RefreshOn(100, true);
+
+                        //显示中心姿态
+                        PoseParameters showRobotPose = new PoseParameters();
+                        Vision.HomMat3dToPose(showRobotPose.PoseType, out double x, out double y, out double z, out double rx, out double ry, out double rz, CamToTool.CvPtr);
+                        user3DShowControl_V.AddCoord(x, y, z, rx, ry, rz, 0.1);
+                        //显示前后移动点
+                        user3DShowControl_V.AddPoint(camInTools.At<double>(0,0), camInTools.At<double>(0, 1), camInTools.At<double>(0, 2), 0);
+                        user3DShowControl_V.AddPoint(camInTools.At<double>(1, 0), camInTools.At<double>(1, 1), camInTools.At<double>(1, 2), 4);
+
+
+                        user3DShowControl_V.RefreshPoints();
+                        user3DShowControl_V.RefreshOFF();
+                    }
+
+                    //眼在手外，要减180度
+                    robotAndCamAngle = 180 - robotAndCamAngle;
+                    //大于90的，都取缩小后的值
+                    if (robotAndCamAngle > 90)
+                    {
+                        robotAndCamAngle = 180 - robotAndCamAngle;
+                    }
+                }
+            }
+
+            return robotAndCamAngle;
+        }
+
+
 
         //public static double scaleSize = 10; //表示计算过程中的点云放缩因子，1时单位为1mm，10时单位为100um，100时单位为10um
-        
+
         ////后面开放一下这几个参数 这个是用多个相机进行点云合成，然后再用点云投影成平面时，才需要用到的参数，分别指xyz的范围。目前不用多个相机融合，因此不用到
         //public static double xSize = 0.02;
         //public static double ySize = 0.02;
@@ -841,6 +1296,10 @@ namespace _3DLaserGlueInspection
         //其他参数
         public OtherSet OtherSet = new OtherSet();
 
+        //3d映射2d参数
+        public ProjectionMapper mapper = new ProjectionMapper();
+
+
         //数模图
         public Mat image = new Mat();
         public List<XLDData> XLDDatas = new List<XLDData>();
@@ -985,7 +1444,30 @@ namespace _3DLaserGlueInspection
                 result3 = false;
             }
 
-            return result0 && result1 && result2 && result3;
+
+            bool result4 = true;
+            try
+            {
+                //XLDDatas = new List<XLDData>();
+                string fPath = basePath + "ProjectMapping.json";
+                if (File.Exists(fPath))
+                {
+
+                    result4 = mapper.LoadFromFile(fPath);
+                }
+                else
+                {
+                    _errMsg += "\r\n" + fPath + _3DLaserGlueInspection.Resources.LanguageDict.FileDoesNotExist;
+                    result4 = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                _errMsg += "\r\n" + ex.ToString();
+                result4 = false;
+            }
+
+            return result0 && result1 && result2 && result3 && result4;
         }
 
         public bool Save()
@@ -1030,6 +1512,15 @@ namespace _3DLaserGlueInspection
                         xml.Serialize(stream, XLDDatas);
                     }
                 }
+
+
+                {
+                    //XLDDatas = new List<XLDData>();
+                    string fPath = basePath + "ProjectMapping.json";
+                    result &= mapper.SaveToFile(fPath);
+                }
+                    
+               
             }
             catch (Exception ex)
             {

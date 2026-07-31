@@ -36,8 +36,8 @@
             <Grid Margin="5,5,5,5" Background="#FF2A3440">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="80*"/>
-                    <ColumnDefinition Width="100*"/>
-                    <ColumnDefinition Width="100*"/>
+                    <ColumnDefinition Width="80*"/>
+                    <ColumnDefinition Width="80*"/>
                 </Grid.ColumnDefinitions>
                 <ListBox Name="cutSetListBox"  Grid.ColumnSpan="1" Margin="5,5,5,48" SelectionChanged="cutSetListBox_SelectionChanged"/>
                 <GroupBox Name="camUsedGroupBox" Grid.Column="1" Header="{x:Static resx:LanguageDict.UsedCam}" Margin="5,5,5,0" Height="156" VerticalAlignment="Top" Foreground="White">
@@ -118,6 +118,7 @@
 
                             </Grid>
                         </Border>
+                        <Button x:Name="runTrajectoryButton" Content="{x:Static resx:LanguageDict.SimRunning}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="155,153,0,0" Click="runTrajectoryButton_Click"  />
 
                     </Grid>
 
@@ -202,18 +203,19 @@
                     </TabItem>
                     <TabItem Header="{x:Static resx:LanguageDict.ShowSet}" Template="{StaticResource TabItemTemplate}" Foreground="White" Background="#FF2A3440" FontSize="14">
                         <Grid >
-                            <Label  Content="{x:Static resx:LanguageDict.SignSize}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="10,92,0,0" VerticalAlignment="Top"/>
-                            <TextBox x:Name="identificationSizeNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="109,94,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="145" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                            <Label  Content="{x:Static resx:LanguageDict.SignSize}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="10,143,0,0" VerticalAlignment="Top"/>
+                            <TextBox x:Name="identificationSizeNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="109,145,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="145" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
                             <Button x:Name="setImageButton" Content="{x:Static resx:LanguageDict.SetImage}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,10,0,0" Click="setImageButton_Click"  />
                             <Button x:Name="showImage" Content="{x:Static resx:LanguageDict.ShowImage}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="144,10,0,0" Click="showImage_Click"  />
                             <Button x:Name="setTrajectoryButton" Content="{x:Static resx:LanguageDict.SetTrajectory}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,51,0,0" Click="setTrajectoryButton_Click"  />
 
-                            <Label  Content="{x:Static resx:LanguageDict.StartImageID}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="10,134,0,0" VerticalAlignment="Top"/>
-                            <Label  Content="{x:Static resx:LanguageDict.EndImageID}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="10,179,0,0" VerticalAlignment="Top"/>
-                            <TextBox x:Name="startImageIndexNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="109,136,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="145" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-                            <TextBox x:Name="endImageIndexNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="109,181,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="145" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-                            <Button x:Name="showTrajectoryButton" Content="{x:Static resx:LanguageDict.ShowTrajectory}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="144,51,0,0" Click="showTrajectoryButton_Click"  />
-                            <Button x:Name="runTrajectoryButton" Content="{x:Static resx:LanguageDict.SimRunning}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="144,225,0,0" Click="runTrajectoryButton_Click"  />
+                            <Label  Content="{x:Static resx:LanguageDict.StartImageID}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="10,185,0,0" VerticalAlignment="Top"/>
+                            <Label  Content="{x:Static resx:LanguageDict.EndImageID}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="10,230,0,0" VerticalAlignment="Top"/>
+                            <TextBox x:Name="startImageIndexNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="109,187,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="145" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                            <TextBox x:Name="endImageIndexNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="109,232,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="145" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                            <Button x:Name="showTrajectoryButton" Content="{x:Static resx:LanguageDict.ShowTrajectory}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="144,93,0,0" Click="showTrajectoryButton_Click"  />
+                            <Button x:Name="runMappingTrajectory" Content="{x:Static resx:LanguageDict.MappingTrajectory}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,93,0,0" Click="runMappingTrajectory_Click"  />
+                            <Button x:Name="runTest" Content="{x:Static resx:LanguageDict.Test}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,310,0,0" Click="runTest_Click"  />
                         </Grid>
                     </TabItem>
                     <TabItem Header="{x:Static resx:LanguageDict.OtherSet}" Template="{StaticResource TabItemTemplate}" Foreground="White" Background="#FF2A3440" FontSize="14">

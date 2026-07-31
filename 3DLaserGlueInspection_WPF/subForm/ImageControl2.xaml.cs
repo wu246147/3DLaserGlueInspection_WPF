@@ -464,7 +464,7 @@ namespace _3DLaserGlueInspection.subForm
                 StrokeThickness = StrokeThickness
             };
             
-            AddChildren(ellipse, 0, 0);
+            AddChildren(ellipse, (int)(point.X - radio), (int)(point.Y - radio));
             canvas.EndInit();
 
         }
