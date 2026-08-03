@@ -1581,6 +1581,9 @@ namespace _3DLaserGlueInspection
         public bool Cam2Enabled = true;
         public bool Cam3Enabled = true;
         public bool Cam4Enabled = true;
+
+        public static int CamCount = 4; //不用变，最多4个相机
+        public List<bool> CamEnabled = Enumerable.Repeat(true, CamCount).ToList();
         //显示画布大小
         public int ShowWidth = 50;//mm
         public int ShowHeight = 50;

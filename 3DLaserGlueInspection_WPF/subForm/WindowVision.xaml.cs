@@ -715,10 +715,10 @@ namespace _3DLaserGlueInspection.subForm
                 if (cutSet != null)
                 {
                     isAlter = true;
-                    cutSet.Cam1Enabled = (bool)enableCam1Check.IsChecked;
-                    cutSet.Cam2Enabled = (bool)enableCam2Check.IsChecked;
-                    cutSet.Cam3Enabled = (bool)enableCam3Check.IsChecked;
-                    cutSet.Cam4Enabled = (bool)enableCam4Check.IsChecked;
+                    cutSet.CamEnabled[0] = (bool)enableCam1Check.IsChecked;
+                    cutSet.CamEnabled[1] = (bool)enableCam2Check.IsChecked;
+                    cutSet.CamEnabled[2] = (bool)enableCam3Check.IsChecked;
+                    cutSet.CamEnabled[3] = (bool)enableCam4Check.IsChecked;
 
                     //cutSet.isUseAngleOpt = (bool)isUseAngleOptCheck.IsChecked;
 
@@ -1057,6 +1057,10 @@ namespace _3DLaserGlueInspection.subForm
                     }
                 }
 
+                
+
+
+
                 set = new Setting(carTypeComboBox.Items[carTypeComboBox.SelectedIndex].ToString());
                 set.Load();
                 cutSetListBox.Items.Clear();
@@ -1085,21 +1089,34 @@ namespace _3DLaserGlueInspection.subForm
             selectPictureListBox.SelectedIndex = -1;
             if (cutSetListBox.SelectedIndex >= 0)
             {
+                //根据camparas来判断要显示多少个相机
+                Params.Param.TryGetValue(CamParamName, out var camParams);
+
+
+                System.Windows.Controls.CheckBox[] camCheckBoxes = new System.Windows.Controls.CheckBox[] { enableCam1Check, enableCam2Check, enableCam3Check, enableCam4Check };
+                for (int i = 0; i < camCheckBoxes.Length; i++)
+                {
+                    camCheckBoxes[i].Visibility = Visibility.Hidden;
+                }
                 selectCamListBox.Items.Clear();
-                for (int i = 0; i < 4; i++)
+                for (int i = 0; i < camParams.Count; i++)
                 {
                     selectCamListBox.Items.Add(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + (i + 1).ToString());
+
+                    camCheckBoxes[i].Visibility = Visibility.Visible;
                 }
+                
+
 
                 cutSet = set.CutSets[cutSetListBox.SelectedIndex];
                 if (cutSet != null)
                 {
                     UnLoadUpData();
 
-                    enableCam1Check.IsChecked = cutSet.Cam1Enabled;
-                    enableCam2Check.IsChecked = cutSet.Cam2Enabled;
-                    enableCam3Check.IsChecked = cutSet.Cam3Enabled;
-                    enableCam4Check.IsChecked = cutSet.Cam4Enabled;
+                    enableCam1Check.IsChecked = cutSet.CamEnabled[0];
+                    enableCam2Check.IsChecked = cutSet.CamEnabled[1];
+                    enableCam3Check.IsChecked = cutSet.CamEnabled[2];
+                    enableCam4Check.IsChecked = cutSet.CamEnabled[3];
 
                     //isUseAngleOptCheck.IsChecked = cutSet.isUseAngleOpt;
                     coefficientSharingCheck.IsChecked = cutSet.isCoefficientSharing;
@@ -2340,10 +2357,10 @@ namespace _3DLaserGlueInspection.subForm
                 int currentCamID = camID;
 
                 //判断是否启用相机
-                bool CamEnabled = camKey == "Cam1" ? cutSet.Cam1Enabled :
-                        camKey == "Cam2" ? cutSet.Cam2Enabled :
-                        camKey == "Cam3" ? cutSet.Cam3Enabled :
-                        cutSet.Cam4Enabled;
+                bool CamEnabled = camKey == "Cam1" ? cutSet.CamEnabled[0] :
+                        camKey == "Cam2" ? cutSet.CamEnabled[1] :
+                        camKey == "Cam3" ? cutSet.CamEnabled[2] :
+                        cutSet.CamEnabled[3];
 
                 if (CamEnabled)
                 {
@@ -2823,15 +2840,15 @@ namespace _3DLaserGlueInspection.subForm
                         int indexImageCut = cutSetListBox.SelectedIndex;
                         int indexImage = selectPictureListBox.SelectedIndex;
                         var cutSet = set.CutSets[indexImageCut];
-                        List<bool> camEnableList = new List<bool> { cutSet.Cam1Enabled, cutSet.Cam2Enabled, cutSet.Cam3Enabled, cutSet.Cam4Enabled };
+                        List<bool> camEnableList = new List<bool> { cutSet.CamEnabled[0], cutSet.CamEnabled[1], cutSet.CamEnabled[2], cutSet.CamEnabled[3] };
                         //相机循环
                         foreach (var item in camKeyList)
                         {
                             //判断是否启用相机
-                            bool CamEnabled = item == "Cam1" ? cutSet.Cam1Enabled :
-                                    item == "Cam2" ? cutSet.Cam2Enabled :
-                                    item == "Cam3" ? cutSet.Cam3Enabled :
-                                    cutSet.Cam4Enabled;
+                            bool CamEnabled = item == "Cam1" ? cutSet.CamEnabled[0]  :
+                                    item == "Cam2" ? cutSet.CamEnabled[1] :
+                                    item == "Cam3" ? cutSet.CamEnabled[2] :
+                                    cutSet.CamEnabled[3];
 
                             if (CamEnabled)
                             {
@@ -3350,10 +3367,10 @@ namespace _3DLaserGlueInspection.subForm
 
                     if (Robot3DPoseDict.ContainsKey(camKey) && Robot3DPoseDict[camKey][cutSetListBox.SelectedIndex].Count > 0 )
                     {
-                        bool CamEnabled = camKey == "Cam1" ? set.CutSets[cutSetListBox.SelectedIndex].Cam1Enabled :
-                                   camKey == "Cam2" ? set.CutSets[cutSetListBox.SelectedIndex].Cam2Enabled :
-                                   camKey == "Cam3" ? set.CutSets[cutSetListBox.SelectedIndex].Cam3Enabled :
-                                   set.CutSets[cutSetListBox.SelectedIndex].Cam4Enabled;
+                        bool CamEnabled = camKey == "Cam1" ? set.CutSets[cutSetListBox.SelectedIndex].CamEnabled[0] :
+                                   camKey == "Cam2" ? set.CutSets[cutSetListBox.SelectedIndex].CamEnabled[1] :
+                                   camKey == "Cam3" ? set.CutSets[cutSetListBox.SelectedIndex].CamEnabled[2] :
+                                   set.CutSets[cutSetListBox.SelectedIndex].CamEnabled[3];
 
                         //判断相机是否启用
                         if (!CamEnabled)

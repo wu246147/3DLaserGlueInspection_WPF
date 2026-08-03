@@ -45,6 +45,8 @@ namespace _3DLaserGlueInspection.subForm
         CamParams Params = new CamParams();
         CamParam camParam = null;
 
+        private System.Windows.Controls.RadioButton[] _radioButtons;
+
         bool _isAlter = false;
 
         List<Mat> MImages = new List<Mat>();
@@ -159,6 +161,42 @@ namespace _3DLaserGlueInspection.subForm
             saveImgTypeComboBox.Items.Add(".tif");
             saveImgTypeComboBox.Items.Add(".jpg");
 
+            // 初始化 radio 按钮数组（确保 XAML 中的 radioButtonCam1..4 已存在）
+            _radioButtons = new[] { radioButtonCam1, radioButtonCam2, radioButtonCam3, radioButtonCam4 };
+        }
+
+        // 新增：根据相机参数字典数量更新要显示的 RadioButton
+        private void UpdateRadioButtons(int camCount)
+        {
+            // camCount 表示 Params.Param[camParaName].Count（相机键的数量）
+            for (int i = 0; i < _radioButtons.Length; i++)
+            {
+                if (i < camCount)
+                {
+                    _radioButtons[i].Visibility = Visibility.Visible;
+                    _radioButtons[i].Content = (i + 1).ToString(); // 显示编号或根据需要改成键名
+                    _radioButtons[i].IsEnabled = true;
+                }
+                else
+                {
+                    _radioButtons[i].Visibility = Visibility.Collapsed;
+                    _radioButtons[i].IsEnabled = false;
+                    _radioButtons[i].IsChecked = false;
+                }
+            }
+
+            // 确保至少一个被选中（如果有可用的）
+            if (camCount > 0)
+            {
+                for (int i = 0; i < Math.Min(camCount, _radioButtons.Length); i++)
+                {
+                    if (_radioButtons[i].IsEnabled)
+                    {
+                        _radioButtons[i].IsChecked = true;
+                        break;
+                    }
+                }
+            }
         }
         public void WindowCamera_Loaded(object sender, RoutedEventArgs e)
         {
@@ -171,6 +209,10 @@ namespace _3DLaserGlueInspection.subForm
             {
                 ShowMessage(GlobalVarAndFunc.LanguageTranslate("参数加载失败：") + Params.ErrMsg);
             }
+
+            //判断有多少个相机，需要显示多少个相机按键
+
+
 
             string[] ParaNames = CamParams.GetParamNames();
             for (int i = 0; i < ParaNames.Length; i++)
@@ -186,9 +228,40 @@ namespace _3DLaserGlueInspection.subForm
         private void comboBoxParamName_SelectedIndexChanged(object sender, EventArgs e)
         {
             paraGrip.IsEnabled = newCamParaNameComboBox.SelectedIndex >= 0;
-            //RadioButton_Cam_CheckedChanged(null, null);
-            radioButtonCam1.IsChecked = true;
-            RadioButton_Cam_CheckedChanged(null, null);
+
+            if (!paraGrip.IsEnabled)
+            {
+                // 无选择时隐藏全部 radio 按钮
+                UpdateRadioButtons(0);
+                return;
+            }
+
+            // 获取参数名字与对应字典数量（容错）
+            string camParaName = newCamParaNameComboBox.Items[newCamParaNameComboBox.SelectedIndex].ToString();
+            int camCount = 0;
+            try
+            {
+                if (Params != null && Params.Param != null && Params.Param.ContainsKey(camParaName))
+                {
+                    // Params.Param[camParaName] 期望是一个字典（例如 Dictionary<string, CamParam>）
+                    var dict = Params.Param[camParaName];
+                    camCount = dict?.Count ?? 0;
+                }
+            }
+            catch
+            {
+                camCount = 0;
+            }
+
+            // 更新要显示的 radio 按钮数量（最多显示已有的 radio 控件数）
+            UpdateRadioButtons(camCount);
+
+            // 保持行为不变：默认选择第一个 radio 并触发已存在的处理逻辑
+            if (_radioButtons.Length > 0 && _radioButtons[0].Visibility == Visibility.Visible)
+            {
+                _radioButtons[0].IsChecked = true;
+                RadioButton_Cam_CheckedChanged(null, null);
+            }
         }
 
         private void RadioButton_Cam_CheckedChanged(object sender, EventArgs e)

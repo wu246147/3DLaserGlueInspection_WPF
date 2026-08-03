@@ -2548,6 +2548,7 @@ namespace _3DLaserGlueInspection
             Cam1ToBase.Clear();
             Cam1InBase.Clear();
 
+            //需要改变相机数量，只要修改data文件夹下的CamSet文件夹下的相机文件夹数量即可
             string camSetPath = basePath + "\\CamSet";
             if (Directory.Exists(camSetPath))
             {

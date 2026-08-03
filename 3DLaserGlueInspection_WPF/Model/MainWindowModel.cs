@@ -51,6 +51,9 @@ namespace _3DLaserGlueInspection
 
     public class MainWindowModel : NotifyBase
     {
+        // 当 initRun 中确定了相机参数数量时，通知 UI 调整列显示
+        public event Action<int> CamCountChanged;
+
         public MainModel mainModel { get; set; } = new MainModel();
 
         public event DispImageHWindowEventHandler DispImageHWindowNumericalModelDiagramEvent;
@@ -699,10 +702,10 @@ namespace _3DLaserGlueInspection
 
                                 var cam = cams[item.Value.CamName];
                                 int segmentIndex = indexImageCut + 1;
-                                bool CamEnabled = item.Key == "Cam1" ? set.CutSets[segmentIndex].Cam1Enabled :
-                                    item.Key == "Cam2" ? set.CutSets[segmentIndex].Cam2Enabled :
-                                    item.Key == "Cam3" ? set.CutSets[segmentIndex].Cam3Enabled :
-                                    set.CutSets[segmentIndex].Cam4Enabled;
+                                bool CamEnabled = item.Key == "Cam1" ? set.CutSets[segmentIndex].CamEnabled[0] :
+                                    item.Key == "Cam2" ? set.CutSets[segmentIndex].CamEnabled[1] :
+                                    item.Key == "Cam3" ? set.CutSets[segmentIndex].CamEnabled[2] :
+                                    set.CutSets[segmentIndex].CamEnabled[3];
                                 displaySize[item.Key].Add(new System.Windows.Size(set.CutSets[segmentIndex].ShowWidth, set.CutSets[segmentIndex].ShowHeight));
                                 if (CamEnabled)
                                 {
@@ -1663,10 +1666,10 @@ namespace _3DLaserGlueInspection
 
                                 var cam = cams[item.Value.CamName];
                                 int segmentIndex = indexImageCut + 1;
-                                bool CamEnabled = item.Key == "Cam1" ? set.CutSets[segmentIndex].Cam1Enabled :
-                                    item.Key == "Cam2" ? set.CutSets[segmentIndex].Cam2Enabled :
-                                    item.Key == "Cam3" ? set.CutSets[segmentIndex].Cam3Enabled :
-                                    set.CutSets[segmentIndex].Cam4Enabled;
+                                bool CamEnabled = item.Key == "Cam1" ? set.CutSets[segmentIndex].CamEnabled[0] :
+                                    item.Key == "Cam2" ? set.CutSets[segmentIndex].CamEnabled[1] :
+                                    item.Key == "Cam3" ? set.CutSets[segmentIndex].CamEnabled[2] :
+                                    set.CutSets[segmentIndex].CamEnabled[3];
                                 displaySize[item.Key].Add(new System.Windows.Size(set.CutSets[segmentIndex].ShowWidth, set.CutSets[segmentIndex].ShowHeight));
                                 if (CamEnabled)
                                 {
@@ -2092,12 +2095,22 @@ namespace _3DLaserGlueInspection
                 ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.NoCameraParametersExist + camParamName, LogType.ng);
                 return false;
             }
+            // 通知 UI 相机参数数量（可能在非 UI 线程调用，调用方需在 UI 线程处理）
+            try
+            {
+                CamCountChanged?.Invoke(camParam?.Count ?? 0);
+            }
+            catch { }
             if (!sets.TryGetValue(car.Name, out set))
             {
                 ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.NoProductParametersExist + car.Name, LogType.ng);
                 return false;
             }
             if (stop) return false;
+
+
+
+
 
             Setting set_copy = set;
             //显示NumericalModelDiagram
@@ -2987,10 +3000,10 @@ namespace _3DLaserGlueInspection
                             bool isAllFinish = true;
                             foreach (var item in camParamTmp)
                             {
-                                bool CamEnabled = item.Key == "Cam1" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam1Enabled :
-                                    item.Key == "Cam2" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam2Enabled :
-                                    item.Key == "Cam3" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam3Enabled :
-                                    cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam4Enabled;
+                                bool CamEnabled = item.Key == "Cam1" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[0] :
+                                    item.Key == "Cam2" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[1] :
+                                    item.Key == "Cam3" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[2] :
+                                    cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[3];
 
                                 if (CamEnabled)
                                 {
@@ -3021,10 +3034,10 @@ namespace _3DLaserGlueInspection
                             bool isAllFinish = true;
                             foreach (var item in camParamTmp)
                             {
-                                bool CamEnabled = item.Key == "Cam1" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam1Enabled :
-                                   item.Key == "Cam2" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam2Enabled :
-                                   item.Key == "Cam3" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam3Enabled :
-                                    cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam4Enabled;
+                                bool CamEnabled = item.Key == "Cam1" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[0] :
+                                    item.Key == "Cam2" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[1] :
+                                    item.Key == "Cam3" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[2] :
+                                    cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[3];
 
                                 if (CamEnabled)
                                 {
@@ -3038,10 +3051,10 @@ namespace _3DLaserGlueInspection
                             {
                                 foreach (var item in camParamTmp)
                                 {
-                                    bool CamEnabled = item.Key == "Cam1" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam1Enabled :
-                                     item.Key == "Cam2" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam2Enabled :
-                                     item.Key == "Cam3" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam3Enabled :
-                                      cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam4Enabled;
+                                    bool CamEnabled = item.Key == "Cam1" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[0] :
+                                        item.Key == "Cam2" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[1] :
+                                        item.Key == "Cam3" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[2] :
+                                        cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[3];
 
                                     if (CamEnabled)
                                     {
@@ -3065,10 +3078,10 @@ namespace _3DLaserGlueInspection
                             //更新结果列表
                             foreach (var item in camParamTmp)
                             {
-                                bool CamEnabled = item.Key == "Cam1" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam1Enabled :
-                                   item.Key == "Cam2" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam2Enabled :
-                                   item.Key == "Cam3" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam3Enabled :
-                                    cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam4Enabled;
+                                bool CamEnabled = item.Key == "Cam1" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[0] :
+                                    item.Key == "Cam2" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[1] :
+                                    item.Key == "Cam3" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[2] :
+                                    cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[3];
 
                                 if (CamEnabled)
                                 {
@@ -3118,10 +3131,10 @@ namespace _3DLaserGlueInspection
                             foreach (var item in camParamTmp)
                             {
 
-                                bool CamEnabled = item.Key == "Cam1" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam1Enabled :
-                                   item.Key == "Cam2" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam2Enabled :
-                                   item.Key == "Cam3" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam3Enabled :
-                                    cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam4Enabled;
+                                bool CamEnabled = item.Key == "Cam1" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[0] :
+                                    item.Key == "Cam2" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[1] :
+                                    item.Key == "Cam3" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[2] :
+                                    cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[3];
 
                                 if (CamEnabled)
                                 {
@@ -3148,10 +3161,10 @@ namespace _3DLaserGlueInspection
                                 {
                                     foreach (var item in camParamTmp)
                                     {
-                                        bool CamEnabled = item.Key == "Cam1" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam1Enabled :
-                                   item.Key == "Cam2" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam2Enabled :
-                                   item.Key == "Cam3" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam3Enabled :
-                                    cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].Cam4Enabled;
+                                        bool CamEnabled = item.Key == "Cam1" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[0] :
+                                            item.Key == "Cam2" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[1] :
+                                            item.Key == "Cam3" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[2] :
+                                            cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[3];
 
                                         if (CamEnabled)
                                         {

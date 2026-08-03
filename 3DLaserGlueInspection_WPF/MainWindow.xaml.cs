@@ -104,12 +104,45 @@ namespace _3DLaserGlueInspection
             model.RefreshOFFEvent += _3DShowControl.RefreshOFF;
             model.RefreshOnEvent += _3DShowControl.RefreshOn;
 
+            // 订阅 model 中相机数量变化事件，用于调整 _2DResultDataGrid 列显示
+            model.CamCountChanged += (count) =>
+            {
+                // 确保在 UI 线程执行
+                Dispatcher.Invoke(() => Adjust2DResultDataGridColumns(count));
+            };
+
         }
 
         private void Window_Closing(object sender, CancelEventArgs e)
         {
             model.StopCommunicationThread();
 
+        }
+
+        // 根据相机数量调整 _2DResultDataGrid 的列显示和宽度
+        private void Adjust2DResultDataGridColumns(int camCount)
+        {
+            try
+            {
+                if (_2DResultDataGrid == null || _2DResultDataGrid.Columns == null) return;
+
+                camCount = Math.Max(1, Math.Min(camCount, _2DResultDataGrid.Columns.Count));
+
+                for (int i = 0; i < _2DResultDataGrid.Columns.Count; i++)
+                {
+                    var col = _2DResultDataGrid.Columns[i];
+                    if (i < camCount)
+                    {
+                        col.Visibility = Visibility.Visible;
+                        col.Width = new DataGridLength(1, DataGridLengthUnitType.Star);
+                    }
+                    else
+                    {
+                        col.Visibility = Visibility.Collapsed;
+                    }
+                }
+            }
+            catch { }
         }
 
         private void min_Btn_Click(object sender, RoutedEventArgs e)
