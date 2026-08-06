@@ -113,10 +113,10 @@
                 </Border>
                 <Label  Content="{x:Static resx:LanguageDict.Cam1}" FontSize="14" Foreground="White"  HorizontalAlignment="Left"/>
 
-                <RadioButton x:Name="radioButtonCam1" Content="1" FontSize="14" Foreground="White" Height="16" Margin="57,7,195,4" Checked="RadioButton_Cam_CheckedChanged" Unchecked="RadioButton_Cam_CheckedChanged"/>
-                <RadioButton x:Name="radioButtonCam2" Content="2" FontSize="14" Foreground="White" Height="16" Margin="110,7,142,4" Checked="RadioButton_Cam_CheckedChanged" Unchecked="RadioButton_Cam_CheckedChanged"/>
-                <RadioButton x:Name="radioButtonCam3" Content="3" FontSize="14" Foreground="White" Height="16" Margin="165,7,87,4" Checked="RadioButton_Cam_CheckedChanged" Unchecked="RadioButton_Cam_CheckedChanged"/>
-                <RadioButton x:Name="radioButtonCam4" Content="4" FontSize="14" Foreground="White" Height="16" Margin="216,7,36,4" Checked="RadioButton_Cam_CheckedChanged" Unchecked="RadioButton_Cam_CheckedChanged"/>
+                <RadioButton x:Name="radioButtonCam1" Content="1" FontSize="14" Foreground="White" Height="16" Margin="57,7,195,4" Visibility="Hidden" Checked="RadioButton_Cam_CheckedChanged" Unchecked="RadioButton_Cam_CheckedChanged"/>
+                <RadioButton x:Name="radioButtonCam2" Content="2" FontSize="14" Foreground="White" Height="16" Margin="110,7,142,4" Visibility="Hidden" Checked="RadioButton_Cam_CheckedChanged" Unchecked="RadioButton_Cam_CheckedChanged"/>
+                <RadioButton x:Name="radioButtonCam3" Content="3" FontSize="14" Foreground="White" Height="16" Margin="165,7,87,4" Visibility="Hidden" Checked="RadioButton_Cam_CheckedChanged" Unchecked="RadioButton_Cam_CheckedChanged"/>
+                <RadioButton x:Name="radioButtonCam4" Content="4" FontSize="14" Foreground="White" Height="16" Margin="216,7,36,4" Visibility="Hidden" Checked="RadioButton_Cam_CheckedChanged" Unchecked="RadioButton_Cam_CheckedChanged"/>
             </Grid>
             <CheckBox x:Name="Line1EnableCheck" Content="Line1" HorizontalAlignment="Center" Margin="0,45,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Checked="Line1EnableCheck_Checked" Unchecked="Line1EnableCheck_Checked"/>
             <CheckBox x:Name="Line2EnableCheck" Content="Line2" HorizontalAlignment="Left" Margin="240,46,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Checked="Line2EnableCheck_Checked" Unchecked="Line2EnableCheck_Checked"/>

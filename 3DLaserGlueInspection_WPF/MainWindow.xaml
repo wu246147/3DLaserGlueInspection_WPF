@@ -61,6 +61,8 @@
             MouseLeftButtonDown="TopMain_MouseLeftBtnDown">
 
             <StackPanel Margin="0,0,178,0" Orientation="Horizontal">
+                <Label  Width="25"
+                    Height="48"/>
                 <Image
                     Width="102"
                     Height="48"
@@ -70,16 +72,16 @@
                      />
                 <Label
                     x:Name="Lable_Title"
-                    Width="309"
+                    Width="350"
                     Height="42"
                     HorizontalContentAlignment="Left"
                     VerticalContentAlignment="Center"
                     Background="#FF242B35"
                     BorderBrush="{x:Null}"
                     Content="{x:Static resx:LanguageDict.log}" 
-                    ContentStringFormat="{}{0} 1.6.1"
+                    ContentStringFormat="{}   {0} 1.8.1 "
                     FontSize="22"
-                    Foreground="#FF1679D0" Margin="0,-2,0,0" />
+                    Foreground="#FF1679D0" />
 
             </StackPanel>
             <!--</Viewbox>-->
@@ -722,7 +724,7 @@ Converter={StaticResource ResultColor}}" />
                             >
                             <DataGrid.Columns>
                                 <DataGridTextColumn
-                                    Width="150"
+                                    Width="100"
                                     Binding="{Binding CarDetTime, StringFormat=\{0:yyyy-MM-dd HH:mm:ss\}}"
                                     Foreground="White"
                                     Header="{x:Static resx:LanguageDict.Time}" />
@@ -731,6 +733,12 @@ Converter={StaticResource ResultColor}}" />
                                     Binding="{Binding CarID}"
                                     Foreground="White"
                                     Header="{x:Static resx:LanguageDict.ProductID}" />
+
+                                <DataGridTextColumn
+                                    Width="*"
+                                    Binding="{Binding GlueLenth}"
+                                    Foreground="White"
+                                    Header="{x:Static resx:LanguageDict.GlueLenth}" />
                                 <DataGridTextColumn
                                     Width="*"
                                     Binding="{Binding CarResult}"

@@ -147,6 +147,14 @@ namespace _3DLaserGlueInspection
 
         Dictionary<string, Task> tasks = new Dictionary<string, Task>();//相机-处理任务
 
+
+        // 胶长检测结果
+        Dictionary<string, SynchronizedList<int>> glueLenthResultStartIDDict = new Dictionary<string, SynchronizedList<int>>();
+        Dictionary<string, SynchronizedList<int>> glueLenthResultEndIDDict = new Dictionary<string, SynchronizedList<int>>();
+        Dictionary<string, SynchronizedList<PoseParameters>> glueLenthResultStartPoseDict = new Dictionary<string, SynchronizedList<PoseParameters>>();
+        Dictionary<string, SynchronizedList<PoseParameters>> glueLenthResultEndPoseDict = new Dictionary<string, SynchronizedList<PoseParameters>>();
+        Dictionary<string, SynchronizedList<double>> glueLenthDict = new Dictionary<string, SynchronizedList<double>>();
+
         Task taskShow2D = null;
 
         Task taskPoint3D = null;
@@ -408,9 +416,6 @@ namespace _3DLaserGlueInspection
                     }
 
                 }
-
-
-
 
             }
             catch (Exception ex)
@@ -699,6 +704,21 @@ namespace _3DLaserGlueInspection
                                 glueDataDict[item.Key].Add(dictData);
                                 var dictResult = new Dictionary<long, BResult>();
                                 glueResultDict[item.Key].Add(dictResult);
+
+
+                                var glueLenth = -1;
+                                glueLenthDict[item.Key].Add(glueLenth);
+                                var glueLenthResultEndID = -1;
+                                glueLenthResultEndIDDict[item.Key].Add(glueLenthResultEndID);
+                                var glueLenthResultEnd = new PoseParameters();
+                                glueLenthResultEndPoseDict[item.Key].Add(glueLenthResultEnd);
+
+                                var glueLenthResultStartID = -1;
+                                glueLenthResultStartIDDict[item.Key].Add(glueLenthResultStartID);
+                                var glueLenthResultStart = new PoseParameters();
+                                glueLenthResultStartPoseDict[item.Key].Add(glueLenthResultStart);
+
+
 
                                 var cam = cams[item.Value.CamName];
                                 int segmentIndex = indexImageCut + 1;
@@ -1026,7 +1046,9 @@ namespace _3DLaserGlueInspection
                         //判断段数是否足够
                         if (indexImageCut + 1 >= set.CutSets.Count)
                         {
+
                             ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.TheNumberOfCameraSegmentsIsSufficient + $"({indexImageCut + 1}/{set.CutSets.Count})，" + _3DLaserGlueInspection.Resources.LanguageDict.ExitThePhotoLoop);
+
                             break;
                         }
                         else
@@ -1125,11 +1147,47 @@ namespace _3DLaserGlueInspection
 
                     mainModel.resultControl = totalResult ? "OK" : "NG";
                     mainModel.resultColorControl = totalResult ? "#FF06BD00" : "Red";
-                        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+
+                    //获取胶长结果
+                    double glueLenthShow = -1;
+                    //目前只支持检测一个胶长，显示也只显示一个
+                    for (int i = 0; i < set.CutSets.Count;i++)
+                    {
+                        if (set.CutSets[i].glueLenthDetEnable)
+                        {
+                            foreach (var item2 in glueLenthDict)
+                            {
+                                //只取所有相机的第一个
+                                if (item2.Value[i] > 0)
+                                {
+                                    glueLenthShow = item2.Value[i];
+                                    break;
+                                }
+                                
+                            }
+                        }
+                        //只取所有段的第一个
+                        if (glueLenthShow != -1)
+                        {
+                            break;
+                        }
+                    }
+
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
                     {
                         CarResultRecord carResultRecord = new CarResultRecord();
                         carResultRecord.CarDetTime = dateTime.ToString("yyyy-MM-dd HH:mm:ss");
                         carResultRecord.CarID = ID.ToString();
+
+                        if (glueLenthShow != -1)
+                        {
+                            carResultRecord.GlueLenth = glueLenthShow.ToString()+"mm";
+                        }
+                        else
+                        {
+                            carResultRecord.GlueLenth = "-";
+                        }
+
                         carResultRecord.CarResult = totalResult ? "OK" : "NG";
 
                         mainModel.CarResultRecords.Insert(0, carResultRecord);
@@ -2337,6 +2395,20 @@ namespace _3DLaserGlueInspection
                     indexResultShowDict.Add(item.Key, 0);
 
                     displaySize.Add(item.Key, new SynchronizedList<System.Windows.Size>());
+
+
+
+                    var glueLenth = new SynchronizedList<double>();
+                    glueLenthDict.Add(item.Key, glueLenth);
+                    var glueLenthResultEndID = new SynchronizedList<int>();
+                    glueLenthResultEndIDDict.Add(item.Key, glueLenthResultEndID);
+                    var glueLenthResultEnd = new SynchronizedList<PoseParameters>();
+                    glueLenthResultEndPoseDict.Add(item.Key, glueLenthResultEnd);
+
+                    var glueLenthResultStartID = new SynchronizedList<int>();
+                    glueLenthResultStartIDDict.Add(item.Key, glueLenthResultStartID);
+                    var glueLenthResultStart = new SynchronizedList<PoseParameters>();
+                    glueLenthResultStartPoseDict.Add(item.Key, glueLenthResultStart);
                 }
             }
             ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.InitializeDataSuccessfully);
@@ -2532,6 +2604,8 @@ namespace _3DLaserGlueInspection
                         indexImageCutProcessDict[item.Key] = 0;
                         while (true)//分段循环
                         {
+                            
+
                             var dictImageKey = ImageKeys[item.Key][indexImageCutProcessDict[item.Key]];
                             var dictImage = Images[item.Key][indexImageCutProcessDict[item.Key]];
                             var dictRobotPose = Robot3DPose[item.Key][indexImageCutProcessDict[item.Key]];
@@ -2549,6 +2623,13 @@ namespace _3DLaserGlueInspection
                             var dictRegionRectangle2 = glueSmallRectRegionDict[item.Key][indexImageCutProcessDict[item.Key]];
                             var dictData = glueDataDict[item.Key][indexImageCutProcessDict[item.Key]];
                             var dictResult = glueResultDict[item.Key][indexImageCutProcessDict[item.Key]];
+
+
+                            var glueLenth = glueLenthDict[item.Key][indexImageCutProcessDict[item.Key]];
+                            var glueLenthResultEndID =  glueLenthResultEndIDDict[item.Key][indexImageCutProcessDict[item.Key]];
+                            var glueLenthResultEndPose =  glueLenthResultEndPoseDict[item.Key][indexImageCutProcessDict[item.Key]];
+                            var glueLenthResultStartID = glueLenthResultStartIDDict[item.Key][indexImageCutProcessDict[item.Key]];
+                            var glueLenthResultStartPose =  glueLenthResultStartPoseDict[item.Key][indexImageCutProcessDict[item.Key]];
 
                             int indexImage = 0;
                             bool bRun = true;
@@ -2621,6 +2702,7 @@ namespace _3DLaserGlueInspection
                                             Mat lightXY = new Mat();
                                             double PoseD = 0;
                                             double V = 0;
+                                            Mat xy = new Mat();
 
                                             Point3D resultCenterPoint = new Point3D();
 
@@ -2691,7 +2773,6 @@ namespace _3DLaserGlueInspection
                                             if (imageSet.轮廓检测)
                                             {
                                                 //ROI裁剪
-                                                Mat xy = new Mat();
                                                 Mat imgCut = new Mat();
                                                 int LeftX = 0;
                                                 int TopY = 0;
@@ -2718,7 +2799,7 @@ namespace _3DLaserGlueInspection
                                                 #region 使用机器人移动轨迹计算夹角
                                                 // 必须要机器人有移动
                                                 int intervalCount = 1;
-                                                if (dictRobotPose.Count > intervalCount +1 && PoseD > 0)
+                                                if (dictRobotPose.Count > intervalCount + 1 && PoseD > 0)
                                                 {
                                                     //计算CamToTool的矩阵
                                                     //打包前后机器人pose
@@ -2745,40 +2826,13 @@ namespace _3DLaserGlueInspection
                                                         Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToTool,
                                                     robotPose, out lightXY, out robotX, out robotY, out robotZ);
                                                     }
-                                                    else 
+                                                    else
                                                     {
                                                         //搞个robot的逆pose，后面再专门打包个算法搞逆pose
                                                         PoseParameters BaseInTool = Vision.PoseInv(robotPose);
                                                         Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToBase,
                                                             BaseInTool, out lightXY, out robotX, out robotY, out robotZ);
                                                     }
-
-                                                    //如果还没到开始id，则跳过显示
-                                                    int indexCross = indexImage - cutSet.StartImageIndex;
-                                                    int setCount = set_copy.CutSets[indexImageCutProcessDict[item.Key]].EndImageIndex - set_copy.CutSets[indexImageCutProcessDict[item.Key]].StartImageIndex + 1;
-                                                    if (indexCross >= 0 && indexCross < setCount)
-                                                    {
-                                                        //间隔显示，减少显示时间
-                                                        if (indexCross % displayIntervalID == 0)
-                                                        {
-                                                            colorScale = new List<double>();
-                                                            //计算显示颜色
-                                                            for (int i = 0; i < robotZ.Count; i++)
-                                                            {
-                                                                double color = ((robotZ[i] - cutSet.ShowColorMin / 1000) / ((cutSet.ShowColorMax - cutSet.ShowColorMin) / 1000));
-
-                                                                colorScale.Add(color);
-                                                            }
-                                                            //显示点云
-                                                            Disp3DPointControlEvent(robotX, robotY, robotZ, colorScale);
-                                                        }
-
-                                                    }
-                                                    //三维数据添加
-                                                    dictX.Add(imageKey, robotX);
-                                                    dictY.Add(imageKey, robotY);
-                                                    dictZ.Add(imageKey, robotZ);
-                                                    //}
 
 
                                                 }
@@ -2857,6 +2911,85 @@ namespace _3DLaserGlueInspection
                                                         bResult.Result = false;
                                                     }
                                                 }
+
+                                            }
+
+
+                                            //胶长检测
+                                            if (cutSet.glueLenthDetEnable && getOutlineResult)
+                                            {
+
+                                                if (resultData.glueWidth > cutSet.glueWidthThre && indexImage > cutSet.glueStartID && indexImage < cutSet.glueEndID)
+                                                {
+                                                    if (glueLenthResultStartID == -1)
+                                                    {
+                                                        glueLenthResultStartID = indexImage;
+                                                        glueLenthResultStartPose = robotPose;
+
+                                                    }
+                                                    glueLenthResultEndID = indexImage;
+                                                    glueLenthResultEndPose = robotPose;
+
+
+                                                    //胶长结果逻辑处理
+                                                    if (glueLenthResultStartID >= 0 && glueLenthResultEndID > glueLenthResultStartID)
+                                                    {
+                                                        double dx = glueLenthResultEndPose.x - glueLenthResultStartPose.x;
+                                                        double dy = glueLenthResultEndPose.y - glueLenthResultStartPose.y;
+                                                        double dz = glueLenthResultEndPose.z - glueLenthResultStartPose.z;
+
+                                                        glueLenth = Math.Sqrt(Math.Pow(dx * 1000, 2) + Math.Pow(dy * 1000, 2) + Math.Pow(dz * 1000, 2));
+
+                                                        //结果不是字典，要专门保存一下
+                                                        glueLenthDict[item.Key][indexImageCutProcessDict[item.Key]] = glueLenth;
+                                                        glueLenthResultEndIDDict[item.Key][indexImageCutProcessDict[item.Key]] = glueLenthResultEndID;
+                                                        glueLenthResultEndPoseDict[item.Key][indexImageCutProcessDict[item.Key]] = glueLenthResultEndPose;
+                                                        glueLenthResultStartIDDict[item.Key][indexImageCutProcessDict[item.Key]] = glueLenthResultStartID;
+                                                        glueLenthResultStartPoseDict[item.Key][indexImageCutProcessDict[item.Key]] = glueLenthResultStartPose;
+                                                    }
+
+                                                   
+                                                }
+                                            }
+
+
+                                            //点云显示
+                                            if (imageSet.轮廓检测)
+                                            {
+                                                if (xy.Rows > 0 && dictRobotPose.Count > 0 && PoseD > 0)
+                                                {
+                                                    //如果还没到开始id，则跳过显示
+                                                    int indexCross = indexImage - cutSet.StartImageIndex;
+                                                    int setCount = cutSet.EndImageIndex - cutSet.StartImageIndex + 1;
+                                                    if (indexCross >= 0 && indexCross < setCount)
+                                                    {
+                                                        //间隔显示，减少显示时间
+                                                        if (indexCross % displayIntervalID == 0)
+                                                        {
+                                                            colorScale = new List<double>();
+                                                            //计算显示颜色
+                                                            for (int i = 0; i < robotZ.Count; i++)
+                                                            {
+                                                                double color = ((robotZ[i] - cutSet.ShowColorMin / 1000) / ((cutSet.ShowColorMax - cutSet.ShowColorMin) / 1000));
+
+                                                                colorScale.Add(color);
+                                                            }
+                                                            //显示点云
+                                                            Disp3DPointControlEvent(robotX, robotY, robotZ, colorScale);
+                                                        }
+
+                                                    }
+                                                    //三维数据添加
+                                                    dictX.Add(imageKey, robotX);
+                                                    dictY.Add(imageKey, robotY);
+                                                    dictZ.Add(imageKey, robotZ);
+                                                }
+                                            }
+
+
+                                            //胶检测结果整理
+                                            if (imageSet.轮廓检测)
+                                            {
                                                 if (!bResult.Result)
                                                 {
                                                     totalResult = false;
@@ -2914,9 +3047,6 @@ namespace _3DLaserGlueInspection
                                                     }
                                                 }
                                             }
-
-
-                                            //胶检测结果
                                             if (dictResult.ContainsKey(imageKey))
                                             {
                                                 dictResult[imageKey] = bResult;
@@ -2936,7 +3066,7 @@ namespace _3DLaserGlueInspection
 
                                             // 结果显示
 
-                               
+
                                         }
                                         else
                                         {
@@ -2949,11 +3079,18 @@ namespace _3DLaserGlueInspection
                                     }
                                     indexImage++;
                                 }
-                                if (!bTaskRun) return;
-                                if (stop) return;
+                                if (!bTaskRun) 
+                                    return;
+                                if (stop) 
+                                    return;
                             }
-                            if (!bTaskRun) return;
-                            if (stop) return;
+
+                           
+
+                            if (!bTaskRun) 
+                                return;
+                            if (stop) 
+                                return;
                         }
                     })));
                 }
@@ -3059,6 +3196,11 @@ namespace _3DLaserGlueInspection
                                     if (CamEnabled)
                                     {
                                         indexResultShowDict[item.Key]++;
+
+                                        if (indexResultShowDict[camParamTmp.Keys.ToArray()[0]] >= cutSets.Count)
+                                        {
+                                            return; //所有分段完成
+                                        }
                                     }
                                 }
                                 bRun = false;
@@ -3205,6 +3347,11 @@ namespace _3DLaserGlueInspection
                         if (stop) return;
                     }
 
+                   
+
+                    // 胶长结果显示
+
+
                     if (!bTaskRun) return;
                     if (stop) return;
                 }
@@ -3296,6 +3443,15 @@ namespace _3DLaserGlueInspection
 
             displaySize.Clear();
             tasks.Clear();
+
+
+            glueLenthDict.Clear();
+            glueLenthResultEndIDDict.Clear();
+            glueLenthResultEndPoseDict.Clear();
+            glueLenthResultStartIDDict.Clear();
+            glueLenthResultStartPoseDict.Clear();
+
+
             #endregion
             //Invoke(new Action(() => { form3DShow.ClearCloud(); }));
             //清空结果

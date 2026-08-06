@@ -908,6 +908,15 @@ namespace _3DLaserGlueInspection.Resources {
         }
         
         /// <summary>
+        ///   查找类似 启用重叠胶长检测 的本地化字符串。
+        /// </summary>
+        public static string EnableOverlappingAdhesiveLengthDetection {
+            get {
+                return ResourceManager.GetString("EnableOverlappingAdhesiveLengthDetection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 设置垂直镜像使能： 的本地化字符串。
         /// </summary>
         public static string EnableVerticalMirroring {
@@ -1259,11 +1268,74 @@ namespace _3DLaserGlueInspection.Resources {
         }
         
         /// <summary>
+        ///   查找类似 胶长 的本地化字符串。
+        /// </summary>
+        public static string GlueLenth {
+            get {
+                return ResourceManager.GetString("GlueLenth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 胶长检测 的本地化字符串。
+        /// </summary>
+        public static string GlueLenthDet {
+            get {
+                return ResourceManager.GetString("GlueLenthDet", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 胶长停止检测ID 的本地化字符串。
+        /// </summary>
+        public static string GlueLenthEndDetID {
+            get {
+                return ResourceManager.GetString("GlueLenthEndDetID", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 胶长最大值 的本地化字符串。
+        /// </summary>
+        public static string GlueLenthMax {
+            get {
+                return ResourceManager.GetString("GlueLenthMax", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 胶长最小值 的本地化字符串。
+        /// </summary>
+        public static string GlueLenthMin {
+            get {
+                return ResourceManager.GetString("GlueLenthMin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 胶长开始检测ID 的本地化字符串。
+        /// </summary>
+        public static string GlueLenthStartDetID {
+            get {
+                return ResourceManager.GetString("GlueLenthStartDetID", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 胶宽 的本地化字符串。
         /// </summary>
         public static string GlueWidth {
             get {
                 return ResourceManager.GetString("GlueWidth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 胶宽阈值 的本地化字符串。
+        /// </summary>
+        public static string GlueWidthThre {
+            get {
+                return ResourceManager.GetString("GlueWidthThre", resourceCulture);
             }
         }
         
@@ -1903,6 +1975,24 @@ namespace _3DLaserGlueInspection.Resources {
         public static string OutputRunningSignal {
             get {
                 return ResourceManager.GetString("OutputRunningSignal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 重叠结束ID 的本地化字符串。
+        /// </summary>
+        public static string OverlapEndID {
+            get {
+                return ResourceManager.GetString("OverlapEndID", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 重叠开始ID 的本地化字符串。
+        /// </summary>
+        public static string OverlapStartID {
+            get {
+                return ResourceManager.GetString("OverlapStartID", resourceCulture);
             }
         }
         

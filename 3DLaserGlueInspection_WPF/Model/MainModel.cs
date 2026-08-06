@@ -90,9 +90,16 @@ namespace _3DLaserGlueInspection
     {
         public string CarDetTime { get; set; }
         public string CarID { get; set; }
+
+        public string GlueV { get; set; }
+
+        public string GlueLenth { get; set; }
         public string CarResult { get; set; }
 
     }
+
+
+
 
     public class LogRecord : NotifyBase
     {
@@ -119,6 +126,8 @@ namespace _3DLaserGlueInspection
 
         ObservableCollection<ImageResultRecord> _imageResultRecords = new ObservableCollection<ImageResultRecord>();
         ObservableCollection<CarResultRecord> _carResultRecords = new ObservableCollection<CarResultRecord>();
+
+
         ObservableCollection<LogRecord> _logRecord = new ObservableCollection<LogRecord>();
 
         string productID = "--";
@@ -201,6 +210,7 @@ namespace _3DLaserGlueInspection
         public string resultColorControl { get { return resultColor; } set { resultColor = value; this.DoNotify(); } }
 
         public ObservableCollection<CarResultRecord> CarResultRecords { get { return _carResultRecords; } set { _carResultRecords = value; this.DoNotify(); } }
+
 
         public ObservableCollection<LogRecord> LogRecords { get { return _logRecord; } set { _logRecord = value; this.DoNotify(); } }
 

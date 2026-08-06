@@ -1105,102 +1105,6 @@ namespace _3DLaserGlueInspection
             Cv2.Add(XY_10um.Col(1), new Scalar(cutSet.ShowHeight * cutSet.scaleSize / 2), XY_10um.Col(1));
         }
 
-        /// <summary>
-        /// 单帧检测整体算法
-        /// </summary>
-        /// <param name="camParam"></param>
-        /// <param name="hCamPar"></param>
-        /// <param name="LightInCam"></param>
-        /// <param name="detImage"></param>
-        /// <param name="cutSet"></param>
-        /// <param name="imageSet"></param>
-        /// <param name="singleFrameExistGlue"></param>
-        /// <param name="singleFrameExistOutline"></param>
-        /// <param name="resultData"></param>
-        /// <param name="bResult"></param>
-        /// <param name="outMaxRegion"></param>
-        /// <param name="outRegionRectangle2"></param>
-        /// <param name="hXLDCont10mm"></param>
-        /// <param name="xy"></param>
-        /// <param name="lightXY"></param>
-        public static void singleFrameDetTotal(CamParam camParam, CameraParameters hCamPar, PoseParameters LightInCam, Mat detImage, CutSet cutSet, ImageSet imageSet, ref bool singleFrameExistGlue, ref bool singleFrameExistOutline, ref Data resultData, ref BResult bResult, ref Mat outMaxRegion, ref Mat outRegionRectangle2, ref Mat hXLDCont10mm, Mat xy, Mat lightXY,double robotAndCamAngle)
-        {
-            Mat OutLine;
-            Mat lightXYcut;
-            if (imageSet.启用裁剪)
-            {
-                Vision.cutLight(xy, camParam, hCamPar, LightInCam, detImage, imageSet, out lightXYcut);
-            }
-            else
-            {
-                lightXYcut = lightXY;
-            }
-
-            //Vision.showMatPoint(lightXY, "lightXY");
-            //Vision.showMatPoint(lightXYcut, "lightXYcut");
-
-            if (lightXYcut.Rows > 0)
-            {
-                singleFrameExistOutline = true;
-                //单帧检测(使用激光坐标系)
-                //轮廓只计算整数，所以数据单位放大至0.01mm，并把原点移至画布中心
-                Mat XY_10um;
-                scalePoint(lightXYcut, cutSet, 90 - LightInCam.rx, out XY_10um);
-
-                if (imageSet.isUseAngleOpt)
-                {
-                    //对x方向进行矫正
-                    double scaleX = 1;
-                    scaleX = Math.Cos(robotAndCamAngle / 180 * Math.PI);
-                    Mat correctionPoints = new Mat();
-                    correctionPoints = hXLDCont10mm.Clone();
-
-                    for (int id = 0; id < correctionPoints.Rows; id++)
-                    {
-                        correctionPoints.At<double>(id, 0) = correctionPoints.At<double>(id, 0) * scaleX;
-                    }
-
-                    hXLDCont10mm = correctionPoints.Clone();
-                }
-                {
-                    //对两个方向进行矫正
-                    double scaleX = imageSet.correctionScaleSizeX;
-                    double scaleY = imageSet.correctionScaleSizeY;
-
-                    Mat correctionPoints = new Mat();
-                    correctionPoints = hXLDCont10mm.Clone();
-
-                    for (int id = 0; id < correctionPoints.Rows; id++)
-                    {
-                        correctionPoints.At<double>(id, 0) = correctionPoints.At<double>(id, 0) * scaleX;
-                        correctionPoints.At<double>(id, 1) = correctionPoints.At<double>(id, 1) * scaleY;
-
-                    }
-
-                    hXLDCont10mm = correctionPoints.Clone();
-                }
-                //离散滤波
-                if (imageSet.离散去噪)
-                {
-                    Vision.TrajectoryDiscreteFilter(XY_10um, out hXLDCont10mm, imageSet.分段距离 * cutSet.scaleSize, imageSet.成段点数);
-                    OutLine = hXLDCont10mm.Clone();
-                }
-                else
-                {
-                    hXLDCont10mm = XY_10um.Clone();
-                    OutLine = XY_10um.Clone();
-                }
-
-                //Vision.showMatPoint(hXLDCont10mm, "hXLDCont10mm");
-
-                //如果存在
-                if (!OutLine.Empty())
-                {
-                    singleFrameDetAndResult(OutLine,imageSet,cutSet, ref singleFrameExistGlue, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2);
-                }
-            }
-        }
-
         public static void singleFrameDetAndResult(Mat OutLine,ImageSet imageSet,CutSet cutSet, ref bool singleFrameExistGlue, ref Data resultData, ref BResult bResult, ref Mat outMaxRegion, ref Mat outRegionRectangle2)
         {
             bool existGlue = false;
@@ -1607,6 +1511,14 @@ namespace _3DLaserGlueInspection
         public double correctionScaleSizeY = 1;
         // 是否共享矫正系数
         public bool isCoefficientSharing = true;
+
+        // 胶长检测
+        public bool glueLenthDetEnable = false;
+        public double glueWidthThre = 0;
+        public double glueLenthMin = 0;
+        public double glueLenthMax = 99999;
+        public int glueStartID = 0;
+        public int glueEndID = 99999;
 
 
         /// <summary>

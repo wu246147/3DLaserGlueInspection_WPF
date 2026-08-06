@@ -92,6 +92,17 @@ namespace _3DLaserGlueInspection.subForm
 
         List<double[]> pointsSave = new List<double[]>();
 
+        // 胶长检测
+        int glueLenthResultStartID = -1;
+        int glueLenthResultEndID = -1;
+        PoseParameters glueLenthResultStartPose = new PoseParameters();
+        PoseParameters glueLenthResultEndPose = new PoseParameters();
+        double glueLenth = -1;
+
+        //自动运行
+        bool isAuto = false;
+
+
         public WindowVision()
         {
             InitializeComponent();
@@ -99,6 +110,7 @@ namespace _3DLaserGlueInspection.subForm
             addButton.IsEnabled = deleteButton.IsEnabled = false;
             camUsedGroupBox.IsEnabled = publicParaGridBox.IsEnabled = false;
             imageSetGrid.IsEnabled = false;
+            glueLenthGrid.IsEnabled = false;
 
             outlineCheck.ContextMenu = new System.Windows.Controls.ContextMenu();
             outlineCheck.ContextMenu.Opened += (s, e) =>
@@ -601,6 +613,16 @@ namespace _3DLaserGlueInspection.subForm
             startImageIndexNumericUpDown.TextChanged += UpData;
             endImageIndexNumericUpDown.TextChanged += UpData;
 
+            //胶长检测
+            glueLenthMaxNumericUpDown.TextChanged += UpData;
+            glueLenthMinNumericUpDown.TextChanged += UpData;
+            glueLenthEndDetIDNumericUpDown.TextChanged += UpData;
+            glueLenthStartDetIDNumericUpDown.TextChanged += UpData;
+            glueWidthThreNumericUpDown.TextChanged += UpData;
+            useOverlappingAdhesiveLehgthDetecctCheck.Checked += UpData;
+
+
+
             outlineCheck.Checked += UpData;
             outlineCheck.Unchecked += UpData;
 
@@ -706,6 +728,15 @@ namespace _3DLaserGlueInspection.subForm
             coefficientSharingCheck.Checked -= UpData;
             coefficientSharingCheck.Unchecked -= UpData;
 
+            //胶长检测
+            glueLenthMaxNumericUpDown.TextChanged -= UpData;
+            glueLenthMinNumericUpDown.TextChanged -= UpData;
+            glueLenthEndDetIDNumericUpDown.TextChanged -= UpData;
+            glueLenthStartDetIDNumericUpDown.TextChanged -= UpData;
+            glueWidthThreNumericUpDown.TextChanged -= UpData;
+            useOverlappingAdhesiveLehgthDetecctCheck.Checked -= UpData;
+
+
         }
         void UpData(object sender, EventArgs e)
         {
@@ -736,6 +767,13 @@ namespace _3DLaserGlueInspection.subForm
 
                         cutSet.scaleSize = Convert.ToInt32(scaleSizeNumericUpDown.Text);
 
+                        // 胶长检测
+                        cutSet.glueWidthThre =  Convert.ToDouble(glueWidthThreNumericUpDown.Text);
+                        cutSet.glueLenthMin = Convert.ToDouble(glueLenthMinNumericUpDown.Text);
+                        cutSet.glueLenthMax = Convert.ToDouble(glueLenthMaxNumericUpDown.Text);
+                        cutSet.glueStartID = Convert.ToInt32(glueLenthStartDetIDNumericUpDown.Text);
+                        cutSet.glueEndID = Convert.ToInt32(glueLenthEndDetIDNumericUpDown.Text);
+                        cutSet.glueLenthDetEnable = (bool)useOverlappingAdhesiveLehgthDetecctCheck.IsChecked;
                         
                     }
                     catch (Exception)
@@ -972,6 +1010,7 @@ namespace _3DLaserGlueInspection.subForm
                     imageSetGrid.IsEnabled = true;
                     this.imageSet = imageSet;
                     showPara = true;
+                    glueLenthGrid.IsEnabled = true;
                 }
                 catch (Exception ex)
                 {
@@ -992,6 +1031,8 @@ namespace _3DLaserGlueInspection.subForm
             if (!showPara)
             {
                 imageSetGrid.IsEnabled = false;
+                glueLenthGrid.IsEnabled = false;
+
                 imageSet = null;
             }
 
@@ -1132,6 +1173,13 @@ namespace _3DLaserGlueInspection.subForm
                     endImageIndexNumericUpDown.Text = cutSet.EndImageIndex.ToString();
                     scaleSizeNumericUpDown.Text = cutSet.scaleSize.ToString();
 
+                    // 胶长检测
+                    glueWidthThreNumericUpDown.Text = cutSet.glueWidthThre.ToString();
+                    glueLenthMinNumericUpDown.Text = cutSet.glueLenthMin.ToString();
+                    glueLenthMaxNumericUpDown.Text = cutSet.glueLenthMax.ToString();
+                    glueLenthStartDetIDNumericUpDown.Text = cutSet.glueStartID.ToString();
+                    glueLenthEndDetIDNumericUpDown.Text = cutSet.glueEndID.ToString();
+                    useOverlappingAdhesiveLehgthDetecctCheck.IsChecked = cutSet.glueLenthDetEnable;
 
                     //SelectedCamAndImage();
 
@@ -2328,7 +2376,9 @@ namespace _3DLaserGlueInspection.subForm
             Thread.Sleep(100);
 
             //数据清空
-            List<string> camKeyList = new List<string> { "Cam1", "Cam2", "Cam3", "Cam4" };
+            Params.Param.TryGetValue(CamParamName, out var camParamsTmp);
+            List<string> camKeyList = camParamsTmp.Keys.ToList();
+
             tasks.Clear();
             CamCenter3DPoseDict.Clear();
 
@@ -3002,17 +3052,30 @@ namespace _3DLaserGlueInspection.subForm
         {
             if (hImage == null)
             {
-                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoImage);
+                if (!isAuto)
+                {
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoImage);
+
+                }
+
                 return;
             }
             if (cutSet == null && imageSet == null)
             {
-                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoDetectionParameters);
+                if (!isAuto)
+                {
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoDetectionParameters);
+
+                }
                 return;
             }
             if (currentRobotPose == null || lastRobotPose == null)
             {
-                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.LessRobotPose);
+                if (!isAuto)
+                {
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.LessRobotPose);
+
+                }
                 return;
             }
 
@@ -3027,7 +3090,11 @@ namespace _3DLaserGlueInspection.subForm
 
             if (PoseD == 0)
             {
-                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.DistIsZero);
+                if (!isAuto)
+                {
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.DistIsZero);
+
+                }
                 return;
             }
 
@@ -3129,7 +3196,7 @@ namespace _3DLaserGlueInspection.subForm
                     {
                         getOutlineResult = true;
                         //坐标转换
-                        Wpf_Replace_halcon.PoseParameters robotPose = new PoseParameters();
+                        //Wpf_Replace_halcon.PoseParameters robotPose = new PoseParameters();
                         List<double> robotX, robotY, robotZ;
 
 
@@ -3137,12 +3204,12 @@ namespace _3DLaserGlueInspection.subForm
                         if (Params.CamHandEyeType[CamParamName] == 0)
                         {
                             Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToTool,
-                        robotPose, out lightXY, out robotX, out robotY, out robotZ);
+                        currentRobotPose, out lightXY, out robotX, out robotY, out robotZ);
                         }
                         else
                         {
                             //搞个robot的逆pose，后面再专门打包个算法搞逆pose
-                            PoseParameters BaseInTool = Vision.PoseInv(robotPose);
+                            PoseParameters BaseInTool = Vision.PoseInv(currentRobotPose);
                             Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToBase,
                                 BaseInTool, out lightXY, out robotX, out robotY, out robotZ);
                         }
@@ -3244,6 +3311,24 @@ namespace _3DLaserGlueInspection.subForm
                     }
                 }
 
+            }
+
+            int imageID = selectPictureListBox.SelectedIndex;
+            //胶长检测
+            if (cutSet.glueLenthDetEnable && getOutlineResult)
+            {
+                
+                if (resultData.glueWidth> cutSet.glueWidthThre && imageID> cutSet.glueStartID && imageID<cutSet.glueEndID)
+                {
+                    if (glueLenthResultStartID == -1)
+                    {
+                        glueLenthResultStartID = imageID;
+                        glueLenthResultStartPose = currentRobotPose;
+
+                    }
+                    glueLenthResultEndID = imageID;
+                    glueLenthResultEndPose = currentRobotPose;
+                }
             }
 
 
@@ -3505,6 +3590,52 @@ namespace _3DLaserGlueInspection.subForm
                 return;
 
             }
+
+        }
+
+        private void glueLenthDetButton_Click(object sender, RoutedEventArgs e)
+        {
+            showImageComboBox.SelectedIndex = 3;
+
+            //初始化
+            glueLenthResultStartID = -1;
+            glueLenthResultEndID = -1;
+            glueLenthResultStartPose = new PoseParameters();
+            glueLenthResultEndPose = new PoseParameters();
+            glueLenth = -1;
+
+            isAuto = true;
+            //遍历推理
+
+            var imageDict = Images[cutSetListBox.SelectedIndex][camKey];
+            for (int i = 0; i < imageDict.Count; i++)
+            {
+                if (i >= cutSet.glueStartID && cutSet.glueEndID > i)
+                {
+                    //切换图片
+                    selectPictureListBox.SelectedIndex = i;
+
+                }
+
+            }
+            isAuto = false;
+
+            // 结果逻辑处理
+            if (glueLenthResultStartID >= 0 && glueLenthResultEndID > glueLenthResultStartID)
+            {
+                double dx = glueLenthResultEndPose.x - glueLenthResultStartPose.x;
+                double dy = glueLenthResultEndPose.y - glueLenthResultStartPose.y;
+                double dz = glueLenthResultEndPose.z - glueLenthResultStartPose.z;
+
+                glueLenth = Math.Sqrt(Math.Pow(dx * 1000, 2) + Math.Pow(dy * 1000, 2) + Math.Pow(dz * 1000, 2));
+            }
+
+            //结果显示
+            glueLenthLabel.Content = $"{glueLenth:F3} mm";
+
+            OverlapStartIDLabel.Content = $"{glueLenthResultStartID}";
+            OverlapEndIDLabel.Content = $"{glueLenthResultEndID}";
+
 
         }
     }
