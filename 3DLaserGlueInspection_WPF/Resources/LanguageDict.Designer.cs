@@ -1322,6 +1322,15 @@ namespace _3DLaserGlueInspection.Resources {
         }
         
         /// <summary>
+        ///   查找类似 胶体积 的本地化字符串。
+        /// </summary>
+        public static string GlueV {
+            get {
+                return ResourceManager.GetString("GlueV", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 胶宽 的本地化字符串。
         /// </summary>
         public static string GlueWidth {
@@ -2569,6 +2578,15 @@ namespace _3DLaserGlueInspection.Resources {
         public static string SelectTheLocationToSave {
             get {
                 return ResourceManager.GetString("SelectTheLocationToSave", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 发送信号 的本地化字符串。
+        /// </summary>
+        public static string SendSignal {
+            get {
+                return ResourceManager.GetString("SendSignal", resourceCulture);
             }
         }
         

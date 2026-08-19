@@ -168,7 +168,8 @@ namespace _3DLaserGlueInspection
         public Dictionary<string, int> indexResultShowDict = new Dictionary<string, int>(); // 表示正在图像处理的段数,用于图像处理
 
 
-        bool totalResult = true;
+        bool partResult = true;    //段的结果
+        bool totalResult = true;    //总的结果
 
         public bool simulation = false;
 
@@ -457,6 +458,7 @@ namespace _3DLaserGlueInspection
             if (robot.GetType() == typeof(KukaRobot))
             {
                 string msg = serializationInfo(0, 0, 0, 0, 0, 0, RESULT, "11");
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.SendSignal + "：" + msg);
                 Server.Send(msg);
             }
         }
@@ -574,6 +576,8 @@ namespace _3DLaserGlueInspection
                     //if (!Write(DO.Triggering, false)) return;
                     //输出准备号好
                     //if (!Write(DO.Ready, true)) return;
+
+                    totalResult = true;
 
 
                     ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.OutputReadySignal);
@@ -1034,7 +1038,7 @@ namespace _3DLaserGlueInspection
 
                         //回复触发OFF信号
 
-                        if (totalResult)
+                        if (partResult)
                         {
                             SocketSend(0);
                         }
@@ -1133,7 +1137,7 @@ namespace _3DLaserGlueInspection
 
 
                     // 暂时屏蔽
-                    if (totalResult)
+                    if (partResult)
                     {
                         mainModel.OKCountControl++;
                     }
@@ -1145,8 +1149,8 @@ namespace _3DLaserGlueInspection
 
                     mainModel.passRateControl = ((double)mainModel.OKCountControl * 100 / mainModel.totalCountControl).ToString("0.00") + "%";
 
-                    mainModel.resultControl = totalResult ? "OK" : "NG";
-                    mainModel.resultColorControl = totalResult ? "#FF06BD00" : "Red";
+                    mainModel.resultControl = partResult ? "OK" : "NG";
+                    mainModel.resultColorControl = partResult ? "#FF06BD00" : "Red";
 
                     //获取胶长结果
                     double glueLenthShow = -1;
@@ -1173,6 +1177,28 @@ namespace _3DLaserGlueInspection
                         }
                     }
 
+                    //获取胶体积
+                    double glueVShow = -1;
+                    foreach (var item in glueVols)
+                    {
+                        foreach (var item2 in item.Value)
+                        {
+                            foreach (var item3 in item2)
+                            {
+                                if (glueVShow == -1)
+                                {
+                                    glueVShow = item3.Value;
+                                }
+                                else
+                                {
+                                    glueVShow += item3.Value;
+                                }
+                            }
+                        }
+                    }
+
+
+
                     System.Windows.Application.Current.Dispatcher.Invoke(() =>
                     {
                         CarResultRecord carResultRecord = new CarResultRecord();
@@ -1181,14 +1207,23 @@ namespace _3DLaserGlueInspection
 
                         if (glueLenthShow != -1)
                         {
-                            carResultRecord.GlueLenth = glueLenthShow.ToString()+"mm";
+                            carResultRecord.GlueLenth = glueLenthShow.ToString("f2") +"mm";
                         }
                         else
                         {
                             carResultRecord.GlueLenth = "-";
                         }
 
-                        carResultRecord.CarResult = totalResult ? "OK" : "NG";
+                        if (glueVShow != -1)
+                        {
+                            carResultRecord.GlueV = glueVShow.ToString("f2") + "mm³";
+                        }
+                        else
+                        {
+                            carResultRecord.GlueV = "-";
+                        }
+
+                        carResultRecord.CarResult = partResult ? "OK" : "NG";
 
                         mainModel.CarResultRecords.Insert(0, carResultRecord);
 
@@ -1197,12 +1232,12 @@ namespace _3DLaserGlueInspection
                     //存图
                     if (!simulation)
                     {
-                        if ((totalResult && set.OtherSet.SaveOKImage) || (!totalResult && set.OtherSet.SaveNGImage))
+                        if ((partResult && set.OtherSet.SaveOKImage) || (!partResult && set.OtherSet.SaveNGImage))
                         {
                             ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.StartSavingImages);
                             try
                             {
-                                string OKNG = totalResult ? "OK" : "NG";
+                                string OKNG = partResult ? "OK" : "NG";
                                 string basePath = $"D:\\image\\{car.Name}\\{dateTime:yyyy-MM-dd HH_mm_ss} {OKNG} [{inVIN}]";
                                 Directory.CreateDirectory(basePath);
 
@@ -1282,7 +1317,16 @@ namespace _3DLaserGlueInspection
                     //收到信号后，就立刻恢复状态
                     resetSignal();
 
-                    SocketSend(0);
+                    if (totalResult)
+                    {
+                        SocketSend(0);
+
+                    }
+                    else
+                    {
+                        SocketSend(-1);
+
+                    }
 
                 }
             }
@@ -1619,7 +1663,7 @@ namespace _3DLaserGlueInspection
                     ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.InitializeDataSuccessfully);
 
                     indexImageCut = -1;//指示正在图像采集段数
-                    totalResult = true;
+                    partResult = true;
                     if (stop) return;
 
                     // 3D 每隔100毫秒再刷新一下结果
@@ -1839,7 +1883,7 @@ namespace _3DLaserGlueInspection
 
                         //回复触发OFF信号
 
-                        if (totalResult)
+                        if (partResult)
                         {
                             SocketSend(0);
                         }
@@ -1946,7 +1990,7 @@ namespace _3DLaserGlueInspection
 
 
                     // 暂时屏蔽
-                    if (totalResult)
+                    if (partResult)
                     {
                         mainModel.OKCountControl++;
                     }
@@ -1958,14 +2002,14 @@ namespace _3DLaserGlueInspection
 
                     mainModel.passRateControl = ((double)mainModel.OKCountControl * 100 / mainModel.totalCountControl).ToString("0.00") + "%";
 
-                    mainModel.resultControl = totalResult ? "OK" : "NG";
-                    mainModel.resultColorControl = totalResult ? "#FF06BD00" : "Red";
+                    mainModel.resultControl = partResult ? "OK" : "NG";
+                    mainModel.resultColorControl = partResult ? "#FF06BD00" : "Red";
                     System.Windows.Application.Current.Dispatcher.Invoke(() =>
                     {
                         CarResultRecord carResultRecord = new CarResultRecord();
                         carResultRecord.CarDetTime = dateTime.ToString("yyyy-MM-dd HH:mm:ss");
                         carResultRecord.CarID = ID.ToString();
-                        carResultRecord.CarResult = totalResult ? "OK" : "NG";
+                        carResultRecord.CarResult = partResult ? "OK" : "NG";
 
                         mainModel.CarResultRecords.Insert(0, carResultRecord);
 
@@ -1974,12 +2018,12 @@ namespace _3DLaserGlueInspection
                     //存图
                     if (!simulation)
                     {
-                        if ((totalResult && set.OtherSet.SaveOKImage) || (!totalResult && set.OtherSet.SaveNGImage))
+                        if ((partResult && set.OtherSet.SaveOKImage) || (!partResult && set.OtherSet.SaveNGImage))
                         {
                             ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.StartSavingImages);
                             try
                             {
-                                string OKNG = totalResult ? "OK" : "NG";
+                                string OKNG = partResult ? "OK" : "NG";
                                 string basePath = $"D:\\image\\{car.Name}\\{dateTime:yyyy-MM-dd HH_mm_ss} {OKNG} [{inVIN}]";
                                 Directory.CreateDirectory(basePath);
 
@@ -2414,7 +2458,7 @@ namespace _3DLaserGlueInspection
             ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.InitializeDataSuccessfully);
 
             indexImageCut = -1;//指示正在图像采集段数
-            totalResult = true;
+            partResult = true;
             if (stop) return false;
 
             // 3D 每隔100毫秒再刷新一下结果
@@ -2723,7 +2767,7 @@ namespace _3DLaserGlueInspection
 
                                                 PoseD = Math.Sqrt(Math.Pow((robotPose.x - lastRobotPose.x), 2) +
                                                     Math.Pow((robotPose.y - lastRobotPose.y), 2) +
-                                                    Math.Pow((robotPose.z - lastRobotPose.z), 2));
+                                                    Math.Pow((robotPose.z - lastRobotPose.z), 2)) * 1000; //单位mm
                                             }
 
                                             //三维数据添加机器人坐标
@@ -2992,6 +3036,7 @@ namespace _3DLaserGlueInspection
                                             {
                                                 if (!bResult.Result)
                                                 {
+                                                    partResult = false;
                                                     totalResult = false;
                                                 }
                                                 //结果统计

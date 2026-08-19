@@ -1249,6 +1249,8 @@ namespace _3DLaserGlueInspection.subForm
             if ((bool)form.ShowDialog())
             {
                 CutSet cutSet = new CutSet(form.Value);
+                cutSet.AfterDeserialize();
+
                 XLDData xLDData = new XLDData(form.Value);
                 if (!string.IsNullOrEmpty(form.CopyName))
                 {

@@ -733,7 +733,11 @@ Converter={StaticResource ResultColor}}" />
                                     Binding="{Binding CarID}"
                                     Foreground="White"
                                     Header="{x:Static resx:LanguageDict.ProductID}" />
-
+                                <DataGridTextColumn
+                                    Width="*"
+                                    Binding="{Binding GlueV}"
+                                    Foreground="White"
+                                    Header="{x:Static resx:LanguageDict.GlueV}" />              
                                 <DataGridTextColumn
                                     Width="*"
                                     Binding="{Binding GlueLenth}"

@@ -1,6 +1,10 @@
 //using HalconDotNet;
+using _3DLaserGlueInspection.subForm;
+using Newtonsoft.Json;
+using OpenCvSharp;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -8,17 +12,13 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
-using OpenCvSharp;
-using Wpf_Replace_halcon;
 using System.Xml.Serialization;
-using System.Diagnostics;
-using Newtonsoft.Json;
-
-using _3DLaserGlueInspection.subForm;
+using Wpf_Replace_halcon;
 
 namespace _3DLaserGlueInspection
 {
     using Newtonsoft.Json;
+    using System.Runtime.Serialization;
 
     public class ProjectionMapperPersistence
     {
@@ -1284,6 +1284,12 @@ namespace _3DLaserGlueInspection
                         result1 = false;
                         _errMsg += "\r\n" + fPath + _3DLaserGlueInspection.Resources.LanguageDict.FileFormatException;
                     }
+
+                    // 反序列化成功后，逐个检查
+                    foreach (var cutSet in CutSets)
+                    {
+                        cutSet.AfterDeserialize();
+                    }
                 }
                 else
                 {
@@ -1487,7 +1493,7 @@ namespace _3DLaserGlueInspection
         public bool Cam4Enabled = true;
 
         public static int CamCount = 4; //不用变，最多4个相机
-        public List<bool> CamEnabled = Enumerable.Repeat(true, CamCount).ToList();
+        public List<bool> CamEnabled;
         //显示画布大小
         public int ShowWidth = 50;//mm
         public int ShowHeight = 50;
@@ -1519,6 +1525,16 @@ namespace _3DLaserGlueInspection
         public double glueLenthMax = 99999;
         public int glueStartID = 0;
         public int glueEndID = 99999;
+
+
+        public void AfterDeserialize()
+        {
+            // 如果 JSON 里没有这个字段（旧存档），给默认值
+            if (CamEnabled == null || CamEnabled.Count == 0)
+            {
+                CamEnabled = Enumerable.Repeat(true, CamCount).ToList();
+            }
+        }
 
 
         /// <summary>
