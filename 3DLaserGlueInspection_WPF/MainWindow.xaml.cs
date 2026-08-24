@@ -366,7 +366,7 @@ namespace _3DLaserGlueInspection
                             {
                                 var cutSet = model.sets[model.car.Name].CutSets[segmentIndex];
 
-
+                                // 显示检测结果
                                 Mat hXLDCont10mm = model.outLineDict[camKey][segmentIndex][model.ImageKeys[camKey][segmentIndex][segmentSubIndex]];
                                 if (model.glueRegionDict.ContainsKey(camKey) && model.glueRegionDict[camKey].Count > segmentIndex && model.glueRegionDict[camKey][segmentIndex].ContainsKey(model.ImageKeys[camKey][segmentIndex][segmentSubIndex]))
                                 {
@@ -391,6 +391,14 @@ namespace _3DLaserGlueInspection
                                     GlobalVarAndFunc.ShowImageData((int)model.displaySize[camKey][segmentIndex].Width, (int)model.displaySize[camKey][segmentIndex].Height, cutSet, hXLDCont10mm,
                                          ref hWindowControl, ref showing, ref olockShow);
                                 }
+
+                                // 显示2d图像位置
+                                {
+                                    hWindowModel.RemoveChildren(model.showCheckPoint);
+                                    System.Windows.Point point = model.glue2DCheckPoint[camKey][segmentIndex][model.ImageKeys[camKey][segmentIndex][segmentSubIndex]];
+                                    model.showCheckPoint = hWindowModel.AddCircle(point, 5, Colors.Yellow);
+                                }
+
                                 return;
                             }
                         }

@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.UI.WebControls;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -35,10 +36,10 @@ namespace _3DLaserGlueInspection
     public delegate void DispClearHWindowEventHandler();
     public delegate void DispImageHWindowEventHandler(BitmapImage img);
     public delegate void DispImageWithoutCloneHWindowEventHandler(BitmapImage img);
-    public delegate void DispTextInImageHWindowEventHandler(string meg, System.Windows.Media.Color color, int imageX, int imageY, double fontSize = 12);
-    public delegate void DispTextInWindowHWindowEventHandler(string meg, System.Windows.Media.Color color, int imageX, int imageY, double fontSize = 12);
-    public delegate void DispPolylineHWindowEventHandler(PointCollection points, System.Windows.Media.Color color, int StrokeThickness = 2);
-    public delegate void DispPolygonHWindowEventHandler(PointCollection points, System.Windows.Media.Color color, string model, int StrokeThickness = 2);
+    public delegate TextBlock DispTextInImageHWindowEventHandler(string meg, System.Windows.Media.Color color, int imageX, int imageY, double fontSize = 12);
+    public delegate TextBlock DispTextInWindowHWindowEventHandler(string meg, System.Windows.Media.Color color, int imageX, int imageY, double fontSize = 12);
+    public delegate Polyline DispPolylineHWindowEventHandler(PointCollection points, System.Windows.Media.Color color, int StrokeThickness = 2);
+    public delegate System.Windows.Shapes.Polygon DispPolygonHWindowEventHandler(PointCollection points, System.Windows.Media.Color color, string model, int StrokeThickness = 2);
 
     public delegate void Disp3DPointEventHandler_H(List<System.Windows.Media.Media3D.Point3D> points, System.Windows.Media.Color Color);
 
@@ -143,6 +144,9 @@ namespace _3DLaserGlueInspection
         public Dictionary<string, SynchronizedList<Dictionary<long, Data>>> glueDataDict = new Dictionary<string, SynchronizedList<Dictionary<long, Data>>>();
         public Dictionary<string, SynchronizedList<Dictionary<long, BResult>>> glueResultDict = new Dictionary<string, SynchronizedList<Dictionary<long, BResult>>>();
 
+        public Dictionary<string, SynchronizedList<Dictionary<long, System.Windows.Point>>> glue2DCheckPoint = new Dictionary<string, SynchronizedList<Dictionary<long, System.Windows.Point>>>();
+
+
         public Dictionary<string, SynchronizedList<System.Windows.Size>> displaySize = new Dictionary<string, SynchronizedList<System.Windows.Size>>();
 
         Dictionary<string, Task> tasks = new Dictionary<string, Task>();//相机-处理任务
@@ -154,6 +158,10 @@ namespace _3DLaserGlueInspection
         Dictionary<string, SynchronizedList<PoseParameters>> glueLenthResultStartPoseDict = new Dictionary<string, SynchronizedList<PoseParameters>>();
         Dictionary<string, SynchronizedList<PoseParameters>> glueLenthResultEndPoseDict = new Dictionary<string, SynchronizedList<PoseParameters>>();
         Dictionary<string, SynchronizedList<double>> glueLenthDict = new Dictionary<string, SynchronizedList<double>>();
+
+        // 2d 结果显示点
+        public System.Windows.Shapes.Polygon showCheckPoint = new System.Windows.Shapes.Polygon();
+
 
         Task taskShow2D = null;
 
@@ -708,6 +716,10 @@ namespace _3DLaserGlueInspection
                                 glueDataDict[item.Key].Add(dictData);
                                 var dictResult = new Dictionary<long, BResult>();
                                 glueResultDict[item.Key].Add(dictResult);
+
+                                var dict2DCheckPoint = new Dictionary<long, System.Windows.Point>();
+                                glue2DCheckPoint[item.Key].Add(dict2DCheckPoint);
+                                
 
 
                                 var glueLenth = -1;
@@ -2434,6 +2446,10 @@ namespace _3DLaserGlueInspection
                     var dictResult = new SynchronizedList<Dictionary<long, BResult>>();
                     glueResultDict.Add(item.Key, dictResult);
 
+                    var dict2DCheckPoint = new SynchronizedList<Dictionary<long, System.Windows.Point>>();
+                    glue2DCheckPoint.Add(item.Key, dict2DCheckPoint);
+
+
                     indexImageCutProcessDict.Add(item.Key, 0);
 
                     indexResultShowDict.Add(item.Key, 0);
@@ -2668,6 +2684,7 @@ namespace _3DLaserGlueInspection
                             var dictData = glueDataDict[item.Key][indexImageCutProcessDict[item.Key]];
                             var dictResult = glueResultDict[item.Key][indexImageCutProcessDict[item.Key]];
 
+                            var dict2DCheckPoint = glue2DCheckPoint[item.Key][indexImageCutProcessDict[item.Key]];
 
                             var glueLenth = glueLenthDict[item.Key][indexImageCutProcessDict[item.Key]];
                             var glueLenthResultEndID =  glueLenthResultEndIDDict[item.Key][indexImageCutProcessDict[item.Key]];
@@ -3382,6 +3399,30 @@ namespace _3DLaserGlueInspection
                                 }
                             }
 
+                            //记录2d坐标位置，用于查询显示
+                            {
+                                foreach (var item in camParamTmp)
+                                {
+                                    bool CamEnabled = item.Key == "Cam1" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[0] :
+                                        item.Key == "Cam2" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[1] :
+                                        item.Key == "Cam3" ? cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[2] :
+                                        cutSets[indexResultShowDict[camParamTmp.Keys.ToArray()[0]]].CamEnabled[3];
+
+                                    if (CamEnabled)
+                                    {
+
+                                        var dictImageKey = ImageKeys[item.Key][indexResultShowDict[item.Key]];
+
+                                        imageKey = dictImageKey[indexImage];
+
+                                        glue2DCheckPoint[item.Key][indexImageCutProcessDict[item.Key]].Add(imageKey, new System.Windows.Point(col, row));
+                                        
+                                     } 
+                                }
+                            }
+                            
+
+
                             hWindowNumericalModelDiagramDispCross(row, col,
                                         angle, cutSet.Size, showResult ? Colors.Green : Colors.Red);
 
@@ -3482,6 +3523,7 @@ namespace _3DLaserGlueInspection
             glueSmallRectRegionDict.Clear();
             glueDataDict.Clear();
             glueResultDict.Clear();
+            glue2DCheckPoint.Clear();
             indexImageCutProcessDict.Clear();
 
             indexResultShowDict.Clear();
