@@ -54,7 +54,8 @@ namespace _3DLaserGlueInspection.subForm
         object olockShow = new object();
         bool showing = false;
 
-        
+        public System.Windows.Shapes.Polygon showCheckPoint = new System.Windows.Shapes.Polygon();
+
 
         Mat robotPoseMat = new Mat();
         double robotAndCamAngle = 0;
@@ -2047,7 +2048,7 @@ namespace _3DLaserGlueInspection.subForm
             {
                 return;
             }
-                
+
             if (showImageComboBox.SelectedIndex < 0)
             {
                 return;
@@ -2086,7 +2087,7 @@ namespace _3DLaserGlueInspection.subForm
                     {
                         if (!outMaxRegion.Empty() && !outRegionRectangle2.Empty())
                         {
-                            GlobalVarAndFunc.ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, cutSet, cutSet.imageSet[selectCamListBox.SelectedIndex][selectPictureListBox.SelectedIndex], 
+                            GlobalVarAndFunc.ShowImageData(cutSet.ShowWidth, cutSet.ShowHeight, cutSet, cutSet.imageSet[selectCamListBox.SelectedIndex][selectPictureListBox.SelectedIndex],
                                 hXLDCont10mm3D, outMaxRegion, outRegionRectangle2, resultData, bResult, ref hWindowModel, ref showing, ref olockShow, 0, 0);
 
                         }
@@ -2115,7 +2116,7 @@ namespace _3DLaserGlueInspection.subForm
                         foreach (var camKey in CamCenter3DPoseDict.Keys) //相机
                         {
                             var dictCam3DPoses = CamCenter3DPoseDict[camKey];
-                            
+
                             foreach (var dictCam3DPose in dictCam3DPoses) //分段
                             {
 
@@ -2351,7 +2352,7 @@ namespace _3DLaserGlueInspection.subForm
 
                             }
 
-                            
+
 
                         }
 
@@ -2364,14 +2365,177 @@ namespace _3DLaserGlueInspection.subForm
 
                     break;
 
+                case 5:
+                    if (!set.image.Empty())
+                    {
+                        hWindowModel.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(set.image));
 
-                default:
+
+                        // 显示当前位置
+                        if (!set.mapper.isCalib())
+                        {
+                            System.Windows.Forms.MessageBox.Show("轨迹还没进行映射，请先设置好3d和2d轨迹，再进行轨迹映射");
+                            return;
+                        }
+                        long imageKey = ImageKeys[cutSetListBox.SelectedIndex][camKey][selectPictureListBox.SelectedIndex];
+
+                        getRobotPose(imageKey,out currentRobotPose);
+
+                        if (robotPoseValues.Count > 0)
+                        {
+                            _3DShowControl.RefreshOn(100, true);
+
+                            //显示机器人轨迹
+                            Mat Cam1ToTool = new Mat();
+                            Mat Cam1ToBase = new Mat();
+                            Mat CamToTool = new Mat();
+                            Mat CamToBase = new Mat();
+                            if (CamParamName == null || camKey == null
+                             || !Params.Param.TryGetValue(CamParamName, out var camParams) || !camParams.TryGetValue(camKey, out var camParam)
+                             || !Params.CamPar.TryGetValue(CamParamName, out var hCamPars) || !hCamPars.TryGetValue(camKey, out var hCamPar)
+                             || !Params.LightInCam.TryGetValue(CamParamName, out var LightInCams) || !LightInCams.TryGetValue(camKey, out var LightInCam)
+                             || !Params.LightToCam.TryGetValue(CamParamName, out var LightToCams) || !LightToCams.TryGetValue(camKey, out var LightToCam)
+                             || !Params.CamToCam1.TryGetValue(CamParamName, out var CamToCam1s) || !CamToCam1s.TryGetValue(camKey, out var CamToCam1)
+                             || !Params.CenterToCam1.TryGetValue(CamParamName, out var CenterToCam1s) || !CenterToCam1s.TryGetValue(camKey, out var CenterToCam1))
+
+                            {
+                                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoCameraParameters);
+                                return;
+                            }
+
+                            //根据情况提取手眼标定参数
+                            double row = 0, col = 0, angle = 0;
+
+                            if (Params.CamHandEyeType[CamParamName] == 0)
+                            {
+                                if (!Params.Cam1ToTool.TryGetValue(CamParamName, out var CamToTools) || !CamToTools.TryGetValue(camKey, out Cam1ToTool))
+                                {
+                                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.LessCamPara + $":Cam1ToTool");
+                                    return;
+                                }
+                                Cam1ToTool = Params.Cam1ToTool[CamParamName][camKey];
+                                CamToTool = Cam1ToTool * CamToCam1;
+                            }
+                            else
+                            {
+                                if (!Params.Cam1ToBase.TryGetValue(CamParamName, out var Cam1ToBases) || !Cam1ToBases.TryGetValue(camKey, out Cam1ToBase))
+                                {
+                                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.LessCamPara + $":Cam1ToBase");
+                                    return;
+                                }
+                                //眼在手外，求Cam1ToTool,需要机器人pose才可以完成转换
+                                Cam1ToBase = Params.Cam1ToBase[CamParamName][camKey];
+                                CamToBase = Cam1ToBase * CamToCam1;
+
+                            }
+
+                            Wpf_Replace_halcon.PoseParameters CamCenter3DPose = new PoseParameters();
+                            //转为机器人坐标
+                            if (Params.CamHandEyeType[CamParamName] == 0)
+                            {
+                                //改为添加相机中心的坐标
+                                Mat ToolToBase = new Mat();
+                                Mat CenterToBase = new Mat();
+                                PoseParameters centerInBase = new PoseParameters();
+                                Vision.poseToHomMat3d(currentRobotPose.PoseType, currentRobotPose.x, currentRobotPose.y, currentRobotPose.z, currentRobotPose.rx, currentRobotPose.ry, currentRobotPose.rz, ToolToBase.CvPtr);
+                                CenterToBase = ToolToBase * Cam1ToTool * CenterToCam1;
+                                centerInBase.PoseType = 2;
+                                Vision.HomMat3dToPose(centerInBase.PoseType, out double centerX, out double centerY, out double centerZ, out double centerRX, out double centerRY, out double centerRZ, CenterToBase.CvPtr);
+                                centerInBase.x = centerX;
+                                centerInBase.y = centerY;
+                                centerInBase.z = centerZ;
+                                centerInBase.rx = centerRX;
+                                centerInBase.ry = centerRY;
+                                centerInBase.rz = centerRZ;
+
+                                CamCenter3DPose = centerInBase;
+                            }
+                            else
+                            {
+                                //也改为添加相机中心的坐标，但是这里是法兰盘的坐标系
+                                PoseParameters BaseInTool = Vision.PoseInv(currentRobotPose);
+                                Mat BaseToTool = new Mat();
+                                PoseParameters centerInTool = new PoseParameters();
+                                Vision.poseToHomMat3d(BaseInTool.PoseType, BaseInTool.x, BaseInTool.y, BaseInTool.z, BaseInTool.rx, BaseInTool.ry, BaseInTool.rz, BaseToTool.CvPtr);
+                                Mat CenterToTool = new Mat();
+                                CenterToTool = BaseToTool * Cam1ToBase * CenterToCam1;
+                                centerInTool.PoseType = 2;
+                                Vision.HomMat3dToPose(centerInTool.PoseType, out double centerX, out double centerY, out double centerZ, out double centerRX, out double centerRY, out double centerRZ, CenterToTool.CvPtr);
+                                centerInTool.x = centerX;
+                                centerInTool.y = centerY;
+                                centerInTool.z = centerZ;
+                                centerInTool.rx = centerRX;
+                                centerInTool.ry = centerRY;
+                                centerInTool.rz = centerRZ;
+                                //dictRobotPose.Add(imageKey, centerInTool);
+                                CamCenter3DPose = centerInTool;
+
+
+                            }
+
+                            if (set.mapper.isCalib())
+                            {
+
+                                double[] _3dPose = new double[3] { CamCenter3DPose.x, CamCenter3DPose.y, CamCenter3DPose.z, };
+                                double[] _2dPoint = set.mapper.To2D(_3dPose);
+
+                                row = _2dPoint[1];
+                                col = _2dPoint[0];
+                                angle = 45;
+
+                                //显示检测点坐标
+
+                                hWindowModel.RemoveChildren(showCheckPoint);
+                                System.Windows.Point point = new System.Windows.Point(col, row);
+                                showCheckPoint = hWindowModel.AddCircle(point, 5, Colors.Yellow);
+                            }
+
+
+                        }
+                        else
+                        {
+                            //显示数据不存在机器人姿态
+                        }
+                    }
+
+                    else
+                    {
+                        System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoImageSet);
+                    }
+                   
+
                     break;
+
+
             }
         }
 
         Dictionary<string, Task> tasks = new Dictionary<string, Task>();//相机-处理任务
 
+        void getRobotPose(long imageKey, out PoseParameters currentRobotPose)
+        {
+            currentRobotPose = new PoseParameters();
+            //获取当前图片的机器人位姿
+            for (int i = 0; i < robotPoseKeys.Count; i++)
+            {
+                if (robotPoseKeys[i] > imageKey)
+                {
+                    if (i > 0)
+                    {
+                        HMatrixTransform.mathHPose(robotPoseValues[i - 1],
+                                            robotPoseValues[i], out currentRobotPose,
+                                            (imageKey - robotPoseKeys[i - 1]) /
+                                            (double)(robotPoseKeys[i] - robotPoseKeys[i - 1])
+                                            );
+                        break;
+                    }
+                    else
+                    {
+                        currentRobotPose = null;
+                    }
+                }
+            }
+        }
         private void get3DDataButton_Click(object sender, RoutedEventArgs e)
         {
             _3DShowControl.ClearPointCloud();
@@ -2471,7 +2635,7 @@ namespace _3DLaserGlueInspection.subForm
                             var imageSet = cutSet.imageSet[currentCamID][indexImage];
 
 
-                            if (robotPoseKeys[indexRobotPose] < camTimeKey)//循环到的姿态晚于等于图片，处理
+                            while (robotPoseKeys[indexRobotPose] < camTimeKey)//循环到的姿态晚于等于图片，处理
                             {
 
                                 indexRobotPose++;
@@ -2585,8 +2749,8 @@ namespace _3DLaserGlueInspection.subForm
 
                                 dictCamPose.Add(camTimeKey, centerInBase);
 
-                                ////测试
-                                _3DShowControl.AddPoint(centerX, centerY, centerZ, 4);
+                                ////测试 暂时不显示机器人轨道
+                                //_3DShowControl.AddPoint(centerX, centerY, centerZ, 4);
 
                             }
                             else
@@ -2612,7 +2776,8 @@ namespace _3DLaserGlueInspection.subForm
                                 centerInTool.rz = centerRZ;
                                 dictCamPose.Add(camTimeKey, centerInTool);
 
-                                _3DShowControl.AddPoint(centerX, centerY, centerZ, 4);
+                                // 暂时不显示机器人轨道
+                                //_3DShowControl.AddPoint(centerX, centerY, centerZ, 4);
 
                             }
 
@@ -2680,6 +2845,7 @@ namespace _3DLaserGlueInspection.subForm
                                         ////测试
                                         if (Params.CamHandEyeType[CamParamName] == 0)
                                         {
+                                            
                                             Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToTool,
                                         robotPose, out lightXY, out robotX, out robotY, out robotZ);
                                         }

@@ -883,6 +883,8 @@ namespace _3DLaserGlueInspection
             Mat LightToCam, Mat CamToTool, PoseParameters robotPose, out Mat lightXY, out List<double> robotX, out List<double> robotY,
             out List<double> robotZ)
         {
+            //printPoint(imagePoint, "imagePoint");
+
             //转激光坐标系
             GetXY(hCamPar, LightInCam, imagePoint, out lightXY);
             //printPoint(lightXY, "lightXY");

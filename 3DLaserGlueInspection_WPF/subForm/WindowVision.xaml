@@ -99,6 +99,7 @@
                     <ComboBoxItem Content="{x:Static resx:LanguageDict._3DPointCloudResults}"/>
                     <ComboBoxItem Content="{x:Static resx:LanguageDict._3DGluingInspectionResults}"/>
                     <ComboBoxItem Content="{x:Static resx:LanguageDict.CurrentPoseDetection}"/>
+                    <ComboBoxItem Content="{x:Static resx:LanguageDict.CurrentLocation2D}"/>
                 </ComboBox>
                 <local:ImageControl2 x:Name="hWindowModel" Grid.Column="0" Grid.Row="0" Margin="0,24,0,0" />
                 <local:User3DShowControl_V x:Name="_3DShowControl" Visibility="Hidden" Background="Black" Margin="0,24,0,0" />

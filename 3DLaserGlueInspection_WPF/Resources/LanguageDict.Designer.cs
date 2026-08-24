@@ -737,6 +737,15 @@ namespace _3DLaserGlueInspection.Resources {
         }
         
         /// <summary>
+        ///   查找类似 当前位置2D 的本地化字符串。
+        /// </summary>
+        public static string CurrentLocation2D {
+            get {
+                return ResourceManager.GetString("CurrentLocation2D", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 当前检测位姿 的本地化字符串。
         /// </summary>
         public static string CurrentPoseDetection {
