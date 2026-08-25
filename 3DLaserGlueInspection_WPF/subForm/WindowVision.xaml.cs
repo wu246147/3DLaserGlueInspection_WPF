@@ -180,6 +180,22 @@ namespace _3DLaserGlueInspection.subForm
             {
                 CreateRightClickMenu((System.Windows.Controls.ContextMenu)s, CopyCorrectionScaleSize);
             };
+
+
+            useBaseLineDetCheck.ContextMenu = new System.Windows.Controls.ContextMenu();
+            useBaseLineDetCheck.ContextMenu.Opened += (s, e) =>
+            {
+                CreateRightClickMenu((System.Windows.Controls.ContextMenu)s, CopyUseBaseLine);
+            };
+
+
+            baseLineGrid.ContextMenu = new System.Windows.Controls.ContextMenu();
+            baseLineGrid.ContextMenu.Opened += (s, e) =>
+            {
+                CreateRightClickMenu((System.Windows.Controls.ContextMenu)s, CopyBaseLine);
+            };
+
+
         }
 
         //void ShowImageData(int showWidth, int showHeight, Mat hXLDCont10mm)
@@ -414,6 +430,20 @@ namespace _3DLaserGlueInspection.subForm
             srcImageSet.轮廓检测 = dstImageSet.轮廓检测;
             isAlter = true;
         }
+
+        private void CopyUseBaseLine(ImageSet srcImageSet, ImageSet dstImageSet)
+        {
+            srcImageSet.isUseBaseLine = dstImageSet.isUseBaseLine;
+            isAlter = true;
+        }
+        private void CopyBaseLine(ImageSet srcImageSet, ImageSet dstImageSet)
+        {
+            srcImageSet.distBaseLineThre = dstImageSet.distBaseLineThre;
+            srcImageSet.baseLineRegion1 = dstImageSet.baseLineRegion1;
+            srcImageSet.baseLineRegion2 = dstImageSet.baseLineRegion2;
+            isAlter = true;
+        }
+
 
         private void CopyCorrectionScaleSize(ImageSet srcImageSet, ImageSet dstImageSet)
         {
@@ -667,6 +697,11 @@ namespace _3DLaserGlueInspection.subForm
             coefficientSharingCheck.Checked += UpData;
             coefficientSharingCheck.Unchecked += UpData;
 
+            useBaseLineDetCheck.Checked += UpData;
+            useBaseLineDetCheck.Unchecked += UpData;
+
+            IgnoreHighNumericUpDown.TextChanged += UpData;
+
 
         }
         void UnLoadUpData()
@@ -736,6 +771,12 @@ namespace _3DLaserGlueInspection.subForm
             glueLenthStartDetIDNumericUpDown.TextChanged -= UpData;
             glueWidthThreNumericUpDown.TextChanged -= UpData;
             useOverlappingAdhesiveLehgthDetecctCheck.Checked -= UpData;
+
+
+            useBaseLineDetCheck.Checked -= UpData;
+            useBaseLineDetCheck.Unchecked -= UpData;
+
+            IgnoreHighNumericUpDown.TextChanged -= UpData;
 
 
         }
@@ -822,7 +863,13 @@ namespace _3DLaserGlueInspection.subForm
                 //imageSet.correctionScaleSizeX = Convert.ToDouble(correctionScaleSizeXNumericUpDown.Text);
                 //imageSet.correctionScaleSizeY = Convert.ToDouble(correctionScaleSizeYNumericUpDown.Text);
 
-            }
+
+
+                imageSet.isUseBaseLine = (bool)useBaseLineDetCheck.IsChecked;
+                imageSet.distBaseLineThre = Convert.ToDouble(IgnoreHighNumericUpDown.Text);
+
+
+    }
             catch (Exception ex)
             {
             }
@@ -1005,6 +1052,9 @@ namespace _3DLaserGlueInspection.subForm
 
                     correctionScaleSizeXNumericUpDown.Text = imageSet.correctionScaleSizeX.ToString();
                     correctionScaleSizeYNumericUpDown.Text = imageSet.correctionScaleSizeY.ToString();
+
+                    useBaseLineDetCheck.IsChecked = imageSet.isUseBaseLine;
+                    IgnoreHighNumericUpDown.Text = imageSet.distBaseLineThre.ToString();
 
 
                     LoadUpData();
@@ -1522,22 +1572,50 @@ namespace _3DLaserGlueInspection.subForm
         {
             if (hImage != null)
             {
-                int imageWidth, imageHeight;
-                imageWidth = hImage.Width;
-                imageHeight = hImage.Height;
+                if (showImageComboBox.SelectedIndex != 0)
+                {
+                    showImageComboBox.SelectedIndex = 0;
+                }
 
-                double LeftX = imageWidth * imageSet.LeftX;
-                double RightX = imageWidth * imageSet.RightX;
-                double TopY = imageHeight * imageSet.TopY;
-                double DownY = imageHeight * imageSet.DownY;
-                hWindowModel.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(hImage).Clone());
+                if (hWindowModel.RectExists("detRect"))
+                {
+                    //更新参数
+                    RectData rectData = hWindowModel.GetRectData("detRect");
 
-                PointCollection points = new PointCollection();
-                points.Add(new System.Windows.Point(LeftX, TopY));
-                points.Add(new System.Windows.Point(RightX, TopY));
-                points.Add(new System.Windows.Point(RightX, DownY));
-                points.Add(new System.Windows.Point(LeftX, DownY));
-                hWindowModel.AddPolygon(points, System.Windows.Media.Color.FromRgb(255, 0, 0), null);
+                    int imageWidth, imageHeight;
+                    imageWidth = hImage.Width;
+                    imageHeight = hImage.Height;
+
+                    double LeftX = rectData.X;
+                    double RightX = rectData.X+ rectData.Width;
+                    double TopY = rectData.Y;
+                    double DownY = rectData.Y + rectData.Height;
+
+                    //更新界面
+                    leftRangeMinNumericUpDown.Text = (LeftX / imageWidth).ToString();
+                    leftRangeMaxNumericUpDown.Text = (RightX / imageWidth).ToString();
+                    topRangeMinNumericUpDown.Text = (TopY / imageHeight).ToString();
+                    topRangeMaxNumericUpDown.Text = (DownY / imageHeight).ToString();
+
+                    //清除矩形
+                    hWindowModel.RemoveRect("detRect");
+
+                }
+                else 
+                {
+                    int imageWidth, imageHeight;
+                    imageWidth = hImage.Width;
+                    imageHeight = hImage.Height;
+
+                    double LeftX = imageWidth * imageSet.LeftX;
+                    double RightX = imageWidth * imageSet.RightX;
+                    double TopY = imageHeight * imageSet.TopY;
+                    double DownY = imageHeight * imageSet.DownY;
+
+                    //显示矩形
+                    hWindowModel.AddRect("detRect", LeftX, TopY, RightX - LeftX, DownY - TopY,true, Colors.Red);
+                }
+                   
 
             }
         }
@@ -1646,7 +1724,7 @@ namespace _3DLaserGlueInspection.subForm
                 {
                     getOutlineResult = true;
                     //坐标转换
-                    Wpf_Replace_halcon.PoseParameters robotPose = new PoseParameters();
+                    //Wpf_Replace_halcon.PoseParameters robotPose = new PoseParameters();
                     List<double> robotX, robotY, robotZ;
                     Mat lightXY = new Mat();
                     //Mat xyCut = new Mat();
@@ -1665,31 +1743,53 @@ namespace _3DLaserGlueInspection.subForm
                     if (Params.CamHandEyeType[CamParamName] == 0)
                     {
                         Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToTool,
-                    robotPose, out lightXY, out robotX, out robotY, out robotZ);
+                    currentRobotPose, out lightXY, out robotX, out robotY, out robotZ);
                     }
                     else
                     {
                         //搞个robot的逆pose，后面再专门打包个算法搞逆pose
-                        PoseParameters BaseInTool = Vision.PoseInv(robotPose);
+                        PoseParameters BaseInTool = Vision.PoseInv(currentRobotPose);
                         Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToBase,
                             BaseInTool, out lightXY, out robotX, out robotY, out robotZ);
                     }
 
                     Vision.scalePoint(lightXY, cutSet, 90 - LightInCam.rx, out hXLDCont10mm);
 
-                    //这里不做尺寸检测，因此，先不管它的x尺寸矫正
-                    ////对x方向进行矫正
-                    //double scaleX = 1;
-                    //scaleX = Math.Cos(robotAndCamAngle / 180 * Math.PI);
-                    //Mat correctionPoints = new Mat();
-                    //correctionPoints = hXLDCont10mm.Clone();
+                    if (imageSet.isUseAngleOpt)
+                    {
+                        //涂胶角度优化
+                        //对x方向进行矫正
+                        double scaleX = 1;
+                        scaleX = Math.Cos(robotAndCamAngle / 180 * Math.PI);
+                        Mat correctionPoints = new Mat();
+                        correctionPoints = hXLDCont10mm.Clone();
 
-                    //for (int id = 0; id < correctionPoints.Rows; id++)
-                    //{
-                    //    correctionPoints.At<double>(id, 0) = correctionPoints.At<double>(id, 0) * scaleX;
-                    //}
+                        for (int id = 0; id < correctionPoints.Rows; id++)
+                        {
+                            correctionPoints.At<double>(id, 0) = correctionPoints.At<double>(id, 0) * scaleX;
+                        }
 
-                    //hXLDCont10mm = correctionPoints.Clone();
+                        hXLDCont10mm = correctionPoints.Clone();
+                    }
+
+
+                    {
+                        //对两个方向进行矫正
+                        double scaleX = imageSet.correctionScaleSizeX;
+                        double scaleY = imageSet.correctionScaleSizeY;
+
+                        Mat correctionPoints = new Mat();
+                        correctionPoints = hXLDCont10mm.Clone();
+
+                        for (int id = 0; id < correctionPoints.Rows; id++)
+                        {
+                            correctionPoints.At<double>(id, 0) = correctionPoints.At<double>(id, 0) * scaleX;
+                            correctionPoints.At<double>(id, 1) = correctionPoints.At<double>(id, 1) * scaleY;
+
+                        }
+
+                        hXLDCont10mm = correctionPoints.Clone();
+                    }
 
                 }
             }
@@ -3318,7 +3418,7 @@ namespace _3DLaserGlueInspection.subForm
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            //for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < 1000; i++)
             {
                 if (imageSet.轮廓检测)
                 {
@@ -3472,8 +3572,10 @@ namespace _3DLaserGlueInspection.subForm
                                 {
                                     hXLDCont10mm3D = hXLDCont10mm.Clone();
                                 }
-
+                                
                                 Vision.singleFrameDetAndResult(hXLDCont10mm3D, imageSet, cutSet, ref singleFrameExistGlue, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2);
+                               
+                                   
                             }
                         }
                     }
@@ -3806,5 +3908,78 @@ namespace _3DLaserGlueInspection.subForm
 
 
         }
+
+
+        private void updateBaseLineRegion()
+        {
+            if (hWindowModel.RectExists("baseLineRegion1"))
+            {
+                imageSet.baseLineRegion1 = hWindowModel.GetRectData("baseLineRegion1");
+            }
+            if (hWindowModel.RectExists("baseLineRegion2"))
+            {
+                imageSet.baseLineRegion2 = hWindowModel.GetRectData("baseLineRegion2");
+            }
+
+        }
+
+
+        private void showBaseLineDetRegion_Checked(object sender, RoutedEventArgs e)
+        {
+            if (showBaseLineDetRegion.IsChecked == true)
+            {
+                //判断是否有图片
+                if (hImage == null)
+                {
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoImage);
+                    return;
+                }
+                if (cutSet == null && imageSet == null)
+                {
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoDetectionParameters);
+                    return;
+                }
+
+                //如果激光图片为空，则执行轮廓检测
+                if (hXLDCont10mm == null || hXLDCont10mm.Empty() || hXLDCont10mm.Size().Height<=0)
+                {
+                    runOutLineButton_Click(null, null);
+                }
+
+                // 图片更新
+                if (showImageComboBox.SelectedIndex != 1)
+                {
+                    showImageComboBox.SelectedIndex = 1;
+                }
+
+                // 框显示
+                hWindowModel.RemoveRect("baseLineRegion1");
+                imageSet.baseLineRegion1 = hWindowModel.AddRotatedRect("baseLineRegion1", imageSet.baseLineRegion1.CenterX, imageSet.baseLineRegion1.CenterY, imageSet.baseLineRegion1.Width, imageSet.baseLineRegion1.Height,
+                    imageSet.baseLineRegion1.Angle, true, Colors.Green);
+                hWindowModel.RemoveRect("baseLineRegion2");
+                imageSet.baseLineRegion2 = hWindowModel.AddRotatedRect("baseLineRegion2", imageSet.baseLineRegion2.CenterX, imageSet.baseLineRegion2.CenterY, imageSet.baseLineRegion2.Width, imageSet.baseLineRegion2.Height,
+                    imageSet.baseLineRegion2.Angle, true, Colors.Green);
+            }
+            else
+            {
+                if (hImage == null)
+                {
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoImage);
+                    return;
+                }
+                if (cutSet == null && imageSet == null)
+                {
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoDetectionParameters);
+                    return;
+                }
+
+                updateBaseLineRegion();
+
+                hWindowModel.RemoveRect("baseLineRegion1");
+                hWindowModel.RemoveRect("baseLineRegion2");
+            }
+            
+        }
+
     }
 }

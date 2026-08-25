@@ -19,6 +19,8 @@ namespace _3DLaserGlueInspection
 {
     using Newtonsoft.Json;
     using System.Runtime.Serialization;
+    using System.Windows;
+    using System.Windows.Documents;
 
     public class ProjectionMapperPersistence
     {
@@ -360,6 +362,54 @@ namespace _3DLaserGlueInspection
         [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
         ///激光提取函数,亚像素
         public static extern int thinningD(IntPtr inputMat, IntPtr outImage, IntPtr outPointMat, int min_thre, int min_width = 1);
+
+
+        [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
+        ///获取矩形框内的点
+        public static extern int GetPointsInRotatedRect(IntPtr laserPoints,IntPtr selectLaserPoints, double centerX, double centerY, double width, double height, double angle
+            );
+
+        [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
+        ///直线拟合
+        public static extern int ransacFitLineFast(IntPtr pts, out double item0,
+            out double item1,
+            out double item2,
+            out double item3,
+            float distThresh = 10.0f,   // 内点距离阈值（像素）
+            int maxIter = 100,        // 最大迭代
+            double conf = 0.999);
+
+        [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
+        ///基于基准面的点过滤，可以过滤海绵条
+        public static extern int FilterPointsByLine(
+                IntPtr inputPoints,
+                double item0,
+                double item1,
+                double item2,
+                double item3,
+                double lineDistThre,
+                IntPtr filteredPoints);
+
+        [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
+        ///基于基准面的涂胶检测
+        public static extern int glueDet(
+            IntPtr inputPoints,
+            double item0,
+            double item1,
+            double item2,
+            double item3,
+            out bool existGlue,
+            out double centerX,
+            out double centerY,
+            out double phi,
+            out double width,
+            out double height,
+            out double maxArea,
+            IntPtr regionBig,
+            IntPtr regionRect);
+
+
+
         [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
         ///单帧检测
 
@@ -593,6 +643,7 @@ namespace _3DLaserGlueInspection
             //Console.WriteLine($"Image type:{Image.Type()}.");
             //Console.WriteLine($"outImage type:{outImage.Type()}.");
 
+
             if (offsetX != 0)
             {
                 for (int i = 0; i < outlinePoints.Rows; i++)
@@ -785,9 +836,21 @@ namespace _3DLaserGlueInspection
             resultData.row = centerY;
             resultData.column = centerX;
 
-            bool heng = Math.Abs(phi) <= Math.PI / 4;
-            resultData.glueHeight = (heng ? height : width) / scaleSize;
-            resultData.glueWidth = (heng ? width : height) / scaleSize;
+            // 最小外接矩形的 width/height 是沿矩形自身方向的尺寸，
+            // 转换为图像坐标系尺寸：竖直方向为 glueHeight，横向为 glueWidth。
+            double normalizedPhi = phi % Math.PI;
+            if (normalizedPhi >= Math.PI / 2)
+            {
+                normalizedPhi -= Math.PI;
+            }
+            else if (normalizedPhi < -Math.PI / 2)
+            {
+                normalizedPhi += Math.PI;
+            }
+
+            bool rectangleIsHorizontal = Math.Abs(normalizedPhi) <= Math.PI / 4;
+            resultData.glueHeight = (rectangleIsHorizontal ? height : width) / scaleSize;
+            resultData.glueWidth = (rectangleIsHorizontal ? width : height) / scaleSize;
             //resultData.glueArea = (heng ? width : height) / scaleSize;
 
             resultData.glueArea = maxArea / (scaleSize * scaleSize);
@@ -1109,6 +1172,7 @@ namespace _3DLaserGlueInspection
 
         public static void singleFrameDetAndResult(Mat OutLine,ImageSet imageSet,CutSet cutSet, ref bool singleFrameExistGlue, ref Data resultData, ref BResult bResult, ref Mat outMaxRegion, ref Mat outRegionRectangle2)
         {
+
             bool existGlue = false;
             double centerX = 0;
             double centerY = 0;
@@ -1116,15 +1180,57 @@ namespace _3DLaserGlueInspection
             double width = 0;
             double height = 0;
             double maxArea = 0;
+            double item0 = 0;
+            double item1 = 0;
+            double item2 = 0;
+            double item3 = 0;
 
+           
             //////开始检测
             //Stopwatch stopwatch = new Stopwatch();
             //stopwatch.Start();
 
 
-            Vision.singleFrameDet(OutLine.CvPtr, out existGlue, out centerX, out centerY, out phi, out width, out height, out maxArea,
-                outMaxRegion.CvPtr, outRegionRectangle2.CvPtr, imageSet.isUseAngleOpt, false);
 
+            if (imageSet.isUseBaseLine)
+            {
+                //拟合点提取
+                Mat selectBaseLinePoints1 = new Mat();
+                Mat selectBaseLinePoints2 = new Mat();
+
+                Mat selectBaseLinePoints = new Mat();
+                Mat selectSpongeStripPoints = new Mat();
+
+                Vision.GetPointsInRotatedRect(OutLine.CvPtr, selectBaseLinePoints1.CvPtr, imageSet.baseLineRegion1.CenterX, imageSet.baseLineRegion1.CenterY,
+                    imageSet.baseLineRegion1.Width, imageSet.baseLineRegion1.Height, imageSet.baseLineRegion1.Angle);
+
+                Vision.GetPointsInRotatedRect(OutLine.CvPtr, selectBaseLinePoints2.CvPtr, imageSet.baseLineRegion2.CenterX, imageSet.baseLineRegion2.CenterY,
+                    imageSet.baseLineRegion2.Width, imageSet.baseLineRegion2.Height, imageSet.baseLineRegion2.Angle);
+
+                Cv2.VConcat(selectBaseLinePoints1, selectBaseLinePoints2, selectBaseLinePoints);
+
+                //基准面拟合
+                float disThre = 0.5f; //直线拟合噪点过滤阈值，这里是像素坐标，因此过滤值大一些。
+                Vision.ransacFitLineFast(selectBaseLinePoints.CvPtr, out item0, out item1, out item2, out item3, disThre * cutSet.scaleSize);
+                
+
+                //点筛选
+                Vision.FilterPointsByLine(OutLine.CvPtr, item0, item1, item2, item3, imageSet.distBaseLineThre * cutSet.scaleSize, selectSpongeStripPoints.CvPtr);
+
+                //Vision.showMatPoint(selectSpongeStripPoints, "selectSpongeStripPoints");
+
+                //涂胶检测
+                Vision.glueDet(selectSpongeStripPoints.CvPtr, item0, item1, item2, item3,
+                    out existGlue, out centerX, out centerY, out phi, out width, out height, out maxArea,
+                    outMaxRegion.CvPtr, outRegionRectangle2.CvPtr);
+                
+
+            }
+            else
+            {
+                Vision.singleFrameDet(OutLine.CvPtr, out existGlue, out centerX, out centerY, out phi, out width, out height, out maxArea,
+                outMaxRegion.CvPtr, outRegionRectangle2.CvPtr, imageSet.isUseAngleOpt, false);
+            }
 
             //stopwatch.Stop();
             ////结束检测
@@ -1135,6 +1241,13 @@ namespace _3DLaserGlueInspection
 
             bResult = new BResult();
             resultData = new Data();
+
+            // 保存基准线拟合参数，供结果显示时直接使用。
+            resultData.item0 = 0;
+            resultData.item1 = 0;
+            resultData.item2 = 0;
+            resultData.item3 = 0;
+
             if (maxArea > 0)
             {
                 //stopwatch = new Stopwatch();
@@ -1143,6 +1256,10 @@ namespace _3DLaserGlueInspection
                 singleFrameExistGlue = true;
                 Vision.judgeGlueResult(imageSet, cutSet.scaleSize, centerX, centerY, width, height, phi, maxArea, out resultData, out bResult);
 
+                resultData.item0 = item0;
+                resultData.item1 = item1;
+                resultData.item2 = item2;
+                resultData.item3 = item3;
                 ////结束检测
                 //elapsedTime = stopwatch.Elapsed;
                 //useTime = elapsedTime.TotalMilliseconds;
@@ -1528,6 +1645,9 @@ namespace _3DLaserGlueInspection
         public int glueStartID = 0;
         public int glueEndID = 99999;
 
+        
+
+
 
         public void AfterDeserialize()
         {
@@ -1593,6 +1713,11 @@ namespace _3DLaserGlueInspection
         public double correctionScaleSizeX = 1;
         public double correctionScaleSizeY = 1;
 
+        // 是否使用基线
+        public bool isUseBaseLine = false;
+        public double distBaseLineThre = 0;
+        public RectData baseLineRegion1 = new RectData();
+        public RectData baseLineRegion2 = new RectData();
 
         public ImageSet(int index)
         {
@@ -1632,6 +1757,12 @@ namespace _3DLaserGlueInspection
         public double glueWidth = -1;
         public double glueArea = -1;
 
+        // 基准线拟合参数：方向向量 (item0, item1) 和线上一点 (item2, item3)。
+        public double item0;
+        public double item1;
+        public double item2;
+        public double item3;
+
         // 深复制
         public Data Clone()
         {
@@ -1642,6 +1773,10 @@ namespace _3DLaserGlueInspection
                 glueHeight = this.glueHeight,
                 glueWidth = this.glueWidth,
                 glueArea = this.glueArea,
+                item0 = this.item0,
+                item1 = this.item1,
+                item2 = this.item2,
+                item3 = this.item3,
             };
         }
     }
@@ -1651,6 +1786,8 @@ namespace _3DLaserGlueInspection
         public bool glueHeight ;
         public bool glueWidth ;
         public bool glueArea ;
+
+      
         /// <summary>
         /// 总结果
         /// </summary>
@@ -1663,6 +1800,7 @@ namespace _3DLaserGlueInspection
                 glueHeight = this.glueHeight,
                 glueWidth = this.glueWidth,
                 glueArea = this.glueArea,
+                
                 Result = this.Result,
             };
         }

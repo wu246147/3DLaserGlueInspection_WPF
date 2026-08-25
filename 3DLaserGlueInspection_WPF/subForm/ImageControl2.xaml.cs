@@ -39,6 +39,20 @@ namespace _3DLaserGlueInspection.subForm
     /// </summary>
     public class RectData
     {
+        public RectData()
+        {
+            Id = "";
+            X = 10;
+            Y = 10;
+            Width = 10;
+            Height = 10;
+            Angle = 0;
+            IsDraggable = true;
+            IsRotatable = true;
+            StrokeColor = Colors.Red;
+            StrokeThickness = 2;
+        }
+
         public string Id { get; set; }
         /// <summary>左上角 X（图像坐标）</summary>
         public double X { get; set; }

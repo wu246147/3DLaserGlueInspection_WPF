@@ -205,6 +205,15 @@ namespace _3DLaserGlueInspection.Resources {
         }
         
         /// <summary>
+        ///   查找类似 基准面检测 的本地化字符串。
+        /// </summary>
+        public static string BaseLineDet {
+            get {
+                return ResourceManager.GetString("BaseLineDet", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 缓存图片 的本地化字符串。
         /// </summary>
         public static string CacheImages {
@@ -1399,6 +1408,15 @@ namespace _3DLaserGlueInspection.Resources {
         public static string HorizontalRange {
             get {
                 return ResourceManager.GetString("HorizontalRange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 忽略高度 的本地化字符串。
+        /// </summary>
+        public static string ignoreHigh {
+            get {
+                return ResourceManager.GetString("ignoreHigh", resourceCulture);
             }
         }
         
@@ -2798,6 +2816,16 @@ namespace _3DLaserGlueInspection.Resources {
         }
         
         /// <summary>
+        ///   查找类似 显示基准面
+        ///检测框 的本地化字符串。
+        /// </summary>
+        public static string ShowBaseLineDetRegion {
+            get {
+                return ResourceManager.GetString("ShowBaseLineDetRegion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 显示高度 的本地化字符串。
         /// </summary>
         public static string ShowHeight {
@@ -3380,6 +3408,15 @@ namespace _3DLaserGlueInspection.Resources {
         public static string UseAngleOptimization {
             get {
                 return ResourceManager.GetString("UseAngleOptimization", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 启用基准线检测 的本地化字符串。
+        /// </summary>
+        public static string useBaseLineDet {
+            get {
+                return ResourceManager.GetString("useBaseLineDet", resourceCulture);
             }
         }
         

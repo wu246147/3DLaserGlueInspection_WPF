@@ -31,7 +31,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="385"/>
                 <ColumnDefinition Width="375*"/>
-                <ColumnDefinition Width="280"/>
+                <ColumnDefinition Width="310"/>
             </Grid.ColumnDefinitions>
             <Grid Margin="5,5,5,5" Background="#FF2A3440">
                 <Grid.ColumnDefinitions>
@@ -93,7 +93,7 @@
 
             </Grid>
             <Grid Grid.Column="1" Margin="5,5,5,5">
-                <ComboBox x:Name="showImageComboBox" FontSize="14"  BorderBrush="#FFDDDDDD" Background="#FF263851" SelectionChanged="showImageComboBox_SelectionChanged" Height="24" VerticalAlignment="Top">
+                <ComboBox x:Name="showImageComboBox" FontSize="14"  BorderBrush="#FFDDDDDD" Background="#FF263851" SelectionChanged="showImageComboBox_SelectionChanged"  Height="24" VerticalAlignment="Top">
                     <ComboBoxItem Content="{x:Static resx:LanguageDict.SimulationImage}"/>
                     <ComboBoxItem Content="{x:Static resx:LanguageDict.ContourDetectionResult}"/>
                     <ComboBoxItem Content="{x:Static resx:LanguageDict._3DPointCloudResults}"/>
@@ -107,7 +107,7 @@
 
 
 
-                <GroupBox Name="rubbish" Header="垃圾桶" Margin="77,343,176,312">
+                <GroupBox Name="rubbish" Header="垃圾桶" Margin="20,50,233,605">
                     <Grid>
                         <CheckBox  x:Name="useDiscreteDenoisingCheck" Content="{x:Static resx:LanguageDict.DiscreteDenoising}" HorizontalAlignment="Left" Margin="60,0,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
                         <Border BorderBrush="White" BorderThickness="1" Margin="47,35,0,0" Height="95" VerticalAlignment="Top" HorizontalAlignment="Left" Width="251">
@@ -131,76 +131,93 @@
             <Grid Grid.Column="2" Margin="5,5,5,5" Background="#FF2A3440">
                 <TabControl Background="#00000000" Foreground="White" BorderBrush="#FF2A3440">
                     <TabItem Header="{x:Static resx:LanguageDict.PictureSet}" Template="{StaticResource TabItemTemplate}" Foreground="White" Background="#FF2A3440" FontSize="14">
-                        <Grid Name="imageSetGrid">
-                            <CheckBox  x:Name="outlineCheck" Content="{x:Static resx:LanguageDict.ContourDet}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" >
-                            </CheckBox>
-                            <Label  Content="{x:Static resx:LanguageDict.MinThre}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="10,32,0,0" VerticalAlignment="Top"/>
-                            <TextBox x:Name="threNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="132,35,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="116" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                        <ScrollViewer
+                             CanContentScroll="True"
+                             VerticalScrollBarVisibility="Auto"
+                            >
+                            <Grid Name="imageSetGrid">
+                                <CheckBox  x:Name="outlineCheck" Content="{x:Static resx:LanguageDict.ContourDet}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" >
+                                </CheckBox>
+                                <Label  Content="{x:Static resx:LanguageDict.MinThre}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="10,32,0,0" VerticalAlignment="Top"/>
+                                <TextBox x:Name="threNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="132,35,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="116" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                <Label  Content="{x:Static resx:LanguageDict.MinimumWidth}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="10,68,0,0" VerticalAlignment="Top"/>
+                                <TextBox x:Name="laserMinWidthNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="132,71,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="116" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
 
-                            <CheckBox  x:Name="singleFrameCheck" Content="{x:Static resx:LanguageDict.SingleFrameDet}" HorizontalAlignment="Left" Margin="10,71,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Visibility="Hidden"/>
-                            <Border BorderBrush="White" BorderThickness="1" Margin="5,133,5,0" Height="115" VerticalAlignment="Top">
-                                <Grid x:Name="toleranceRangeGrid" ShowGridLines="True">
-                                    <Label  Content="{x:Static resx:LanguageDict.GlueWidth}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,4,0,0"/>
-                                    <TextBox x:Name="glueWidthMinNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="71,6,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-                                    <Label  Content="~" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,4,0,0"/>
-                                    <TextBox x:Name="glueWidthMaxNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="167,6,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-                                    <Label  Content="{x:Static resx:LanguageDict.GlueHeight}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,40,0,0"/>
-                                    <TextBox x:Name="glueHeightMinNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="71,42,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-                                    <Label  Content="~" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,40,0,0"/>
-                                    <TextBox x:Name="glueHeightMaxNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="167,42,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-                                    <Label  Content="{x:Static resx:LanguageDict.Area}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,76,0,0"/>
-                                    <TextBox x:Name="glueAreaMinNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="71,78,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-                                    <Label  Content="~" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,76,0,0"/>
-                                    <TextBox x:Name="glueAreaMaxNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="167,78,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-                                </Grid>
-                            </Border>
-                            <Grid Margin="5,254,5,0" Height="119" VerticalAlignment="Top" Visibility="Visible">
-                                <Border BorderBrush="White" BorderThickness="1" Height="83" VerticalAlignment="Top" Margin="0,33,0,0">
-                                    <Grid Name="cropGrid" ShowGridLines="True" Height="85" VerticalAlignment="Top" Margin="0,-1,0,0">
-                                        <Label  Content="{x:Static resx:LanguageDict.HorizontalRange}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,9,0,0"/>
-                                        <TextBox x:Name="leftRangeMinNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="71,11,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-                                        <Label  Content="~" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,9,0,0"/>
-                                        <TextBox x:Name="leftRangeMaxNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="167,11,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-                                        <Label  Content="{x:Static resx:LanguageDict.VerticalRange}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,45,0,0"/>
-                                        <TextBox x:Name="topRangeMinNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="71,47,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-                                        <Label  Content="~" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,45,0,0"/>
-                                        <TextBox x:Name="topRangeMaxNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="167,47,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-
+                                <CheckBox  x:Name="singleFrameCheck" Content="{x:Static resx:LanguageDict.SingleFrameDet}" HorizontalAlignment="Left" Margin="10,71,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Visibility="Hidden"/>
+                                <Border BorderBrush="White" BorderThickness="1" Margin="5,133,10,0" Height="115" VerticalAlignment="Top">
+                                    <Grid x:Name="toleranceRangeGrid" ShowGridLines="True">
+                                        <Label  Content="{x:Static resx:LanguageDict.GlueWidth}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,4,0,0"/>
+                                        <TextBox x:Name="glueWidthMinNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="71,6,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                        <Label  Content="~" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,4,0,0"/>
+                                        <TextBox x:Name="glueWidthMaxNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="167,6,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                        <Label  Content="{x:Static resx:LanguageDict.GlueHeight}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,40,0,0"/>
+                                        <TextBox x:Name="glueHeightMinNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="71,42,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                        <Label  Content="~" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,40,0,0"/>
+                                        <TextBox x:Name="glueHeightMaxNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="167,42,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                        <Label  Content="{x:Static resx:LanguageDict.Area}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,76,0,0"/>
+                                        <TextBox x:Name="glueAreaMinNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="71,78,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                        <Label  Content="~" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,76,0,0"/>
+                                        <TextBox x:Name="glueAreaMaxNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="167,78,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
                                     </Grid>
                                 </Border>
-                                <CheckBox  x:Name="useCroppintCheck" Content="{x:Static resx:LanguageDict.EnableCropping}" HorizontalAlignment="Left" Margin="10,8,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
-                                <Button x:Name="showRangeButton" Content="{x:Static resx:LanguageDict.ShowRange}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="127,4,0,0" Click="showRangeButton_Click"  />
-                            </Grid>
+                                <Grid Margin="5,254,10,0" Height="119" VerticalAlignment="Top" Visibility="Visible">
+                                    <Border BorderBrush="White" BorderThickness="1" Height="83" VerticalAlignment="Top" Margin="0,33,0,0">
+                                        <Grid Name="cropGrid" ShowGridLines="True" Height="85" VerticalAlignment="Top" Margin="0,-1,0,0">
+                                            <Label  Content="{x:Static resx:LanguageDict.HorizontalRange}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,9,0,0"/>
+                                            <TextBox x:Name="leftRangeMinNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="71,11,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                            <Label  Content="~" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,9,0,0"/>
+                                            <TextBox x:Name="leftRangeMaxNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="167,11,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                            <Label  Content="{x:Static resx:LanguageDict.VerticalRange}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,45,0,0"/>
+                                            <TextBox x:Name="topRangeMinNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="71,47,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                            <Label  Content="~" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,45,0,0"/>
+                                            <TextBox x:Name="topRangeMaxNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="167,47,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
 
-                            <Button x:Name="runOutLineButton" Content="{x:Static resx:LanguageDict.SingleFrameContourDet}" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,486,0,0" Click="runOutLineButton_Click"/>
-                            <Label Name="runTimeLabel" Content="-- ms" FontSize="14" Foreground="White" Margin="0,484,25,0" VerticalAlignment="Top" HorizontalAlignment="Right"/>
-                            <Button x:Name="get3DDataButton" Content="{x:Static resx:LanguageDict._3DPointCloudExtraction}" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,527,0,0" Click="get3DDataButton_Click"/>
-                            <Button x:Name="runButton" Content="{x:Static resx:LanguageDict._3DGluingFrameDetection}" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,568,0,0" Click="runButton_Click2"/>
-                            <CheckBox  x:Name="_3DCloudDetCheck" Content="{x:Static resx:LanguageDict._3DGluingDetection}" HorizontalAlignment="Left" Margin="5,108,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
-
-                            <CheckBox  x:Name="saveCloudPointCheck" Content="{x:Static resx:LanguageDict.SavePointCloud}" HorizontalAlignment="Left" Margin="150,531,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Checked="saveCloudPointCheck_Checked" Unchecked="saveCloudPointCheck_Checked" />
-                            <Label  Content="{x:Static resx:LanguageDict.CameraAndMovementDirectionAngle}" FontSize="14" Foreground="White" Margin="0,375,81,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="183" Height="55"/>
-                            <TextBox x:Name="robotAndCamAngleNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="173,387,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="75" InputMethod.IsInputMethodEnabled="False" IsEnabled="False" />
-
-                            <Border BorderBrush="White" BorderThickness="1" Height="220" Margin="5,608,5,0" VerticalAlignment="Top">
-                                <Grid x:Name="correctionGrid" ShowGridLines="True" >
-                                    <Button x:Name="correctionButton" Content="{x:Static resx:LanguageDict.SizeCorrection}" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="6,150,0,0" Click="correctionButton_Click"/>
-                                    <Label Content="{x:Static resx:LanguageDict.CorrectionX}" FontSize="14" Foreground="White" Margin="0,10,99,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="153"/>
-                                    <Label Content="{x:Static resx:LanguageDict.CorrectionY}" FontSize="14" Foreground="White" Margin="0,45,99,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="153"/>
-                                    <Label Content="{x:Static resx:LanguageDict.ActuallyGlueWidth}" FontSize="14" Foreground="White" HorizontalAlignment="Left" Width="153" Margin="0,78,0,0" VerticalAlignment="Top"/>
-                                    <Label Content="{x:Static resx:LanguageDict.ActuallyGlueHeight}" FontSize="14" Foreground="White" Margin="0,113,99,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="153"/>
-                                    <TextBox x:Name="correctionScaleSizeXNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="158,10,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="84" InputMethod.IsInputMethodEnabled="False" IsEnabled="False" />
-                                    <TextBox x:Name="correctionScaleSizeYNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="158,45,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="84" InputMethod.IsInputMethodEnabled="False" IsEnabled="False" />
-                                    <TextBox x:Name="actualGlueWidthNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="158,80,0,0" TextWrapping="Wrap" Text="0" Width="84" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" VerticalAlignment="Top" />
-                                    <TextBox x:Name="actualGlueHeightNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="158,115,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="84" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-                                    <CheckBox  x:Name="coefficientSharingCheck" Content="{x:Static resx:LanguageDict.CommonCorrectionCoefficient}" HorizontalAlignment="Left" Margin="6,191,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" IsChecked="True" />
+                                        </Grid>
+                                    </Border>
+                                    <CheckBox  x:Name="useCroppintCheck" Content="{x:Static resx:LanguageDict.EnableCropping}" HorizontalAlignment="Left" Margin="10,8,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
+                                    <Button x:Name="showRangeButton" Content="{x:Static resx:LanguageDict.ShowRange}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="127,4,0,0" Click="showRangeButton_Click"  />
                                 </Grid>
-                            </Border>
-                            <Label  Content="{x:Static resx:LanguageDict.MinimumWidth}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="10,68,0,0" VerticalAlignment="Top"/>
-                            <TextBox x:Name="laserMinWidthNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="132,71,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="116" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-                            <CheckBox  x:Name="isUseAngleOptCheck" Content="{x:Static resx:LanguageDict.UseAngleOptimization}" HorizontalAlignment="Left" Margin="10,434,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
 
-                        </Grid>
+
+                                <CheckBox  x:Name="_3DCloudDetCheck" Content="{x:Static resx:LanguageDict._3DGluingDetection}" HorizontalAlignment="Left" Margin="5,108,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
+                                <Grid x:Name="imageSetOther" Margin="0,507,0,0">
+                                    <Label  Content="{x:Static resx:LanguageDict.CameraAndMovementDirectionAngle}" FontSize="14" Foreground="White" HorizontalAlignment="Left" Width="183" Height="55" Margin="0,12,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
+                                    <TextBox x:Name="robotAndCamAngleNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="188,27,0,0" TextWrapping="Wrap" Text="0" Width="75" InputMethod.IsInputMethodEnabled="False" IsEnabled="False" VerticalAlignment="Top" />
+                                    <CheckBox  x:Name="isUseAngleOptCheck" Content="{x:Static resx:LanguageDict.UseAngleOptimization}" HorizontalAlignment="Left" Margin="10,70,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
+                                    <Button x:Name="runOutLineButton" Content="{x:Static resx:LanguageDict.SingleFrameContourDet}" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,122,0,0" Click="runOutLineButton_Click"/>
+                                    <Label x:Name="runTimeLabel" Content="-- ms" FontSize="14" Foreground="White" Margin="0,120,25,0" VerticalAlignment="Top" HorizontalAlignment="Right" Grid.Column="1"/>
+                                    <Button x:Name="get3DDataButton" Content="{x:Static resx:LanguageDict._3DPointCloudExtraction}" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,163,0,0" Click="get3DDataButton_Click"/>
+                                    <Button x:Name="runButton" Content="{x:Static resx:LanguageDict._3DGluingFrameDetection}" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,204,0,0" Click="runButton_Click2"/>
+                                    <CheckBox  x:Name="saveCloudPointCheck" Content="{x:Static resx:LanguageDict.SavePointCloud}" HorizontalAlignment="Left" Margin="173,167,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Checked="saveCloudPointCheck_Checked" Unchecked="saveCloudPointCheck_Checked" />
+
+                                    <Border BorderBrush="White" BorderThickness="1" Height="220" Margin="5,244,10,0" VerticalAlignment="Top" Grid.ColumnSpan="2">
+                                        <Grid x:Name="correctionGrid" ShowGridLines="True" >
+                                            <Button x:Name="correctionButton" Content="{x:Static resx:LanguageDict.SizeCorrection}" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="6,150,0,0" Click="correctionButton_Click"/>
+                                            <Label Content="{x:Static resx:LanguageDict.CorrectionX}" FontSize="14" Foreground="White" Margin="0,10,99,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="153"/>
+                                            <Label Content="{x:Static resx:LanguageDict.CorrectionY}" FontSize="14" Foreground="White" Margin="0,45,99,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="153"/>
+                                            <Label Content="{x:Static resx:LanguageDict.ActuallyGlueWidth}" FontSize="14" Foreground="White" HorizontalAlignment="Left" Width="153" Margin="0,78,0,0" VerticalAlignment="Top"/>
+                                            <Label Content="{x:Static resx:LanguageDict.ActuallyGlueHeight}" FontSize="14" Foreground="White" Margin="0,113,99,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="153"/>
+                                            <TextBox x:Name="correctionScaleSizeXNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="158,10,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="84" InputMethod.IsInputMethodEnabled="False" IsEnabled="False" />
+                                            <TextBox x:Name="correctionScaleSizeYNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="158,45,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="84" InputMethod.IsInputMethodEnabled="False" IsEnabled="False" />
+                                            <TextBox x:Name="actualGlueWidthNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="158,80,0,0" TextWrapping="Wrap" Text="0" Width="84" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" VerticalAlignment="Top" />
+                                            <TextBox x:Name="actualGlueHeightNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="158,115,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="84" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                            <CheckBox  x:Name="coefficientSharingCheck" Content="{x:Static resx:LanguageDict.CommonCorrectionCoefficient}" HorizontalAlignment="Left" Margin="6,191,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" IsChecked="True" />
+                                        </Grid>
+                                    </Border>
+
+                                </Grid>
+                                <CheckBox  x:Name="useBaseLineDetCheck" Content="{x:Static resx:LanguageDict.useBaseLineDet}" HorizontalAlignment="Left" Margin="5,378,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
+                                <Grid Name="baseLineGrid" Margin="5,373,10,0" Height="125" VerticalAlignment="Top" Visibility="Visible">
+                                    <Border BorderBrush="White" BorderThickness="1" Margin="0,33,0,0"/>
+                                    <CheckBox  x:Name="showBaseLineDetRegion" Content="{x:Static resx:LanguageDict.ShowBaseLineDetRegion}" HorizontalAlignment="Left" Margin="10,44,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Checked="showBaseLineDetRegion_Checked" Unchecked="showBaseLineDetRegion_Checked" />
+                                    <Button x:Name="runBaseLineCheck" Content="{x:Static resx:LanguageDict.BaseLineDet}" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="130,49,0,0"/>
+                                    <Label  Content="{x:Static resx:LanguageDict.ignoreHigh}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="10,83,0,0" VerticalAlignment="Top"/>
+                                    <TextBox x:Name="IgnoreHighNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="130,86,0,0" TextWrapping="Wrap" Text="0" Width="116" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" VerticalAlignment="Top" />
+                                </Grid>
+
+
+                            </Grid>
+                        </ScrollViewer>
                     </TabItem>
                     <TabItem Header="{x:Static resx:LanguageDict.ShowSet}" Template="{StaticResource TabItemTemplate}" Foreground="White" Background="#FF2A3440" FontSize="14">
                         <Grid >

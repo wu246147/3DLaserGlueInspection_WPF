@@ -336,6 +336,27 @@ namespace _3DLaserGlueInspection
                             //DispPolygonjHWindowControlEvent(regionSmallestRectangle2Points, Colors.Blue, "margin");
                             imageControl.AddPolygon(regionSmallestRectangle2Points, Colors.Blue, "margin");
                         }
+
+
+                        if (set.isUseBaseLine)
+                        {
+                            // 直接使用检测阶段保存的基准线参数，不重复计算基准线。
+                            double baselineOffset = set.distBaseLineThre * cutSet.scaleSize;
+                            PointCollection baselinePoints = CreateLinePoints(data.item0, data.item1, data.item2, data.item3,
+                                showWidth * cutSet.scaleSize, showHeight * cutSet.scaleSize, offsetX, offsetY, 0);
+                            PointCollection ignoredHeightPoints = CreateLinePoints(data.item0, data.item1, data.item2, data.item3,
+                                showWidth * cutSet.scaleSize, showHeight * cutSet.scaleSize, offsetX, offsetY, baselineOffset);
+
+                            if (baselinePoints.Count >= 2)
+                            {
+                                imageControl.AddPolyline(baselinePoints, Colors.Blue);
+                            }
+                            if (ignoredHeightPoints.Count >= 2)
+                            {
+                                imageControl.AddPolyline(ignoredHeightPoints, Colors.Yellow);
+                            }
+                        }
+                    
                     }
                 }
                 catch (Exception ex)
@@ -346,6 +367,77 @@ namespace _3DLaserGlueInspection
             }
         }
 
+        /// <summary>
+        /// 根据 cv::fitLine 返回的方向向量和线上一点，生成与画布边界相交的直线。
+        /// offsetDistance 为正时，沿图像上方（Y 减小方向）偏移。
+        /// </summary>
+        private static PointCollection CreateLinePoints(double vx, double vy, double x0, double y0,
+            double imageWidth, double imageHeight, double offsetX, double offsetY, double offsetDistance)
+        {
+            PointCollection points = new PointCollection();
+            double vectorLength = Math.Sqrt(vx * vx + vy * vy);
+            if (vectorLength < 1e-12 || imageWidth <= 0 || imageHeight <= 0)
+            {
+                return points;
+            }
+
+            vx /= vectorLength;
+            vy /= vectorLength;
+
+            // 取 Y 分量为负的法向量，确保“上方”对应图像坐标的 Y 减小方向。
+            double normalX = -vy;
+            double normalY = vx;
+            if (normalY > 0)
+            {
+                normalX = -normalX;
+                normalY = -normalY;
+            }
+
+            double lineX = x0 + offsetX + normalX * offsetDistance;
+            double lineY = y0 + offsetY + normalY * offsetDistance;
+            double epsilon = 1e-8;
+            List<double> intersections = new List<double>();
+
+            Action<double> addIntersection = t =>
+            {
+                double x = lineX + t * vx;
+                double y = lineY + t * vy;
+                if (x < -epsilon || x > imageWidth + epsilon || y < -epsilon || y > imageHeight + epsilon)
+                {
+                    return;
+                }
+
+                foreach (double oldT in intersections)
+                {
+                    if (Math.Abs(oldT - t) < epsilon)
+                    {
+                        return;
+                    }
+                }
+                intersections.Add(t);
+            };
+
+            if (Math.Abs(vx) > epsilon)
+            {
+                addIntersection(-lineX / vx);
+                addIntersection((imageWidth - lineX) / vx);
+            }
+            if (Math.Abs(vy) > epsilon)
+            {
+                addIntersection(-lineY / vy);
+                addIntersection((imageHeight - lineY) / vy);
+            }
+
+            if (intersections.Count >= 2)
+            {
+                intersections.Sort();
+                points.Add(new System.Windows.Point(lineX + intersections[0] * vx, lineY + intersections[0] * vy));
+                points.Add(new System.Windows.Point(lineX + intersections[intersections.Count - 1] * vx,
+                    lineY + intersections[intersections.Count - 1] * vy));
+            }
+
+            return points;
+        }
         public static void AddCrossContour(int size, double rows, double cols, double angles, System.Windows.Media.Color color, ref ImageControl2 imageControl)
         {
             //PointCollection Points1 = new PointCollection();
