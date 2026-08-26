@@ -535,6 +535,48 @@ namespace _3DLaserGlueInspection.subForm
         }
 
 
+        private void DisposeWindowImages()
+        {
+            // 先解除显示控件对 BitmapImage 和绘制对象的引用。
+            hWindowModel?.SetImageSource(null);
+            hWindowModel?.ClearChildren();
+
+            // hImage 是 Images 字典中当前图片的引用，不单独 Dispose，避免重复释放。
+            hImage = null;
+            foreach (var segmentImages in Images)
+            {
+                if (segmentImages == null)
+                {
+                    continue;
+                }
+
+                foreach (var cameraImages in segmentImages.Values)
+                {
+                    if (cameraImages == null)
+                    {
+                        continue;
+                    }
+
+                    foreach (var image in cameraImages.Values)
+                    {
+                        image?.Dispose();
+                    }
+                }
+            }
+            Images.Clear();
+            ImageKeys.Clear();
+
+            robotPoseMat?.Dispose();
+            robotPoseMat = null;
+            hXLDCont10mm?.Dispose();
+            hXLDCont10mm = null;
+            outMaxRegion?.Dispose();
+            outMaxRegion = null;
+            outRegionRectangle2?.Dispose();
+            outRegionRectangle2 = null;
+            hXLDCont10mm3D?.Dispose();
+            hXLDCont10mm3D = null;
+        }
         private void WindowVision_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             if (isAlter && set != null)
@@ -559,6 +601,9 @@ namespace _3DLaserGlueInspection.subForm
                     return;
                 }
             }
+            DisposeWindowImages();
+            set?.Dispose();
+            set = null;
         }
 
         private void CopyToAllPicture(object sender, RoutedEventArgs e)
@@ -1153,6 +1198,7 @@ namespace _3DLaserGlueInspection.subForm
 
 
 
+                set?.Dispose();
                 set = new Setting(carTypeComboBox.Items[carTypeComboBox.SelectedIndex].ToString());
                 set.Load();
                 cutSetListBox.Items.Clear();

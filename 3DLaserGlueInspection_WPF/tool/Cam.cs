@@ -291,9 +291,12 @@ namespace _3DLaserGlueInspection
         /// <param name="pUser"></param>
         void ImageCallbackFunc(IntPtr pData, ref MV_FRAME_OUT_INFO_EX pFrameInfo, IntPtr pUser)
         {
-            ToMImage(pData, pFrameInfo, out Mat mImage);
+            if (ToMImage(pData, pFrameInfo, out Mat mImage))
+            {
+                // 该回调只用于兼容相机 SDK 的回调模式，没有消费者接管图像所有权。
+                mImage?.Dispose();
+            }
         }
-
         /// <summary>
         /// 
         /// </summary>
@@ -303,110 +306,105 @@ namespace _3DLaserGlueInspection
         /// <returns></returns>
         private bool ToMImage(IntPtr pData, MV_FRAME_OUT_INFO_EX pFrameInfo, out Mat mImage)
         {
-            if (IsColorPixelFormat(pFrameInfo.enPixelType))
+            mImage = null;
+            IntPtr pImageBuf = IntPtr.Zero;
+            try
             {
                 IntPtr pTemp = IntPtr.Zero;
-                if (pFrameInfo.enPixelType == MvGvspPixelType.PixelType_Gvsp_RGB8_Packed)
+                MatType matType;
+                int nImageBufSize;
+
+                if (IsColorPixelFormat(pFrameInfo.enPixelType))
                 {
-                    pTemp = pData;
+                    matType = MatType.CV_8UC3;
+                    nImageBufSize = pFrameInfo.nWidth * pFrameInfo.nHeight * 3;
+                    if (pFrameInfo.enPixelType == MvGvspPixelType.PixelType_Gvsp_RGB8_Packed)
+                    {
+                        pTemp = pData;
+                    }
+                    else
+                    {
+                        pImageBuf = Marshal.AllocHGlobal(nImageBufSize);
+
+                        MV_PIXEL_CONVERT_PARAM stPixelConvertParam = new MV_PIXEL_CONVERT_PARAM();
+                        stPixelConvertParam.pSrcData = pData;
+                        stPixelConvertParam.nWidth = pFrameInfo.nWidth;
+                        stPixelConvertParam.nHeight = pFrameInfo.nHeight;
+                        stPixelConvertParam.enSrcPixelType = pFrameInfo.enPixelType;
+                        stPixelConvertParam.nSrcDataLen = pFrameInfo.nFrameLen;
+                        stPixelConvertParam.nDstBufferSize = (uint)nImageBufSize;
+                        stPixelConvertParam.pDstBuffer = pImageBuf;
+                        stPixelConvertParam.enDstPixelType = MvGvspPixelType.PixelType_Gvsp_RGB8_Packed;
+
+                        int nRet = MV_CC_ConvertPixelType_NET(ref stPixelConvertParam);
+                        if (MvCamera.MV_OK != nRet)
+                        {
+                            _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.FormatConversionFailed;
+                            return false;
+                        }
+                        pTemp = pImageBuf;
+                    }
+                }
+                else if (IsMonoPixelFormat(pFrameInfo.enPixelType))
+                {
+                    matType = MatType.CV_8UC1;
+                    nImageBufSize = pFrameInfo.nWidth * pFrameInfo.nHeight;
+                    if (pFrameInfo.enPixelType == MvGvspPixelType.PixelType_Gvsp_Mono8)
+                    {
+                        pTemp = pData;
+                    }
+                    else
+                    {
+                        pImageBuf = Marshal.AllocHGlobal(nImageBufSize);
+
+                        MV_PIXEL_CONVERT_PARAM stPixelConvertParam = new MV_PIXEL_CONVERT_PARAM();
+                        stPixelConvertParam.pSrcData = pData;
+                        stPixelConvertParam.nWidth = pFrameInfo.nWidth;
+                        stPixelConvertParam.nHeight = pFrameInfo.nHeight;
+                        stPixelConvertParam.enSrcPixelType = pFrameInfo.enPixelType;
+                        stPixelConvertParam.nSrcDataLen = pFrameInfo.nFrameLen;
+                        stPixelConvertParam.nDstBufferSize = (uint)nImageBufSize;
+                        stPixelConvertParam.pDstBuffer = pImageBuf;
+                        stPixelConvertParam.enDstPixelType = MvGvspPixelType.PixelType_Gvsp_Mono8;
+
+                        int nRet = MV_CC_ConvertPixelType_NET(ref stPixelConvertParam);
+                        if (MvCamera.MV_OK != nRet)
+                        {
+                            _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.FormatConversionFailed;
+                            return false;
+                        }
+                        pTemp = pImageBuf;
+                    }
                 }
                 else
                 {
-                    int nImageBufSize = pFrameInfo.nWidth * pFrameInfo.nHeight * 3;
-                    IntPtr pImageBuf = Marshal.AllocHGlobal(nImageBufSize);
-
-                    MV_PIXEL_CONVERT_PARAM stPixelConvertParam = new MV_PIXEL_CONVERT_PARAM();
-
-                    stPixelConvertParam.pSrcData = pData;//源数据
-                    stPixelConvertParam.nWidth = pFrameInfo.nWidth;//图像宽度
-                    stPixelConvertParam.nHeight = pFrameInfo.nHeight;//图像高度
-                    stPixelConvertParam.enSrcPixelType = pFrameInfo.enPixelType;//源数据的格式
-                    stPixelConvertParam.nSrcDataLen = pFrameInfo.nFrameLen;
-
-                    stPixelConvertParam.nDstBufferSize = (uint)nImageBufSize;
-                    stPixelConvertParam.pDstBuffer = pImageBuf;//转换后的数据
-                    stPixelConvertParam.enDstPixelType = MvGvspPixelType.PixelType_Gvsp_RGB8_Packed;
-                    int nRet = MV_CC_ConvertPixelType_NET(ref stPixelConvertParam);//格式转换
-                    if (MvCamera.MV_OK != nRet)
-                    {
-                        _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.FormatConversionFailed;
-                        mImage = null;
-                        return false;
-                    }
-                    pTemp = pImageBuf;
-                }
-
-                try
-                {
-                    mImage = Mat.FromPixelData(pFrameInfo.nHeight, pFrameInfo.nWidth, MatType.CV_8UC3, pTemp);
-
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.FormatConversionCreationFailed + ex.ToString();
-                    mImage = null;
+                    _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.UnknownFormat + pFrameInfo.enPixelType;
                     return false;
                 }
+
+                // FromPixelData 只是一个不拥有底层指针的视图，必须在释放 SDK/临时缓冲区
+                // 之前深拷贝，避免回调结束后 Mat 仍指向无效内存。
+                using (Mat imageView = Mat.FromPixelData(pFrameInfo.nHeight, pFrameInfo.nWidth, matType, pTemp))
+                {
+                    mImage = imageView.Clone();
+                }
+
+                return true;
             }
-            else if (IsMonoPixelFormat(pFrameInfo.enPixelType))
+            catch (Exception ex)
             {
-                IntPtr pTemp = IntPtr.Zero;
-                if (pFrameInfo.enPixelType == MvGvspPixelType.PixelType_Gvsp_Mono8)
-                {
-                    pTemp = pData;
-                }
-                else
-                {
-                    int nImageBufSize = pFrameInfo.nWidth * pFrameInfo.nHeight;
-                    IntPtr pImageBuf = Marshal.AllocHGlobal(nImageBufSize);
-
-                    MV_PIXEL_CONVERT_PARAM stPixelConvertParam = new MV_PIXEL_CONVERT_PARAM();
-
-                    stPixelConvertParam.pSrcData = pData;//源数据
-                    stPixelConvertParam.nWidth = pFrameInfo.nWidth;//图像宽度
-                    stPixelConvertParam.nHeight = pFrameInfo.nHeight;//图像高度
-                    stPixelConvertParam.enSrcPixelType = pFrameInfo.enPixelType;//源数据的格式
-                    stPixelConvertParam.nSrcDataLen = pFrameInfo.nFrameLen;
-
-                    stPixelConvertParam.nDstBufferSize = (uint)nImageBufSize;
-                    stPixelConvertParam.pDstBuffer = pImageBuf;//转换后的数据
-                    stPixelConvertParam.enDstPixelType = MvGvspPixelType.PixelType_Gvsp_Mono8;
-                    int nRet = MV_CC_ConvertPixelType_NET(ref stPixelConvertParam);//格式转换
-                    if (MvCamera.MV_OK != nRet)
-                    {
-                        _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.FormatConversionFailed;
-                        mImage = null;
-                        return false;
-                    }
-                    pTemp = pImageBuf;
-                }
-                try
-                {
-                    //mImage = new Mat("byte", pFrameInfo.nWidth, pFrameInfo.nHeight, pTemp);
-                    mImage = Mat.FromPixelData(pFrameInfo.nHeight, pFrameInfo.nWidth, MatType.CV_8UC1, pTemp);
-
-                    //Mat mImage = new Mat();
-                    //mImage.GenImage1Extern("byte", pFrameInfo.nWidth, pFrameInfo.nHeight, pTemp, IntPtr.Zero);
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.FormatConversionCreationFailed + ex.ToString();
-                    mImage = null;
-                    return false;
-                }
-            }
-            else
-            {
-                _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.UnknownFormat + pFrameInfo.enPixelType;
+                _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.FormatConversionCreationFailed + ex.ToString();
                 mImage = null;
                 return false;
             }
-
+            finally
+            {
+                if (pImageBuf != IntPtr.Zero)
+                {
+                    Marshal.FreeHGlobal(pImageBuf);
+                }
+            }
         }
-
-
         /// <summary>
         /// 单帧取像
         /// </summary>
@@ -432,14 +430,21 @@ namespace _3DLaserGlueInspection
                     if (MvCamera.MV_OK == nRet)
                     {
                         bool bflag = ToMImage(stFrameOut.pBufAddr, stFrameOut.stFrameInfo, out mImage);
-                        if (_manufacturerName == "ChinaVision" && _ReverseX)
+                        if (bflag && _manufacturerName == "ChinaVision" && _ReverseX)
                         {
-                            //HObject mImage_mirror;
-                            //HalconDotNet.HOperatorSet.MirrorImage(mImage, out mImage_mirror, "column");
-                            //mImage = new Mat(mImage_mirror);
-                            Mat mImageFlip = new Mat();
-                            Cv2.Flip(mImage, mImageFlip, 0);
-                            mImage = mImageFlip;
+                            Mat mImageFlip = null;
+                            try
+                            {
+                                mImageFlip = new Mat();
+                                Cv2.Flip(mImage, mImageFlip, 0);
+                                mImage.Dispose();
+                                mImage = mImageFlip;
+                                mImageFlip = null;
+                            }
+                            finally
+                            {
+                                mImageFlip?.Dispose();
+                            }
                         }
 
                         MV_CC_FreeImageBuffer_NET(ref stFrameOut);
@@ -499,9 +504,11 @@ namespace _3DLaserGlueInspection
                             double row2 = stFrameOut.stFrameInfo.nHeight * down;
                             //outGray = mImage.Intensity(new HRegion(row1, col1, row2, col2), out double _);
                             Rect rect = new Rect((int)col1, (int)row1, (int)(col2 - col1), (int)(row2 - row1));
-                            Mat cutImage = new Mat(mImage, rect);
-                            Scalar mean = Cv2.Mean(cutImage);
-                            outGray = mean.Val0;
+                            using (Mat cutImage = new Mat(mImage, rect))
+                            {
+                                Scalar mean = Cv2.Mean(cutImage);
+                                outGray = mean.Val0;
+                            }
 
 
                         }
@@ -592,16 +599,19 @@ namespace _3DLaserGlueInspection
                             if (bflag)
                             {
                                 //double gray = mImage.Intensity(hRegion, out double _);
-                                Mat cutImage = new Mat(mImage, rect);
-                                Scalar mean = Cv2.Mean(cutImage);
-                                double gray = mean.Val0;
+                                double gray;
+                                using (Mat cutImage = new Mat(mImage, rect))
+                                {
+                                    gray = Cv2.Mean(cutImage).Val0;
+                                }
 
                                 if (gray == 0)
                                 {
                                     rect = new Rect((int)col1, (int)row1, (int)(col2 - col1), (int)(row2 - row1));
-                                    cutImage = new Mat(mImage, rect);
-                                    mean = Cv2.Mean(cutImage);
-                                    gray = mean.Val0;
+                                    using (Mat cutImage = new Mat(mImage, rect))
+                                    {
+                                        gray = Cv2.Mean(cutImage).Val0;
+                                    }
                                 }
                                 if (gray < grayMin)
                                 {
@@ -679,6 +689,13 @@ namespace _3DLaserGlueInspection
                                 }
 
                                 outGray = gray;
+
+                                // 本帧仅用于曝光判断且还要继续重拍时，立即释放本帧图像。
+                                if (bRun)
+                                {
+                                    mImage?.Dispose();
+                                    mImage = null;
+                                }
                             }
                         }
                         //else
@@ -721,24 +738,48 @@ namespace _3DLaserGlueInspection
                         int nRet = MV_CC_GetImageBuffer_NET(ref stFrameOut, 1000);
                         if (MvCamera.MV_OK == nRet)
                         {
-                            bool bflag = ToMImage(stFrameOut.pBufAddr, stFrameOut.stFrameInfo, out Mat mImage);
-                            if (_manufacturerName == "ChinaVision" && _ReverseX)
+                            Mat mImage = null;
+                            try
                             {
-                                //HObject mImage_mirror;
-                                //HalconDotNet.HOperatorSet.MirrorImage(mImage, out mImage_mirror, "column");
-                                //mImage = new Mat(mImage_mirror);
-                                Mat mImageFlip = new Mat();
-                                Cv2.Flip(mImage, mImageFlip, 0);
-                                mImage = mImageFlip;
+                                bool bflag = ToMImage(stFrameOut.pBufAddr, stFrameOut.stFrameInfo, out mImage);
+                                if (bflag && _manufacturerName == "ChinaVision" && _ReverseX)
+                                {
+                                    Mat mImageFlip = null;
+                                    try
+                                    {
+                                        mImageFlip = new Mat();
+                                        Cv2.Flip(mImage, mImageFlip, 0);
+                                        mImage.Dispose();
+                                        mImage = mImageFlip;
+                                        mImageFlip = null;
+                                    }
+                                    finally
+                                    {
+                                        mImageFlip?.Dispose();
+                                    }
+                                }
+
+                                if (bflag && mImage != null)
+                                {
+                                    // 回调成功接收后，Mat 的所有权转移给回调方。
+                                    UseImages(mImage);
+                                    mImage = null;
+                                }
                             }
-                            if (bflag)
+                            catch (Exception ex)
                             {
-                                UseImages(mImage.Clone());
+                                _errMsg = ex.ToString();
                             }
-                            MV_CC_FreeImageBuffer_NET(ref stFrameOut);
+                            finally
+                            {
+                                // 回调未接管的图像（包括异常和无效帧）必须在这里释放。
+                                mImage?.Dispose();
+                                MV_CC_FreeImageBuffer_NET(ref stFrameOut);
+                            }
                         }
-                    };
+                    }
                 });
+                th.IsBackground = true;
                 th.Start();
                 return true;
             }
@@ -748,7 +789,6 @@ namespace _3DLaserGlueInspection
                 return false;
             }
         }
-
         /// <summary>
         /// 相机初始化设置
         /// </summary>
@@ -2528,10 +2568,28 @@ namespace _3DLaserGlueInspection
         ////保存的参数
         //public Dictionary<string, Mat> SensorToTool = new Dictionary<string, Mat>();
 
+        private void DisposeMatDictionaries(Dictionary<string, Dictionary<string, Mat>> matrices)
+        {
+            foreach (var group in matrices.Values)
+            {
+                foreach (var matrix in group.Values)
+                {
+                    matrix?.Dispose();
+                }
+            }
+        }
+
         public bool Load()
         {
             bool results = true;
             string basePath = AppDomain.CurrentDomain.BaseDirectory + "Data";
+            // 这些字典持有 OpenCV 原生内存，清空前必须先释放旧值。
+            DisposeMatDictionaries(LightToCam);
+            DisposeMatDictionaries(Cam1ToTool);
+            DisposeMatDictionaries(CamToCam1);
+            DisposeMatDictionaries(CenterToCam1);
+            DisposeMatDictionaries(Cam1ToBase);
+
             Param.Clear();
             CamPar.Clear();
             LightInCam.Clear();
@@ -3078,21 +3136,28 @@ namespace _3DLaserGlueInspection
                                     if (Cam1ToTool[name].ContainsKey(camKey))
                                     {
                                         //CamToTool[name][camKey] = ToolInCam[name][camKey].PoseInvert().PoseToHomMat3d();
-                                        Mat H = new Mat();
-                                        Vision.poseToHomMat3d(ToolInCam1[name][camKey].PoseType, ToolInCam1[name][camKey].x, ToolInCam1[name][camKey].y, ToolInCam1[name][camKey].z,
-                                            ToolInCam1[name][camKey].rx, ToolInCam1[name][camKey].ry, ToolInCam1[name][camKey].rz, H.CvPtr);
-                                        //CamToTool[name][camKey] = H;
-                                        //这里必须要求逆才行，因为标定的是相机坐标系下的法兰盘位姿，不是法兰盘坐标系下的相机位姿
-                                        Cam1ToTool[name][camKey] = H.Inv();
+                                        using (Mat H = new Mat())
+                                        {
+                                            Vision.poseToHomMat3d(ToolInCam1[name][camKey].PoseType,
+                                                ToolInCam1[name][camKey].x, ToolInCam1[name][camKey].y,
+                                                ToolInCam1[name][camKey].z, ToolInCam1[name][camKey].rx,
+                                                ToolInCam1[name][camKey].ry, ToolInCam1[name][camKey].rz, H.CvPtr);
+                                            // 这里必须要求逆才行，因为标定的是相机坐标系下的法兰盘位姿。
+                                            Mat oldMatrix = Cam1ToTool[name][camKey];
+                                            oldMatrix?.Dispose();
+                                            Cam1ToTool[name][camKey] = H.Inv();
+                                        }
                                     }
                                     else
                                     {
-                                        Mat H = new Mat();
-                                        Vision.poseToHomMat3d(ToolInCam1[name][camKey].PoseType, ToolInCam1[name][camKey].x, ToolInCam1[name][camKey].y, ToolInCam1[name][camKey].z,
-                                            ToolInCam1[name][camKey].rx, ToolInCam1[name][camKey].ry, ToolInCam1[name][camKey].rz, H.CvPtr);
-                                        //CamToTool[name].Add(camKey, H);
-
-                                        Cam1ToTool[name].Add(camKey, H.Inv());
+                                        using (Mat H = new Mat())
+                                        {
+                                            Vision.poseToHomMat3d(ToolInCam1[name][camKey].PoseType,
+                                                ToolInCam1[name][camKey].x, ToolInCam1[name][camKey].y,
+                                                ToolInCam1[name][camKey].z, ToolInCam1[name][camKey].rx,
+                                                ToolInCam1[name][camKey].ry, ToolInCam1[name][camKey].rz, H.CvPtr);
+                                            Cam1ToTool[name].Add(camKey, H.Inv());
+                                        }
                                     }
                                 }
                             }

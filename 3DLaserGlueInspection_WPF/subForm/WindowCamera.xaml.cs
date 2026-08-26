@@ -130,25 +130,30 @@ namespace _3DLaserGlueInspection.subForm
 
         void ShowImage(Mat imgMat)
         {
-            if (imgMat.Empty())
+            try
             {
-                return;
-            }
-
-            Dispatcher.Invoke(new Action(() => {
-                hWindowModel.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(imgMat));
-                if ((bool)cacheImgCheck.IsChecked)
+                if (imgMat == null || imgMat.Empty())
                 {
-                    MImages.Add(img.Clone());
-                    imageCountLabel.Content = MImages.Count.ToString();
+                    return;
                 }
 
-            }));
-
-
-
+                Dispatcher.Invoke(new Action(() =>
+                {
+                    hWindowModel.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(imgMat));
+                    if ((bool)cacheImgCheck.IsChecked)
+                    {
+                        // 缓存使用独立副本，回调帧本身由本方法统一释放。
+                        MImages.Add(imgMat.Clone());
+                        imageCountLabel.Content = MImages.Count.ToString();
+                    }
+                }));
+            }
+            finally
+            {
+                // KeepShot 将帧所有权交给回调方，显示完成后必须释放。
+                imgMat?.Dispose();
+            }
         }
-
         public WindowCamera()
         {
             InitializeComponent();
@@ -436,6 +441,8 @@ namespace _3DLaserGlueInspection.subForm
         private void singleCheckButton_Click(object sender, RoutedEventArgs e)
         {
             Stopwatch sw = Stopwatch.StartNew();
+            img?.Dispose();
+            img = null;
             if (cam.OneShot(out img))
             {
                 sw.Stop();
@@ -443,7 +450,8 @@ namespace _3DLaserGlueInspection.subForm
                 {
                     hWindowModel.ClearChildren();
                 }));
-                ShowImage(img);
+                // 保留 img 供保存按钮使用，显示回调接收并释放独立副本。
+                ShowImage(img.Clone());
                 ShowMessage(GlobalVarAndFunc.LanguageTranslate("单帧采集时间") + "：" + sw.ElapsedMilliseconds.ToString() + "ms");
             }
             else
@@ -452,7 +460,6 @@ namespace _3DLaserGlueInspection.subForm
                 ShowMessage(cam.ErrMsg);
             }
         }
-
         private void continuousCheckButton_Click(object sender, RoutedEventArgs e)
         {
             singleCheckButton.IsEnabled = false;
@@ -827,13 +834,19 @@ namespace _3DLaserGlueInspection.subForm
             }
             try
             {
-                img?.Dispose();
                 cam.Close();
                 ShowMessage(GlobalVarAndFunc.LanguageTranslate("关闭相机"));
             }
             catch { }
+            finally
+            {
+                img?.Dispose();
+                img = null;
+                MImages.ForEach(cachedImage => cachedImage?.Dispose());
+                MImages.Clear();
+                imageCountLabel.Content = MImages.Count.ToString();
+            }
         }
-
         private void Line1EnableCheck_Checked(object sender, RoutedEventArgs e)
         {
             if (!cam.SetLine1Inverter((bool)Line1EnableCheck.IsChecked))

@@ -498,6 +498,10 @@ namespace _3DLaserGlueInspection
                 if (cars.Load())
                 {
                     ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ProductConfigurationParametersLoadedSuccessfully);
+                    foreach (var oldSetting in sets.Values)
+                    {
+                        oldSetting?.Dispose();
+                    }
                     sets.Clear();
                     bool bLoad = true;
                     foreach (var item in cars.Cars.Values)
@@ -831,6 +835,7 @@ namespace _3DLaserGlueInspection
                                                     //再添加图片到队列
                                                     dictImage.Add(key, image);
                                                     dictImageKey.Add(key);
+                                                    image = null;
                                                     
 
                                                     double fps = dictImageKey.Count * 1000.0 * 1000.0 / key;
@@ -838,7 +843,12 @@ namespace _3DLaserGlueInspection
 
                                                     
                                                 }
-                                            }
+                                                else
+                                                {
+                                                    // 已达到当前段的采集数量，当前帧不再入队。
+                                                    image?.Dispose();
+                                                }
+                                                }
                                         }));
                                         if (flag)
                                         {
@@ -962,6 +972,7 @@ namespace _3DLaserGlueInspection
                                                                 //再添加图片到队列
                                                                 dictImage.Add(key, image);
                                                                 dictImageKey.Add(key);
+                                                                image = null;
                                                                 
 
                                                             }
@@ -1416,6 +1427,10 @@ namespace _3DLaserGlueInspection
                 if (cars.Load())
                 {
                     ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ProductConfigurationParametersLoadedSuccessfully);
+                    foreach (var oldSetting in sets.Values)
+                    {
+                        oldSetting?.Dispose();
+                    }
                     sets.Clear();
                     bool bLoad = true;
                     foreach (var item in cars.Cars.Values)
@@ -1796,10 +1811,16 @@ namespace _3DLaserGlueInspection
                                                 {
                                                     dictImage.Add(key, image);
                                                     dictImageKey.Add(key);
+                                                    image = null;
                                                     var dictImageKeyCount = dictImageKey.Count;
 
                                                 }
-                                            }
+                                                else
+                                                {
+                                                    // 已达到当前段的采集数量，当前帧不再入队。
+                                                    image?.Dispose();
+                                                }
+                                                }
                                         }));
                                         if (flag)
                                         {
@@ -2633,10 +2654,10 @@ namespace _3DLaserGlueInspection
                     var CenterToCam1 = Params.CenterToCam1[camParamName][item.Key];
 
                     /// 相机1坐标转为法兰盘坐标
-                    Mat Cam1ToTool = new Mat();
-                    Mat Cam1ToBase = new Mat();
-                    Mat CamToTool = new Mat();
-                    Mat CamToBase = new Mat();
+                    Mat Cam1ToTool = null;
+                    Mat Cam1ToBase = null;
+                    Mat CamToTool = null;
+                    Mat CamToBase = null;
 
                     if (Params.CamHandEyeType[camParamName] == 0)
                     {
@@ -2738,9 +2759,18 @@ namespace _3DLaserGlueInspection
                                     Thread.Sleep(10);
                                 }
 
-                                if (bAdd)
-                                {
-                                    try
+                                    if (bAdd)
+                                    {
+                                        Mat outMaxRegion = null;
+                                        Mat outRegionRectangle2 = null;
+                                        Mat hXLDCont10mm = null;
+                                        Mat lightXY = null;
+                                        Mat xy = null;
+                                        bool hXLDCont10mmStored = false;
+                                        bool outMaxRegionStored = false;
+                                        bool outRegionRectangle2Stored = false;
+
+                                        try
                                     {
                                         int camIndex = item.Key == "Cam1" ? 0 : item.Key == "Cam2" ? 1 : item.Key == "Cam3" ? 2 : 3;
                                         if (set_copy.CutSets.Count > indexImageCutProcessDict[item.Key] && set_copy.CutSets[indexImageCutProcessDict[item.Key]].imageSet.Count > camIndex && set_copy.CutSets[indexImageCutProcessDict[item.Key]].imageSet[camIndex].Count > indexImage)
@@ -2753,17 +2783,14 @@ namespace _3DLaserGlueInspection
                                             bool singleFrameExistGlue = false;
                                             Data resultData = new Data();
                                             BResult bResult = new BResult();
-                                            Mat outMaxRegion = new Mat();
-                                            Mat outRegionRectangle2 = new Mat();
-                                            Mat hXLDCont10mm = new Mat();
+                                             outMaxRegion = new Mat();
+                                             outRegionRectangle2 = new Mat();
                                             List<double> robotX, robotY, robotZ, colorScale;
                                             robotX = new List<double>();
                                             robotY = new List<double>();
                                             robotZ = new List<double>();
-                                            Mat lightXY = new Mat();
-                                            double PoseD = 0;
-                                            double V = 0;
-                                            Mat xy = new Mat();
+                                             double PoseD = 0;
+                                             double V = 0;
 
                                             Point3D resultCenterPoint = new Point3D();
 
@@ -2787,54 +2814,60 @@ namespace _3DLaserGlueInspection
                                                     Math.Pow((robotPose.z - lastRobotPose.z), 2)) * 1000; //单位mm
                                             }
 
-                                            //三维数据添加机器人坐标
+                                            // 三维数据添加机器人坐标
                                             if (Params.CamHandEyeType[camParamName] == 0)
                                             {
-                                                //改为添加相机中心的坐标
-                                                Mat ToolToBase = new Mat();
-                                                Mat CenterToBase = new Mat();
                                                 PoseParameters centerInBase = new PoseParameters();
-                                                Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
-                                                CenterToBase = ToolToBase * Cam1ToTool * CenterToCam1;
-                                                centerInBase.PoseType = 2;
-                                                Vision.HomMat3dToPose(centerInBase.PoseType, out double centerX, out double centerY, out double centerZ, out double centerRX, out double centerRY, out double centerRZ, CenterToBase.CvPtr);
-                                                centerInBase.x = centerX;
-                                                centerInBase.y = centerY;
-                                                centerInBase.z = centerZ;
-                                                centerInBase.rx = centerRX;
-                                                centerInBase.ry = centerRY;
-                                                centerInBase.rz = centerRZ;
-                                                //dictRobotPose.Add(imageKey, centerInBase);
+                                                using (Mat toolToBase = new Mat())
+                                                {
+                                                    Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z,
+                                                        robotPose.rx, robotPose.ry, robotPose.rz, toolToBase.CvPtr);
+                                                    using (Mat centerToBase = toolToBase * Cam1ToTool * CenterToCam1)
+                                                    {
+                                                        centerInBase.PoseType = 2;
+                                                        Vision.HomMat3dToPose(centerInBase.PoseType, out double centerX, out double centerY,
+                                                            out double centerZ, out double centerRX, out double centerRY, out double centerRZ,
+                                                            centerToBase.CvPtr);
+                                                        centerInBase.x = centerX;
+                                                        centerInBase.y = centerY;
+                                                        centerInBase.z = centerZ;
+                                                        centerInBase.rx = centerRX;
+                                                        centerInBase.ry = centerRY;
+                                                        centerInBase.rz = centerRZ;
+                                                    }
+                                                }
                                                 dictCamCenter3DPose.Add(imageKey, centerInBase);
                                             }
                                             else
                                             {
-                                                //也改为添加相机中心的坐标，但是这里是法兰盘的坐标系
                                                 PoseParameters BaseInTool = Vision.PoseInv(robotPose);
-                                                Mat BaseToTool = new Mat();
                                                 PoseParameters centerInTool = new PoseParameters();
-                                                Vision.poseToHomMat3d(BaseInTool.PoseType, BaseInTool.x, BaseInTool.y, BaseInTool.z, BaseInTool.rx, BaseInTool.ry, BaseInTool.rz, BaseToTool.CvPtr);
-                                                Mat CenterToTool = new Mat();
-                                                CenterToTool = BaseToTool * Cam1ToBase * CenterToCam1;
-                                                centerInTool.PoseType = 2;
-                                                Vision.HomMat3dToPose(centerInTool.PoseType, out double centerX, out double centerY, out double centerZ, out double centerRX, out double centerRY, out double centerRZ, CenterToTool.CvPtr);
-                                                centerInTool.x = centerX;
-                                                centerInTool.y = centerY;
-                                                centerInTool.z = centerZ;
-                                                centerInTool.rx = centerRX;
-                                                centerInTool.ry = centerRY;
-                                                centerInTool.rz = centerRZ;
-                                                //dictRobotPose.Add(imageKey, centerInTool);
+                                                using (Mat baseToTool = new Mat())
+                                                {
+                                                    Vision.poseToHomMat3d(BaseInTool.PoseType, BaseInTool.x, BaseInTool.y, BaseInTool.z,
+                                                        BaseInTool.rx, BaseInTool.ry, BaseInTool.rz, baseToTool.CvPtr);
+                                                    using (Mat centerToTool = baseToTool * Cam1ToBase * CenterToCam1)
+                                                    {
+                                                        centerInTool.PoseType = 2;
+                                                        Vision.HomMat3dToPose(centerInTool.PoseType, out double centerX, out double centerY,
+                                                            out double centerZ, out double centerRX, out double centerRY, out double centerRZ,
+                                                            centerToTool.CvPtr);
+                                                        centerInTool.x = centerX;
+                                                        centerInTool.y = centerY;
+                                                        centerInTool.z = centerZ;
+                                                        centerInTool.rx = centerRX;
+                                                        centerInTool.ry = centerRY;
+                                                        centerInTool.rz = centerRZ;
+                                                    }
+                                                }
                                                 dictCamCenter3DPose.Add(imageKey, centerInTool);
-
-
                                             }
                                             dictRobotPose.Add(imageKey, robotPose);
 
                                             if (imageSet.轮廓检测)
                                             {
                                                 //ROI裁剪
-                                                Mat imgCut = new Mat();
+                                                Mat imgCut;
                                                 int LeftX = 0;
                                                 int TopY = 0;
                                                 if (imageSet.启用裁剪)
@@ -2854,7 +2887,15 @@ namespace _3DLaserGlueInspection
                                                     imgCut = dictImage[imageKey].Clone();
                                                 }
                                                 //激光轮廓提取
-                                                Vision.getLaserPosition(imgCut, imageSet.minThreshold, imageSet.laserMinWidth, out xy, item.Value.OffsetX + LeftX, item.Value.OffsetY + TopY);
+                                                try
+                                                {
+                                                    Vision.getLaserPosition(imgCut, imageSet.minThreshold, imageSet.laserMinWidth,
+                                                        out xy, item.Value.OffsetX + LeftX, item.Value.OffsetY + TopY);
+                                                }
+                                                finally
+                                                {
+                                                    imgCut.Dispose();
+                                                }
 
                                                 // 计算机器人与相机的夹角
                                                 #region 使用机器人移动轨迹计算夹角
@@ -2878,7 +2919,7 @@ namespace _3DLaserGlueInspection
                                                 #endregion
 
                                                 //需要保证检测到有点，并且机器人已经处于移动状态
-                                                if (xy.Rows > 0 && dictRobotPose.Count > 0 && PoseD > 0)
+                                                if (xy != null && xy.Rows > 0 && dictRobotPose.Count > 0 && PoseD > 0)
                                                 {
                                                     getOutlineResult = true;
 
@@ -2905,59 +2946,50 @@ namespace _3DLaserGlueInspection
                                                 if (imageSet._3DGlueDet)
                                                 {
 
-                                                    if (lightXY.Rows > 0)
+                                                    if (lightXY != null && lightXY.Rows > 0)
                                                     {
 
                                                         singleFrameExistOutline = true;
                                                         Vision.scalePoint(lightXY, cutSet, 90 - LightInCam.rx, out hXLDCont10mm);
                                                         if (imageSet.isUseAngleOpt)
                                                         {
-                                                            //对x方向进行矫正
-                                                            double scaleX = 1;
-                                                            scaleX = Math.Cos(robotAndCamAngle / 180 * Math.PI);
-                                                            Mat correctionPoints = new Mat();
-                                                            correctionPoints = hXLDCont10mm.Clone();
-
-                                                            for (int id = 0; id < correctionPoints.Rows; id++)
+                                                            double scaleX = Math.Cos(robotAndCamAngle / 180 * Math.PI);
+                                                            for (int id = 0; id < hXLDCont10mm.Rows; id++)
                                                             {
-                                                                correctionPoints.At<double>(id, 0) = correctionPoints.At<double>(id, 0) * scaleX;
+                                                                hXLDCont10mm.At<double>(id, 0) = hXLDCont10mm.At<double>(id, 0) * scaleX;
                                                             }
-
-                                                            hXLDCont10mm = correctionPoints.Clone();
                                                         }
+                                                        double correctionScaleX = imageSet.correctionScaleSizeX;
+                                                        double correctionScaleY = imageSet.correctionScaleSizeY;
+                                                        for (int id = 0; id < hXLDCont10mm.Rows; id++)
                                                         {
-                                                            //对两个方向进行矫正
-                                                            double scaleX = imageSet.correctionScaleSizeX;
-                                                            double scaleY = imageSet.correctionScaleSizeY;
-
-                                                            Mat correctionPoints = new Mat();
-                                                            correctionPoints = hXLDCont10mm.Clone();
-
-                                                            for (int id = 0; id < correctionPoints.Rows; id++)
-                                                            {
-                                                                correctionPoints.At<double>(id, 0) = correctionPoints.At<double>(id, 0) * scaleX;
-                                                                correctionPoints.At<double>(id, 1) = correctionPoints.At<double>(id, 1) * scaleY;
-
-                                                            }
-
-                                                            hXLDCont10mm = correctionPoints.Clone();
+                                                            hXLDCont10mm.At<double>(id, 0) = hXLDCont10mm.At<double>(id, 0) * correctionScaleX;
+                                                            hXLDCont10mm.At<double>(id, 1) = hXLDCont10mm.At<double>(id, 1) * correctionScaleY;
                                                         }
                                                         //如果存在
                                                         if (!hXLDCont10mm.Empty())
                                                         {
 
-                                                            Mat hXLDContPorcess = new Mat();
-                                                            //离散滤波
-                                                            if (imageSet.离散去噪)
+                                                            Mat hXLDContPorcess = null;
+                                                            try
                                                             {
-                                                                Vision.TrajectoryDiscreteFilter(hXLDCont10mm, out hXLDContPorcess, imageSet.分段距离 * cutSet.scaleSize, imageSet.成段点数);
+                                                                if (imageSet.离散去噪)
+                                                                {
+                                                                    Vision.TrajectoryDiscreteFilter(hXLDCont10mm, out hXLDContPorcess,
+                                                                        imageSet.分段距离 * cutSet.scaleSize, imageSet.成段点数);
+                                                                }
+                                                                else
+                                                                {
+                                                                    hXLDContPorcess = hXLDCont10mm.Clone();
+                                                                }
+                                                                Vision.singleFrameDetAndResult(hXLDContPorcess, imageSet, cutSet,
+                                                                    ref singleFrameExistGlue, ref resultData, ref bResult,
+                                                                    ref outMaxRegion, ref outRegionRectangle2);
                                                             }
-                                                            else
+                                                            finally
                                                             {
-                                                                hXLDContPorcess = hXLDCont10mm.Clone();
+                                                                hXLDContPorcess?.Dispose();
                                                             }
-
-                                                            Vision.singleFrameDetAndResult(hXLDContPorcess, imageSet, cutSet, ref singleFrameExistGlue, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2);
 
                                                             //计算涂胶体积
                                                             V = resultData.glueArea * PoseD;
@@ -3017,7 +3049,7 @@ namespace _3DLaserGlueInspection
                                             //点云显示
                                             if (imageSet.轮廓检测)
                                             {
-                                                if (xy.Rows > 0 && dictRobotPose.Count > 0 && PoseD > 0)
+                                                if (xy != null && xy.Rows > 0 && dictRobotPose.Count > 0 && PoseD > 0)
                                                 {
                                                     //如果还没到开始id，则跳过显示
                                                     int indexCross = indexImage - cutSet.StartImageIndex;
@@ -3057,17 +3089,22 @@ namespace _3DLaserGlueInspection
                                                     totalResult = false;
                                                 }
                                                 //结果统计
-                                                if (hXLDCont10mm.Rows > 0)
+                                                 if (hXLDCont10mm != null && hXLDCont10mm.Rows > 0)
                                                 {
                                                     if (dictXLD.ContainsKey(imageKey))
                                                     {
+                                                        Mat oldXld = dictXLD[imageKey];
+                                                        if (!object.ReferenceEquals(oldXld, hXLDCont10mm))
+                                                        {
+                                                            oldXld?.Dispose();
+                                                        }
                                                         dictXLD[imageKey] = hXLDCont10mm;
                                                     }
                                                     else
                                                     {
                                                         dictXLD.Add(imageKey, hXLDCont10mm);
                                                     }
-
+                                                    hXLDCont10mmStored = true;
                                                 }
                                                 if (resultData.glueArea > 0)
                                                 {
@@ -3083,21 +3120,34 @@ namespace _3DLaserGlueInspection
                                                     //胶区域结果
                                                     if (dictRegion.ContainsKey(imageKey))
                                                     {
+                                                        Mat oldRegion = dictRegion[imageKey];
+                                                        if (!object.ReferenceEquals(oldRegion, outMaxRegion))
+                                                        {
+                                                            oldRegion?.Dispose();
+                                                        }
                                                         dictRegion[imageKey] = outMaxRegion;
                                                     }
                                                     else
                                                     {
                                                         dictRegion.Add(imageKey, outMaxRegion);
                                                     }
-                                                    //胶最小外接矩形结果
+                                                    outMaxRegionStored = true;
+
+                                                    // 胶最小外接矩形结果
                                                     if (dictRegionRectangle2.ContainsKey(imageKey))
                                                     {
+                                                        Mat oldRectangle = dictRegionRectangle2[imageKey];
+                                                        if (!object.ReferenceEquals(oldRectangle, outRegionRectangle2))
+                                                        {
+                                                            oldRectangle?.Dispose();
+                                                        }
                                                         dictRegionRectangle2[imageKey] = outRegionRectangle2;
                                                     }
                                                     else
                                                     {
                                                         dictRegionRectangle2.Add(imageKey, outRegionRectangle2);
                                                     }
+                                                    outRegionRectangle2Stored = true;
                                                     // 胶3d坐标中心记录
                                                     if (dictResultCenter3DPoint.ContainsKey(imageKey))
                                                     {
@@ -3138,6 +3188,23 @@ namespace _3DLaserGlueInspection
                                     catch (Exception ex)
                                     {
                                         Console.WriteLine($"ex:{ex.Message}");
+                                    }
+                                    finally
+                                    {
+                                        if (!hXLDCont10mmStored)
+                                        {
+                                            hXLDCont10mm?.Dispose();
+                                        }
+                                        if (!outMaxRegionStored)
+                                        {
+                                            outMaxRegion?.Dispose();
+                                        }
+                                        if (!outRegionRectangle2Stored)
+                                        {
+                                            outRegionRectangle2?.Dispose();
+                                        }
+                                        lightXY?.Dispose();
+                                        xy?.Dispose();
                                     }
                                     indexImage++;
                                 }
@@ -3830,10 +3897,10 @@ namespace _3DLaserGlueInspection
                 {
                     lock (olockShow)
                     {
-                        Mat mat = new Mat();
-                        mat = Mat.Zeros((int)(showHeight * cutSet.scaleSize), (int)(showWidth * cutSet.scaleSize), MatType.CV_8UC3);
-
-                        DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//扩画布
+                        using (Mat mat = Mat.Zeros((int)(showHeight * cutSet.scaleSize), (int)(showWidth * cutSet.scaleSize), MatType.CV_8UC3))
+                        {
+                            DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//扩画布
+                        }
 
                         PointCollection points = new PointCollection();
                         for (int i = 0; i < hXLDCont10mm.Rows; i++)
@@ -3865,10 +3932,10 @@ namespace _3DLaserGlueInspection
                 {
                     lock (olockShow)
                     {
-                        Mat mat = new Mat();
-                        mat = Mat.Zeros((int)(showHeight * cutSet.scaleSize), (int)(showWidth * cutSet.scaleSize), MatType.CV_8UC3);
-
-                        DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//扩画布
+                        using (Mat mat = Mat.Zeros((int)(showHeight * cutSet.scaleSize), (int)(showWidth * cutSet.scaleSize), MatType.CV_8UC3))
+                        {
+                            DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//扩画布
+                        }
 
                         PointCollection points = new PointCollection();
                         for (int i = 0; i < hXLDCont10mm.Rows; i++)

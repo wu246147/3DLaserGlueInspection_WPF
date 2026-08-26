@@ -466,35 +466,40 @@ namespace _3DLaserGlueInspection
         /// <param name="robotPose"></param>
         /// <param name="lastRobotPose"></param>
         /// <returns></returns>
-        public static double GetRobotAndCamAngle(int CamHandEyeType, Mat CamToCam1, Mat CenterToCam1, Mat Cam1ToBase, Mat CamToTool, PoseParameters robotPose, PoseParameters lastRobotPose, User3DShowControl_V user3DShowControl_V = null)
+        public static double GetRobotAndCamAngle(int CamHandEyeType, Mat CamToCam1, Mat CenterToCam1,
+            Mat Cam1ToBase, Mat CamToTool, PoseParameters robotPose, PoseParameters lastRobotPose,
+            User3DShowControl_V user3DShowControl_V = null)
         {
             double robotAndCamAngle;
             if (CamHandEyeType == 0)
             {
-                Mat robotPoseMat = Mat.Zeros(2, 7, MatType.CV_64FC1);
-                robotPoseMat.At<double>(0, 0) = lastRobotPose.x;
-                robotPoseMat.At<double>(0, 1) = lastRobotPose.y;
-                robotPoseMat.At<double>(0, 2) = lastRobotPose.z;
-                robotPoseMat.At<double>(0, 3) = lastRobotPose.rx;
-                robotPoseMat.At<double>(0, 4) = lastRobotPose.ry;
-                robotPoseMat.At<double>(0, 5) = lastRobotPose.rz;
-                robotPoseMat.At<double>(0, 6) = lastRobotPose.PoseType;
+                using (Mat robotPoseMat = Mat.Zeros(2, 7, MatType.CV_64FC1))
+                using (Mat toolToBase = new Mat())
+                {
+                    robotPoseMat.At<double>(0, 0) = lastRobotPose.x;
+                    robotPoseMat.At<double>(0, 1) = lastRobotPose.y;
+                    robotPoseMat.At<double>(0, 2) = lastRobotPose.z;
+                    robotPoseMat.At<double>(0, 3) = lastRobotPose.rx;
+                    robotPoseMat.At<double>(0, 4) = lastRobotPose.ry;
+                    robotPoseMat.At<double>(0, 5) = lastRobotPose.rz;
+                    robotPoseMat.At<double>(0, 6) = lastRobotPose.PoseType;
 
-                robotPoseMat.At<double>(1, 0) = robotPose.x;
-                robotPoseMat.At<double>(1, 1) = robotPose.y;
-                robotPoseMat.At<double>(1, 2) = robotPose.z;
-                robotPoseMat.At<double>(1, 3) = robotPose.rx;
-                robotPoseMat.At<double>(1, 4) = robotPose.ry;
-                robotPoseMat.At<double>(1, 5) = robotPose.rz;
-                robotPoseMat.At<double>(1, 6) = robotPose.PoseType;
+                    robotPoseMat.At<double>(1, 0) = robotPose.x;
+                    robotPoseMat.At<double>(1, 1) = robotPose.y;
+                    robotPoseMat.At<double>(1, 2) = robotPose.z;
+                    robotPoseMat.At<double>(1, 3) = robotPose.rx;
+                    robotPoseMat.At<double>(1, 4) = robotPose.ry;
+                    robotPoseMat.At<double>(1, 5) = robotPose.rz;
+                    robotPoseMat.At<double>(1, 6) = robotPose.PoseType;
 
-                Mat ToolToBase = new Mat();
-                Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
+                    Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z,
+                        robotPose.rx, robotPose.ry, robotPose.rz, toolToBase.CvPtr);
+                    using (Mat camToBase = toolToBase * CamToTool)
+                    {
+                        Vision.robotAndCamVectorAngle(robotPoseMat.CvPtr, camToBase.CvPtr, 2, 0, out robotAndCamAngle);
+                    }
+                }
 
-                Mat CamToBase = ToolToBase * CamToTool;
-
-                Vision.robotAndCamVectorAngle(robotPoseMat.CvPtr, CamToBase.CvPtr, 2, 0, out robotAndCamAngle);
-                //大于90的，都取缩小后的值
                 if (robotAndCamAngle > 90)
                 {
                     robotAndCamAngle = 180 - robotAndCamAngle;
@@ -502,92 +507,79 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                Mat camInTools = Mat.Zeros(2, 7, MatType.CV_64FC1);
-                //这里直接使用Cam2Tool，后面可以使用Center2Tool
-                //轨迹的前一个点，要转成center2Tool
+                using (Mat camInTools = Mat.Zeros(2, 7, MatType.CV_64FC1))
                 {
-                    Mat ToolToBase = new Mat();
-                    Mat BaseToTool;
-                    Mat CenterToTool;
-                    Vision.poseToHomMat3d(lastRobotPose.PoseType, lastRobotPose.x, lastRobotPose.y, lastRobotPose.z,
-                        lastRobotPose.rx, lastRobotPose.ry, lastRobotPose.rz, ToolToBase.CvPtr);
-
-                    BaseToTool = ToolToBase.Inv();
-
-                    CenterToTool = BaseToTool * Cam1ToBase * CenterToCam1;
-
-                    double x, y, z, rx, ry, rz;
-                    Vision.HomMat3dToPose(2, out x, out y, out z, out rx, out ry, out rz, CenterToTool.CvPtr);
-
-                    camInTools.At<double>(0, 0) = x;
-                    camInTools.At<double>(0, 1) = y;
-                    camInTools.At<double>(0, 2) = z;
-                    camInTools.At<double>(0, 3) = rx;
-                    camInTools.At<double>(0, 4) = ry;
-                    camInTools.At<double>(0, 5) = rz;
-                    camInTools.At<double>(0, 6) = 2;
-
-                }
-                //轨迹的后一个点，要转成center2Tool
-                {
-                    Mat ToolToBase = new Mat();
-                    Mat BaseToTool ;
-                    Mat CenterToTool ;
-                    Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z,
-                        robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
-
-                    BaseToTool = ToolToBase.Inv();
-
-                    CenterToTool = BaseToTool * Cam1ToBase * CenterToCam1;
-
-                    double x, y, z, rx, ry, rz;
-                    Vision.HomMat3dToPose(2, out x, out y, out z, out rx, out ry, out rz, CenterToTool.CvPtr);
-
-                    camInTools.At<double>(1, 0) = x;
-                    camInTools.At<double>(1, 1) = y;
-                    camInTools.At<double>(1, 2) = z;
-                    camInTools.At<double>(1, 3) = rx;
-                    camInTools.At<double>(1, 4) = ry;
-                    camInTools.At<double>(1, 5) = rz;
-                    camInTools.At<double>(1, 6) = 2;
-
-                }
-
-                //检测的相机位姿
-                {
-                    //眼在手外，求Cam1ToTool,需要机器人pose才可以完成转换
-                    //Mat BaseToTool = robotPoseMat.Inv();
-                    Mat ToolToBase = new Mat();
-                    Mat BaseToTool;
-                    Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
-                    BaseToTool = ToolToBase.Inv();
-
-                    CamToTool = BaseToTool * Cam1ToBase * CamToCam1;
-
-                    Vision.robotAndCamVectorAngle(camInTools.CvPtr, CamToTool.CvPtr, 2, 0, out robotAndCamAngle);
-
-                    //显示结果
-                    if (user3DShowControl_V != null)
+                    // 轨迹的前一个点转换到中心坐标系。
+                    using (Mat toolToBase = new Mat())
                     {
-                        user3DShowControl_V.ClearPointCloud();
-                        user3DShowControl_V.RefreshOn(100, true);
-
-                        //显示中心姿态
-                        PoseParameters showRobotPose = new PoseParameters();
-                        Vision.HomMat3dToPose(showRobotPose.PoseType, out double x, out double y, out double z, out double rx, out double ry, out double rz, CamToTool.CvPtr);
-                        user3DShowControl_V.AddCoord(x, y, z, rx, ry, rz, 0.1);
-                        //显示前后移动点
-                        user3DShowControl_V.AddPoint(camInTools.At<double>(0,0), camInTools.At<double>(0, 1), camInTools.At<double>(0, 2), 0);
-                        user3DShowControl_V.AddPoint(camInTools.At<double>(1, 0), camInTools.At<double>(1, 1), camInTools.At<double>(1, 2), 4);
-
-
-                        user3DShowControl_V.RefreshPoints();
-                        user3DShowControl_V.RefreshOFF();
+                        Vision.poseToHomMat3d(lastRobotPose.PoseType, lastRobotPose.x, lastRobotPose.y,
+                            lastRobotPose.z, lastRobotPose.rx, lastRobotPose.ry, lastRobotPose.rz, toolToBase.CvPtr);
+                        using (Mat inv = toolToBase.Inv())
+                        using (Mat centerToTool = inv * Cam1ToBase * CenterToCam1)
+                        {
+                            Vision.HomMat3dToPose(2, out double x, out double y, out double z,
+                                out double rx, out double ry, out double rz, centerToTool.CvPtr);
+                            camInTools.At<double>(0, 0) = x;
+                            camInTools.At<double>(0, 1) = y;
+                            camInTools.At<double>(0, 2) = z;
+                            camInTools.At<double>(0, 3) = rx;
+                            camInTools.At<double>(0, 4) = ry;
+                            camInTools.At<double>(0, 5) = rz;
+                            camInTools.At<double>(0, 6) = 2;
+                        }
                     }
 
-                    //眼在手外，要减180度
+                    // 轨迹的后一个点转换到中心坐标系。
+                    using (Mat toolToBase = new Mat())
+                    {
+                        Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y,
+                            robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, toolToBase.CvPtr);
+                        using (Mat inv = toolToBase.Inv())
+                        using (Mat centerToTool = inv * Cam1ToBase * CenterToCam1)
+                        {
+                            Vision.HomMat3dToPose(2, out double x, out double y, out double z,
+                                out double rx, out double ry, out double rz, centerToTool.CvPtr);
+                            camInTools.At<double>(1, 0) = x;
+                            camInTools.At<double>(1, 1) = y;
+                            camInTools.At<double>(1, 2) = z;
+                            camInTools.At<double>(1, 3) = rx;
+                            camInTools.At<double>(1, 4) = ry;
+                            camInTools.At<double>(1, 5) = rz;
+                            camInTools.At<double>(1, 6) = 2;
+                        }
+                    }
+
+                    // 计算检测时的相机位姿。
+                    using (Mat toolToBase = new Mat())
+                    {
+                        Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y,
+                            robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, toolToBase.CvPtr);
+                        using (Mat inv = toolToBase.Inv())
+                        using (Mat camToToolForAngle = inv * Cam1ToBase * CamToCam1)
+                        {
+                            Vision.robotAndCamVectorAngle(camInTools.CvPtr, camToToolForAngle.CvPtr, 2, 0,
+                                out robotAndCamAngle);
+
+                            if (user3DShowControl_V != null)
+                            {
+                                user3DShowControl_V.ClearPointCloud();
+                                user3DShowControl_V.RefreshOn(100, true);
+
+                                Vision.HomMat3dToPose(2, out double x, out double y, out double z,
+                                    out double rx, out double ry, out double rz, camToToolForAngle.CvPtr);
+                                user3DShowControl_V.AddCoord(x, y, z, rx, ry, rz, 0.1);
+                                user3DShowControl_V.AddPoint(camInTools.At<double>(0, 0), camInTools.At<double>(0, 1),
+                                    camInTools.At<double>(0, 2), 0);
+                                user3DShowControl_V.AddPoint(camInTools.At<double>(1, 0), camInTools.At<double>(1, 1),
+                                    camInTools.At<double>(1, 2), 4);
+                                user3DShowControl_V.RefreshPoints();
+                                user3DShowControl_V.RefreshOFF();
+                            }
+                        }
+                    }
+
+                    // 眼在手外，要减 180 度。
                     robotAndCamAngle = 180 - robotAndCamAngle;
-                    //大于90的，都取缩小后的值
                     if (robotAndCamAngle > 90)
                     {
                         robotAndCamAngle = 180 - robotAndCamAngle;
@@ -597,9 +589,6 @@ namespace _3DLaserGlueInspection
 
             return robotAndCamAngle;
         }
-
-
-
         //public static double scaleSize = 10; //表示计算过程中的点云放缩因子，1时单位为1mm，10时单位为100um，100时单位为10um
 
         ////后面开放一下这几个参数 这个是用多个相机进行点云合成，然后再用点云投影成平面时，才需要用到的参数，分别指xyz的范围。目前不用多个相机融合，因此不用到
@@ -624,10 +613,11 @@ namespace _3DLaserGlueInspection
         /// <param name="offsetY"></param>
         public static void getLaserPosition(Mat Image, double minThreshold,int laserMinWidth, out Mat outlinePoints, int offsetX = 0, int offsetY = 0)
         {
-            Mat outImage = new Mat();
             outlinePoints = new Mat();
-
-            thinningD(Image.CvPtr, outImage.CvPtr, outlinePoints.CvPtr, (int)minThreshold, laserMinWidth);
+            using (Mat outImage = new Mat())
+            {
+                thinningD(Image.CvPtr, outImage.CvPtr, outlinePoints.CvPtr, (int)minThreshold, laserMinWidth);
+            }
 
             ////添加
             //Vision.printPoint(outlinePoints, "outlinePoints");
@@ -761,9 +751,8 @@ namespace _3DLaserGlueInspection
             PoseParameters LightInCam, Mat img, ImageSet imageSet, out Mat lightXYcut)
         {
             lightXYcut = new Mat();
-            int imageWidth, imageHeight;
-            imageWidth = img.Cols;
-            imageHeight = img.Rows;
+            int imageWidth = img.Cols;
+            int imageHeight = img.Rows;
 
             double LeftX = imageWidth * imageSet.LeftX + camParam.OffsetX;
             double RightX = imageWidth * imageSet.RightX + camParam.OffsetX;
@@ -779,16 +768,17 @@ namespace _3DLaserGlueInspection
                     idList.Add(i);
                 }
             }
-            Mat selectXY = new Mat(idList.Count, 2, MatType.CV_64FC1);
-            for (int i = 0; i < idList.Count; i++)
-            {
-                selectXY.At<double>(i, 0) = xy.At<double>(idList[i], 0);
-                selectXY.At<double>(i, 1) = xy.At<double>(idList[i], 1);
-            }
-            //转激光坐标系
-            Vision.GetXY(hCamPar, LightInCam, selectXY, out lightXYcut);
-        }
 
+            using (Mat selectXY = new Mat(idList.Count, 2, MatType.CV_64FC1))
+            {
+                for (int i = 0; i < idList.Count; i++)
+                {
+                    selectXY.At<double>(i, 0) = xy.At<double>(idList[i], 0);
+                    selectXY.At<double>(i, 1) = xy.At<double>(idList[i], 1);
+                }
+                Vision.GetXY(hCamPar, LightInCam, selectXY, out lightXYcut);
+            }
+        }
         public static void cutLight(Mat xy, CamParam camParam, Mat img, ImageSet imageSet, out Mat xyCut)
         {
             int imageWidth, imageHeight;
@@ -880,33 +870,32 @@ namespace _3DLaserGlueInspection
         /// <param name="rows"></param>
         /// <param name="cols"></param>
         /// <param name="angles"></param>
-        public static void XLDDataDivide(XLDData XLDData, int divideCount, out List<double> rows, out List<double> cols, out List<double> angles)
+        public static void XLDDataDivide(XLDData XLDData, int divideCount, out List<double> rows,
+            out List<double> cols, out List<double> angles)
         {
             rows = new List<double>();
             cols = new List<double>();
             angles = new List<double>();
             if (XLDData.ControlRows.Length >= 2)
             {
-                Mat inputPointMat = new Mat();
-                Mat dividedPoints = new Mat();
-                inputPointMat = Mat.Zeros(XLDData.ControlRows.Length, 2, MatType.CV_64FC1);
-                for (int i = 0; i < XLDData.ControlRows.Length; i++)
+                using (Mat inputPointMat = Mat.Zeros(XLDData.ControlRows.Length, 2, MatType.CV_64FC1))
+                using (Mat dividedPoints = new Mat())
                 {
-                    inputPointMat.At<double>(i, 0) = XLDData.ControlCols[i];
-                    inputPointMat.At<double>(i, 1) = XLDData.ControlRows[i];
+                    for (int i = 0; i < XLDData.ControlRows.Length; i++)
+                    {
+                        inputPointMat.At<double>(i, 0) = XLDData.ControlCols[i];
+                        inputPointMat.At<double>(i, 1) = XLDData.ControlRows[i];
+                    }
 
-                }
-
-                dividePolyline(inputPointMat.CvPtr, divideCount, dividedPoints.CvPtr);
-                for (int i = 0; i < divideCount; i++)
-                {
-                    cols.Add(dividedPoints.At<double>(i, 0));
-                    rows.Add(dividedPoints.At<double>(i, 1));
-                    angles.Add(dividedPoints.At<double>(i, 2));
+                    dividePolyline(inputPointMat.CvPtr, divideCount, dividedPoints.CvPtr);
+                    for (int i = 0; i < divideCount; i++)
+                    {
+                        cols.Add(dividedPoints.At<double>(i, 0));
+                        rows.Add(dividedPoints.At<double>(i, 1));
+                        angles.Add(dividedPoints.At<double>(i, 2));
+                    }
                 }
             }
-            
-
         }
         public static void printPoint(Mat Points,string Name)
         { 
@@ -946,72 +935,39 @@ namespace _3DLaserGlueInspection
             Mat LightToCam, Mat CamToTool, PoseParameters robotPose, out Mat lightXY, out List<double> robotX, out List<double> robotY,
             out List<double> robotZ)
         {
-            //printPoint(imagePoint, "imagePoint");
-
-            //转激光坐标系
+            // 转激光坐标系。lightXY 是输出结果，由调用方负责释放。
             GetXY(hCamPar, LightInCam, imagePoint, out lightXY);
-            //printPoint(lightXY, "lightXY");
 
-            //printPoint(lightXY, "lightXY");
-            Mat lightXY4 = new Mat();
-            lightXY4 = Mat.Zeros(lightXY.Rows, 4, MatType.CV_64FC1);
-            Mat ones = new Mat();
-            ones = Mat.Ones(lightXY.Rows, 1, MatType.CV_64FC1);
-            ones.CopyTo(lightXY4.Col(3));
-
-            lightXY.CopyTo(lightXY4[new OpenCvSharp.Rect(0, 0, 2, lightXY4.Rows)]);
-            //转相机坐标系
-            Mat camXY4 = new Mat();
-            //Console.WriteLine("LightToCam:");
-            affineTransPoint3d(lightXY4.CvPtr, camXY4.CvPtr, LightToCam.CvPtr, false);
-            //printPoint(LightToCam, "LightToCam");
-            //printPoint(camXY4, "camXY4");
-
-            ////转传感器坐标系
-            Mat toolXY4 = new Mat();
-            //转工具
-            //Console.WriteLine("CamToTool:");
-            affineTransPoint3d(camXY4.CvPtr, toolXY4.CvPtr, CamToTool.CvPtr, false);
-            //printPoint(CamToTool, "CamToTool");
-            //printPoint(toolXY4, "toolXY4");
-
-            //转机器人坐标
-            Mat robotXY4 = new Mat();
-            Mat ToolToRobot = new Mat();
-
-            Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToRobot.CvPtr);
-            //Console.WriteLine("ToolToRobot:");
-            Vision.affineTransPoint3d(toolXY4.CvPtr, robotXY4.CvPtr, ToolToRobot.CvPtr, false);
-            //printPoint(ToolToRobot, "ToolToRobot");
-            //printPoint(robotXY4, "robotXY4");
-
-            //List<Point2d> imagePointsList = new List<Point2d>();
-            //List<Point3d> lightPointsList = new List<Point3d>();
-            //List<Point3d> camPointsList = new List<Point3d>();
-            //List<Point3d> toolPointsList = new List<Point3d>();
-            //List<Point3d> robotXY4List = new List<Point3d>();
-
-            //tranformMatToPoint2d(imagePoint, imagePointsList);
-            //tranformMatToPoint3d(lightXY4, lightPointsList);
-            //tranformMatToPoint3d(camXY4, camPointsList);
-            //tranformMatToPoint3d(toolXY4, toolPointsList);
-            //tranformMatToPoint3d(robotXY4, robotXY4List);
-
-            robotX = new List<double>();
-            robotY = new List<double>();
-            robotZ = new List<double>();
-            for (int i = 0; i < robotXY4.Rows; i++)
+            using (Mat lightXY4 = Mat.Zeros(lightXY.Rows, 4, MatType.CV_64FC1))
+            using (Mat ones = Mat.Ones(lightXY.Rows, 1, MatType.CV_64FC1))
+            using (Mat lightXY4Col3 = lightXY4.Col(3))
+            using (Mat lightXY4XY = lightXY4[new OpenCvSharp.Rect(0, 0, 2, lightXY4.Rows)])
+            using (Mat camXY4 = new Mat())
+            using (Mat toolXY4 = new Mat())
+            using (Mat robotXY4 = new Mat())
+            using (Mat toolToRobot = new Mat())
             {
-                robotX.Add(robotXY4.At<double>(i, 0));
-                robotY.Add(robotXY4.At<double>(i, 1));
-                robotZ.Add(robotXY4.At<double>(i, 2));
+                ones.CopyTo(lightXY4Col3);
+                lightXY.CopyTo(lightXY4XY);
 
-                //robotX.Add(camXY4.At<double>(i, 0));
-                //robotY.Add(camXY4.At<double>(i, 1));
-                //robotZ.Add(camXY4.At<double>(i, 2));
+                affineTransPoint3d(lightXY4.CvPtr, camXY4.CvPtr, LightToCam.CvPtr, false);
+                affineTransPoint3d(camXY4.CvPtr, toolXY4.CvPtr, CamToTool.CvPtr, false);
+
+                Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z,
+                    robotPose.rx, robotPose.ry, robotPose.rz, toolToRobot.CvPtr);
+                Vision.affineTransPoint3d(toolXY4.CvPtr, robotXY4.CvPtr, toolToRobot.CvPtr, false);
+
+                robotX = new List<double>();
+                robotY = new List<double>();
+                robotZ = new List<double>();
+                for (int i = 0; i < robotXY4.Rows; i++)
+                {
+                    robotX.Add(robotXY4.At<double>(i, 0));
+                    robotY.Add(robotXY4.At<double>(i, 1));
+                    robotZ.Add(robotXY4.At<double>(i, 2));
+                }
             }
         }
-
         /// <summary>
         /// 点坐标转换，从相机转为激光坐标系和机器人坐标系.眼在手上输出的是机器坐标系下的点云坐标；眼在手外输出的是法兰盘坐标系下的点云位置。
         /// 眼在手上时，输出objToBase
@@ -1028,148 +984,65 @@ namespace _3DLaserGlueInspection
         /// <param name="robotX"></param>
         /// <param name="robotY"></param>
         /// <param name="robotZ"></param>
-        public static void pointTransform2LightAndRobot(Mat lightXY, 
+        public static void pointTransform2LightAndRobot(Mat lightXY,
             Mat LightToCam, Mat CamToTool, PoseParameters robotPose, out List<double> robotX, out List<double> robotY,
             out List<double> robotZ)
         {
-            //printPoint(lightXY, "lightXY");
-
-            //printPoint(lightXY, "lightXY");
-            Mat lightXY4 = new Mat();
-            lightXY4 = Mat.Zeros(lightXY.Rows, 4, MatType.CV_64FC1);
-            Mat ones = new Mat();
-            ones = Mat.Ones(lightXY.Rows, 1, MatType.CV_64FC1);
-            ones.CopyTo(lightXY4.Col(3));
-
-            lightXY.CopyTo(lightXY4[new OpenCvSharp.Rect(0, 0, 2, lightXY4.Rows)]);
-            //转相机坐标系
-            Mat camXY4 = new Mat();
-            //Console.WriteLine("LightToCam:");
-            affineTransPoint3d(lightXY4.CvPtr, camXY4.CvPtr, LightToCam.CvPtr, false);
-            //printPoint(LightToCam, "LightToCam");
-            //printPoint(camXY4, "camXY4");
-
-            ////转传感器坐标系
-            Mat toolXY4 = new Mat();
-            //转工具
-            //Console.WriteLine("CamToTool:");
-            affineTransPoint3d(camXY4.CvPtr, toolXY4.CvPtr, CamToTool.CvPtr, false);
-            //printPoint(CamToTool, "CamToTool");
-            //printPoint(toolXY4, "toolXY4");
-
-            //转机器人坐标
-            Mat robotXY4 = new Mat();
-            Mat ToolToRobot = new Mat();
-
-            Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToRobot.CvPtr);
-            //Console.WriteLine("ToolToRobot:");
-            Vision.affineTransPoint3d(toolXY4.CvPtr, robotXY4.CvPtr, ToolToRobot.CvPtr, false);
-            //printPoint(ToolToRobot, "ToolToRobot");
-            //printPoint(robotXY4, "robotXY4");
-
-            //List<Point2d> imagePointsList = new List<Point2d>();
-            //List<Point3d> lightPointsList = new List<Point3d>();
-            //List<Point3d> camPointsList = new List<Point3d>();
-            //List<Point3d> toolPointsList = new List<Point3d>();
-            //List<Point3d> robotXY4List = new List<Point3d>();
-
-            //tranformMatToPoint2d(imagePoint, imagePointsList);
-            //tranformMatToPoint3d(lightXY4, lightPointsList);
-            //tranformMatToPoint3d(camXY4, camPointsList);
-            //tranformMatToPoint3d(toolXY4, toolPointsList);
-            //tranformMatToPoint3d(robotXY4, robotXY4List);
-
-            robotX = new List<double>();
-            robotY = new List<double>();
-            robotZ = new List<double>();
-            for (int i = 0; i < robotXY4.Rows; i++)
+            using (Mat lightXY4 = Mat.Zeros(lightXY.Rows, 4, MatType.CV_64FC1))
+            using (Mat ones = Mat.Ones(lightXY.Rows, 1, MatType.CV_64FC1))
+            using (Mat lightXY4Col3 = lightXY4.Col(3))
+            using (Mat lightXY4XY = lightXY4[new OpenCvSharp.Rect(0, 0, 2, lightXY4.Rows)])
+            using (Mat camXY4 = new Mat())
+            using (Mat toolXY4 = new Mat())
+            using (Mat robotXY4 = new Mat())
+            using (Mat toolToRobot = new Mat())
             {
-                robotX.Add(robotXY4.At<double>(i, 0));
-                robotY.Add(robotXY4.At<double>(i, 1));
-                robotZ.Add(robotXY4.At<double>(i, 2));
+                ones.CopyTo(lightXY4Col3);
+                lightXY.CopyTo(lightXY4XY);
 
-                //robotX.Add(camXY4.At<double>(i, 0));
-                //robotY.Add(camXY4.At<double>(i, 1));
-                //robotZ.Add(camXY4.At<double>(i, 2));
+                affineTransPoint3d(lightXY4.CvPtr, camXY4.CvPtr, LightToCam.CvPtr, false);
+                affineTransPoint3d(camXY4.CvPtr, toolXY4.CvPtr, CamToTool.CvPtr, false);
+
+                Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z,
+                    robotPose.rx, robotPose.ry, robotPose.rz, toolToRobot.CvPtr);
+                Vision.affineTransPoint3d(toolXY4.CvPtr, robotXY4.CvPtr, toolToRobot.CvPtr, false);
+
+                robotX = new List<double>();
+                robotY = new List<double>();
+                robotZ = new List<double>();
+                for (int i = 0; i < robotXY4.Rows; i++)
+                {
+                    robotX.Add(robotXY4.At<double>(i, 0));
+                    robotY.Add(robotXY4.At<double>(i, 1));
+                    robotZ.Add(robotXY4.At<double>(i, 2));
+                }
             }
         }
-
-
-
-        /// <summary>
-        /// 在指定范围内做高斯加权平均
-        /// </summary>
-        /// <param name="points">轨迹点</param>
-        /// <param name="from">可用范围起点索引</param>
-        /// <param name="to">可用范围终点索引</param>
-        /// <param name="anchor">权重中心（最关注的点）</param>
-        /// <param name="sigma">高斯标准差</param>
-        public static Point3D GaussianSmoothInRange(
-            Point3D[] points,
-            int from,
-            int to,
-            int anchor,
-            double sigma)
-        {
-            double wx = 0, wy = 0, wz = 0, wSum = 0;
-
-            // 确保不越界
-            int start = Math.Max(from, 0);
-            int end = Math.Min(to, points.Length - 1);
-
-            for (int j = start; j <= end; j++)
-            {
-                double dist = j - anchor;  // 到权重中心的距离
-                double w = Math.Exp(-(dist * dist) / (2.0 * sigma * sigma));
-
-                wx += points[j].X * w;
-                wy += points[j].Y * w;
-                wz += points[j].Z * w;
-                wSum += w;
-            }
-
-            return new Point3D(wx / wSum, wy / wSum, wz / wSum);
-        }
-
-        private static void tranformMatToPoint2d(Mat pointMat, List<Point2d> pointList)
-        {
-            for (int i = 0; i < pointMat.Rows; i++)
-            {
-                pointList.Add(new Point2d(pointMat.At<double>(i, 0),
-                    pointMat.At<double>(i, 1)));
-            }
-        }
-
-
-        private static void tranformMatToPoint3d(Mat pointMat, List<Point3d> pointList)
-        {
-            for (int i = 0; i < pointMat.Rows; i++)
-            {
-                pointList.Add(new Point3d(pointMat.At<double>(i, 0),
-                    pointMat.At<double>(i, 1), pointMat.At<double>(i, 2)));
-            }
-        }
-
         /// <summary>
         /// 用于显示和矫正计算，要结合激光和相机的夹角，进行
         /// </summary>
         /// <param name="lightXYcut"></param>
         /// <param name="cutSet"></param>
         /// <param name="XY_10um"></param>
-        public static void scalePoint(Mat lightXYcut,CutSet cutSet,double lightAngle, out Mat XY_10um)
+        public static void scalePoint(Mat lightXYcut, CutSet cutSet, double lightAngle, out Mat XY_10um)
         {
-
-
             XY_10um = new Mat(lightXYcut.Size(), lightXYcut.Type());
-            //X
-            Cv2.Multiply(lightXYcut.Col(0), new Scalar(1000 * cutSet.scaleSize), XY_10um.Col(0));
-            Cv2.Add(XY_10um.Col(0), new Scalar(cutSet.ShowWidth * cutSet.scaleSize / 2), XY_10um.Col(0));
-            //Y
 
-            Cv2.Multiply(lightXYcut.Col(1), new Scalar(1000 * cutSet.scaleSize * Math.Cos(lightAngle / 180 * Math.PI)), XY_10um.Col(1));
-            Cv2.Add(XY_10um.Col(1), new Scalar(cutSet.ShowHeight * cutSet.scaleSize / 2), XY_10um.Col(1));
+            using (Mat inputX = lightXYcut.Col(0))
+            using (Mat outputX = XY_10um.Col(0))
+            {
+                Cv2.Multiply(inputX, new Scalar(1000 * cutSet.scaleSize), outputX);
+                Cv2.Add(outputX, new Scalar(cutSet.ShowWidth * cutSet.scaleSize / 2), outputX);
+            }
+
+            using (Mat inputY = lightXYcut.Col(1))
+            using (Mat outputY = XY_10um.Col(1))
+            {
+                Cv2.Multiply(inputY,
+                    new Scalar(1000 * cutSet.scaleSize * Math.Cos(lightAngle / 180 * Math.PI)), outputY);
+                Cv2.Add(outputY, new Scalar(cutSet.ShowHeight * cutSet.scaleSize / 2), outputY);
+            }
         }
-
         public static void singleFrameDetAndResult(Mat OutLine,ImageSet imageSet,CutSet cutSet, ref bool singleFrameExistGlue, ref Data resultData, ref BResult bResult, ref Mat outMaxRegion, ref Mat outRegionRectangle2)
         {
 
@@ -1194,37 +1067,35 @@ namespace _3DLaserGlueInspection
 
             if (imageSet.isUseBaseLine)
             {
-                //拟合点提取
-                Mat selectBaseLinePoints1 = new Mat();
-                Mat selectBaseLinePoints2 = new Mat();
+                // 拟合点提取和基准线筛选均为本次检测的临时 Mat。
+                using (Mat selectBaseLinePoints1 = new Mat())
+                using (Mat selectBaseLinePoints2 = new Mat())
+                using (Mat selectBaseLinePoints = new Mat())
+                using (Mat selectSpongeStripPoints = new Mat())
+                {
+                    Vision.GetPointsInRotatedRect(OutLine.CvPtr, selectBaseLinePoints1.CvPtr,
+                        imageSet.baseLineRegion1.CenterX, imageSet.baseLineRegion1.CenterY,
+                        imageSet.baseLineRegion1.Width, imageSet.baseLineRegion1.Height,
+                        imageSet.baseLineRegion1.Angle);
 
-                Mat selectBaseLinePoints = new Mat();
-                Mat selectSpongeStripPoints = new Mat();
+                    Vision.GetPointsInRotatedRect(OutLine.CvPtr, selectBaseLinePoints2.CvPtr,
+                        imageSet.baseLineRegion2.CenterX, imageSet.baseLineRegion2.CenterY,
+                        imageSet.baseLineRegion2.Width, imageSet.baseLineRegion2.Height,
+                        imageSet.baseLineRegion2.Angle);
 
-                Vision.GetPointsInRotatedRect(OutLine.CvPtr, selectBaseLinePoints1.CvPtr, imageSet.baseLineRegion1.CenterX, imageSet.baseLineRegion1.CenterY,
-                    imageSet.baseLineRegion1.Width, imageSet.baseLineRegion1.Height, imageSet.baseLineRegion1.Angle);
+                    Cv2.VConcat(selectBaseLinePoints1, selectBaseLinePoints2, selectBaseLinePoints);
 
-                Vision.GetPointsInRotatedRect(OutLine.CvPtr, selectBaseLinePoints2.CvPtr, imageSet.baseLineRegion2.CenterX, imageSet.baseLineRegion2.CenterY,
-                    imageSet.baseLineRegion2.Width, imageSet.baseLineRegion2.Height, imageSet.baseLineRegion2.Angle);
+                    float disThre = 0.5f;
+                    Vision.ransacFitLineFast(selectBaseLinePoints.CvPtr, out item0, out item1,
+                        out item2, out item3, disThre * cutSet.scaleSize);
 
-                Cv2.VConcat(selectBaseLinePoints1, selectBaseLinePoints2, selectBaseLinePoints);
+                    Vision.FilterPointsByLine(OutLine.CvPtr, item0, item1, item2, item3,
+                        imageSet.distBaseLineThre * cutSet.scaleSize, selectSpongeStripPoints.CvPtr);
 
-                //基准面拟合
-                float disThre = 0.5f; //直线拟合噪点过滤阈值，这里是像素坐标，因此过滤值大一些。
-                Vision.ransacFitLineFast(selectBaseLinePoints.CvPtr, out item0, out item1, out item2, out item3, disThre * cutSet.scaleSize);
-                
-
-                //点筛选
-                Vision.FilterPointsByLine(OutLine.CvPtr, item0, item1, item2, item3, imageSet.distBaseLineThre * cutSet.scaleSize, selectSpongeStripPoints.CvPtr);
-
-                //Vision.showMatPoint(selectSpongeStripPoints, "selectSpongeStripPoints");
-
-                //涂胶检测
-                Vision.glueDet(selectSpongeStripPoints.CvPtr, item0, item1, item2, item3,
-                    out existGlue, out centerX, out centerY, out phi, out width, out height, out maxArea,
-                    outMaxRegion.CvPtr, outRegionRectangle2.CvPtr);
-                
-
+                    Vision.glueDet(selectSpongeStripPoints.CvPtr, item0, item1, item2, item3,
+                        out existGlue, out centerX, out centerY, out phi, out width, out height,
+                        out maxArea, outMaxRegion.CvPtr, outRegionRectangle2.CvPtr);
+                }
             }
             else
             {
@@ -1276,19 +1147,25 @@ namespace _3DLaserGlueInspection
         public static PoseParameters PoseInv(PoseParameters robotPose)
         {
             PoseParameters BaseInTool = new PoseParameters();
-            Mat ToolToBase = new Mat();
-            Mat BaseToTool = new Mat();
-            Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
-            BaseToTool = ToolToBase.Inv();
+            using (Mat ToolToBase = new Mat())
+            {
+                Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z,
+                    robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
+                using (Mat BaseToTool = ToolToBase.Inv())
+                {
+                    BaseInTool.PoseType = robotPose.PoseType;
+                    Vision.HomMat3dToPose(BaseInTool.PoseType, out double centerX, out double centerY,
+                        out double centerZ, out double centerRX, out double centerRY, out double centerRZ,
+                        BaseToTool.CvPtr);
 
-            BaseInTool.PoseType = robotPose.PoseType;
-            Vision.HomMat3dToPose(BaseInTool.PoseType, out double centerX, out double centerY, out double centerZ, out double centerRX, out double centerRY, out double centerRZ, BaseToTool.CvPtr);
-            BaseInTool.x = centerX;
-            BaseInTool.y = centerY;
-            BaseInTool.z = centerZ;
-            BaseInTool.rx = centerRX;
-            BaseInTool.ry = centerRY;
-            BaseInTool.rz = centerRZ;
+                    BaseInTool.x = centerX;
+                    BaseInTool.y = centerY;
+                    BaseInTool.z = centerZ;
+                    BaseInTool.rx = centerRX;
+                    BaseInTool.ry = centerRY;
+                    BaseInTool.rz = centerRZ;
+                }
+            }
             return BaseInTool;
         }
     }
@@ -1305,7 +1182,7 @@ namespace _3DLaserGlueInspection
     //    }
     //}
 
-    public class Setting
+    public class Setting : IDisposable
     {
         public string ErrMsg => _errMsg;
         string _errMsg = string.Empty;
@@ -1332,6 +1209,12 @@ namespace _3DLaserGlueInspection
             this.Name = name;
         }
 
+        public void Dispose()
+        {
+            image?.Dispose();
+            image = null;
+        }
+
         public bool Load()
         {
             string basePath = AppDomain.CurrentDomain.BaseDirectory + "Data\\Project\\" + Name + "\\";
@@ -1355,6 +1238,8 @@ namespace _3DLaserGlueInspection
         private bool Load(string basePath)
         {
             _errMsg = string.Empty;
+            image?.Dispose();
+            image = null;
             bool result0 = true;
             try
             {

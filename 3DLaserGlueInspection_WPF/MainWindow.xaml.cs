@@ -115,6 +115,7 @@ namespace _3DLaserGlueInspection
 
         private void Window_Closing(object sender, CancelEventArgs e)
         {
+            model.stop = true;
             model.StopCommunicationThread();
 
         }

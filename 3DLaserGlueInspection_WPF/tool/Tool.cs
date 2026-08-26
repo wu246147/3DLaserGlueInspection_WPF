@@ -216,9 +216,10 @@ namespace _3DLaserGlueInspection
                 {
                     lock (olockShow)
                     {
-                        Mat mat = new Mat();
-                        mat = Mat.Zeros((int)(showHeight * cutSet.scaleSize), (int)(showWidth * cutSet.scaleSize), MatType.CV_8UC3);
-                        imageControl.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));
+                        using (Mat mat = Mat.Zeros((int)(showHeight * cutSet.scaleSize), (int)(showWidth * cutSet.scaleSize), MatType.CV_8UC3))
+                        {
+                            imageControl.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));
+                        }
                         //DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//扩画布
                         PointCollection points = new PointCollection();
                         for (int i = 0; i < hXLDCont10mm.Rows; i++)
@@ -249,11 +250,11 @@ namespace _3DLaserGlueInspection
                 {
                     lock (olockShow)
                     {
-                        Mat mat = new Mat();
-                        mat = Mat.Zeros((int)(showHeight * cutSet.scaleSize), (int)(showWidth * cutSet.scaleSize), MatType.CV_8UC3);
-
-                        //DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//扩画布
-                        imageControl.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));
+                        using (Mat mat = Mat.Zeros((int)(showHeight * cutSet.scaleSize), (int)(showWidth * cutSet.scaleSize), MatType.CV_8UC3))
+                        {
+                            //DispImageWithoutCloneHWindowControlEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));//扩画布
+                            imageControl.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(mat));
+                        }
 
                         //Console.WriteLine($"mat.Size:{mat.Size()}");
 
