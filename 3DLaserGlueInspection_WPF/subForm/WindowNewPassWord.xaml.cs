@@ -1,19 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Forms;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace _3DLaserGlueInspection.subForm
 {
@@ -22,27 +12,52 @@ namespace _3DLaserGlueInspection.subForm
     /// </summary>
     public partial class WindowNewPassWord : Window
     {
-        string Password = string.Empty;
-        string mm = "";
+        private string Password = string.Empty;
+        private string mm = "";
+
+        private string GetPasswordFilePath()
+        {
+            return userTypeComboBox.SelectedIndex == 1
+                ? "Data\\SupperUser"
+                : "Data\\User";
+        }
 
         public WindowNewPassWord()
         {
             InitializeComponent();
         }
-        void NewMethod()
+
+        private static string GetPasswordHash(string password)
+        {
+            using (MD5 md5 = MD5.Create())
+            {
+                return Convert.ToBase64String(md5.ComputeHash(Encoding.UTF8.GetBytes(password ?? string.Empty)));
+            }
+        }
+
+        private void LoadPassword()
+        {
+            string filePath = GetPasswordFilePath();
+            Password = File.Exists(filePath)
+                ? File.ReadAllText(filePath)
+                : string.Empty;
+        }
+
+        private void NewMethod()
         {
             if (newPassWordNumericUpDown.Text == repeatPassWordNumericUpDown.Text)
             {
                 try
                 {
-                    string NewPassword = Convert.ToBase64String(MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(newPassWordNumericUpDown.Text)));
+                    string newPassword = GetPasswordHash(newPassWordNumericUpDown.Text);
                     if (!Directory.Exists("Data"))
                     {
                         Directory.CreateDirectory("Data");
                     }
-                    File.WriteAllText("Data\\User", NewPassword);
+
+                    File.WriteAllText(GetPasswordFilePath(), newPassword);
                     tipLabel.Content = _3DLaserGlueInspection.Resources.LanguageDict.PasswordChangedSuccessfully;
-                    Password = NewPassword;
+                    Password = newPassword;
                 }
                 catch (Exception ex)
                 {
@@ -57,7 +72,7 @@ namespace _3DLaserGlueInspection.subForm
 
         private void ensureButton_Click(object sender, RoutedEventArgs e)
         {
-            string key = Convert.ToBase64String(MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(originPassWordNumericUpDown.Text)));
+            string key = GetPasswordHash(originPassWordNumericUpDown.Text);
             if (key == Password)
             {
                 NewMethod();
@@ -70,17 +85,26 @@ namespace _3DLaserGlueInspection.subForm
 
         private void cancelButton_Click(object sender, RoutedEventArgs e)
         {
-            this.Close();
+            Close();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            //翻译 未启用
-            //GeneralFunc.ChangeLanguateFun(typeof(FormNewPassword), this);
-            string fPath = "Data\\User";
-            if (System.IO. File.Exists(fPath))
+            LoadPassword();
+        }
+
+        private void userTypeComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            LoadPassword();
+            if (originPassWordNumericUpDown != null)
             {
-                Password = System.IO.File.ReadAllText(fPath);
+                originPassWordNumericUpDown.Clear();
+                newPassWordNumericUpDown.Clear();
+                repeatPassWordNumericUpDown.Clear();
+            }
+            if (tipLabel != null)
+            {
+                tipLabel.Content = "    ";
             }
         }
 

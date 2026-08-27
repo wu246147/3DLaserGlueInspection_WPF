@@ -164,13 +164,15 @@
                                     <Border BorderBrush="White" BorderThickness="1" Height="83" VerticalAlignment="Top" Margin="0,33,0,0">
                                         <Grid Name="cropGrid" ShowGridLines="True" Height="85" VerticalAlignment="Top" Margin="0,-1,0,0">
                                             <Label  Content="{x:Static resx:LanguageDict.HorizontalRange}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,9,0,0"/>
-                                            <TextBox x:Name="leftRangeMinNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="71,11,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-                                            <Label  Content="~" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,9,0,0"/>
-                                            <TextBox x:Name="leftRangeMaxNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="167,11,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                            <TextBox x:Name="leftRangeMinNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="71,11,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="46" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                            <Label  Content="~" FontSize="14" Foreground="White"  HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,9,0,0"/>
+                                            <TextBox x:Name="leftRangeMaxNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="144,11,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="44" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
                                             <Label  Content="{x:Static resx:LanguageDict.VerticalRange}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,45,0,0"/>
-                                            <TextBox x:Name="topRangeMinNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="71,47,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-                                            <Label  Content="~" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,45,0,0"/>
-                                            <TextBox x:Name="topRangeMaxNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="167,47,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                            <TextBox x:Name="topRangeMinNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="71,47,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="46" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                            <Label  Content="~" FontSize="14" Foreground="White"  HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,45,0,0"/>
+                                            <TextBox x:Name="topRangeMaxNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="144,47,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="44" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                            <Label x:Name="roiWidthLabel" Content="-- mm" FontSize="14" Foreground="White" Margin="0,9,4,0" VerticalAlignment="Top" HorizontalAlignment="Right"/>
+                                            <Label x:Name="roiHeightLabel" Content="-- mm" FontSize="14" Foreground="White" Margin="0,47,4,0" VerticalAlignment="Top" HorizontalAlignment="Right"/>
 
                                         </Grid>
                                     </Border>
@@ -180,7 +182,7 @@
 
 
                                 <CheckBox  x:Name="_3DCloudDetCheck" Content="{x:Static resx:LanguageDict._3DGluingDetection}" HorizontalAlignment="Left" Margin="5,108,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
-                                <Grid x:Name="imageSetOther" Margin="0,507,0,0">
+                                <Grid x:Name="imageSetOther" Margin="0,597,0,0">
                                     <Label  Content="{x:Static resx:LanguageDict.CameraAndMovementDirectionAngle}" FontSize="14" Foreground="White" HorizontalAlignment="Left" Width="183" Height="55" Margin="0,12,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
                                     <TextBox x:Name="robotAndCamAngleNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="188,27,0,0" TextWrapping="Wrap" Text="0" Width="75" InputMethod.IsInputMethodEnabled="False" IsEnabled="False" VerticalAlignment="Top" />
                                     <CheckBox  x:Name="isUseAngleOptCheck" Content="{x:Static resx:LanguageDict.UseAngleOptimization}" HorizontalAlignment="Left" Margin="10,70,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
@@ -208,11 +210,29 @@
                                 </Grid>
                                 <CheckBox  x:Name="useBaseLineDetCheck" Content="{x:Static resx:LanguageDict.useBaseLineDet}" HorizontalAlignment="Left" Margin="5,378,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
                                 <Grid Name="baseLineGrid" Margin="5,373,10,0" Height="125" VerticalAlignment="Top" Visibility="Visible">
-                                    <Border BorderBrush="White" BorderThickness="1" Margin="0,33,0,0"/>
-                                    <CheckBox  x:Name="showBaseLineDetRegion" Content="{x:Static resx:LanguageDict.ShowBaseLineDetRegion}" HorizontalAlignment="Left" Margin="10,44,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Checked="showBaseLineDetRegion_Checked" Unchecked="showBaseLineDetRegion_Checked" />
-                                    <Button x:Name="runBaseLineCheck" Content="{x:Static resx:LanguageDict.BaseLineDet}" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="130,49,0,0"/>
-                                    <Label  Content="{x:Static resx:LanguageDict.ignoreHigh}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="10,83,0,0" VerticalAlignment="Top"/>
-                                    <TextBox x:Name="IgnoreHighNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="130,86,0,0" TextWrapping="Wrap" Text="0" Width="116" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" VerticalAlignment="Top" />
+                                    <Border BorderBrush="White" BorderThickness="1" Margin="0,33,0,0">
+                                        <Grid Margin="0,0,0,0"  Visibility="Visible">
+                                            <Label  Content="mm" FontSize="14" Foreground="White" Margin="0,46,10,0" VerticalAlignment="Top" HorizontalAlignment="Right"/>
+                                            <CheckBox  x:Name="showBaseLineDetRegion" Content="{x:Static resx:LanguageDict.ShowBaseLineDetRegion}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Checked="showBaseLineDetRegion_Checked" Unchecked="showBaseLineDetRegion_Checked" />
+                                            <Button x:Name="runBaseLineCheck" Content="{x:Static resx:LanguageDict.BaseLineDet}" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="130,10,0,0" Visibility="Hidden"/>
+                                            <Label  Content="{x:Static resx:LanguageDict.ignoreHigh}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="10,45,0,0" VerticalAlignment="Top"/>
+                                            <TextBox x:Name="IgnoreHighNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="130,48,0,0" TextWrapping="Wrap" Text="0" Width="70" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" VerticalAlignment="Top" />
+                                        </Grid>
+                                    </Border>
+                                    
+                                </Grid>
+
+                                <!-- 气泡检测参数：每个图像参数可单独启用，并设置点间最小间隔。 -->
+                                <CheckBox x:Name="useBubbleDetCheck" Content="启用气泡检测" HorizontalAlignment="Left" Margin="5,510,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
+                                <Grid x:Name="bubbleGrid" Margin="5,505,10,0" Height="83" VerticalAlignment="Top" Visibility="Visible">
+                                    <Border BorderBrush="White" BorderThickness="1" Margin="0,33,0,0">
+                                        <Grid Margin="0,0,0,0"  Visibility="Visible">
+                                            <Label  Content="mm" FontSize="14" Foreground="White" Margin="0,10,9,0" VerticalAlignment="Top" HorizontalAlignment="Right"/>
+                                            <Label Content="点间最小间隔" FontSize="14" Foreground="White" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+                                            <TextBox x:Name="bubblePointMinDistanceNumericUpDown" FontSize="14" HorizontalAlignment="Left" Margin="130,10,0,0" TextWrapping="Wrap" Text="0" Width="70" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" VerticalAlignment="Top" />
+                                        </Grid>
+                                    </Border>
+                                   
                                 </Grid>
 
 

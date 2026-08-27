@@ -195,6 +195,19 @@ namespace _3DLaserGlueInspection.subForm
                 CreateRightClickMenu((System.Windows.Controls.ContextMenu)s, CopyBaseLine);
             };
 
+            // 气泡检测控件沿用基准面检测的右键复制逻辑。
+            useBubbleDetCheck.ContextMenu = new System.Windows.Controls.ContextMenu();
+            useBubbleDetCheck.ContextMenu.Opened += (s, e) =>
+            {
+                CreateRightClickMenu((System.Windows.Controls.ContextMenu)s, CopyUseBubble);
+            };
+
+            bubbleGrid.ContextMenu = new System.Windows.Controls.ContextMenu();
+            bubbleGrid.ContextMenu.Opened += (s, e) =>
+            {
+                CreateRightClickMenu((System.Windows.Controls.ContextMenu)s, CopyBubble);
+            };
+
 
         }
 
@@ -444,6 +457,28 @@ namespace _3DLaserGlueInspection.subForm
             isAlter = true;
         }
 
+
+        /// <summary>
+        /// 把指定图像参数的气泡检测启用状态复制到当前图像参数。
+        /// </summary>
+        /// <param name="srcImageSet">当前需要被修改的图像参数。</param>
+        /// <param name="dstImageSet">提供气泡检测启用状态的图像参数。</param>
+        private void CopyUseBubble(ImageSet srcImageSet, ImageSet dstImageSet)
+        {
+            srcImageSet.isUseBubbleDet = dstImageSet.isUseBubbleDet;
+            isAlter = true;
+        }
+
+        /// <summary>
+        /// 把指定图像参数的气泡点间隔阈值复制到当前图像参数。
+        /// </summary>
+        /// <param name="srcImageSet">当前需要被修改的图像参数。</param>
+        /// <param name="dstImageSet">提供气泡检测阈值的图像参数。</param>
+        private void CopyBubble(ImageSet srcImageSet, ImageSet dstImageSet)
+        {
+            srcImageSet.bubblePointMinDistance = dstImageSet.bubblePointMinDistance;
+            isAlter = true;
+        }
 
         private void CopyCorrectionScaleSize(ImageSet srcImageSet, ImageSet dstImageSet)
         {
@@ -747,6 +782,10 @@ namespace _3DLaserGlueInspection.subForm
 
             IgnoreHighNumericUpDown.TextChanged += UpData;
 
+            useBubbleDetCheck.Checked += UpData;
+            useBubbleDetCheck.Unchecked += UpData;
+            bubblePointMinDistanceNumericUpDown.TextChanged += UpData;
+
 
         }
         void UnLoadUpData()
@@ -822,6 +861,10 @@ namespace _3DLaserGlueInspection.subForm
             useBaseLineDetCheck.Unchecked -= UpData;
 
             IgnoreHighNumericUpDown.TextChanged -= UpData;
+
+            useBubbleDetCheck.Checked -= UpData;
+            useBubbleDetCheck.Unchecked -= UpData;
+            bubblePointMinDistanceNumericUpDown.TextChanged -= UpData;
 
 
         }
@@ -912,6 +955,10 @@ namespace _3DLaserGlueInspection.subForm
 
                 imageSet.isUseBaseLine = (bool)useBaseLineDetCheck.IsChecked;
                 imageSet.distBaseLineThre = Convert.ToDouble(IgnoreHighNumericUpDown.Text);
+
+                // 保存气泡检测开关和点间隔阈值到 ImageSet。
+                imageSet.isUseBubbleDet = (bool)useBubbleDetCheck.IsChecked;
+                imageSet.bubblePointMinDistance = Convert.ToDouble(bubblePointMinDistanceNumericUpDown.Text);
 
 
     }
@@ -1085,10 +1132,10 @@ namespace _3DLaserGlueInspection.subForm
                     glueAreaMinNumericUpDown.Text = imageSet.areaMin.ToString();
                     glueAreaMaxNumericUpDown.Text = imageSet.areaMax.ToString();
                     useCroppintCheck.IsChecked = imageSet.启用裁剪;
-                    leftRangeMinNumericUpDown.Text = imageSet.LeftX.ToString();
-                    leftRangeMaxNumericUpDown.Text = imageSet.RightX.ToString();
-                    topRangeMinNumericUpDown.Text = imageSet.TopY.ToString();
-                    topRangeMaxNumericUpDown.Text = imageSet.DownY.ToString();
+                    leftRangeMinNumericUpDown.Text = imageSet.LeftX.ToString("F2");
+                    leftRangeMaxNumericUpDown.Text = imageSet.RightX.ToString("F2");
+                    topRangeMinNumericUpDown.Text = imageSet.TopY.ToString("F2");
+                    topRangeMaxNumericUpDown.Text = imageSet.DownY.ToString("F2");
                     useDiscreteDenoisingCheck.IsChecked = imageSet.离散去噪;
                     discreteDenoisingDistNumericUpDown.Text = imageSet.分段距离.ToString();
                     discreteDenoisingCountNumericUpDown.Text = imageSet.成段点数.ToString();
@@ -1100,6 +1147,43 @@ namespace _3DLaserGlueInspection.subForm
 
                     useBaseLineDetCheck.IsChecked = imageSet.isUseBaseLine;
                     IgnoreHighNumericUpDown.Text = imageSet.distBaseLineThre.ToString();
+
+                    // 切换图像参数时同步加载气泡检测设置。
+                    useBubbleDetCheck.IsChecked = imageSet.isUseBubbleDet;
+                    bubblePointMinDistanceNumericUpDown.Text = imageSet.bubblePointMinDistance.ToString();
+
+
+
+                    //清除矩形
+                    hWindowModel.RemoveRect("detRect");
+
+                    if (hImage != null)
+                    {
+                        //显示roi实际宽高
+                        if (CamParamName != null && camKey != null
+                        && Params.CamPar.TryGetValue(CamParamName, out var hCamPars) && hCamPars.TryGetValue(camKey, out var hCamPar)
+                        && Params.LightInCam.TryGetValue(CamParamName, out var LightInCams) && LightInCams.TryGetValue(camKey, out var LightInCam))
+                        {
+                            using (Mat imagePoint = Mat.Zeros(2, 2, MatType.CV_64FC1))
+                            {
+                                imagePoint.At<double>(0, 0) = imageSet.LeftX * hImage.Width;
+                                imagePoint.At<double>(0, 1) = imageSet.TopY * hImage.Height;
+                                imagePoint.At<double>(1, 0) = imageSet.RightX * hImage.Width;
+                                imagePoint.At<double>(1, 1) = imageSet.DownY * hImage.Height;
+
+                                Mat lightXY = new Mat();
+                                Vision.GetXY(hCamPar, LightInCam, imagePoint, out lightXY);
+                                Vision.scalePoint(lightXY, cutSet, 90 - LightInCam.rx, out hXLDCont10mm);
+
+                                roiHeightLabel.Content = ((hXLDCont10mm.At<double>(1, 1) - hXLDCont10mm.At<double>(0, 1)) / cutSet.scaleSize).ToString("F2") + "mm";
+                                roiWidthLabel.Content = ((hXLDCont10mm.At<double>(1, 0) - hXLDCont10mm.At<double>(0, 0)) / cutSet.scaleSize).ToString("F2") + "mm";
+                                lightXY.Dispose();
+                            }
+                        }
+                    }
+                        
+
+
 
 
                     LoadUpData();
@@ -1405,9 +1489,10 @@ namespace _3DLaserGlueInspection.subForm
         {
             FolderBrowserDialog folder = new FolderBrowserDialog();
             folder.SelectedPath = "D:\\image\\";
+            DateTime dateTime = DateTime.Now;
             if (carTypeComboBox.SelectedIndex >= 0 && set != null)
             {
-                folder.SelectedPath = set.OtherSet.SaveImagePath + "\\" + carTypeComboBox.Items[carTypeComboBox.SelectedIndex].ToString();
+                folder.SelectedPath = set.OtherSet.SaveImagePath + "\\" + carTypeComboBox.Items[carTypeComboBox.SelectedIndex].ToString() + "\\" + $"{dateTime:yyyy-MM-dd}";
             }
             if (folder.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
@@ -1638,14 +1723,43 @@ namespace _3DLaserGlueInspection.subForm
                     double DownY = rectData.Y + rectData.Height;
 
                     //更新界面
-                    leftRangeMinNumericUpDown.Text = (LeftX / imageWidth).ToString();
-                    leftRangeMaxNumericUpDown.Text = (RightX / imageWidth).ToString();
-                    topRangeMinNumericUpDown.Text = (TopY / imageHeight).ToString();
-                    topRangeMaxNumericUpDown.Text = (DownY / imageHeight).ToString();
+                    leftRangeMinNumericUpDown.Text = (LeftX / imageWidth).ToString("F2");
+                    leftRangeMaxNumericUpDown.Text = (RightX / imageWidth).ToString("F2");
+                    topRangeMinNumericUpDown.Text = (TopY / imageHeight).ToString("F2");
+                    topRangeMaxNumericUpDown.Text = (DownY / imageHeight).ToString("F2");
 
                     //清除矩形
                     hWindowModel.RemoveRect("detRect");
 
+                    if (hImage != null)
+                    {
+                        //显示roi实际宽高
+                        if (CamParamName != null && camKey != null
+                        && Params.CamPar.TryGetValue(CamParamName, out var hCamPars) && hCamPars.TryGetValue(camKey, out var hCamPar)
+                        && Params.LightInCam.TryGetValue(CamParamName, out var LightInCams) && LightInCams.TryGetValue(camKey, out var LightInCam))
+                        {
+                            using (Mat imagePoint = Mat.Zeros(2, 2, MatType.CV_64FC1))
+                            {
+                                imagePoint.At<double>(0, 0) = imageSet.LeftX * hImage.Width;
+                                imagePoint.At<double>(0, 1) = imageSet.TopY * hImage.Height;
+                                imagePoint.At<double>(1, 0) = imageSet.RightX * hImage.Width;
+                                imagePoint.At<double>(1, 1) = imageSet.DownY * hImage.Height;
+                                Mat lightXY = new Mat();
+                                Vision.printPoint(imagePoint, "imagePoint");
+                                Vision.GetXY(hCamPar, LightInCam, imagePoint, out lightXY);
+                                Vision.printPoint(lightXY, "lightXY");
+
+
+                                Vision.scalePoint(lightXY, cutSet, 90 - LightInCam.rx, out hXLDCont10mm);
+                                Vision.printPoint(hXLDCont10mm, "hXLDCont10mm");
+
+                                roiHeightLabel.Content = ((hXLDCont10mm.At<double>(1, 1) - hXLDCont10mm.At<double>(0, 1)) / cutSet.scaleSize).ToString("F2") + "mm";
+                                roiWidthLabel.Content = ((hXLDCont10mm.At<double>(1, 0) - hXLDCont10mm.At<double>(0, 0)) / cutSet.scaleSize).ToString("F2") + "mm";
+                                lightXY.Dispose();
+                            }
+                        }
+                    }
+                   
                 }
                 else 
                 {
@@ -3619,7 +3733,8 @@ namespace _3DLaserGlueInspection.subForm
                                     hXLDCont10mm3D = hXLDCont10mm.Clone();
                                 }
                                 
-                                Vision.singleFrameDetAndResult(hXLDCont10mm3D, imageSet, cutSet, ref singleFrameExistGlue, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2);
+                                // 气泡检测使用修正后的 hXLDCont10mm 原始点，胶水检测仍使用离散滤波后的点。
+                                Vision.singleFrameDetAndResult(hXLDCont10mm3D, imageSet, cutSet, ref singleFrameExistGlue, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2, hXLDCont10mm);
                                
                                    
                             }
@@ -3987,10 +4102,10 @@ namespace _3DLaserGlueInspection.subForm
                 }
 
                 //如果激光图片为空，则执行轮廓检测
-                if (hXLDCont10mm == null || hXLDCont10mm.Empty() || hXLDCont10mm.Size().Height<=0)
-                {
+                //if (hXLDCont10mm == null || hXLDCont10mm.Empty() || hXLDCont10mm.Size().Height<=0)
+                //{
                     runOutLineButton_Click(null, null);
-                }
+                //}
 
                 // 图片更新
                 if (showImageComboBox.SelectedIndex != 1)

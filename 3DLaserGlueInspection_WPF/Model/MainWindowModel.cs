@@ -4,6 +4,7 @@ using HelixToolkit.Wpf;
 using HslCommunication.Core.Net;
 using LiveCharts.Configurations;
 using LiveCharts.Wpf;
+using MySqlX.XDevAPI.Common;
 using OpenCvSharp;
 using RAIVASCS.Common;
 using System;
@@ -12,6 +13,9 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading;
@@ -89,9 +93,16 @@ namespace _3DLaserGlueInspection
         };
 
         public bool stop = true;
+        private readonly object runLogLock = new object();
+        private string currentRunID = null;
         Thread mainThread = null;
 
         CarNameIdSet cars = new CarNameIdSet();
+
+        //数据库
+        wSql sql = null;
+        bool sqlEnable = false;
+
 
         //当前车型
         public Car car;
@@ -471,8 +482,24 @@ namespace _3DLaserGlueInspection
             }
         }
 
+        private void SetCurrentRunID(ushort id)
+        {
+            lock (runLogLock)
+            {
+                currentRunID = id.ToString();
+            }
+        }
+
+        private void ClearCurrentRunID()
+        {
+            lock (runLogLock)
+            {
+                currentRunID = null;
+            }
+        }
         public void MainRun()
         {
+            ClearCurrentRunID();
             try
             {
                 //if (simulation)
@@ -546,6 +573,26 @@ namespace _3DLaserGlueInspection
                 //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.IOParameterLoadingFailed + io.ErrMsg, LogType.ng);
                 //    return;
                 //}
+
+                //数据库初始化
+                if (!sqlEnable)
+                {
+                    try
+                    {
+                        sql = new wSql("127.0.0.1", "admin", "admin", "raivasgb");
+                        sql.Open();
+                        ShowMessage("数据库连接测试成功！");
+                        sql.Close();
+                        sqlEnable = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        ShowMessage("数据库连接测试失败！" + ex.Message, LogType.warn);
+                        sqlEnable = false;
+                    }
+                }
+
+
                 #endregion
 
                 //连接设备
@@ -584,6 +631,7 @@ namespace _3DLaserGlueInspection
 
                 while (!stop)
                 {
+                    ClearCurrentRunID();
                     //if (!Write(DO.Running, false)) return;
                     //if (!Write(DO.Triggering, false)) return;
                     //输出准备号好
@@ -1261,7 +1309,7 @@ namespace _3DLaserGlueInspection
                             try
                             {
                                 string OKNG = partResult ? "OK" : "NG";
-                                string basePath = $"D:\\image\\{car.Name}\\{dateTime:yyyy-MM-dd HH_mm_ss} {OKNG} [{inVIN}]";
+                                string basePath = $"{set.OtherSet.SaveImagePath}\\{car.Name}\\{dateTime:yyyy-MM-dd}\\{dateTime:yyyy-MM-dd HH_mm_ss} {OKNG} [{inVIN}]";
                                 Directory.CreateDirectory(basePath);
 
                                 foreach (var camValue in Images)//相机
@@ -1307,6 +1355,76 @@ namespace _3DLaserGlueInspection
                             ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ImageStorageCompleted);
                         }
                     }
+
+                    //保存数据库
+                    //if (!simulation)
+                    {
+                        try
+                        {
+                            if (sqlEnable)
+                            {
+                                sql?.Open();
+                                sql?.BeginTransaction();
+                                try
+                                {
+
+                                    //车辆信息表
+                                    Dictionary<string, string> 车辆信息表 = new Dictionary<string, string>
+                                        {
+                                            { "时间", dateTime.ToString("yyyy-MM-dd HH:mm:ss") },
+                                            { "产品号", ID.ToString() },
+                                            { "VIN码", inVIN },
+                                            { "检测结果", totalResult?"1":"0"  },
+                                        };
+                                    int r = sql.InsertRow(sql.Database + ".产品信息表", 车辆信息表);
+
+                                    //测点数据表,遍历所有测点结果
+                                    //         public Dictionary<string, SynchronizedList<Dictionary<long, Data>>> glueDataDict = new Dictionary<string, SynchronizedList<Dictionary<long, Data>>>();
+
+                                    foreach (var camKey in glueDataDict.Keys)
+                                    {
+                                        //sql.InsertRow(sql.Database + ".测点数据表", sqlValuePairs[item]);
+                                       for (int segID = 0; segID < glueDataDict[camKey].Count; segID++)
+                                       {
+                                           foreach (var imgID in glueDataDict[camKey][segID].Keys)
+                                           {
+                                                Dictionary<string, string> sqlValue = new Dictionary<string, string>
+                                               {
+                                                    { "时间", dateTime.ToString("yyyy-MM-dd HH:mm:ss") },
+                                                    { "产品号", ID.ToString() },
+                                                    { "VIN码", inVIN },
+                                                     { "相机", camKey },
+                                                     { "段位号", segID.ToString() },
+                                                     { "点位号", imgID.ToString() },
+                                                     { "胶宽", glueDataDict[camKey][segID][imgID].glueWidth.ToString() },
+                                                     { "胶高", glueDataDict[camKey][segID][imgID].glueHeight.ToString() },
+                                                     { "胶面积", glueDataDict[camKey][segID][imgID].glueArea.ToString() },
+                                                     { "检测结果", glueResultDict[camKey][segID][imgID].Result?"1":"0" },                                                   
+                                               };
+                                                sql.InsertRow(sql.Database + ".测点数据表", sqlValue);
+                                            }
+                                       }
+
+                                    }
+
+                                    sql.Commit();
+                                }
+                                catch (Exception ex)
+                                {
+                                    sql.Rollback();
+                                    ShowMessage(ex.ToString(), LogType.warn);
+                                }
+                                sql?.Close();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            ShowMessage($"数据库写入异常：{ex}", LogType.warn);
+                        }
+
+                        ShowMessage($"数据库写入完成");
+                    }
+
 
                     ////保存涂胶坐标
                     //{
@@ -1496,6 +1614,7 @@ namespace _3DLaserGlueInspection
 
                 while (!stop)
                 {
+                    ClearCurrentRunID();
 
                     ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.OutputReadySignal);
 
@@ -1539,6 +1658,7 @@ namespace _3DLaserGlueInspection
                     ID = 0;
                     car = new Car();
                     ID = (ushort)CarNumber;
+                    SetCurrentRunID(ID);
                     bool isExist = false;
                     foreach (var item in cars.Cars.Values)
                     {
@@ -2057,7 +2177,7 @@ namespace _3DLaserGlueInspection
                             try
                             {
                                 string OKNG = partResult ? "OK" : "NG";
-                                string basePath = $"D:\\image\\{car.Name}\\{dateTime:yyyy-MM-dd HH_mm_ss} {OKNG} [{inVIN}]";
+                                string basePath = $"{set.OtherSet.SaveImagePath}\\{car.Name}\\{dateTime:yyyy-MM-dd HH_mm_ss} {OKNG} [{inVIN}]";
                                 Directory.CreateDirectory(basePath);
 
                                 foreach (var camValue in Images)//相机
@@ -2177,6 +2297,7 @@ namespace _3DLaserGlueInspection
 
                 }
                 catch { }
+                ClearCurrentRunID();
             }
         }
 
@@ -2195,6 +2316,7 @@ namespace _3DLaserGlueInspection
             ID = 0;
             car = new Car();
             ID = (ushort)CarNumber;
+            SetCurrentRunID(ID);
             bool isExist = false;
             foreach (var item in cars.Cars.Values)
             {
@@ -2221,6 +2343,7 @@ namespace _3DLaserGlueInspection
             mainModel.timeControl = dateTime.ToString("G");
             mainModel.resultControl = "--";
             mainModel.resultColorControl = "White";
+
 
 
             //检测参数是否存在
@@ -2982,9 +3105,10 @@ namespace _3DLaserGlueInspection
                                                                 {
                                                                     hXLDContPorcess = hXLDCont10mm.Clone();
                                                                 }
+                                                                // 气泡检测使用修正后的 hXLDCont10mm 原始点，胶水检测仍使用离散滤波后的点。
                                                                 Vision.singleFrameDetAndResult(hXLDContPorcess, imageSet, cutSet,
                                                                     ref singleFrameExistGlue, ref resultData, ref bResult,
-                                                                    ref outMaxRegion, ref outRegionRectangle2);
+                                                                    ref outMaxRegion, ref outRegionRectangle2, hXLDCont10mm);
                                                             }
                                                             finally
                                                             {
@@ -3815,15 +3939,46 @@ namespace _3DLaserGlueInspection
         #endregion
 
 
-        public void ShowMessage(string message)
+        public void ShowMessage(
+            string message,
+            [CallerMemberName] string callerMemberName = "",
+            [CallerFilePath] string callerFilePath = "",
+            [CallerLineNumber] int callerLineNumber = 0)
         {
-            ShowMessage(message, LogType.normal);
+            ShowMessage(message, LogType.normal, callerMemberName, callerFilePath, callerLineNumber);
         }
 
         object olock = new object();
 
-        public void ShowMessage(string message, LogType type)
+        public void ShowMessage(
+            string message,
+            LogType type,
+            [CallerMemberName] string callerMemberName = "",
+            [CallerFilePath] string callerFilePath = "",
+            [CallerLineNumber] int callerLineNumber = 0)
         {
+            string idForLog;
+            lock (runLogLock)
+            {
+                idForLog = currentRunID;
+            }
+            if (idForLog != null)
+            {
+                message = $"[VIN:{idForLog}] {message}";
+            }
+            
+            int threadId = Thread.CurrentThread.ManagedThreadId;
+            string callerFile = System.IO.Path.GetFileName(callerFilePath);
+            string callerLocation = $"{callerFile}:{callerLineNumber} {callerMemberName}";
+            message = $"[ThreadId:{threadId}][Caller:{callerLocation}] {message} ";
+
+            if (type == LogType.warn)
+            {
+                message = "[error]" + message;
+            }
+
+           
+
             DateTime dateTime = DateTime.Now;
             string day = dateTime.ToString("yyyy-MM-dd");
             string time = dateTime.ToString("HH:mm:ss.fff");

@@ -211,6 +211,11 @@ namespace _3DLaserGlueInspection
                 model.mainModel.buttonRunContentControl = _3DLaserGlueInspection.Resources.LanguageDict.Stop;
                 model.mainModel.buttonRunTagControl = "\uE67A";
 
+                //禁止菜单
+                MenuItem_paraSetting.IsEnabled = false;
+                MenuItem_signalSetting.IsEnabled = false;
+                MenuItem_camSetting.IsEnabled = false;
+                MenuItem_productSetting.IsEnabled = false;
             }
             else
             {
@@ -221,6 +226,12 @@ namespace _3DLaserGlueInspection
                 model.stop = true;
                 model.mainModel.buttonRunContentControl = _3DLaserGlueInspection.Resources.LanguageDict.Start;
                 model.mainModel.buttonRunTagControl = "\uE658";
+
+                //允许菜单
+                MenuItem_paraSetting.IsEnabled = true;
+                MenuItem_signalSetting.IsEnabled = true;
+                MenuItem_camSetting.IsEnabled = true;
+                MenuItem_productSetting.IsEnabled = true;
             }
 
             ////测试
@@ -256,33 +267,86 @@ namespace _3DLaserGlueInspection
             model.simulation = (bool)simulationCheck.IsChecked;
         }
 
+        private bool TryPasswordLogin(out WindowPassWord.PasswordUserType userType)
+        {
+            WindowPassWord formPassword = new WindowPassWord();
+            bool loginSucceeded = formPassword.ShowDialog() == true;
+            userType = formPassword.LoginUserType;
+            return loginSucceeded && userType != WindowPassWord.PasswordUserType.None;
+        }
+
+        private void ShowAdministratorPermissionDenied()
+        {
+            System.Windows.Forms.MessageBox.Show(
+                "管理员无法进入该页面",
+                "提示",
+                System.Windows.Forms.MessageBoxButtons.OK,
+                System.Windows.Forms.MessageBoxIcon.Warning);
+        }
         private void MenuItem_camSetting_Click(object sender, RoutedEventArgs e)
         {
-            WindowCamera windowCamera = new WindowCamera();
-            windowCamera.ShowDialog();
+            if (!TryPasswordLogin(out WindowPassWord.PasswordUserType userType))
+            {
+                return;
+            }
 
+            if (userType == WindowPassWord.PasswordUserType.Administrator
+                || userType == WindowPassWord.PasswordUserType.SuperAdministrator)
+            {
+                WindowCamera windowCamera = new WindowCamera();
+                windowCamera.ShowDialog();
+            }
         }
 
         private void MenuItem_robotSetting_signalSetting_Click(object sender, RoutedEventArgs e)
         {
-            //密码验证，未启用
-            WindowPassWord formPassword = new WindowPassWord();
-            if ((bool)formPassword.ShowDialog())
+            if (!TryPasswordLogin(out WindowPassWord.PasswordUserType userType))
+            {
+                return;
+            }
+
+            if (userType == WindowPassWord.PasswordUserType.SuperAdministrator)
+            {
                 robot.ShowForm();
+            }
+            else
+            {
+                ShowAdministratorPermissionDenied();
+            }
         }
 
         private void MenuItem_productSetting_Click(object sender, RoutedEventArgs e)
         {
-            WindowPassWord formPassword = new WindowPassWord();
-            if ((bool)formPassword.ShowDialog())
+            if (!TryPasswordLogin(out WindowPassWord.PasswordUserType userType))
+            {
+                return;
+            }
+
+            if (userType == WindowPassWord.PasswordUserType.SuperAdministrator)
+            {
                 new CarNameIdSet().ShowCarSetForm(CamParams.GetParamNames());
+            }
+            else
+            {
+                ShowAdministratorPermissionDenied();
+            }
         }
 
         private void MenuItem_paraSetting_Click(object sender, RoutedEventArgs e)
         {
-            WindowPassWord formPassword = new WindowPassWord();
-            if ((bool)formPassword.ShowDialog())
+            if (!TryPasswordLogin(out WindowPassWord.PasswordUserType userType))
+            {
+                return;
+            }
+
+            if (userType == WindowPassWord.PasswordUserType.SuperAdministrator)
+            {
                 new WindowVision().ShowDialog();
+            }
+            else
+            {
+                ShowAdministratorPermissionDenied();
+            }
         }
 
         private void MenuItem_changePasswordSetting_Click(object sender, RoutedEventArgs e)
@@ -431,6 +495,11 @@ namespace _3DLaserGlueInspection
             MenuItem_englishLanguage.IsChecked = true;
 
             GlobalVarAndFunc.SwitchLanguage("en-US");
+        }
+
+        private void menuItem_custom_Click(object sender, RoutedEventArgs e)
+        {
+
         }
 
         //void ShowImageData(int showWidth, int showHeight, Mat hXLDCont10mm)

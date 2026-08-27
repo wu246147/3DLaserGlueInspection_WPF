@@ -1,18 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Forms;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace _3DLaserGlueInspection.subForm
 {
@@ -21,23 +11,63 @@ namespace _3DLaserGlueInspection.subForm
     /// </summary>
     public partial class WindowPassWord : Window
     {
-        static DateTime dateTime;
-        string Password = string.Empty;
-        string mm = "";
+        public enum PasswordUserType
+        {
+            None,
+            Administrator,
+            SuperAdministrator
+        }
+
+        public PasswordUserType LoginUserType { get; private set; } = PasswordUserType.None;
+
+        private string Password = string.Empty;
+
+        private PasswordUserType SelectedUserType =>
+            userTypeComboBox.SelectedIndex == 1
+                ? PasswordUserType.SuperAdministrator
+                : PasswordUserType.Administrator;
 
         public WindowPassWord()
         {
             InitializeComponent();
         }
 
+        private static string GetPasswordFilePath(PasswordUserType userType)
+        {
+            return userType == PasswordUserType.SuperAdministrator
+                ? "Data\\SupperUser"
+                : "Data\\User";
+        }
+
+        private static string GetPasswordHash(string password)
+        {
+            using (MD5 md5 = MD5.Create())
+            {
+                return Convert.ToBase64String(md5.ComputeHash(Encoding.UTF8.GetBytes(password ?? string.Empty)));
+            }
+        }
+
+        private void LoadPassword()
+        {
+            string filePath = GetPasswordFilePath(SelectedUserType);
+            Password = System.IO.File.Exists(filePath)
+                ? System.IO.File.ReadAllText(filePath)
+                : string.Empty;
+        }
+
+        private void CompleteLogin()
+        {
+            LoginUserType = SelectedUserType;
+            DialogResult = true;
+            Close();
+        }
+
         private void ensureButton_Click(object sender, RoutedEventArgs e)
         {
-            string key = Convert.ToBase64String(MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(passWordNumericUpDown.Text)));
+            string key = GetPasswordHash(passWordNumericUpDown.Text);
             if (key == Password)
             {
-                dateTime = DateTime.Now;
-                this.DialogResult = true;
-                this.Close();
+                CompleteLogin();
             }
             else
             {
@@ -47,48 +77,28 @@ namespace _3DLaserGlueInspection.subForm
 
         private void cancelButton_Click(object sender, RoutedEventArgs e)
         {
-            this.Close();
+            Close();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            //翻译 未启用
-            //GeneralFunc.ChangeLanguateFun(typeof(FormPassword), this);
-
-            if (dateTime != null)
-            {
-                double s = DateTime.Now.Subtract(dateTime).TotalSeconds;
-                if (s > 0 && s < 600)
-                {
-                    dateTime = DateTime.Now;
-                    this.DialogResult = true;
-                    this.Close();
-                }
-            }
-            string fPath = "Data\\User";
-            if (System.IO.File.Exists(fPath))
-            {
-                Password = System.IO.File.ReadAllText(fPath);
-            }
+            // 每次打开登录窗口都重新读取并验证密码。
+            LoadPassword();
         }
 
-        private void ensureButton_MouseDown(object sender, MouseButtonEventArgs e)
+        private void userTypeComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-            if (e.ChangedButton == MouseButton.Middle)
+            LoadPassword();
+            if (passWordNumericUpDown != null)
             {
-                mm += "m";
+                passWordNumericUpDown.Clear();
             }
-            if (e.ChangedButton == MouseButton.Right)
+            if (tipLabel != null)
             {
-                mm += "r";
-            }
-            if (mm.EndsWith("mrrm"))
-            {
-                dateTime = DateTime.Now;
-                this.DialogResult = true;
-                this.Close();
+                tipLabel.Content = "    ";
             }
         }
+
 
         private void passWordNumericUpDown_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {

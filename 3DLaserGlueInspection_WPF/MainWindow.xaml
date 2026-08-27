@@ -537,7 +537,7 @@
                     VerticalScrollBarVisibility="Auto">
                     <DataGrid.Columns>
                         <DataGridTextColumn
-                            Width="100"
+                            Width="170"
                             Binding="{Binding LogTime, StringFormat=\{0:yyyy-MM-dd HH:mm:ss\}}"
                             Foreground="White"
                             Header="{x:Static resx:LanguageDict.Time}" />
@@ -919,7 +919,8 @@ Converter={StaticResource ResultColor}}" />
                 <MenuItem
                     x:Name="MenuItem_languageSetting"
                     BorderBrush="#FF3C4451"
-                    Header="{x:Static resx:LanguageDict.Language}" Height="50">
+                    Header="{x:Static resx:LanguageDict.Language}" Height="50" >
+
                     <MenuItem
                         x:Name="MenuItem_chineseLanguage"
                         BorderBrush="#00000000"

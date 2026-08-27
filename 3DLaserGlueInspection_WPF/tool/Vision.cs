@@ -1043,7 +1043,65 @@ namespace _3DLaserGlueInspection
                 Cv2.Add(outputY, new Scalar(cutSet.ShowHeight * cutSet.scaleSize / 2), outputY);
             }
         }
-        public static void singleFrameDetAndResult(Mat OutLine,ImageSet imageSet,CutSet cutSet, ref bool singleFrameExistGlue, ref Data resultData, ref BResult bResult, ref Mat outMaxRegion, ref Mat outRegionRectangle2)
+        /// <summary>
+        /// 检测轮廓相邻点之间的最大间隔是否超过气泡检测阈值。
+        /// 存在任意相邻点间隔大于阈值时返回 false；点数不足两个时视为通过。
+        /// </summary>
+        /// <param name="points">按轮廓顺序排列的 N×2 点矩阵，列 0 为横向坐标，列 1 为竖直坐标。</param>
+        /// <param name="maxAllowedDistance">允许的最大点间隔，单位与 points 一致。</param>
+        /// <param name="maxDistance">检测到的相邻点最大间隔。</param>
+        /// <param name="startX">最大间隔起点的横向坐标。</param>
+        /// <param name="startY">最大间隔起点的竖直坐标。</param>
+        /// <param name="endX">最大间隔终点的横向坐标。</param>
+        /// <param name="endY">最大间隔终点的竖直坐标。</param>
+        /// <param name="gapPointValid">是否成功记录了最大间隔对应的两个点。</param>
+        /// <returns>所有相邻点间隔均不超过阈值时返回 true，否则返回 false。</returns>
+        public static bool DetectBubble(Mat points, double maxAllowedDistance,
+            out double maxDistance, out double startX, out double startY,
+            out double endX, out double endY, out bool gapPointValid)
+        {
+            maxDistance = 0;
+            startX = 0;
+            startY = 0;
+            endX = 0;
+            endY = 0;
+            gapPointValid = false;
+            if (points == null || points.Empty() || points.Rows < 2)
+            {
+                return true;
+            }
+
+            if (points.Cols < 2 || double.IsNaN(maxAllowedDistance) ||
+                double.IsInfinity(maxAllowedDistance) || maxAllowedDistance < 0)
+            {
+                return false;
+            }
+
+            for (int index = 1; index < points.Rows; index++)
+            {
+                double dx = points.At<double>(index, 0) - points.At<double>(index - 1, 0);
+                double dy = points.At<double>(index, 1) - points.At<double>(index - 1, 1);
+                double distance = Math.Sqrt(dx * dx + dy * dy);
+                if (double.IsNaN(distance) || double.IsInfinity(distance))
+                {
+                    return false;
+                }
+
+                if (distance > maxDistance)
+                {
+                    maxDistance = distance;
+                    startX = points.At<double>(index - 1, 0);
+                    startY = points.At<double>(index - 1, 1);
+                    endX = points.At<double>(index, 0);
+                    endY = points.At<double>(index, 1);
+                    gapPointValid = true;
+                }
+            }
+
+            return maxDistance <= maxAllowedDistance;
+        }
+
+        public static void singleFrameDetAndResult(Mat OutLine,ImageSet imageSet,CutSet cutSet, ref bool singleFrameExistGlue, ref Data resultData, ref BResult bResult, ref Mat outMaxRegion, ref Mat outRegionRectangle2, Mat bubblePoints = null)
         {
 
             bool existGlue = false;
@@ -1110,6 +1168,22 @@ namespace _3DLaserGlueInspection
 
             //Console.WriteLine($"singleFrameDet use time:{useTime}ms");
 
+            // 气泡检测使用修正后的原始轮廓点，避免离散滤波掩盖点间大间隔。
+            bool bubbleResult = true;
+            double bubblePointDistance = 0;
+            double bubbleGapStartX = 0;
+            double bubbleGapStartY = 0;
+            double bubbleGapEndX = 0;
+            double bubbleGapEndY = 0;
+            bool bubbleGapPointValid = false;
+            double bubblePointDistanceThreshold = imageSet.bubblePointMinDistance * cutSet.scaleSize;
+            if (imageSet.isUseBubbleDet)
+            {
+                bubbleResult = DetectBubble(bubblePoints ?? OutLine, bubblePointDistanceThreshold,
+                    out bubblePointDistance, out bubbleGapStartX, out bubbleGapStartY,
+                    out bubbleGapEndX, out bubbleGapEndY, out bubbleGapPointValid);
+            }
+
             bResult = new BResult();
             resultData = new Data();
 
@@ -1142,6 +1216,21 @@ namespace _3DLaserGlueInspection
             }
 
 
+
+            // 保存气泡检测结果和阈值，供主流程、结果记录及 ShowImageData 使用。
+            resultData.bubbleResult = bubbleResult;
+            resultData.bubblePointDistance = bubblePointDistance;
+            resultData.bubblePointDistanceThreshold = bubblePointDistanceThreshold;
+            resultData.bubbleGapPointValid = bubbleGapPointValid;
+            resultData.bubbleGapStartX = bubbleGapStartX;
+            resultData.bubbleGapStartY = bubbleGapStartY;
+            resultData.bubbleGapEndX = bubbleGapEndX;
+            resultData.bubbleGapEndY = bubbleGapEndY;
+            bResult.bubbleResult = bubbleResult;
+            if (!bubbleResult)
+            {
+                bResult.Result = false;
+            }
         }
 
         public static PoseParameters PoseInv(PoseParameters robotPose)
@@ -1600,7 +1689,12 @@ namespace _3DLaserGlueInspection
 
         // 是否使用基线
         public bool isUseBaseLine = false;
-        public double distBaseLineThre = 0;
+        public double distBaseLineThre = 0.5;
+
+        // 是否启用气泡检测
+        public bool isUseBubbleDet = false;
+        // 气泡检测允许的最大点间隔；界面参数单位为 mm，计算时换算到轨迹坐标单位。
+        public double bubblePointMinDistance = 5;
         public RectData baseLineRegion1 = new RectData();
         public RectData baseLineRegion2 = new RectData();
 
@@ -1648,6 +1742,17 @@ namespace _3DLaserGlueInspection
         public double item2;
         public double item3;
 
+        // 气泡检测结果、实际最大点间隔和检测阈值。
+        public bool bubbleResult = true;
+        public double bubblePointDistance = 0;
+        public double bubblePointDistanceThreshold = 0;
+        // 气泡超限间隔对应的两个点坐标。
+        public bool bubbleGapPointValid = false;
+        public double bubbleGapStartX = 0;
+        public double bubbleGapStartY = 0;
+        public double bubbleGapEndX = 0;
+        public double bubbleGapEndY = 0;
+
         // 深复制
         public Data Clone()
         {
@@ -1662,6 +1767,14 @@ namespace _3DLaserGlueInspection
                 item1 = this.item1,
                 item2 = this.item2,
                 item3 = this.item3,
+                bubbleResult = this.bubbleResult,
+                bubblePointDistance = this.bubblePointDistance,
+                bubblePointDistanceThreshold = this.bubblePointDistanceThreshold,
+                bubbleGapPointValid = this.bubbleGapPointValid,
+                bubbleGapStartX = this.bubbleGapStartX,
+                bubbleGapStartY = this.bubbleGapStartY,
+                bubbleGapEndX = this.bubbleGapEndX,
+                bubbleGapEndY = this.bubbleGapEndY,
             };
         }
     }
@@ -1671,6 +1784,9 @@ namespace _3DLaserGlueInspection
         public bool glueHeight ;
         public bool glueWidth ;
         public bool glueArea ;
+
+        // 气泡检测结果
+        public bool bubbleResult = true;
 
       
         /// <summary>
@@ -1685,6 +1801,7 @@ namespace _3DLaserGlueInspection
                 glueHeight = this.glueHeight,
                 glueWidth = this.glueWidth,
                 glueArea = this.glueArea,
+                bubbleResult = this.bubbleResult,
                 
                 Result = this.Result,
             };

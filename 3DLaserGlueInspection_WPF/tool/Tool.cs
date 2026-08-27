@@ -275,26 +275,15 @@ namespace _3DLaserGlueInspection
                         imageControl.AddPolyline(points, Colors.Gray);
 
 
-                        string textWindow1 = _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth + ":" + (bResult.glueWidth ? "OK" : "NG") + " " + _3DLaserGlueInspection.Resources.LanguageDict.DetRange +
-                               $": {set.widthMin}~{set.widthMax}";
-                        string textWindow2 = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight + ":" + (bResult.glueHeight ? "OK" : "NG") + " " + _3DLaserGlueInspection.Resources.LanguageDict.DetRange +
-                            $": {set.heightMin}~{set.heightMax}";
-                        string textWindow3 = _3DLaserGlueInspection.Resources.LanguageDict.Area + ":" + (bResult.glueArea ? "OK" : "NG") + " " + _3DLaserGlueInspection.Resources.LanguageDict.DetRange +
-                            $": {set.areaMin}~{set.areaMax}";
-                        string textWindow = textWindow1 + "\r\n" + textWindow2 + "\r\n" + textWindow3;
-                        //Console.WriteLine($"point :({10},{10})");
-                        //DispTextInImageHWindowControlEvent(textWindow, Colors.Black, 10, 10);
-                        imageControl.AddTextBlock(textWindow1, (bResult.glueWidth ? Colors.Green : Colors.Red), 10, 10);
-                        imageControl.AddTextBlock(textWindow2, (bResult.glueHeight ? Colors.Green : Colors.Red), 10, 10 + 24);
-                        imageControl.AddTextBlock(textWindow3, (bResult.glueArea ? Colors.Green : Colors.Red), 10, 10 + 48);
+                      
 
 
                         if (!hRegion.Empty())
                         {
                             //Console.WriteLine($"text value :");
-                            string text1 = _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth+":" + $"{data.glueWidth:0.00}";
-                            string text2 = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight+":" + $"{data.glueHeight:0.00}";
-                            string text3 = _3DLaserGlueInspection.Resources.LanguageDict.Area+":" + $"{data.glueArea:0.00}";
+                            string text1 = _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth+":" + $"{data.glueWidth:0.00}mm";
+                            string text2 = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight+":" + $"{data.glueHeight:0.00}mm";
+                            string text3 = _3DLaserGlueInspection.Resources.LanguageDict.Area+":" + $"{data.glueArea:0.00}mm²";
 
                             imageControl.AddTextBlock(text1, (bResult.glueWidth ? Colors.Green : Colors.Red), (int)data.column + (int)(data.glueWidth / 2 * cutSet.scaleSize + offsetX),
                                 (int)data.row + (int)(data.glueHeight / 2 * cutSet.scaleSize + offsetY));
@@ -303,9 +292,17 @@ namespace _3DLaserGlueInspection
                             imageControl.AddTextBlock(text3, (bResult.glueArea ? Colors.Green : Colors.Red), (int)data.column + (int)(data.glueWidth / 2 * cutSet.scaleSize + offsetX),
                                 (int)data.row + (int)(data.glueHeight / 2 * cutSet.scaleSize + offsetY + 48));
 
+                            if (set.isUseBubbleDet)
+                            {
+                                double scale = cutSet.scaleSize > 0 ? cutSet.scaleSize : 1;
+                                string bubbleText = $"气泡检测: {data.bubblePointDistance / scale:0.00}mm";
+                                imageControl.AddTextBlock(bubbleText, (bResult.bubbleResult ? Colors.Green : Colors.Red), (int)data.column + (int)(data.glueWidth / 2 * cutSet.scaleSize + offsetX),
+                                (int)data.row + (int)(data.glueHeight / 2 * cutSet.scaleSize + offsetY + 72));
+                            }
+
                             //Console.WriteLine($"text result :");
                             //hWindowControl.DispTextInImage(text, data.row, data.column);
-                           
+
 
                             //Console.WriteLine($"region :");
 
@@ -355,9 +352,58 @@ namespace _3DLaserGlueInspection
                             if (ignoredHeightPoints.Count >= 2)
                             {
                                 imageControl.AddPolyline(ignoredHeightPoints, Colors.Yellow);
+
+
+                            }
+
+                        }
+
+
+
+                        // 字体结果显示最后
+
+                        string textWindow1 = _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth + ":" + (bResult.glueWidth ? "OK" : "NG") + " " + _3DLaserGlueInspection.Resources.LanguageDict.DetRange +
+                             $": {set.widthMin}~{set.widthMax}mm";
+                        string textWindow2 = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight + ":" + (bResult.glueHeight ? "OK" : "NG") + " " + _3DLaserGlueInspection.Resources.LanguageDict.DetRange +
+                            $": {set.heightMin}~{set.heightMax}mm";
+                        string textWindow3 = _3DLaserGlueInspection.Resources.LanguageDict.Area + ":" + (bResult.glueArea ? "OK" : "NG") + " " + _3DLaserGlueInspection.Resources.LanguageDict.DetRange +
+                            $": {set.areaMin}~{set.areaMax}mm²";
+                        string textWindow = textWindow1 + "\r\n" + textWindow2 + "\r\n" + textWindow3;
+                        //Console.WriteLine($"point :({10},{10})");
+                        //DispTextInImageHWindowControlEvent(textWindow, Colors.Black, 10, 10);
+                        imageControl.AddTextBlock(textWindow1, (bResult.glueWidth ? Colors.Green : Colors.Red), 10, 10);
+                        imageControl.AddTextBlock(textWindow2, (bResult.glueHeight ? Colors.Green : Colors.Red), 10, 10 + 24);
+                        imageControl.AddTextBlock(textWindow3, (bResult.glueArea ? Colors.Green : Colors.Red), 10, 10 + 48);
+
+                        // 气泡检测启用时，在结果区显示检测结果、最大点间隔和阈值。
+                        if (set.isUseBubbleDet)
+                        {
+                            double scale = cutSet.scaleSize > 0 ? cutSet.scaleSize : 1;
+                            string bubbleText = $"气泡检测: {(bResult.bubbleResult ? "OK" : "NG")} 阈值: {set.bubblePointMinDistance:0.00}mm";
+                            imageControl.AddTextBlock(bubbleText,
+                                (bResult.bubbleResult ? Colors.Green : Colors.Red), 10, 10 + 72);
+                            // 气泡检测 NG 时，连接检测出的超限间隔两个点并显示提示。
+                            if (!bResult.bubbleResult && data.bubbleGapPointValid)
+                            {
+                                PointCollection bubbleGapPoints = new PointCollection();
+                                bubbleGapPoints.Add(new System.Windows.Point(data.bubbleGapStartX + offsetX, data.bubbleGapStartY + offsetY));
+                                bubbleGapPoints.Add(new System.Windows.Point(data.bubbleGapEndX + offsetX, data.bubbleGapEndY + offsetY));
+                                imageControl.AddPolyline(bubbleGapPoints, Colors.Orange, 3);
+                                int promptX = (int)((data.bubbleGapStartX + data.bubbleGapEndX) / 2 + offsetX);
+                                int promptY = (int)((data.bubbleGapStartY + data.bubbleGapEndY) / 2 + offsetY);
+                                imageControl.AddTextBlock("气泡超限间隔", Colors.Orange, promptX, promptY);
                             }
                         }
-                    
+
+                        //// 气泡检测启用时，在结果区显示检测结果、最大点间隔和阈值。
+                        //if (set.isUseBubbleDet && data != null && bResult != null)
+                        //{
+                        //    double scale = cutSet.scaleSize > 0 ? cutSet.scaleSize : 1;
+                        //    string bubbleText = $"气泡检测: {(bResult.bubbleResult ? "OK" : "NG")}  最大点间隔: {data.bubblePointDistance / scale:0.00}mm  阈值: {set.bubblePointMinDistance:0.00}mm";
+                        //    imageControl.AddTextBlock(bubbleText,
+                        //        (bResult.bubbleResult ? Colors.Green : Colors.Red), 10, 10 + 72);
+                        //}
+
                     }
                 }
                 catch (Exception ex)
