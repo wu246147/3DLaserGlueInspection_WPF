@@ -345,7 +345,7 @@ namespace _3DLaserGlueInspection
             Thread cameraThread;
             try
             {
-                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedSignal + "："+info);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedSignal + ":"+info);
 
                 //string[] tempReceivedParts;
                 //tempReceivedParts = info.Split(',');
@@ -477,7 +477,7 @@ namespace _3DLaserGlueInspection
             if (robot.GetType() == typeof(KukaRobot))
             {
                 string msg = serializationInfo(0, 0, 0, 0, 0, 0, RESULT, "11");
-                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.SendSignal + "：" + msg);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.SendSignal + ":" + msg);
                 Server.Send(msg);
             }
         }
@@ -581,13 +581,13 @@ namespace _3DLaserGlueInspection
                     {
                         sql = new wSql("127.0.0.1", "admin", "admin", "raivasgb");
                         sql.Open();
-                        ShowMessage("数据库连接测试成功！");
+                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.DatabaseConnectionTestSuccessful);
                         sql.Close();
                         sqlEnable = true;
                     }
                     catch (Exception ex)
                     {
-                        ShowMessage("数据库连接测试失败！" + ex.Message, LogType.warn);
+                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.DatabaseConnectionTestFailed + ex.Message, LogType.warn);
                         sqlEnable = false;
                     }
                 }
@@ -1419,10 +1419,10 @@ namespace _3DLaserGlueInspection
                         }
                         catch (Exception ex)
                         {
-                            ShowMessage($"数据库写入异常：{ex}", LogType.warn);
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.DatabaseWriteException + ex, LogType.warn);
                         }
 
-                        ShowMessage($"数据库写入完成");
+                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.DatabaseWriteCompleted);
                     }
 
 
@@ -2084,7 +2084,7 @@ namespace _3DLaserGlueInspection
                     }
 
                     //等待2d结果显示完毕
-                    ShowMessage("等待2d结果显示完毕");
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingFor2DResultDisplayToComplete);
                     while (!taskShow2D.IsCompleted)
                     {
                         Thread.Sleep(10);
@@ -4124,16 +4124,16 @@ namespace _3DLaserGlueInspection
 
                             DispPolygonjHWindowControlEvent(regionSmallestRectangle2Points, Colors.Blue, "margin");
 
-                            string text = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight + $"：{data.glueHeight:0.00}\r\n"
-                               + _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth + $"：{data.glueWidth:0.00}\r\n"
-                               + _3DLaserGlueInspection.Resources.LanguageDict.Area+ $"：{data.glueArea:0.00}";
+                            string text = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight + $":{data.glueHeight:0.00}\r\n"
+                               + _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth + $":{data.glueWidth:0.00}\r\n"
+                               + _3DLaserGlueInspection.Resources.LanguageDict.Area+ $":{data.glueArea:0.00}";
                             DispTextInImageHWindowControlEvent(text, Colors.White, (int)data.column + (int)(data.glueWidth / 2 * cutSet.scaleSize + offsetX),
                                 (int)data.row + (int)(data.glueHeight / 2 * cutSet.scaleSize + offsetY));
 
                             //hWindowControl.DispTextInImage(text, data.row, data.column);
-                            string textWindow1 = _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth +"："+ (bResult.glueWidth ? "OK" : "NG");
-                            string textWindow2 = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight + "：" + (bResult.glueHeight ? "OK" : "NG");
-                            string textWindow3 = _3DLaserGlueInspection.Resources.LanguageDict.Area + "：" + (bResult.glueArea ? "OK" : "NG");
+                            string textWindow1 = _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth +":"+ (bResult.glueWidth ? "OK" : "NG");
+                            string textWindow2 = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight + ":" + (bResult.glueHeight ? "OK" : "NG");
+                            string textWindow3 = _3DLaserGlueInspection.Resources.LanguageDict.Area + ":" + (bResult.glueArea ? "OK" : "NG");
                             string textWindow = textWindow1 + "\r\n" + textWindow2 + "\r\n" + textWindow3;
                             DispTextInImageHWindowControlEvent(textWindow, Colors.White, 10, 10);
 

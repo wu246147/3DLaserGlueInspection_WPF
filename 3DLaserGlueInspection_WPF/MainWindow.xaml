@@ -926,7 +926,7 @@ Converter={StaticResource ResultColor}}" />
                         BorderBrush="#00000000"
                         BorderThickness="0"
                         Foreground="Black"
-                        Header="中文" IsCheckable="True" Click="MenuItem_chineseLanguage_Click"/>
+                        Header="{x:Static resx:LanguageDict.Chinese}" IsCheckable="True" Click="MenuItem_chineseLanguage_Click"/>
                     <MenuItem
                         x:Name="MenuItem_englishLanguage"
                         BorderBrush="#00000000"

@@ -82,7 +82,7 @@ namespace _3DLaserGlueInspection
         public List<double[]> getMapping2DPoint()
         {
             if(!_ready)
-                throw new InvalidOperationException("请先调用 Calibrate()");
+                throw new InvalidOperationException(_3DLaserGlueInspection.Resources.LanguageDict.CalibrateRequired);
             return To2D(_pts3D);
         }
 
@@ -104,11 +104,11 @@ namespace _3DLaserGlueInspection
         public void Calibrate(List<double[]> pose3D, double[] controlRows, double[] controlCols)
         {
             if (pose3D == null || pose3D.Count < 2)
-                throw new ArgumentException("pose3D 至少需要 2 个点");
+                throw new ArgumentException(_3DLaserGlueInspection.Resources.LanguageDict.Pose3DAtLeastTwoPoints);
             if (controlRows == null || controlCols == null || controlRows.Length < 2)
-                throw new ArgumentException("controlRows/controlCols 至少需要 2 个点");
+                throw new ArgumentException(_3DLaserGlueInspection.Resources.LanguageDict.ControlRowsColsAtLeastTwoPoints);
             if (controlRows.Length != controlCols.Length)
-                throw new ArgumentException("controlRows 与 controlCols 长度不一致");
+                throw new ArgumentException(_3DLaserGlueInspection.Resources.LanguageDict.ControlRowsColsLengthMismatch);
 
             // 构建 2D 点列表 (x, y) = (col, row)
             _pts2D = new List<double[]>(controlRows.Length);
@@ -132,9 +132,9 @@ namespace _3DLaserGlueInspection
         public double[] To2D(double[] point3D)
         {
             if (!_ready)
-                throw new InvalidOperationException("请先调用 Calibrate()");
+                throw new InvalidOperationException(_3DLaserGlueInspection.Resources.LanguageDict.CalibrateRequired);
             if (point3D == null || point3D.Length < 3)
-                throw new ArgumentException("point3D 至少包含 3 个元素");
+                throw new ArgumentException(_3DLaserGlueInspection.Resources.LanguageDict.Point3DAtLeastThreeElements);
 
             // 1. 在 3D 轨迹上找最近点，得到弧长参数 t
             int nearestIdx = FindNearestIndex(point3D, _pts3D);

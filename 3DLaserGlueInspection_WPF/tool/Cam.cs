@@ -216,7 +216,7 @@ namespace _3DLaserGlueInspection
             //nRet = MV_CC_RegisterImageCallBackEx_NET(ImageCallback, IntPtr.Zero);
             //if (MvCamera.MV_OK != nRet)
             //{
-            //    _errMsg = "注册回调失败:" + Convert.ToString(nRet, 16);
+            //    _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.RegisterCallbackFailed + Convert.ToString(nRet, 16);
             //    return false;
             //}
             _isOpen = true;
@@ -700,7 +700,7 @@ namespace _3DLaserGlueInspection
                         }
                         //else
                         //{
-                        //    _errMsg = "采集失败：" + Convert.ToString(nRet, 16);
+                        //    _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.CollectionFailed + Convert.ToString(nRet, 16);
                         //    return false;
                         //}
                     }

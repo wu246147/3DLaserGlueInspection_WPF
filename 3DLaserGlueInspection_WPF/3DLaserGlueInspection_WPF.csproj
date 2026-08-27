@@ -103,6 +103,9 @@
     <Reference Include="Microsoft.Extensions.Logging.Abstractions, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Extensions.Logging.Abstractions.6.0.0\lib\net461\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
     </Reference>
+    <Reference Include="MySql.Data">
+      <HintPath>C:\Program Files (x86)\MySQL\MySQL Installer for Windows\MySql.Data.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -161,7 +164,13 @@
     <Compile Include="Converter\EnumToBooleanConverter.cs" />
     <Compile Include="Converter\FloatToPercentConverter.cs" />
     <Compile Include="Converter\HalfConverter.cs" />
+    <Compile Include="Converter\ResultToColorConverter.cs" />
     <Compile Include="Converter\VisibilityToWidthConverter.cs" />
+    <Compile Include="Resources\LanguageDict.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>LanguageDict.resx</DependentUpon>
+    </Compile>
     <Compile Include="subForm\ImageControl2.xaml.cs">
       <DependentUpon>ImageControl2.xaml</DependentUpon>
     </Compile>
@@ -207,6 +216,7 @@
     <Compile Include="tool\TCPServer.cs" />
     <Compile Include="tool\Tool.cs" />
     <Compile Include="tool\Vision.cs" />
+    <Compile Include="tool\wSql.cs" />
     <Page Include="Assets\Styles\DefaultStyle.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -286,9 +296,18 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <EmbeddedResource Include="Properties\Resources.en-US.resx" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\LanguageDict.en-US.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\LanguageDict.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>LanguageDict.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <Resource Include="Assets\Fonts\iconfont.ttf" />
@@ -331,7 +350,6 @@
     <Resource Include="Assets\Icons\Logo.png" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Resources\" />
     <Folder Include="Themes\" />
   </ItemGroup>
   <ItemGroup>

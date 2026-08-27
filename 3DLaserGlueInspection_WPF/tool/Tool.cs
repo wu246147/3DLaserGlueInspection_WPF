@@ -105,7 +105,7 @@ namespace _3DLaserGlueInspection
             // 弹窗提醒重启后，切换语言
             var result = MessageBox.Show(
                 Resources.LanguageDict.LanguageChangeSuccess,
-                "Warn",
+                Resources.LanguageDict.Prompt,
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
 
@@ -148,33 +148,57 @@ namespace _3DLaserGlueInspection
             }
         }
 
+        /// <summary>
+        /// 将旧版以中文文本为参数的翻译调用转换为当前 LanguageDict 资源。
+        /// 支持资源中带或不带中英文冒号的文本；未找到资源时原样返回，避免日志内容丢失。
+        /// </summary>
+        /// <param name="info">待翻译的中文文本。</param>
+        /// <returns>当前语言对应的文本；找不到匹配资源时返回原文本。</returns>
         public static string LanguageTranslate(string info)
         {
-            string translate="";
-            //if (LANGUAGE_ID == 0)
-            //{
-            //    translate = info;
-            //}
-            //else
-            //{
-            //    if (LANGUAGE_DIC != null)
-            //    { 
-            //        if (LANGUAGE_DIC.ContainsKey(info))
-            //        {
-            //            translate = LANGUAGE_DIC[info];
-            //        }
-            //        else
-            //        {
-            //            translate = info;
-            //        }
-            //    }
-            //    else
-            //    {
-            //        translate = info;
-            //    }
+            if (string.IsNullOrEmpty(info))
+            {
+                return info;
+            }
 
-            //}
-            return translate;
+            string normalizedInfo = info.TrimEnd(' ', ':', '：');
+            System.Resources.ResourceSet resourceSet =
+                Resources.LanguageDict.ResourceManager.GetResourceSet(
+                    CultureInfo.InvariantCulture, true, true);
+            if (resourceSet != null)
+            {
+                foreach (System.Collections.DictionaryEntry entry in resourceSet)
+                {
+                    string resourceValue = entry.Value as string;
+                    if (string.IsNullOrEmpty(resourceValue))
+                    {
+                        continue;
+                    }
+
+                    string normalizedResourceValue = resourceValue.TrimEnd(' ', ':', '：');
+                    if (!string.Equals(normalizedResourceValue, normalizedInfo, StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
+                    string translated = Resources.LanguageDict.ResourceManager.GetString(
+                        entry.Key.ToString(), CultureInfo.CurrentUICulture);
+                    if (string.IsNullOrEmpty(translated))
+                    {
+                        return info;
+                    }
+
+                    string suffix = info.Substring(normalizedInfo.Length);
+                    if (suffix.Length > 0 && !translated.EndsWith(":", StringComparison.Ordinal)
+                        && !translated.EndsWith("：", StringComparison.Ordinal))
+                    {
+                        translated += suffix.IndexOf("：", StringComparison.Ordinal) >= 0 ? ":" : suffix;
+                    }
+                    return translated;
+                }
+            }
+
+            return info;
         }
 
 
@@ -295,7 +319,7 @@ namespace _3DLaserGlueInspection
                             if (set.isUseBubbleDet)
                             {
                                 double scale = cutSet.scaleSize > 0 ? cutSet.scaleSize : 1;
-                                string bubbleText = $"气泡检测: {data.bubblePointDistance / scale:0.00}mm";
+                                string bubbleText = $"{Resources.LanguageDict.BubbleDetection}: {data.bubblePointDistance / scale:0.00}mm";
                                 imageControl.AddTextBlock(bubbleText, (bResult.bubbleResult ? Colors.Green : Colors.Red), (int)data.column + (int)(data.glueWidth / 2 * cutSet.scaleSize + offsetX),
                                 (int)data.row + (int)(data.glueHeight / 2 * cutSet.scaleSize + offsetY + 72));
                             }
@@ -362,11 +386,11 @@ namespace _3DLaserGlueInspection
 
                         // 字体结果显示最后
 
-                        string textWindow1 = _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth + ":" + (bResult.glueWidth ? "OK" : "NG") + " " + _3DLaserGlueInspection.Resources.LanguageDict.DetRange +
+                        string textWindow1 = _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth + ":" + (bResult.glueWidth ? Resources.LanguageDict.OK : Resources.LanguageDict.NG) + " " + _3DLaserGlueInspection.Resources.LanguageDict.DetRange +
                              $": {set.widthMin}~{set.widthMax}mm";
-                        string textWindow2 = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight + ":" + (bResult.glueHeight ? "OK" : "NG") + " " + _3DLaserGlueInspection.Resources.LanguageDict.DetRange +
+                        string textWindow2 = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight + ":" + (bResult.glueHeight ? Resources.LanguageDict.OK : Resources.LanguageDict.NG) + " " + _3DLaserGlueInspection.Resources.LanguageDict.DetRange +
                             $": {set.heightMin}~{set.heightMax}mm";
-                        string textWindow3 = _3DLaserGlueInspection.Resources.LanguageDict.Area + ":" + (bResult.glueArea ? "OK" : "NG") + " " + _3DLaserGlueInspection.Resources.LanguageDict.DetRange +
+                        string textWindow3 = _3DLaserGlueInspection.Resources.LanguageDict.Area + ":" + (bResult.glueArea ? Resources.LanguageDict.OK : Resources.LanguageDict.NG) + " " + _3DLaserGlueInspection.Resources.LanguageDict.DetRange +
                             $": {set.areaMin}~{set.areaMax}mm²";
                         string textWindow = textWindow1 + "\r\n" + textWindow2 + "\r\n" + textWindow3;
                         //Console.WriteLine($"point :({10},{10})");
@@ -379,7 +403,7 @@ namespace _3DLaserGlueInspection
                         if (set.isUseBubbleDet)
                         {
                             double scale = cutSet.scaleSize > 0 ? cutSet.scaleSize : 1;
-                            string bubbleText = $"气泡检测: {(bResult.bubbleResult ? "OK" : "NG")} 阈值: {set.bubblePointMinDistance:0.00}mm";
+                            string bubbleText = $"{Resources.LanguageDict.BubbleDetection}: {(bResult.bubbleResult ? Resources.LanguageDict.OK : Resources.LanguageDict.NG)} {Resources.LanguageDict.BubbleMaximumPointSpacing}: {data.bubblePointDistance / scale:0.00}mm {Resources.LanguageDict.Threshold}: {set.bubblePointMinDistance:0.00}mm";
                             imageControl.AddTextBlock(bubbleText,
                                 (bResult.bubbleResult ? Colors.Green : Colors.Red), 10, 10 + 72);
                             // 气泡检测 NG 时，连接检测出的超限间隔两个点并显示提示。
@@ -391,7 +415,7 @@ namespace _3DLaserGlueInspection
                                 imageControl.AddPolyline(bubbleGapPoints, Colors.Orange, 3);
                                 int promptX = (int)((data.bubbleGapStartX + data.bubbleGapEndX) / 2 + offsetX);
                                 int promptY = (int)((data.bubbleGapStartY + data.bubbleGapEndY) / 2 + offsetY);
-                                imageControl.AddTextBlock("气泡超限间隔", Colors.Orange, promptX, promptY);
+                                imageControl.AddTextBlock(Resources.LanguageDict.BubbleOutOfRangeGap, Colors.Orange, promptX, promptY);
                             }
                         }
 

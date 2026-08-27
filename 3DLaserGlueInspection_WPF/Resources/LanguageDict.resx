@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -1240,5 +1240,204 @@
   </data>
   <data name="GetExportTimeFail" xml:space="preserve">
     <value>获取曝光失败：</value>
+  </data>
+  <data name="Test" xml:space="preserve">
+    <value>测试</value>
+  </data>
+  <data name="MappingTrajectory" xml:space="preserve">
+    <value>映射轨迹</value>
+  </data>
+  <data name="EnableOverlappingAdhesiveLengthDetection" xml:space="preserve">
+    <value>启用重叠胶长检测</value>
+  </data>
+  <data name="GlueWidthThre" xml:space="preserve">
+    <value>胶宽阈值</value>
+  </data>
+  <data name="GlueLenthMin" xml:space="preserve">
+    <value>胶长最小值</value>
+  </data>
+  <data name="GlueLenthMax" xml:space="preserve">
+    <value>胶长最大值</value>
+  </data>
+  <data name="GlueLenthStartDetID" xml:space="preserve">
+    <value>胶长开始检测ID</value>
+  </data>
+  <data name="GlueLenthEndDetID" xml:space="preserve">
+    <value>胶长停止检测ID</value>
+  </data>
+  <data name="GlueLenthDet" xml:space="preserve">
+    <value>胶长检测</value>
+  </data>
+  <data name="GlueLenth" xml:space="preserve">
+    <value>胶长</value>
+  </data>
+  <data name="OverlapStartID" xml:space="preserve">
+    <value>重叠开始ID</value>
+  </data>
+  <data name="OverlapEndID" xml:space="preserve">
+    <value>重叠结束ID</value>
+  </data>
+  <data name="GlueV" xml:space="preserve">
+    <value>胶体积</value>
+  </data>
+  <data name="SendSignal" xml:space="preserve">
+    <value>发送信号</value>
+  </data>
+  <data name="CurrentLocation2D" xml:space="preserve">
+    <value>当前位置2D</value>
+  </data>
+  <data name="ShowBaseLineDetRegion" xml:space="preserve">
+    <value>显示基准面
+检测框</value>
+  </data>
+  <data name="useBaseLineDet" xml:space="preserve">
+    <value>启用基准线检测</value>
+  </data>
+  <data name="ignoreHigh" xml:space="preserve">
+    <value>忽略高度</value>
+  </data>
+  <data name="BaseLineDet" xml:space="preserve">
+    <value>基准面检测</value>
+  </data>
+  <data name="DatabaseConnectionTestSuccessful" xml:space="preserve">
+    <value>数据库连接测试成功！</value>
+  </data>
+  <data name="DatabaseConnectionTestFailed" xml:space="preserve">
+    <value>数据库连接测试失败！</value>
+  </data>
+  <data name="DatabaseWriteException" xml:space="preserve">
+    <value>数据库写入异常：</value>
+  </data>
+  <data name="DatabaseWriteCompleted" xml:space="preserve">
+    <value>数据库写入完成</value>
+  </data>
+  <data name="WaitingFor2DResultDisplayToComplete" xml:space="preserve">
+    <value>等待2d结果显示完毕</value>
+  </data>
+  <data name="ThreeDTrackEmptyRunFirst" xml:space="preserve">
+    <value>3d轨迹为空，请先运行3d轨迹</value>
+  </data>
+  <data name="TrajectoryNotMappedSetFirst" xml:space="preserve">
+    <value>轨迹还没进行映射，请先设置好3d和2d轨迹，再进行轨迹映射</value>
+  </data>
+  <data name="SelectVehicleRouteCameraFirst" xml:space="preserve">
+    <value>请先选择车型、路线和相机！</value>
+  </data>
+  <data name="InputDataFormatError" xml:space="preserve">
+    <value>输入数据格式错误：</value>
+  </data>
+  <data name="ActualInputCannotBeZero" xml:space="preserve">
+    <value>输入实际数据不能为0！</value>
+  </data>
+  <data name="DetectionResultCannotBeZero" xml:space="preserve">
+    <value>检测结果不能为0！</value>
+  </data>
+  <data name="CorrectionSuccessful" xml:space="preserve">
+    <value>矫正成功。</value>
+  </data>
+  <data name="CameraDisabledCannotMap" xml:space="preserve">
+    <value>相机未启用，无法用未启用相机进行映射轨迹！</value>
+  </data>
+  <data name="Set2DDetectionTrajectoryAndStartEndFirst" xml:space="preserve">
+    <value>请先设置2d检测轨迹，并且设置起点终点序号！</value>
+  </data>
+  <data name="EndPointNumberTooLarge" xml:space="preserve">
+    <value>终点序号过大，超过提取的3d轨迹点数量！</value>
+  </data>
+  <data name="SelectVehicleRouteCameraAndExtract3D" xml:space="preserve">
+    <value>请先选择车型、路线和相机，并执行3D点云提取！</value>
+  </data>
+  <data name="ErrorWithMessage" xml:space="preserve">
+    <value>报错：</value>
+  </data>
+  <data name="RegisterCallbackFailed" xml:space="preserve">
+    <value>注册回调失败:</value>
+  </data>
+  <data name="UnsupportedBool" xml:space="preserve">
+    <value>不支持bool</value>
+  </data>
+  <data name="UnsupportedInt" xml:space="preserve">
+    <value>不支持int</value>
+  </data>
+  <data name="WriteNotSupported" xml:space="preserve">
+    <value>不支持写入</value>
+  </data>
+  <data name="ListenerStopped" xml:space="preserve">
+    <value>监听已停止。</value>
+  </data>
+  <data name="ListenerStartError" xml:space="preserve">
+    <value>开始监听时发生错误:</value>
+  </data>
+  <data name="NewClientConnected" xml:space="preserve">
+    <value>新客户端已连接:</value>
+  </data>
+  <data name="ListenerSocketClosed" xml:space="preserve">
+    <value>监听Socket已关闭，停止接受新连接。</value>
+  </data>
+  <data name="AcceptClientError" xml:space="preserve">
+    <value>接受客户端时发生错误:</value>
+  </data>
+  <data name="CalibrateRequired" xml:space="preserve">
+    <value>请先调用 Calibrate()</value>
+  </data>
+  <data name="Pose3DAtLeastTwoPoints" xml:space="preserve">
+    <value>pose3D 至少需要 2 个点</value>
+  </data>
+  <data name="ControlRowsColsAtLeastTwoPoints" xml:space="preserve">
+    <value>controlRows/controlCols 至少需要 2 个点</value>
+  </data>
+  <data name="ControlRowsColsLengthMismatch" xml:space="preserve">
+    <value>controlRows 与 controlCols 长度不一致</value>
+  </data>
+  <data name="Point3DAtLeastThreeElements" xml:space="preserve">
+    <value>point3D 至少包含 3 个元素</value>
+  </data>
+  <data name="SingleInstanceDisabled" xml:space="preserve">
+    <value>软件已设置禁止多开！</value>
+  </data>
+  <data name="DuplicateInstance" xml:space="preserve">
+    <value>重复</value>
+  </data>
+  <data name="AdministratorCannotEnterPage" xml:space="preserve">
+    <value>管理员无法进入该页面</value>
+  </data>
+  <data name="Chinese" xml:space="preserve">
+    <value>中文</value>
+  </data>
+  <data name="ChangeObject" xml:space="preserve">
+    <value>修改对象</value>
+  </data>
+  <data name="Administrator" xml:space="preserve">
+    <value>管理员</value>
+  </data>
+  <data name="SuperAdministrator" xml:space="preserve">
+    <value>超级管理员</value>
+  </data>
+  <data name="UserType" xml:space="preserve">
+    <value>用户类型</value>
+  </data>
+  <data name="Rubbish" xml:space="preserve">
+    <value>垃圾桶</value>
+  </data>
+  <data name="EnableBubbleDetection" xml:space="preserve">
+    <value>启用气泡检测</value>
+  </data>
+  <data name="BubblePointMinimumDistance" xml:space="preserve">
+    <value>点间最小间隔</value>
+  </data>
+  <data name="BubbleDetection" xml:space="preserve">
+    <value>气泡检测</value>
+  </data>
+  <data name="BubbleMaximumPointSpacing" xml:space="preserve">
+    <value>最大点间隔</value>
+  </data>
+  <data name="Threshold" xml:space="preserve">
+    <value>阈值</value>
+  </data>
+  <data name="BubbleOutOfRangeGap" xml:space="preserve">
+    <value>气泡超限间隔</value>
+  </data>
+  <data name="ImageFileFilter" xml:space="preserve">
+    <value>PNG(*.png)|*.png|Bitmap(*.bmp)|*.bmp|Tiff(*.tif)|*.tif|JPEG(*.jpg)|*.jpg|所有文件(*.*)|*.*</value>
   </data>
 </root>

@@ -278,8 +278,8 @@ namespace _3DLaserGlueInspection
         private void ShowAdministratorPermissionDenied()
         {
             System.Windows.Forms.MessageBox.Show(
-                "管理员无法进入该页面",
-                "提示",
+                _3DLaserGlueInspection.Resources.LanguageDict.AdministratorCannotEnterPage,
+                _3DLaserGlueInspection.Resources.LanguageDict.Prompt,
                 System.Windows.Forms.MessageBoxButtons.OK,
                 System.Windows.Forms.MessageBoxIcon.Warning);
         }

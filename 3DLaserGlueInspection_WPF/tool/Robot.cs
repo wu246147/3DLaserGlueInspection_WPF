@@ -1097,14 +1097,14 @@ namespace _3DLaserGlueInspection
                         }
                         else
                         {
-                            _errMsg = paramPath + "文件格式异常";
+                            _errMsg = paramPath + _3DLaserGlueInspection.Resources.LanguageDict.FileFormatException;
                             result = false;
                         }
                     }
                 }
                 else
                 {
-                    _errMsg = paramPath + "文件不存在";
+                    _errMsg = paramPath + _3DLaserGlueInspection.Resources.LanguageDict.FileDoesNotExist;
                     result = false;
                 }
             }
@@ -1128,7 +1128,7 @@ namespace _3DLaserGlueInspection
                     if (ios == null)
                     {
                         result = false;
-                        _errMsg = paramPath + "文件格式异常";
+                        _errMsg = paramPath + _3DLaserGlueInspection.Resources.LanguageDict.FileFormatException;
                     }
                     else
                     {
@@ -1138,7 +1138,7 @@ namespace _3DLaserGlueInspection
                 else
                 {
                     result = false;
-                    _errMsg = paramPath + "文件不存在";
+                    _errMsg = paramPath + _3DLaserGlueInspection.Resources.LanguageDict.FileDoesNotExist;
                 }
             }
             catch (Exception ex)
@@ -1227,7 +1227,7 @@ namespace _3DLaserGlueInspection
 
         public bool Read(DI eDI, out bool value)
         {
-            _errMsg = "不支持bool";
+            _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.UnsupportedBool;
             value = false;
             return false;
         }
@@ -1242,7 +1242,7 @@ namespace _3DLaserGlueInspection
                 string ioAddress = ioDict[ioName].Address.Trim();
                 if (!string.IsNullOrEmpty(ioAddress))
                 {
-                    _errMsg = "不支持bool";
+                    _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.UnsupportedBool;
                     value = false;
                     return false;
 
@@ -1256,7 +1256,7 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = ioName + "地址未分配";
+                _errMsg = ioName + _3DLaserGlueInspection.Resources.LanguageDict.AddressNotAssigned;
             }
             value = false;
             return false;
@@ -1277,7 +1277,7 @@ namespace _3DLaserGlueInspection
                 string ioAddress = ioDict[ioName].Address.Trim();
                 if (!string.IsNullOrEmpty(ioAddress))
                 {
-                    _errMsg = "不支持int";
+                    _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.UnsupportedInt;
                     value = 0;
                     return false;
 
@@ -1291,7 +1291,7 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = ioName + "地址未分配";
+                _errMsg = ioName + _3DLaserGlueInspection.Resources.LanguageDict.AddressNotAssigned;
             }
             value = 0;
             return false;
@@ -1307,7 +1307,7 @@ namespace _3DLaserGlueInspection
                 {
                     lock (iolock)
                     {
-                        _errMsg = "不支持写入";
+                        _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.WriteNotSupported;
                         value = false;
                         return false;
                     }
@@ -1319,7 +1319,7 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                _errMsg = eDO.ToString() + "地址未分配";
+                _errMsg = eDO.ToString() + _3DLaserGlueInspection.Resources.LanguageDict.AddressNotAssigned;
             }
             return false;
         }

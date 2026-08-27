@@ -91,14 +91,14 @@ namespace TCPIP
                         }
                         else
                         {
-                            _errMsg = paramPath + "文件格式异常";
+                            _errMsg = paramPath + _3DLaserGlueInspection.Resources.LanguageDict.FileFormatException;
                             result = false;
                         }
                     }
                 }
                 else
                 {
-                    _errMsg = paramPath + "文件不存在";
+                    _errMsg = paramPath + _3DLaserGlueInspection.Resources.LanguageDict.FileDoesNotExist;
                     result = false;
                 }
             }
@@ -174,12 +174,12 @@ namespace TCPIP
             catch (ObjectDisposedException)
             {
                 // 当 mySocket 被关闭时，BeginAccept 会抛出此异常，这是正常的停止方式
-                Console.WriteLine("监听已停止。");
+                Console.WriteLine(_3DLaserGlueInspection.Resources.LanguageDict.ListenerStopped);
             }
             catch (Exception ex)
             {
                 // 处理其他可能的异常
-                Console.WriteLine($"开始监听时发生错误: {ex.Message}");
+                Console.WriteLine(_3DLaserGlueInspection.Resources.LanguageDict.ListenerStartError + ex.Message);
                 // 根据需求，可以选择在这里停止或尝试重新开始监听
             }
         }
@@ -191,7 +191,7 @@ namespace TCPIP
             {
                 // 1. 完成接受操作，并获取与客户端通信的新Socket
                 Socket clientSocket = mySocket.EndAccept(ar);
-                Console.WriteLine($"新客户端已连接: {clientSocket.RemoteEndPoint}");
+                Console.WriteLine(_3DLaserGlueInspection.Resources.LanguageDict.NewClientConnected + clientSocket.RemoteEndPoint);
 
                 //// 2. 处理这个新连接的客户端
                 ////    注意：这里我们不再将客户端Socket存到类级别的变量(this.ConnectSocket)中，
@@ -216,12 +216,12 @@ namespace TCPIP
             catch (ObjectDisposedException)
             {
                 // 监听Socket被关闭，停止接受循环
-                Console.WriteLine("监听Socket已关闭，停止接受新连接。");
+                Console.WriteLine(_3DLaserGlueInspection.Resources.LanguageDict.ListenerSocketClosed);
             }
             catch (Exception ex)
             {
                 // 在接受客户端时发生错误
-                Console.WriteLine($"接受客户端时发生错误: {ex.Message}");
+                Console.WriteLine(_3DLaserGlueInspection.Resources.LanguageDict.AcceptClientError + ex.Message);
                 // 即使出错，也尝试继续监听下一个客户端
                 StartAcceptLoop();
             }

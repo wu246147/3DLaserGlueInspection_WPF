@@ -117,21 +117,38 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="log" xml:space="preserve">
-    <value>AI 3D Vision 
-Glue Inspection</value>
+  <data name="3DGluingDetection" xml:space="preserve">
+    <value>3D Gluing Detection</value>
   </data>
-  <data name="LanguageChangeSuccess" xml:space="preserve">
-    <value>The language switch is successful, and the interface will update after restarting the software.</value>
+  <data name="3DGluingFrameDetection" xml:space="preserve">
+    <value>3D Gluing Frame Detection</value>
+  </data>
+  <data name="3DGluingInspectionResults" xml:space="preserve">
+    <value>3D Gluing Inspection Results</value>
   </data>
   <data name="3DImageDisplayTaskStartupCompleted" xml:space="preserve">
     <value>3D image display task startup completed</value>
+  </data>
+  <data name="3DPointCloudExtraction" xml:space="preserve">
+    <value>3D Point Cloud Extraction</value>
+  </data>
+  <data name="3DPointCloudResults" xml:space="preserve">
+    <value>3D Point Cloud Results</value>
   </data>
   <data name="ActualFrameRate" xml:space="preserve">
     <value>Actual frame rate:</value>
   </data>
   <data name="ActualFrameRateAcquisitionFailed" xml:space="preserve">
     <value>Actual frame rate acquisition failed:</value>
+  </data>
+  <data name="ActuallyGlueHeight" xml:space="preserve">
+    <value>Actually Glue Height</value>
+  </data>
+  <data name="ActuallyGlueWidth" xml:space="preserve">
+    <value>Actually Glue Width</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Add</value>
   </data>
   <data name="AddressFormatMismatch" xml:space="preserve">
     <value>Address format mismatch</value>
@@ -148,6 +165,9 @@ Glue Inspection</value>
   <data name="AutomaticExposureAcquisitionTime" xml:space="preserve">
     <value>Automatic exposure acquisition time</value>
   </data>
+  <data name="CacheImages" xml:space="preserve">
+    <value>Cache Images</value>
+  </data>
   <data name="Cam" xml:space="preserve">
     <value> Cam</value>
   </data>
@@ -156,6 +176,10 @@ Glue Inspection</value>
   </data>
   <data name="CameraAcquisitionStoppedAcquisitionTime" xml:space="preserve">
     <value>Camera acquisition stopped, acquisition time:</value>
+  </data>
+  <data name="CameraAndMovementDirectionAngle" xml:space="preserve">
+    <value>Camera And Movement 
+Direction Angle</value>
   </data>
   <data name="CameraClose" xml:space="preserve">
     <value>Camera close</value>
@@ -193,6 +217,36 @@ Glue Inspection</value>
   <data name="CameraValue" xml:space="preserve">
     <value>,Camera value:</value>
   </data>
+  <data name="CamName" xml:space="preserve">
+    <value>Cam Name</value>
+  </data>
+  <data name="CamParaName" xml:space="preserve">
+    <value>Cam Para Name</value>
+  </data>
+  <data name="CamSetting" xml:space="preserve">
+    <value>Camera_Settings</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="CarType" xml:space="preserve">
+    <value>Car Type</value>
+  </data>
+  <data name="Change" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="ChangePassWord" xml:space="preserve">
+    <value>Change PassWord</value>
+  </data>
+  <data name="ChangePassWork" xml:space="preserve">
+    <value>Change password</value>
+  </data>
+  <data name="ClearCache" xml:space="preserve">
+    <value>Clear Cache</value>
+  </data>
+  <data name="CloseCam" xml:space="preserve">
+    <value>Close Cam</value>
+  </data>
   <data name="CloseSuccessfully" xml:space="preserve">
     <value>Close successfully</value>
   </data>
@@ -202,8 +256,20 @@ Glue Inspection</value>
   <data name="CollectionFailed" xml:space="preserve">
     <value>Collection failed:</value>
   </data>
+  <data name="ColorLowerLimit" xml:space="preserve">
+    <value>Min Color</value>
+  </data>
+  <data name="ColorUpperLimit" xml:space="preserve">
+    <value>Max Color</value>
+  </data>
+  <data name="CommonCorrectionCoefficient" xml:space="preserve">
+    <value>Share Correction</value>
+  </data>
   <data name="Computer" xml:space="preserve">
     <value>Computer</value>
+  </data>
+  <data name="Connect" xml:space="preserve">
+    <value>Connect</value>
   </data>
   <data name="ConnectionFailed" xml:space="preserve">
     <value>Connection failed:</value>
@@ -211,11 +277,23 @@ Glue Inspection</value>
   <data name="ConnectionSuccessful" xml:space="preserve">
     <value>Connection successful</value>
   </data>
+  <data name="ContAcq" xml:space="preserve">
+    <value>Cont Acq</value>
+  </data>
   <data name="ContinueThePhotoLoop" xml:space="preserve">
     <value>Continue the photo loop</value>
   </data>
   <data name="ContinuousCollectionBegins" xml:space="preserve">
     <value>Continuous collection begins</value>
+  </data>
+  <data name="ContourDet" xml:space="preserve">
+    <value>Contour Det</value>
+  </data>
+  <data name="ContourDetectionResult" xml:space="preserve">
+    <value>Contour Detection Result</value>
+  </data>
+  <data name="ControlButton" xml:space="preserve">
+    <value>Control Buttons</value>
   </data>
   <data name="ConversionFailedFormatError" xml:space="preserve">
     <value>Conversion failed, format error</value>
@@ -226,14 +304,50 @@ Glue Inspection</value>
   <data name="CoordinateConversionLighttocamDoesNotExist" xml:space="preserve">
     <value>Coordinate conversion (LightToCam) does not exist</value>
   </data>
+  <data name="Copy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="CopyPara" xml:space="preserve">
+    <value>Copy Para</value>
+  </data>
   <data name="CopyToAllImages" xml:space="preserve">
     <value>Copy to All Images</value>
   </data>
   <data name="CopyToRangeImage" xml:space="preserve">
     <value>Copy to Range Image</value>
   </data>
+  <data name="CorrectionX" xml:space="preserve">
+    <value>CorrectionX</value>
+  </data>
+  <data name="CorrectionY" xml:space="preserve">
+    <value>CorrectionY</value>
+  </data>
   <data name="CtrlRightClickToDeleteCompleteDrawing" xml:space="preserve">
     <value>Ctrl: Right click to delete: complete drawing</value>
+  </data>
+  <data name="CurrentPoseDetection" xml:space="preserve">
+    <value>Current Pose Detection</value>
+  </data>
+  <data name="DataDir" xml:space="preserve">
+    <value>Data Dir</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Del</value>
+  </data>
+  <data name="DetList" xml:space="preserve">
+    <value>Det List</value>
+  </data>
+  <data name="DetResult" xml:space="preserve">
+    <value>Det Results</value>
+  </data>
+  <data name="DetToolParaSetting" xml:space="preserve">
+    <value>Det Tool Para Setting</value>
+  </data>
+  <data name="Disconnect" xml:space="preserve">
+    <value>Disconnect</value>
+  </data>
+  <data name="DiscreteDenoising" xml:space="preserve">
+    <value>Discrete Denoising</value>
   </data>
   <data name="DoesNotSupportStrings" xml:space="preserve">
     <value>Does not support strings</value>
@@ -250,6 +364,12 @@ Glue Inspection</value>
   <data name="DuplicateName" xml:space="preserve">
     <value>Duplicate name!</value>
   </data>
+  <data name="Enable" xml:space="preserve">
+    <value>Enable</value>
+  </data>
+  <data name="EnableCropping" xml:space="preserve">
+    <value>Enable Crop</value>
+  </data>
   <data name="EnableFrameRateSetting" xml:space="preserve">
     <value>Enable frame rate setting:</value>
   </data>
@@ -258,6 +378,12 @@ Glue Inspection</value>
   </data>
   <data name="EnableVerticalMirroring" xml:space="preserve">
     <value>Enable vertical mirroring:</value>
+  </data>
+  <data name="EndImageID" xml:space="preserve">
+    <value>End ImageID</value>
+  </data>
+  <data name="EndPoint" xml:space="preserve">
+    <value>EndPoint</value>
   </data>
   <data name="ExitThePhotoLoop" xml:space="preserve">
     <value>Exit the photo loop</value>
@@ -322,6 +448,15 @@ Glue Inspection</value>
   <data name="Get" xml:space="preserve">
     <value>Get </value>
   </data>
+  <data name="GetExposure" xml:space="preserve">
+    <value>Get Exposure</value>
+  </data>
+  <data name="GetFreq" xml:space="preserve">
+    <value>Get Freq</value>
+  </data>
+  <data name="GetGain" xml:space="preserve">
+    <value>Get Gain</value>
+  </data>
   <data name="GetHorizontalOffsetParameterValueFail" xml:space="preserve">
     <value>Get Horizontal offset parameter value fail:</value>
   </data>
@@ -337,6 +472,12 @@ Glue Inspection</value>
   <data name="GetMaximumWidthOfImage" xml:space="preserve">
     <value>Get Maximum width of image:</value>
   </data>
+  <data name="GetOffset" xml:space="preserve">
+    <value>Get Offset</value>
+  </data>
+  <data name="GetSize" xml:space="preserve">
+    <value>Get Size</value>
+  </data>
   <data name="GetVerticalOffsetParameterValue" xml:space="preserve">
     <value>Get Vertical offset parameter value:</value>
   </data>
@@ -346,11 +487,21 @@ Glue Inspection</value>
   <data name="GlueWidth" xml:space="preserve">
     <value>Glue W</value>
   </data>
+  <data name="HandleMagnification" xml:space="preserve">
+    <value>Handle 
+Magnification</value>
+  </data>
+  <data name="HorizonFilp" xml:space="preserve">
+    <value>Horizon Filp</value>
+  </data>
   <data name="HorizontalOffsetParameterValue" xml:space="preserve">
     <value>Horizontal offset parameter value:</value>
   </data>
   <data name="HorizontalOffsetSettingFailed" xml:space="preserve">
     <value>Horizontal offset setting failed:</value>
+  </data>
+  <data name="HorizontalRange" xml:space="preserve">
+    <value>H Range</value>
   </data>
   <data name="ImageBmpJpgJpegPngAllFiles" xml:space="preserve">
     <value>Image|*.bmp;*.jpg;*.jpeg;*.png|All Files|*.*</value>
@@ -367,6 +518,9 @@ Glue Inspection</value>
   <data name="ImageSavedSuccessfully" xml:space="preserve">
     <value>Image saved successfully</value>
   </data>
+  <data name="ImageSavingFormat" xml:space="preserve">
+    <value>Image Saving Format</value>
+  </data>
   <data name="ImageStorageCompleted" xml:space="preserve">
     <value>Image storage completed</value>
   </data>
@@ -375,6 +529,9 @@ Glue Inspection</value>
   </data>
   <data name="ImageWidth" xml:space="preserve">
     <value>Image width:</value>
+  </data>
+  <data name="Info" xml:space="preserve">
+    <value>Info</value>
   </data>
   <data name="InitializationSettingsFailed" xml:space="preserve">
     <value>Initialization settings failed:</value>
@@ -400,11 +557,23 @@ Glue Inspection</value>
   <data name="IoParameterLoadingSuccessful" xml:space="preserve">
     <value>IO parameter loading successful</value>
   </data>
+  <data name="Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="LanguageChangeSuccess" xml:space="preserve">
+    <value>The language switch is successful, and the interface will update after restarting the software.</value>
+  </data>
+  <data name="LanguageSwitchSuccessful" xml:space="preserve">
+    <value>Language switch successful.</value>
+  </data>
   <data name="LaserShutdownFailed" xml:space="preserve">
     <value>Laser shutdown failed:</value>
   </data>
   <data name="LaserSuccessfullyTurnedOff" xml:space="preserve">
     <value>Laser successfully turned off</value>
+  </data>
+  <data name="Last" xml:space="preserve">
+    <value>Last</value>
   </data>
   <data name="LeftClickAddPointShiftSwitchMode" xml:space="preserve">
     <value>Left click: Add point Shift: Switch mode</value>
@@ -415,14 +584,51 @@ Glue Inspection</value>
   <data name="LoadingSuccessful" xml:space="preserve">
     <value>Loading successful</value>
   </data>
+  <data name="log" xml:space="preserve">
+    <value>AI 3D Vision 
+Glue Inspection</value>
+  </data>
+  <data name="LogInfo" xml:space="preserve">
+    <value>Log info</value>
+  </data>
   <data name="MaximumHeightOfImage" xml:space="preserve">
     <value>Maximum height of image:</value>
+  </data>
+  <data name="MaximumSize" xml:space="preserve">
+    <value>Maximum Size</value>
   </data>
   <data name="MaximumWidthOfImage" xml:space="preserve">
     <value>Maximum width of image:</value>
   </data>
+  <data name="MillimeterSegmentedDistance" xml:space="preserve">
+    <value>Millimeter Segmented Distance</value>
+  </data>
+  <data name="MillimeterSegmentPointNumber" xml:space="preserve">
+    <value>Millimeter Segment Point Number</value>
+  </data>
+  <data name="MinimumWidth" xml:space="preserve">
+    <value>Laser Min Width</value>
+  </data>
+  <data name="MinThre" xml:space="preserve">
+    <value>Min Thre</value>
+  </data>
+  <data name="MonitoringCommunication" xml:space="preserve">
+    <value>Monitoring Communication</value>
+  </data>
   <data name="Name" xml:space="preserve">
     <value>Name</value>
+  </data>
+  <data name="NewFile" xml:space="preserve">
+    <value>New File</value>
+  </data>
+  <data name="NewPassWord" xml:space="preserve">
+    <value>New PassWord</value>
+  </data>
+  <data name="Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="NG" xml:space="preserve">
+    <value>NG</value>
   </data>
   <data name="NoCameraParameters" xml:space="preserve">
     <value>No camera parameters</value>
@@ -451,17 +657,35 @@ Glue Inspection</value>
   <data name="NoProductParametersExist" xml:space="preserve">
     <value>No product parameters exist:</value>
   </data>
+  <data name="NotDet" xml:space="preserve">
+    <value>Not Det</value>
+  </data>
   <data name="NotEnabled" xml:space="preserve">
     <value>Not enabled</value>
   </data>
   <data name="NoTrajectorySet" xml:space="preserve">
     <value>No trajectory set</value>
   </data>
+  <data name="OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="OpenCam" xml:space="preserve">
+    <value>Open Cam</value>
+  </data>
   <data name="OpenFailed" xml:space="preserve">
     <value>Open failed:</value>
   </data>
   <data name="OpenSuccessful" xml:space="preserve">
     <value>Open successful</value>
+  </data>
+  <data name="OriginPassWord" xml:space="preserve">
+    <value>Origin PassWord</value>
+  </data>
+  <data name="OtherSet" xml:space="preserve">
+    <value>OtherSet</value>
   </data>
   <data name="OutputReadySignal" xml:space="preserve">
     <value>Output Ready signal</value>
@@ -472,6 +696,9 @@ Glue Inspection</value>
   <data name="Para" xml:space="preserve">
     <value>Para?</value>
   </data>
+  <data name="ParaInfo" xml:space="preserve">
+    <value>Para Info</value>
+  </data>
   <data name="ParameterLoadingFailed" xml:space="preserve">
     <value>Parameter loading failed:</value>
   </data>
@@ -481,11 +708,32 @@ Glue Inspection</value>
   <data name="ParameterSaveFailed" xml:space="preserve">
     <value>Parameter save failed</value>
   </data>
+  <data name="ParaSetting" xml:space="preserve">
+    <value>Parameter_Settings</value>
+  </data>
+  <data name="PassWord" xml:space="preserve">
+    <value>PassWord</value>
+  </data>
   <data name="PasswordChangedSuccessfully" xml:space="preserve">
     <value>Password changed successfully!</value>
   </data>
   <data name="PasswordIncorrect" xml:space="preserve">
     <value>Password incorrect!</value>
+  </data>
+  <data name="PhotoNum" xml:space="preserve">
+    <value>Photo Num</value>
+  </data>
+  <data name="PictureList" xml:space="preserve">
+    <value>Image List</value>
+  </data>
+  <data name="PictureSet" xml:space="preserve">
+    <value>DetSet</value>
+  </data>
+  <data name="PLCSetting" xml:space="preserve">
+    <value>Upper computer settings</value>
+  </data>
+  <data name="PleaseInputPassWord" xml:space="preserve">
+    <value>PleaseInputPassWord</value>
   </data>
   <data name="PleaseSelectAFile" xml:space="preserve">
     <value>Please select a file</value>
@@ -505,8 +753,17 @@ Glue Inspection</value>
   <data name="ProductConfigurationParametersLoadedSuccessfully" xml:space="preserve">
     <value>Product configuration parameters loaded successfully</value>
   </data>
+  <data name="ProductID" xml:space="preserve">
+    <value>ProductID</value>
+  </data>
   <data name="ProductIdCannotBeEmpty" xml:space="preserve">
     <value>Product ID cannot be empty!</value>
+  </data>
+  <data name="ProductList" xml:space="preserve">
+    <value>Product List</value>
+  </data>
+  <data name="ProductName" xml:space="preserve">
+    <value>Product Name</value>
   </data>
   <data name="ProductNumber" xml:space="preserve">
     <value>Product Number:</value>
@@ -514,8 +771,14 @@ Glue Inspection</value>
   <data name="ProductParameters" xml:space="preserve">
     <value>Product parameters</value>
   </data>
+  <data name="ProductSetting" xml:space="preserve">
+    <value>Product_Settings</value>
+  </data>
   <data name="Prompt" xml:space="preserve">
     <value>Prompt</value>
+  </data>
+  <data name="PublicPara" xml:space="preserve">
+    <value>Public Para</value>
   </data>
   <data name="ReadFailed" xml:space="preserve">
     <value>Read failed:</value>
@@ -535,8 +798,20 @@ Glue Inspection</value>
   <data name="ReceivedVehicleModelNumber" xml:space="preserve">
     <value>Received vehicle model number:</value>
   </data>
+  <data name="Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
   <data name="RegionalGrayscaleMean" xml:space="preserve">
     <value>Regional grayscale mean</value>
+  </data>
+  <data name="Registers" xml:space="preserve">
+    <value>Registers</value>
+  </data>
+  <data name="RepeatPassWord" xml:space="preserve">
+    <value>Repeat</value>
+  </data>
+  <data name="Result" xml:space="preserve">
+    <value>Result</value>
   </data>
   <data name="Robot" xml:space="preserve">
     <value>Robot</value>
@@ -556,11 +831,45 @@ Glue Inspection</value>
   <data name="RobotProcessingCompleted" xml:space="preserve">
     <value>Robot processing completed</value>
   </data>
+  <data name="RobotSetting" xml:space="preserve">
+    <value>Robot settings</value>
+  </data>
   <data name="RobotSuccessfullyConnected" xml:space="preserve">
     <value>Robot successfully connected</value>
   </data>
+  <data name="SaveCache" xml:space="preserve">
+    <value>Save Cache</value>
+  </data>
+  <data name="SaveCurrentImg" xml:space="preserve">
+    <value>Save Current Img</value>
+  </data>
+  <data name="SaveDir" xml:space="preserve">
+    <value>Save Dir</value>
+  </data>
   <data name="SaveFailed" xml:space="preserve">
     <value>Save failed:</value>
+  </data>
+  <data name="SaveNGImg" xml:space="preserve">
+    <value>Save NG Img</value>
+  </data>
+  <data name="SaveOKImg" xml:space="preserve">
+    <value>Save OK Img</value>
+  </data>
+  <data name="SavePara" xml:space="preserve">
+    <value>Save Para</value>
+  </data>
+  <data name="SavePointCloud" xml:space="preserve">
+    <value>Save Point 
+Cloud</value>
+  </data>
+  <data name="ScanCam" xml:space="preserve">
+    <value>Scan Cam</value>
+  </data>
+  <data name="SelectCam" xml:space="preserve">
+    <value>Select Cam</value>
+  </data>
+  <data name="SelectPicture" xml:space="preserve">
+    <value>Select Picture</value>
   </data>
   <data name="SelectTheLocationToSave" xml:space="preserve">
     <value>Select the location to save</value>
@@ -580,6 +889,15 @@ Glue Inspection</value>
   <data name="SetFrameRate" xml:space="preserve">
     <value>Set frame rate</value>
   </data>
+  <data name="SetFreq" xml:space="preserve">
+    <value>Set Freq</value>
+  </data>
+  <data name="SetGain" xml:space="preserve">
+    <value>Set Gain</value>
+  </data>
+  <data name="SetImage" xml:space="preserve">
+    <value>Set Image</value>
+  </data>
   <data name="SetImageHeight" xml:space="preserve">
     <value>Set Image height:</value>
   </data>
@@ -591,6 +909,12 @@ Glue Inspection</value>
   </data>
   <data name="SetImageWidthFail" xml:space="preserve">
     <value>Set Image width fail:</value>
+  </data>
+  <data name="SetOffset" xml:space="preserve">
+    <value>Set Offset</value>
+  </data>
+  <data name="SetSize" xml:space="preserve">
+    <value>Set Size</value>
   </data>
   <data name="SetTheHorizontalOffsetParameterValue" xml:space="preserve">
     <value>Set the horizontal offset parameter value:</value>
@@ -604,6 +928,33 @@ Glue Inspection</value>
   <data name="SettingFailed" xml:space="preserve">
     <value>Setting failed:</value>
   </data>
+  <data name="SetTrajectory" xml:space="preserve">
+    <value>Set Trajectory</value>
+  </data>
+  <data name="ShowHeight" xml:space="preserve">
+    <value>Show Height</value>
+  </data>
+  <data name="ShowImage" xml:space="preserve">
+    <value>Show Image</value>
+  </data>
+  <data name="ShowRange" xml:space="preserve">
+    <value>Show Range</value>
+  </data>
+  <data name="ShowSet" xml:space="preserve">
+    <value>ShowSet</value>
+  </data>
+  <data name="ShowTrajectory" xml:space="preserve">
+    <value>ShowTrajectory</value>
+  </data>
+  <data name="ShowWidth" xml:space="preserve">
+    <value>Show Width</value>
+  </data>
+  <data name="SignalDistribution" xml:space="preserve">
+    <value>Signal_Distribution</value>
+  </data>
+  <data name="SignalName" xml:space="preserve">
+    <value>Signal Name</value>
+  </data>
   <data name="SignalReadFailedRereading" xml:space="preserve">
     <value>Signal read failed, rereading:</value>
   </data>
@@ -616,17 +967,47 @@ Glue Inspection</value>
   <data name="SignalWriteFailedRewritingInProgress" xml:space="preserve">
     <value>Signal write failed, rewriting in progress:</value>
   </data>
+  <data name="SignSize" xml:space="preserve">
+    <value>Sign Size</value>
+  </data>
+  <data name="SimRunning" xml:space="preserve">
+    <value>Sim Running</value>
+  </data>
+  <data name="Simul" xml:space="preserve">
+    <value>Simulation</value>
+  </data>
+  <data name="SimulationImage" xml:space="preserve">
+    <value>Simulation Image</value>
+  </data>
   <data name="SimulationPathDoesNotExist" xml:space="preserve">
     <value>Simulation path does not exist</value>
   </data>
   <data name="SimulationPathNotFilledIn" xml:space="preserve">
     <value>Simulation path not filled in</value>
   </data>
+  <data name="SingleAcq" xml:space="preserve">
+    <value>Single Acq</value>
+  </data>
   <data name="SingleFrameAcquisitionTime" xml:space="preserve">
     <value>Single frame acquisition time</value>
   </data>
+  <data name="SingleFrameContourDet" xml:space="preserve">
+    <value>Single Frame Contour Det</value>
+  </data>
+  <data name="SingleFrameDet" xml:space="preserve">
+    <value>Single Frame Det</value>
+  </data>
+  <data name="SizeCorrection" xml:space="preserve">
+    <value>Size Correction</value>
+  </data>
+  <data name="SoftwareRun" xml:space="preserve">
+    <value>Software</value>
+  </data>
   <data name="Start" xml:space="preserve">
     <value>Start</value>
+  </data>
+  <data name="StartImageID" xml:space="preserve">
+    <value>Start ImageID</value>
   </data>
   <data name="StartIndexIsGreaterThanEndIndex" xml:space="preserve">
     <value>Start index is greater than end index</value>
@@ -636,6 +1017,9 @@ Glue Inspection</value>
   </data>
   <data name="StartingContinuousCollectionSuccessfully" xml:space="preserve">
     <value>Starting continuous collection successfully</value>
+  </data>
+  <data name="StartPoint" xml:space="preserve">
+    <value>StartPoint</value>
   </data>
   <data name="StartSavingImages" xml:space="preserve">
     <value>Start saving images</value>
@@ -648,6 +1032,9 @@ Glue Inspection</value>
   </data>
   <data name="StopCollectionSuccessfully" xml:space="preserve">
     <value>Stop collection successfully</value>
+  </data>
+  <data name="Sure" xml:space="preserve">
+    <value>Sure</value>
   </data>
   <data name="TheFolderDoesNotExist" xml:space="preserve">
     <value>The folder does not exist</value>
@@ -712,14 +1099,39 @@ Glue Inspection</value>
   <data name="Up" xml:space="preserve">
     <value>Up</value>
   </data>
+  <data name="UseAngleOptimization" xml:space="preserve">
+    <value>Use Angle 
+Optimization</value>
+  </data>
+  <data name="UseCam" xml:space="preserve">
+    <value>Use Cam</value>
+  </data>
+  <data name="UsedCam" xml:space="preserve">
+    <value>Used Cam</value>
+  </data>
+  <data name="User" xml:space="preserve">
+    <value>User</value>
+  </data>
+  <data name="Val" xml:space="preserve">
+    <value>Val</value>
+  </data>
   <data name="ValueFail" xml:space="preserve">
     <value> Value fail</value>
+  </data>
+  <data name="VerticalFilp" xml:space="preserve">
+    <value>Vertical Filp</value>
   </data>
   <data name="VerticalOffsetParameterValue" xml:space="preserve">
     <value>Vertical offset parameter value:</value>
   </data>
   <data name="VerticalOffsetSettingFailed" xml:space="preserve">
     <value>Vertical offset setting failed:</value>
+  </data>
+  <data name="VerticalRange" xml:space="preserve">
+    <value>V Range</value>
+  </data>
+  <data name="WaitForDet" xml:space="preserve">
+    <value>Wait For Det</value>
   </data>
   <data name="WaitingForImageProcessingToComplete" xml:space="preserve">
     <value>Waiting for image processing to complete</value>
@@ -741,418 +1153,6 @@ Glue Inspection</value>
   </data>
   <data name="WritingFormatNotSupported" xml:space="preserve">
     <value>Writing format not supported</value>
-  </data>
-  <data name="LanguageSwitchSuccessful" xml:space="preserve">
-    <value>Language switch successful.</value>
-  </data>
-  <data name="User" xml:space="preserve">
-    <value>User</value>
-  </data>
-  <data name="ChangePassWork" xml:space="preserve">
-    <value>Change password</value>
-  </data>
-  <data name="PLCSetting" xml:space="preserve">
-    <value>Upper computer settings</value>
-  </data>
-  <data name="SignalDistribution" xml:space="preserve">
-    <value>Signal_Distribution</value>
-  </data>
-  <data name="CamSetting" xml:space="preserve">
-    <value>Camera_Settings</value>
-  </data>
-  <data name="ParaSetting" xml:space="preserve">
-    <value>Parameter_Settings</value>
-  </data>
-  <data name="ProductSetting" xml:space="preserve">
-    <value>Product_Settings</value>
-  </data>
-  <data name="RobotSetting" xml:space="preserve">
-    <value>Robot settings</value>
-  </data>
-  <data name="Language" xml:space="preserve">
-    <value>Language</value>
-  </data>
-  <data name="Simul" xml:space="preserve">
-    <value>Simulation</value>
-  </data>
-  <data name="ProductID" xml:space="preserve">
-    <value>ProductID</value>
-  </data>
-  <data name="Result" xml:space="preserve">
-    <value>Result</value>
-  </data>
-  <data name="DetResult" xml:space="preserve">
-    <value>Det Results</value>
-  </data>
-  <data name="NG" xml:space="preserve">
-    <value>NG</value>
-  </data>
-  <data name="NotDet" xml:space="preserve">
-    <value>Not Det</value>
-  </data>
-  <data name="OK" xml:space="preserve">
-    <value>OK</value>
-  </data>
-  <data name="WaitForDet" xml:space="preserve">
-    <value>Wait For Det</value>
-  </data>
-  <data name="ControlButton" xml:space="preserve">
-    <value>Control Buttons</value>
-  </data>
-  <data name="MonitoringCommunication" xml:space="preserve">
-    <value>Monitoring Communication</value>
-  </data>
-  <data name="SoftwareRun" xml:space="preserve">
-    <value>Software</value>
-  </data>
-  <data name="LogInfo" xml:space="preserve">
-    <value>Log info</value>
-  </data>
-  <data name="Info" xml:space="preserve">
-    <value>Info</value>
-  </data>
-  <data name="DetList" xml:space="preserve">
-    <value>Det List</value>
-  </data>
-  <data name="PictureList" xml:space="preserve">
-    <value>Image List</value>
-  </data>
-  <data name="ProductList" xml:space="preserve">
-    <value>Product List</value>
-  </data>
-  <data name="3DGluingDetection" xml:space="preserve">
-    <value>3D Gluing Detection</value>
-  </data>
-  <data name="3DGluingFrameDetection" xml:space="preserve">
-    <value>3D Gluing Frame Detection</value>
-  </data>
-  <data name="3DGluingInspectionResults" xml:space="preserve">
-    <value>3D Gluing Inspection Results</value>
-  </data>
-  <data name="3DPointCloudExtraction" xml:space="preserve">
-    <value>3D Point Cloud Extraction</value>
-  </data>
-  <data name="3DPointCloudResults" xml:space="preserve">
-    <value>3D Point Cloud Results</value>
-  </data>
-  <data name="ActuallyGlueHeight" xml:space="preserve">
-    <value>Actually Glue Height</value>
-  </data>
-  <data name="ActuallyGlueWidth" xml:space="preserve">
-    <value>Actually Glue Width</value>
-  </data>
-  <data name="Add" xml:space="preserve">
-    <value>Add</value>
-  </data>
-  <data name="CacheImages" xml:space="preserve">
-    <value>Cache Images</value>
-  </data>
-  <data name="CameraAndMovementDirectionAngle" xml:space="preserve">
-    <value>Camera And Movement 
-Direction Angle</value>
-  </data>
-  <data name="CamName" xml:space="preserve">
-    <value>Cam Name</value>
-  </data>
-  <data name="CarType" xml:space="preserve">
-    <value>Car Type</value>
-  </data>
-  <data name="ClearCache" xml:space="preserve">
-    <value>Clear Cache</value>
-  </data>
-  <data name="CloseCam" xml:space="preserve">
-    <value>Close Cam</value>
-  </data>
-  <data name="ColorLowerLimit" xml:space="preserve">
-    <value>Min Color</value>
-  </data>
-  <data name="ColorUpperLimit" xml:space="preserve">
-    <value>Max Color</value>
-  </data>
-  <data name="CommonCorrectionCoefficient" xml:space="preserve">
-    <value>Share Correction</value>
-  </data>
-  <data name="ContAcq" xml:space="preserve">
-    <value>Cont Acq</value>
-  </data>
-  <data name="ContourDet" xml:space="preserve">
-    <value>Contour Det</value>
-  </data>
-  <data name="ContourDetectionResult" xml:space="preserve">
-    <value>Contour Detection Result</value>
-  </data>
-  <data name="CorrectionX" xml:space="preserve">
-    <value>CorrectionX</value>
-  </data>
-  <data name="CorrectionY" xml:space="preserve">
-    <value>CorrectionY</value>
-  </data>
-  <data name="CurrentPoseDetection" xml:space="preserve">
-    <value>Current Pose Detection</value>
-  </data>
-  <data name="DataDir" xml:space="preserve">
-    <value>Data Dir</value>
-  </data>
-  <data name="Delete" xml:space="preserve">
-    <value>Del</value>
-  </data>
-  <data name="DetToolParaSetting" xml:space="preserve">
-    <value>Det Tool Para Setting</value>
-  </data>
-  <data name="DiscreteDenoising" xml:space="preserve">
-    <value>Discrete Denoising</value>
-  </data>
-  <data name="Enable" xml:space="preserve">
-    <value>Enable</value>
-  </data>
-  <data name="EnableCropping" xml:space="preserve">
-    <value>Enable Crop</value>
-  </data>
-  <data name="EndImageID" xml:space="preserve">
-    <value>End ImageID</value>
-  </data>
-  <data name="GetExposure" xml:space="preserve">
-    <value>Get Exposure</value>
-  </data>
-  <data name="GetFreq" xml:space="preserve">
-    <value>Get Freq</value>
-  </data>
-  <data name="GetGain" xml:space="preserve">
-    <value>Get Gain</value>
-  </data>
-  <data name="GetOffset" xml:space="preserve">
-    <value>Get Offset</value>
-  </data>
-  <data name="GetSize" xml:space="preserve">
-    <value>Get Size</value>
-  </data>
-  <data name="HandleMagnification" xml:space="preserve">
-    <value>Handle 
-Magnification</value>
-  </data>
-  <data name="HorizonFilp" xml:space="preserve">
-    <value>Horizon Filp</value>
-  </data>
-  <data name="HorizontalRange" xml:space="preserve">
-    <value>H Range</value>
-  </data>
-  <data name="ImageSavingFormat" xml:space="preserve">
-    <value>Image Saving Format</value>
-  </data>
-  <data name="Last" xml:space="preserve">
-    <value>Last</value>
-  </data>
-  <data name="MaximumSize" xml:space="preserve">
-    <value>Maximum Size</value>
-  </data>
-  <data name="MillimeterSegmentedDistance" xml:space="preserve">
-    <value>Millimeter Segmented Distance</value>
-  </data>
-  <data name="MillimeterSegmentPointNumber" xml:space="preserve">
-    <value>Millimeter Segment Point Number</value>
-  </data>
-  <data name="MinimumWidth" xml:space="preserve">
-    <value>Laser Min Width</value>
-  </data>
-  <data name="MinThre" xml:space="preserve">
-    <value>Min Thre</value>
-  </data>
-  <data name="NewFile" xml:space="preserve">
-    <value>New File</value>
-  </data>
-  <data name="Next" xml:space="preserve">
-    <value>Next</value>
-  </data>
-  <data name="Open" xml:space="preserve">
-    <value>Open</value>
-  </data>
-  <data name="OpenCam" xml:space="preserve">
-    <value>Open Cam</value>
-  </data>
-  <data name="OtherSet" xml:space="preserve">
-    <value>OtherSet</value>
-  </data>
-  <data name="PhotoNum" xml:space="preserve">
-    <value>Photo Num</value>
-  </data>
-  <data name="PictureSet" xml:space="preserve">
-    <value>DetSet</value>
-  </data>
-  <data name="PublicPara" xml:space="preserve">
-    <value>Public Para</value>
-  </data>
-  <data name="Refresh" xml:space="preserve">
-    <value>Refresh</value>
-  </data>
-  <data name="SaveCache" xml:space="preserve">
-    <value>Save Cache</value>
-  </data>
-  <data name="SaveCurrentImg" xml:space="preserve">
-    <value>Save Current Img</value>
-  </data>
-  <data name="SaveDir" xml:space="preserve">
-    <value>Save Dir</value>
-  </data>
-  <data name="SaveNGImg" xml:space="preserve">
-    <value>Save NG Img</value>
-  </data>
-  <data name="SaveOKImg" xml:space="preserve">
-    <value>Save OK Img</value>
-  </data>
-  <data name="SavePara" xml:space="preserve">
-    <value>Save Para</value>
-  </data>
-  <data name="SavePointCloud" xml:space="preserve">
-    <value>Save Point 
-Cloud</value>
-  </data>
-  <data name="ScanCam" xml:space="preserve">
-    <value>Scan Cam</value>
-  </data>
-  <data name="SelectCam" xml:space="preserve">
-    <value>Select Cam</value>
-  </data>
-  <data name="SelectPicture" xml:space="preserve">
-    <value>Select Picture</value>
-  </data>
-  <data name="SetFreq" xml:space="preserve">
-    <value>Set Freq</value>
-  </data>
-  <data name="SetGain" xml:space="preserve">
-    <value>Set Gain</value>
-  </data>
-  <data name="SetImage" xml:space="preserve">
-    <value>Set Image</value>
-  </data>
-  <data name="SetOffset" xml:space="preserve">
-    <value>Set Offset</value>
-  </data>
-  <data name="SetSize" xml:space="preserve">
-    <value>Set Size</value>
-  </data>
-  <data name="SetTrajectory" xml:space="preserve">
-    <value>Set Trajectory</value>
-  </data>
-  <data name="ShowHeight" xml:space="preserve">
-    <value>Show Height</value>
-  </data>
-  <data name="ShowImage" xml:space="preserve">
-    <value>Show Image</value>
-  </data>
-  <data name="ShowRange" xml:space="preserve">
-    <value>Show Range</value>
-  </data>
-  <data name="ShowSet" xml:space="preserve">
-    <value>ShowSet</value>
-  </data>
-  <data name="ShowTrajectory" xml:space="preserve">
-    <value>ShowTrajectory</value>
-  </data>
-  <data name="ShowWidth" xml:space="preserve">
-    <value>Show Width</value>
-  </data>
-  <data name="SignSize" xml:space="preserve">
-    <value>Sign Size</value>
-  </data>
-  <data name="SimRunning" xml:space="preserve">
-    <value>Sim Running</value>
-  </data>
-  <data name="SimulationImage" xml:space="preserve">
-    <value>Simulation Image</value>
-  </data>
-  <data name="SingleAcq" xml:space="preserve">
-    <value>Single Acq</value>
-  </data>
-  <data name="SingleFrameContourDet" xml:space="preserve">
-    <value>Single Frame Contour Det</value>
-  </data>
-  <data name="SingleFrameDet" xml:space="preserve">
-    <value>Single Frame Det</value>
-  </data>
-  <data name="SizeCorrection" xml:space="preserve">
-    <value>Size Correction</value>
-  </data>
-  <data name="StartImageID" xml:space="preserve">
-    <value>Start ImageID</value>
-  </data>
-  <data name="UseAngleOptimization" xml:space="preserve">
-    <value>Use Angle 
-Optimization</value>
-  </data>
-  <data name="UseCam" xml:space="preserve">
-    <value>Use Cam</value>
-  </data>
-  <data name="UsedCam" xml:space="preserve">
-    <value>Used Cam</value>
-  </data>
-  <data name="VerticalFilp" xml:space="preserve">
-    <value>Vertical Filp</value>
-  </data>
-  <data name="VerticalRange" xml:space="preserve">
-    <value>V Range</value>
-  </data>
-  <data name="CamParaName" xml:space="preserve">
-    <value>Cam Para Name</value>
-  </data>
-  <data name="Cancel" xml:space="preserve">
-    <value>Cancel</value>
-  </data>
-  <data name="Change" xml:space="preserve">
-    <value>Change</value>
-  </data>
-  <data name="ChangePassWord" xml:space="preserve">
-    <value>Change PassWord</value>
-  </data>
-  <data name="Connect" xml:space="preserve">
-    <value>Connect</value>
-  </data>
-  <data name="Copy" xml:space="preserve">
-    <value>Copy</value>
-  </data>
-  <data name="CopyPara" xml:space="preserve">
-    <value>Copy Para</value>
-  </data>
-  <data name="Disconnect" xml:space="preserve">
-    <value>Disconnect</value>
-  </data>
-  <data name="EndPoint" xml:space="preserve">
-    <value>EndPoint</value>
-  </data>
-  <data name="NewPassWord" xml:space="preserve">
-    <value>New PassWord</value>
-  </data>
-  <data name="OriginPassWord" xml:space="preserve">
-    <value>Origin PassWord</value>
-  </data>
-  <data name="ParaInfo" xml:space="preserve">
-    <value>Para Info</value>
-  </data>
-  <data name="PassWord" xml:space="preserve">
-    <value>PassWord</value>
-  </data>
-  <data name="PleaseInputPassWord" xml:space="preserve">
-    <value>PleaseInputPassWord</value>
-  </data>
-  <data name="ProductName" xml:space="preserve">
-    <value>Product Name</value>
-  </data>
-  <data name="Registers" xml:space="preserve">
-    <value>Registers</value>
-  </data>
-  <data name="RepeatPassWord" xml:space="preserve">
-    <value>Repeat</value>
-  </data>
-  <data name="SignalName" xml:space="preserve">
-    <value>Signal Name</value>
-  </data>
-  <data name="StartPoint" xml:space="preserve">
-    <value>StartPoint</value>
-  </data>
-  <data name="Sure" xml:space="preserve">
-    <value>Sure</value>
-  </data>
-  <data name="Val" xml:space="preserve">
-    <value>Val</value>
   </data>
   <data name="ServerSignalLoadedSuccessfully" xml:space="preserve">
     <value>Server Signal Loaded Successfully</value>
@@ -1223,6 +1223,12 @@ Optimization</value>
   <data name="WaitingForTheStartSignalToTurnOff" xml:space="preserve">
     <value>Waiting For The Start Signal To Turn Off</value>
   </data>
+  <data name="CouldFindAnyCam1" xml:space="preserve">
+    <value>Could Find Any Cam1</value>
+  </data>
+  <data name="CouldFindCam1" xml:space="preserve">
+    <value>Could Find Cam1</value>
+  </data>
   <data name="DistIsZero" xml:space="preserve">
     <value>Dist Is Zero</value>
   </data>
@@ -1238,10 +1244,203 @@ Optimization</value>
   <data name="GetExportTimeFail" xml:space="preserve">
     <value>Get Export Time Fail：</value>
   </data>
-  <data name="CouldFindCam1" xml:space="preserve">
-    <value>Could Find Cam1</value>
+  <data name="Test" xml:space="preserve">
+    <value>Test</value>
   </data>
-  <data name="CouldFindAnyCam1" xml:space="preserve">
-    <value>Could Find Any Cam1</value>
+  <data name="MappingTrajectory" xml:space="preserve">
+    <value>Mapping Trajectory</value>
+  </data>
+  <data name="EnableOverlappingAdhesiveLengthDetection" xml:space="preserve">
+    <value>Enable overlapping adhesive length detection</value>
+  </data>
+  <data name="GlueWidthThre" xml:space="preserve">
+    <value>Glue Width Thre</value>
+  </data>
+  <data name="GlueLenthMin" xml:space="preserve">
+    <value>Glue Lenth Min</value>
+  </data>
+  <data name="GlueLenthMax" xml:space="preserve">
+    <value>Glue Lenth Max</value>
+  </data>
+  <data name="GlueLenthStartDetID" xml:space="preserve">
+    <value>Glue Lenth Start Det ID</value>
+  </data>
+  <data name="GlueLenthEndDetID" xml:space="preserve">
+    <value>Glue Lenth End Det ID</value>
+  </data>
+  <data name="GlueLenthDet" xml:space="preserve">
+    <value>Glue Lenth Det</value>
+  </data>
+  <data name="GlueLenth" xml:space="preserve">
+    <value>Glue Lenth</value>
+  </data>
+  <data name="OverlapStartID" xml:space="preserve">
+    <value>Overlap Start ID</value>
+  </data>
+  <data name="OverlapEndID" xml:space="preserve">
+    <value>Overlap End ID</value>
+  </data>
+  <data name="GlueV" xml:space="preserve">
+    <value>Glue V</value>
+  </data>
+  <data name="SendSignal" xml:space="preserve">
+    <value>Send Signal</value>
+  </data>
+  <data name="CurrentLocation2D" xml:space="preserve">
+    <value>Current Location 2D</value>
+  </data>
+  <data name="ShowBaseLineDetRegion" xml:space="preserve">
+    <value>Show Base Line 
+Det Region</value>
+  </data>
+  <data name="useBaseLineDet" xml:space="preserve">
+    <value>use base line det</value>
+  </data>
+  <data name="ignoreHigh" xml:space="preserve">
+    <value>ignore high</value>
+  </data>
+  <data name="BaseLineDet" xml:space="preserve">
+    <value>Base Line Det</value>
+  </data>
+  <data name="DatabaseConnectionTestSuccessful" xml:space="preserve">
+    <value>Database connection test succeeded!</value>
+  </data>
+  <data name="DatabaseConnectionTestFailed" xml:space="preserve">
+    <value>Database connection test failed!</value>
+  </data>
+  <data name="DatabaseWriteException" xml:space="preserve">
+    <value>Database write exception:</value>
+  </data>
+  <data name="DatabaseWriteCompleted" xml:space="preserve">
+    <value>Database write completed</value>
+  </data>
+  <data name="WaitingFor2DResultDisplayToComplete" xml:space="preserve">
+    <value>Waiting for 2D result display to complete</value>
+  </data>
+  <data name="ThreeDTrackEmptyRunFirst" xml:space="preserve">
+    <value>The 3D trajectory is empty. Please run the 3D trajectory first.</value>
+  </data>
+  <data name="TrajectoryNotMappedSetFirst" xml:space="preserve">
+    <value>The trajectory has not been mapped. Please set the 3D and 2D trajectories first, then map them.</value>
+  </data>
+  <data name="SelectVehicleRouteCameraFirst" xml:space="preserve">
+    <value>Please select the vehicle model, route, and camera first!</value>
+  </data>
+  <data name="InputDataFormatError" xml:space="preserve">
+    <value>Input data format error:</value>
+  </data>
+  <data name="ActualInputCannotBeZero" xml:space="preserve">
+    <value>The actual input data cannot be 0!</value>
+  </data>
+  <data name="DetectionResultCannotBeZero" xml:space="preserve">
+    <value>The detection result cannot be 0!</value>
+  </data>
+  <data name="CorrectionSuccessful" xml:space="preserve">
+    <value>Correction successful.</value>
+  </data>
+  <data name="CameraDisabledCannotMap" xml:space="preserve">
+    <value>The camera is disabled and cannot be used to map the trajectory!</value>
+  </data>
+  <data name="Set2DDetectionTrajectoryAndStartEndFirst" xml:space="preserve">
+    <value>Please set the 2D detection trajectory and the start/end indexes first!</value>
+  </data>
+  <data name="EndPointNumberTooLarge" xml:space="preserve">
+    <value>The end-point index exceeds the number of extracted 3D trajectory points!</value>
+  </data>
+  <data name="SelectVehicleRouteCameraAndExtract3D" xml:space="preserve">
+    <value>Please select the vehicle model, route, and camera, then extract the 3D point cloud first!</value>
+  </data>
+  <data name="ErrorWithMessage" xml:space="preserve">
+    <value>Error:</value>
+  </data>
+  <data name="RegisterCallbackFailed" xml:space="preserve">
+    <value>Callback registration failed:</value>
+  </data>
+  <data name="UnsupportedBool" xml:space="preserve">
+    <value>bool is not supported</value>
+  </data>
+  <data name="UnsupportedInt" xml:space="preserve">
+    <value>int is not supported</value>
+  </data>
+  <data name="WriteNotSupported" xml:space="preserve">
+    <value>Writing is not supported</value>
+  </data>
+  <data name="ListenerStopped" xml:space="preserve">
+    <value>Listener stopped.</value>
+  </data>
+  <data name="ListenerStartError" xml:space="preserve">
+    <value>Error occurred while starting listener:</value>
+  </data>
+  <data name="NewClientConnected" xml:space="preserve">
+    <value>New client connected:</value>
+  </data>
+  <data name="ListenerSocketClosed" xml:space="preserve">
+    <value>Listener socket closed. Stopped accepting new connections.</value>
+  </data>
+  <data name="AcceptClientError" xml:space="preserve">
+    <value>Error occurred while accepting a client:</value>
+  </data>
+  <data name="CalibrateRequired" xml:space="preserve">
+    <value>Please call Calibrate() first</value>
+  </data>
+  <data name="Pose3DAtLeastTwoPoints" xml:space="preserve">
+    <value>pose3D must contain at least 2 points</value>
+  </data>
+  <data name="ControlRowsColsAtLeastTwoPoints" xml:space="preserve">
+    <value>controlRows/controlCols must contain at least 2 points</value>
+  </data>
+  <data name="ControlRowsColsLengthMismatch" xml:space="preserve">
+    <value>controlRows and controlCols must have the same length</value>
+  </data>
+  <data name="Point3DAtLeastThreeElements" xml:space="preserve">
+    <value>point3D must contain at least 3 elements</value>
+  </data>
+  <data name="SingleInstanceDisabled" xml:space="preserve">
+    <value>The software is configured to prevent multiple instances!</value>
+  </data>
+  <data name="DuplicateInstance" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="AdministratorCannotEnterPage" xml:space="preserve">
+    <value>Administrators cannot access this page</value>
+  </data>
+  <data name="Chinese" xml:space="preserve">
+    <value>Chinese</value>
+  </data>
+  <data name="ChangeObject" xml:space="preserve">
+    <value>Change target</value>
+  </data>
+  <data name="Administrator" xml:space="preserve">
+    <value>Administrator</value>
+  </data>
+  <data name="SuperAdministrator" xml:space="preserve">
+    <value>Super administrator</value>
+  </data>
+  <data name="UserType" xml:space="preserve">
+    <value>User type</value>
+  </data>
+  <data name="Rubbish" xml:space="preserve">
+    <value>Trash</value>
+  </data>
+  <data name="EnableBubbleDetection" xml:space="preserve">
+    <value>Enable bubble detection</value>
+  </data>
+  <data name="BubblePointMinimumDistance" xml:space="preserve">
+    <value>Minimum point spacing</value>
+  </data>
+  <data name="BubbleDetection" xml:space="preserve">
+    <value>Bubble detection</value>
+  </data>
+  <data name="BubbleMaximumPointSpacing" xml:space="preserve">
+    <value>Maximum point spacing</value>
+  </data>
+  <data name="Threshold" xml:space="preserve">
+    <value>Threshold</value>
+  </data>
+  <data name="BubbleOutOfRangeGap" xml:space="preserve">
+    <value>Bubble spacing exceeded</value>
+  </data>
+  <data name="ImageFileFilter" xml:space="preserve">
+    <value>PNG (*.png)|*.png|Bitmap (*.bmp)|*.bmp|TIFF (*.tif)|*.tif|JPEG (*.jpg)|*.jpg|All files (*.*)|*.*</value>
   </data>
 </root>

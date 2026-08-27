@@ -39,8 +39,8 @@ namespace _3DLaserGlueInspection
             if (processExist)
             {
                 MessageBox.Show(
-                    "软件已设置禁止多开！",
-                    "重复",
+                    _3DLaserGlueInspection.Resources.LanguageDict.SingleInstanceDisabled,
+                    _3DLaserGlueInspection.Resources.LanguageDict.DuplicateInstance,
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
 

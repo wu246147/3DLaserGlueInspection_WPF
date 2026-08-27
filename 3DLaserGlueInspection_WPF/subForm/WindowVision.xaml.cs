@@ -2114,13 +2114,13 @@ namespace _3DLaserGlueInspection.subForm
 
                         if (pose3D.Count == 0)
                         {
-                            System.Windows.Forms.MessageBox.Show("3d轨迹为空，请先运行3d轨迹");
+                            System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.ThreeDTrackEmptyRunFirst);
                             return;
                         }
 
                         if (!set.mapper.isCalib())
                         {
-                            System.Windows.Forms.MessageBox.Show("轨迹还没进行映射，请先设置好3d和2d轨迹，再进行轨迹映射");
+                            System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.TrajectoryNotMappedSetFirst);
                             return;
                         }
 
@@ -2176,7 +2176,7 @@ namespace _3DLaserGlueInspection.subForm
             else
             {
                 //请先选择车型、路线和相机，并执行3D点云提取。
-                System.Windows.Forms.MessageBox.Show($"请先选择车型、路线和相机！");
+                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.SelectVehicleRouteCameraFirst);
                 return;
 
             }
@@ -2634,7 +2634,7 @@ namespace _3DLaserGlueInspection.subForm
                         // 显示当前位置
                         if (!set.mapper.isCalib())
                         {
-                            System.Windows.Forms.MessageBox.Show("轨迹还没进行映射，请先设置好3d和2d轨迹，再进行轨迹映射");
+                            System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.TrajectoryNotMappedSetFirst);
                             return;
                         }
                         long imageKey = ImageKeys[cutSetListBox.SelectedIndex][camKey][selectPictureListBox.SelectedIndex];
@@ -3796,17 +3796,17 @@ namespace _3DLaserGlueInspection.subForm
             }
             catch (Exception ex)
             {
-                System.Windows.Forms.MessageBox.Show($"输入数据格式错误：{ex.Message}！");
+                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.InputDataFormatError + ex.Message + "!");
                 return;
             }
             if (actualGlueSizeX == 0 || actualGlueSizeY == 0)
             {
-                System.Windows.Forms.MessageBox.Show($"输入实际数据不能为0！");
+                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.ActualInputCannotBeZero);
                 return;
             }
             if (resultData.glueWidth == 0 || resultData.glueHeight == 0)
             {
-                System.Windows.Forms.MessageBox.Show($"检测结果不能为0！");
+                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.DetectionResultCannotBeZero);
                 return;
             }
 
@@ -3832,7 +3832,7 @@ namespace _3DLaserGlueInspection.subForm
             correctionScaleSizeXNumericUpDown.Text = imageSet.correctionScaleSizeX.ToString();
             correctionScaleSizeYNumericUpDown.Text = imageSet.correctionScaleSizeY.ToString();
 
-            System.Windows.Forms.MessageBox.Show($"矫正成功。");
+            System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.CorrectionSuccessful);
 
         }
 
@@ -3892,7 +3892,7 @@ namespace _3DLaserGlueInspection.subForm
                         if (!CamEnabled)
                         {
                             //请先选择车型、路线和相机，并执行3D点云提取。
-                            System.Windows.Forms.MessageBox.Show($"相机未启用，无法用未启用相机进行映射轨迹！");
+                            System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.CameraDisabledCannotMap);
                             return;
                         }
 
@@ -3901,7 +3901,7 @@ namespace _3DLaserGlueInspection.subForm
                             set.CutSets[cutSetListBox.SelectedIndex].EndImageIndex<= set.CutSets[cutSetListBox.SelectedIndex].StartImageIndex)
                         {
                             //请先选择车型、路线和相机，并执行3D点云提取。
-                            System.Windows.Forms.MessageBox.Show($"请先设置2d检测轨迹，并且设置起点终点序号！");
+                            System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.Set2DDetectionTrajectoryAndStartEndFirst);
                             return;
                         }
 
@@ -3909,7 +3909,7 @@ namespace _3DLaserGlueInspection.subForm
                         if (set.CutSets[cutSetListBox.SelectedIndex].EndImageIndex > CamCenter3DPoseDict[camKey][cutSetListBox.SelectedIndex].Count - 1)
                         {
                             //请先选择车型、路线和相机，并执行3D点云提取。
-                            System.Windows.Forms.MessageBox.Show($"终点序号过大，超过提取的3d轨迹点数量！");
+                            System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.EndPointNumberTooLarge);
                             return;
                         }
 
@@ -4001,7 +4001,7 @@ namespace _3DLaserGlueInspection.subForm
                     else
                     {
                         //请先选择车型、路线和相机，并执行3D点云提取。
-                        System.Windows.Forms.MessageBox.Show($"请先选择车型、路线和相机，并执行3D点云提取！");
+                        System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.SelectVehicleRouteCameraAndExtract3D);
                         return;
                     }
 
@@ -4010,14 +4010,14 @@ namespace _3DLaserGlueInspection.subForm
                 catch (Exception ex)
                 {
                     //请先选择车型、路线和相机，并执行3D点云提取。
-                    System.Windows.Forms.MessageBox.Show($"报错：{ex.Message}！");
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.ErrorWithMessage + ex.Message + "!");
                     return;
                 }
             }
             else
             {
                 //请先选择车型、路线和相机，并执行3D点云提取。
-                System.Windows.Forms.MessageBox.Show($"请先选择车型、路线和相机，并执行3D点云提取！");
+                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.SelectVehicleRouteCameraAndExtract3D);
                 return;
 
             }

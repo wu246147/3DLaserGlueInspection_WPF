@@ -1,0 +1,211 @@
+Project,File,Key,Comment,,Comment.en-US,.en-US
+3DLaserGlueInspection_WPF,Resources\LanguageDict,LanguageSwitchSuccessful,,语言切换成功。,,Language switch successful.
+3DLaserGlueInspection_WPF,Resources\LanguageDict,Prompt,,提示,,Prompt
+3DLaserGlueInspection_WPF,Resources\LanguageDict,Find,,找到,,Find 
+3DLaserGlueInspection_WPF,Resources\LanguageDict,Cam,,个相机,, Cam
+3DLaserGlueInspection_WPF,Resources\LanguageDict,CameraSuccessfullyOpened,,相机打开成功,,Camera successfully opened
+3DLaserGlueInspection_WPF,Resources\LanguageDict,CameraInitializationFailed,,相机初始化失败,,Camera initialization failed
+3DLaserGlueInspection_WPF,Resources\LanguageDict,AutomaticExposureAcquisitionTime,,自动曝光采集时间,,Automatic exposure acquisition time
+3DLaserGlueInspection_WPF,Resources\LanguageDict,RegionalGrayscaleMean,,区域灰度均值,,Regional grayscale mean
+3DLaserGlueInspection_WPF,Resources\LanguageDict,SingleFrameAcquisitionTime,,单帧采集时间,,Single frame acquisition time
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ContinuousCollectionBegins,,连续采集开始,,Continuous collection begins
+3DLaserGlueInspection_WPF,Resources\LanguageDict,CameraAcquisitionStoppedAcquisitionTime,,"相机采集停止,采集时间：",,"Camera acquisition stopped, acquisition time:"
+3DLaserGlueInspection_WPF,Resources\LanguageDict,CameraClose,,相机关闭,,Camera close
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ExposureTime,,曝光时间,,exposure  time
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ExposureTimeAcquisitionFailed,,曝光时间获取失败:,,Exposure time acquisition failed
+3DLaserGlueInspection_WPF,Resources\LanguageDict,SetExposure,,设置曝光：,,Set Exposure:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ExposureSettingFailed,,曝光设置失败:,,Exposure setting failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,EnableHorizontalMirroring,,设置水平镜像使能：,,Enable horizontal mirroring:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,SetEnableHorizontalMirroringFail,,水平镜像使能设置失败:,,Set Enable horizontal mirroring fail:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,EnableVerticalMirroring,,设置垂直镜像使能：,,Enable vertical mirroring:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,SetEnableVerticalMirroringFail,,垂直镜像使能设置失败:,,Set Enable vertical mirroring fail:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ImageWidth,,图像宽度：,,Image width:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,GetImageWidthFailed,,图像宽度获取失败:,,Get Image width failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ImageHeight,,图像高度：,,Image height:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,GetImageHeightFailed,,图像高度获取失败:,,Get Image height failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,SetImageWidth,,设置图像宽度：,,Set Image width:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,SetImageWidthFail,,图像宽度设置失败:,,Set Image width fail:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,SetImageHeight,,设置图像高度：,,Set Image height:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,SetImageHeightFail,,图像高度设置失败:,,Set Image height fail:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,MaximumWidthOfImage,,图像最大宽度：,,Maximum width of image:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,GetMaximumWidthOfImage,,图像最大宽度获取失败:,,Get Maximum width of image:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,MaximumHeightOfImage,,图像最大高度：,,Maximum height of image:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,GetMaximumHeightOfImage,,图像最大高度获取失败:,,Get Maximum height of image:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,HorizontalOffsetParameterValue,,水平偏移参数值：,,Horizontal offset parameter value:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,GetHorizontalOffsetParameterValueFail,,水平偏移获取失败:,,Get Horizontal offset parameter value fail:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,VerticalOffsetParameterValue,,垂直偏移参数值：,,Vertical offset parameter value:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,GetVerticalOffsetParameterValue,,垂直偏移获取失败:,,Get Vertical offset parameter value:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,CameraValue,,，相机值：,,",Camera value:"
+3DLaserGlueInspection_WPF,Resources\LanguageDict,SetTheHorizontalOffsetParameterValue,,设置水平偏移参数值：,,Set the horizontal offset parameter value:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,HorizontalOffsetSettingFailed,,水平偏移设置失败:,,Horizontal offset setting failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,SetTheVerticalOffsetParameterValue,,设置垂直偏移参数值：,,Set the vertical offset parameter value:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,VerticalOffsetSettingFailed,,垂直偏移设置失败:,,Vertical offset setting failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,EnableFrameRateSetting,,设置帧率使能：,,Enable frame rate setting:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,FrameRateEnableSettingFailed,,帧率使能设置失败:,,Frame rate enable setting failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,SetFrameRate,,设置的帧率：,,Set frame rate:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,FailedToRetrieveTheSetFrameRate,,设置的帧率获取失败:,,Failed to retrieve the set frame rate:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ActualFrameRate,,实际帧率：,,Actual frame rate:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ActualFrameRateAcquisitionFailed,,实际帧率获取失败:,,Actual frame rate acquisition failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,SetFrameRate,,设置帧率：,,Set frame rate:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,FrameRateSettingFailed,,帧率设置失败:,,Frame rate setting failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,SelectTheLocationToSave,,选择要保存的位置,,Select the location to save
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ImageSavedSuccessfully,,图片保存成功,,Image saved successfully
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ParameterLoadingFailed,,参数加载失败：,,Parameter loading failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,DoYouWantToSaveTheParameters,,是否保存参数？,,Do you want to save the parameters?
+3DLaserGlueInspection_WPF,Resources\LanguageDict,SaveFailed,,保存失败：,,Save failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,TurnOffTheCamera,,关闭相机,,Turn off the camera
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ParameterSavedSuccessfully,,参数保存成功,,Parameter saved successfully
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ParameterSaveFailed,,参数保存失败,,Parameter save failed
+3DLaserGlueInspection_WPF,Resources\LanguageDict,FailedToOpenSettings,,打开设置失败:,,Failed to open settings:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,FailedToCloseSettings,,关闭设置失败:,,Failed to close settings:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,TheProductNameCannotBeEmpty,,产品名称不能为空！,,The product name cannot be empty!
+3DLaserGlueInspection_WPF,Resources\LanguageDict,TheProductNameCannotContainCharacters,,产品名称不能包含字符,,The product name cannot contain characters
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ProductIdCannotBeEmpty,,产品ID不能为空！,,Product ID cannot be empty!
+3DLaserGlueInspection_WPF,Resources\LanguageDict,TheProductIdFormatIsIncorrect,,产品ID格式不正确！,,The product ID format is incorrect!
+3DLaserGlueInspection_WPF,Resources\LanguageDict,TheProductNameAlreadyExistsAndCannotBeAddedAgain,,产品名称已存在，不能重复添加！,,The product name already exists and cannot be added again!
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ProductId,,产品ID,,Product ID
+3DLaserGlueInspection_WPF,Resources\LanguageDict,AlreadyExistsCannotBeAddedAgain,,已存在，不能重复添加！,,"Already exists, cannot be added again!"
+3DLaserGlueInspection_WPF,Resources\LanguageDict,NoModificationSelected,,未选择修改项！,,No modification selected!
+3DLaserGlueInspection_WPF,Resources\LanguageDict,NoDeletionOptionSelected,,未选择删除项！,,No deletion option selected!
+3DLaserGlueInspection_WPF,Resources\LanguageDict,FileFormatException,,文件格式异常,,File format exception
+3DLaserGlueInspection_WPF,Resources\LanguageDict,FileDoesNotExist,,文件不存在,,File does not exist
+3DLaserGlueInspection_WPF,Resources\LanguageDict,TheOriginalPasswordIsIncorrect,,原密码错误！,,The original password is incorrect!
+3DLaserGlueInspection_WPF,Resources\LanguageDict,PasswordChangedSuccessfully,,密码修改成功！,,Password changed successfully!
+3DLaserGlueInspection_WPF,Resources\LanguageDict,TheTwoNewPasswordsDoNotMatch,,两次新密码不一致！,,The two new passwords do not match!
+3DLaserGlueInspection_WPF,Resources\LanguageDict,PasswordIncorrect,,密码错误！,,Password incorrect!
+3DLaserGlueInspection_WPF,Resources\LanguageDict,FailedToFindCamera,,寻找相机失败：,,Failed to find camera:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,NoCamerasFound,,未找到任何相机,,No cameras found
+3DLaserGlueInspection_WPF,Resources\LanguageDict,CameraNotFound,,未找到相机,,Camera not found
+3DLaserGlueInspection_WPF,Resources\LanguageDict,TheFolderDoesNotExist,,文件夹不存在,,The folder does not exist
+3DLaserGlueInspection_WPF,Resources\LanguageDict,CameraNotTurnedOn,,相机未打开,,Camera not turned on
+3DLaserGlueInspection_WPF,Resources\LanguageDict,CameraCreationFailed,,相机创建失败:,,Camera creation failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,CameraFailedToOpen,,相机打开失败:,,Camera failed to open:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,CameraShutdownFailed,,关闭相机失败：,,Camera shutdown failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,FailedToStartCollection,,开始采集失败：,,Failed to start collection:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,StopCollectionFailed,,停止采集失败：,,Stop collection failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,FormatConversionFailed,,格式转换失败,,Format conversion failed
+3DLaserGlueInspection_WPF,Resources\LanguageDict,FormatConversionCreationFailed,,格式转换创建失败:,,Format conversion creation failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,UnknownFormat,,未知格式:,,Unknown format:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,CollectionFailed,,采集失败：,,Collection failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,FailedToObtainExposureTimeValue,,获取ExposureTime值失败：,,Failed to obtain Exposure Time value:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,SetTheNumberOfInternalImageCachingNodesInTheSdkTo,,设置设置SDK内部图像缓存节点个数为,,Set the number of internal image caching nodes in the SDK to
+3DLaserGlueInspection_WPF,Resources\LanguageDict,Failed,,失败：,,Failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,Set,,设置,,Set 
+3DLaserGlueInspection_WPF,Resources\LanguageDict,To,,为,, to 
+3DLaserGlueInspection_WPF,Resources\LanguageDict,Get,,获取,,Get 
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ValueFail,,值失败：,, Value fail
+3DLaserGlueInspection_WPF,Resources\LanguageDict,AddressNotAssigned,,地址未分配,,Address not assigned
+3DLaserGlueInspection_WPF,Resources\LanguageDict,WritingFormatNotSupported,,写入格式不支持,,Writing format not supported
+3DLaserGlueInspection_WPF,Resources\LanguageDict,CopyToAllImages,,复制至全部图片,,Copy to all images
+3DLaserGlueInspection_WPF,Resources\LanguageDict,CopyToRangeImage,,复制至范围图片,,Copy to Range Image
+3DLaserGlueInspection_WPF,Resources\LanguageDict,DoYouWantToSaveIt,,是否保存,,Do you want to save it
+3DLaserGlueInspection_WPF,Resources\LanguageDict,Para,,参数？,,Para?
+3DLaserGlueInspection_WPF,Resources\LanguageDict,NoImage,,无图片,,No Image
+3DLaserGlueInspection_WPF,Resources\LanguageDict,NoDetectionParameters,,无检测参数,,No detection parameters
+3DLaserGlueInspection_WPF,Resources\LanguageDict,NoCameraParameters,,无相机参数,,No camera parameters
+3DLaserGlueInspection_WPF,Resources\LanguageDict,GlueWidth,,胶宽：,,Glue width:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,GlueHeight,,胶高：,,Glue height:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,Area,,面积：,,Area:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,PleaseSelectAFile,,请选择文件,,Please select a file
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ImageBmpJpgJpegPngAllFiles,,图片|*.bmp;*.jpg;*.jpeg;*.png|所有文件|*.*,,Image|*.bmp;*.jpg;*.jpeg;*.png|All Files|*.*
+3DLaserGlueInspection_WPF,Resources\LanguageDict,SettingFailed,,设置失败：,,Setting failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,PleaseSelectTheVehicleModelFirst,,请先选择车型,,Please select the vehicle model first
+3DLaserGlueInspection_WPF,Resources\LanguageDict,NoImageSet,,未设置图片,,No image set
+3DLaserGlueInspection_WPF,Resources\LanguageDict,LeftClickAddPointShiftSwitchMode,,左键:添加点 Shift:切换模式,,Left click: Add point Shift: Switch mode
+3DLaserGlueInspection_WPF,Resources\LanguageDict,CtrlRightClickToDeleteCompleteDrawing,,Ctrl:删除点 右键:完成绘制,,Ctrl: Right click to delete: complete drawing
+3DLaserGlueInspection_WPF,Resources\LanguageDict,PleaseSelectTheNumberOfSegmentsFirst,,请先选择段数,,Please select the number of segments first
+3DLaserGlueInspection_WPF,Resources\LanguageDict,NoTrajectorySet,,未设置轨迹,,No trajectory set
+3DLaserGlueInspection_WPF,Resources\LanguageDict,DoesNotSupportStrings,,不支持字符串,,Does not support strings
+3DLaserGlueInspection_WPF,Resources\LanguageDict,AddressFormatMismatch,,地址格式不匹配,,Address format mismatch
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ReadFailed,,读取失败:,,Read failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,WriteFailed,,写入失败:,,Write failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ConversionFailedFormatError,,转换失败，格式有误,,"Conversion failed, format error"
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ConnectionSuccessful,,连接成功,,Connection successful
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ConnectionFailed,,连接失败:,,Connection failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,CloseSuccessfully,,关闭成功,,Close successfully
+3DLaserGlueInspection_WPF,Resources\LanguageDict,Start,,启动,,Start
+3DLaserGlueInspection_WPF,Resources\LanguageDict,SimulationPathNotFilledIn,,仿真路径未填写,,Simulation path not filled in
+3DLaserGlueInspection_WPF,Resources\LanguageDict,SimulationPathDoesNotExist,,仿真路径不存在,,Simulation path does not exist
+3DLaserGlueInspection_WPF,Resources\LanguageDict,TheMainThreadIsAlreadyRunning,,主线程已经运行中,,The main thread is already running
+3DLaserGlueInspection_WPF,Resources\LanguageDict,CameraParametersLoadedSuccessfully,,相机参数加载成功,,Camera parameters loaded successfully
+3DLaserGlueInspection_WPF,Resources\LanguageDict,CameraParameterLoadingFailed,,相机参数加载失败：,,Camera parameter loading failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ProductConfigurationParametersLoadedSuccessfully,,产品配置参数加载成功,,Product configuration parameters loaded successfully
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ProductParameters,,产品参数,,Product parameters
+3DLaserGlueInspection_WPF,Resources\LanguageDict,LoadingSuccessful,,加载成功,,Loading successful
+3DLaserGlueInspection_WPF,Resources\LanguageDict,LoadingFailed,,加载失败：,,Loading failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ProductConfigurationParameterLoadingFailed,,产品配置参数加载失败：,,Product configuration parameter loading failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,RobotParametersLoadedSuccessfully,,机器人参数加载成功,,Robot parameters loaded successfully
+3DLaserGlueInspection_WPF,Resources\LanguageDict,RobotParameterLoadingFailed,,机器人参数加载失败：,,Robot parameter loading failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,IoParameterLoadingSuccessful,,IO参数加载成功,,IO parameter loading successful
+3DLaserGlueInspection_WPF,Resources\LanguageDict,IoParameterLoadingFailed,,IO参数加载失败：,,IO parameter loading failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,RobotSuccessfullyConnected,,机器人连接成功,,Robot successfully connected
+3DLaserGlueInspection_WPF,Resources\LanguageDict,RobotConnectionFailed,,机器人连接失败：,,Robot connection failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,IoConnectionSuccessful,,IO连接成功,,IO connection successful
+3DLaserGlueInspection_WPF,Resources\LanguageDict,IoConnectionFailed,,IO连接失败：,,IO connection failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,OutputReadySignal,,输出Ready信号,,Output Ready signal
+3DLaserGlueInspection_WPF,Resources\LanguageDict,WaitingForTheStartSignal,,等待开始信号,,Waiting for the start signal
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ReceivedStartSignal,,收到开始信号,,Received start signal
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ReceivedVehicleModelNumber,,收到车型号为,,Received vehicle model number:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ThereIsNoVehicleModelAvailable,,不存在车型,,There is no vehicle model available
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ProductNumber,,产品号：,,Product Number:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,Name,,名称：,,Name:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,Time,,时间：,,Time:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,NoCameraParametersExist,,不存在相机参数：,,No camera parameters exist:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,NoProductParametersExist,,不存在产品参数：,,No product parameters exist:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,Cam,,相机,,Cam
+3DLaserGlueInspection_WPF,Resources\LanguageDict,OpenSuccessful,,打开成功,,Open successful
+3DLaserGlueInspection_WPF,Resources\LanguageDict,OpenFailed,,打开失败：,,Open failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,InitializationSettingsSuccessful,,初始化设置成功,,Initialization settings successful
+3DLaserGlueInspection_WPF,Resources\LanguageDict,InitializationSettingsFailed,,初始化设置失败：,,Initialization settings failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,NotEnabled,,未启用,,Not enabled
+3DLaserGlueInspection_WPF,Resources\LanguageDict,CameraConnectionCompleted,,相机连接完成,,Camera connection completed
+3DLaserGlueInspection_WPF,Resources\LanguageDict,CoordinateConversionCamtotoolDoesNotExist,,坐标转换(CamToTool)不存在,,Coordinate conversion (CamToTool) does not exist
+3DLaserGlueInspection_WPF,Resources\LanguageDict,CoordinateConversionLighttocamDoesNotExist,,坐标转换(LightToCam)不存在,,Coordinate conversion (LightToCam) does not exist
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ExternalParameterToolincamDatDoesNotExist,,外参(ToolInCam.dat)不存在,,External parameter (ToolInCam. dat) does not exist
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ExternalParameterLightincamDatDoesNotExist,,外参(LightInCam.dat)不存在,,External parameter (LightInCam. dat) does not exist
+3DLaserGlueInspection_WPF,Resources\LanguageDict,TheInternalReferenceCamparamCalDoesNotExist,,内参(camparam.cal)不存在,,The internal reference (camparam. cal) does not exist
+3DLaserGlueInspection_WPF,Resources\LanguageDict,InitializeDataSuccessfully,,初始化数据成功,,Initialize data successfully
+3DLaserGlueInspection_WPF,Resources\LanguageDict,RobotAttitudeAcquisitionTaskHasBeenInitiatedAndCompleted,,机器人姿态获取任务启动完成,,Robot attitude acquisition task has been initiated and completed
+3DLaserGlueInspection_WPF,Resources\LanguageDict,OutputRunningSignal,,输出Running信号,,Output Running Signal
+3DLaserGlueInspection_WPF,Resources\LanguageDict,TurnOffTheReadySignal,,关闭Ready信号,,Turn off the Ready signal
+3DLaserGlueInspection_WPF,Resources\LanguageDict,WaitingForTriggerSignalOn,,等待触发信号ON,,Waiting for trigger signal ON
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ReceivedTriggerSignalOn,,收到触发信号ON,,Received trigger signal ON
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ImageProcessingTaskStartupCompleted,,图像处理任务启动完成,,Image processing task startup completed
+3DLaserGlueInspection_WPF,Resources\LanguageDict,3DImageDisplayTaskStartupCompleted,,三维图像显示任务启动完成,,3D image display task startup completed
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ReceivedEndSignalExitThePhotoLoop,,"收到END信号,退出拍照循环",,"Received END signal, exit the photo loop"
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ReceivedAbortSignalProcessRestarts,,"收到Abort信号,流程重新开始",,"Received Abort signal, process restarts"
+3DLaserGlueInspection_WPF,Resources\LanguageDict,StartingContinuousCollectionSuccessfully,,开始连续采集成功,,Starting continuous collection successfully
+3DLaserGlueInspection_WPF,Resources\LanguageDict,StartingContinuousCollectionFailed,,开始连续采集失败：,,Starting continuous collection failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,WaitingForTriggerSignalOff,,等待触发信号OFF,,Waiting for trigger signal OFF
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ReceivedTriggerSignalOff,,收到触发信号OFF,,Received trigger signal OFF
+3DLaserGlueInspection_WPF,Resources\LanguageDict,StopCollectionSuccessfully,,停止采集成功,,Stop collection successfully
+3DLaserGlueInspection_WPF,Resources\LanguageDict,TheNumberOfCameraSegmentsIsSufficient,,拍照段数足够,,The number of camera segments is sufficient
+3DLaserGlueInspection_WPF,Resources\LanguageDict,InsufficientNumberOfPhotoSegments,,拍照段数不足,,Insufficient number of photo segments
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ExitThePhotoLoop,,退出拍照循环,,Exit the photo loop
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ContinueThePhotoLoop,,继续拍照循环,,Continue the photo loop
+3DLaserGlueInspection_WPF,Resources\LanguageDict,WaitingForTheRobotToCompleteProcessing,,等待机器人处理完成,,Waiting for the robot to complete processing
+3DLaserGlueInspection_WPF,Resources\LanguageDict,RobotProcessingCompleted,,机器人处理完成,,Robot processing completed
+3DLaserGlueInspection_WPF,Resources\LanguageDict,WaitingForImageProcessingToComplete,,等待图像处理完成,,Waiting for image processing to complete
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ImageProcessingCompleted,,图像处理完成,,Image processing completed
+3DLaserGlueInspection_WPF,Resources\LanguageDict,TurnOffTheRunningSignal,,关闭Running信号,,Turn off the Running signal
+3DLaserGlueInspection_WPF,Resources\LanguageDict,StartSavingImages,,开始存图,,Start saving images
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ImageStorageException,,存图异常：,,Image storage exception:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ImageStorageCompleted,,存图完成,,Image storage completed
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ProcessException,,流程异常：,,Process exception:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,LaserSuccessfullyTurnedOff,,关闭激光成功,,Laser successfully turned off
+3DLaserGlueInspection_WPF,Resources\LanguageDict,LaserShutdownFailed,,关闭激光失败：,,Laser shutdown failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ClosingFailed,,关闭失败：,,Closing failed:
+3DLaserGlueInspection_WPF,Resources\LanguageDict,SignalReReadingSuccessful,,信号重读成功,,Signal re reading successful
+3DLaserGlueInspection_WPF,Resources\LanguageDict,SignalReadFailedRereading,,信号读取失败，重读中:,,"Signal read failed, rereading:"
+3DLaserGlueInspection_WPF,Resources\LanguageDict,SignalRewritingSuccessful,,信号重写成功,,Signal rewriting successful
+3DLaserGlueInspection_WPF,Resources\LanguageDict,SignalWriteFailedRewritingInProgress,,信号写入失败，重写中:,,"Signal write failed, rewriting in progress:"
+3DLaserGlueInspection_WPF,Resources\LanguageDict,TheSoftwareIsRunningAreYouSureToExit,,软件正在运行中，确定退出？,,"The software is running, are you sure to exit?"
+3DLaserGlueInspection_WPF,Resources\LanguageDict,ThisCommunicationMethodHasNoSettingInterface,,该通讯方式无设置界面！,,This communication method has no setting interface!
+3DLaserGlueInspection_WPF,Resources\LanguageDict,Computer,,上位机,,Computer
+3DLaserGlueInspection_WPF,Resources\LanguageDict,Robot,,机器人,,Robot
+3DLaserGlueInspection_WPF,Resources\LanguageDict,Down,,下,,Down
+3DLaserGlueInspection_WPF,Resources\LanguageDict,Up,,上,,Up
+3DLaserGlueInspection_WPF,Resources\LanguageDict,TheNameIsEmpty,,名称为空！,,The name is empty!
+3DLaserGlueInspection_WPF,Resources\LanguageDict,DuplicateName,,名称重复！,,Duplicate name!
+3DLaserGlueInspection_WPF,Resources\LanguageDict,Stop,,停止,,Stop
+3DLaserGlueInspection_WPF,Resources\LanguageDict,StartIndexIsGreaterThanEndIndex,,起点大于终点,,Start index is greater than end index

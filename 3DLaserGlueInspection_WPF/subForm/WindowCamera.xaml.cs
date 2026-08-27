@@ -212,7 +212,7 @@ namespace _3DLaserGlueInspection.subForm
 
             if (!Params.Load())
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("参数加载失败：") + Params.ErrMsg);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ParameterLoadingFailed + Params.ErrMsg);
             }
 
             //判断有多少个相机，需要显示多少个相机按键
@@ -392,7 +392,7 @@ namespace _3DLaserGlueInspection.subForm
             {
                 CamNameComboBox.Items.Clear();
 
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("找到") + DeviceList.Length + GlobalVarAndFunc.LanguageTranslate("个相机"));
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Find + DeviceList.Length + _3DLaserGlueInspection.Resources.LanguageDict.Cam);
                 for (int i = 0; i < SNs.Length; i++)
                 {
                     CamNameComboBox.Items.Add((SNs[i]).ToString());
@@ -422,14 +422,14 @@ namespace _3DLaserGlueInspection.subForm
 
                 //控件启用
                 ButtonsEnable(true);
-                ShowMessage($"{cam.Name}({cam.SN})" + GlobalVarAndFunc.LanguageTranslate("相机打开成功"));
+                ShowMessage($"{cam.Name}({cam.SN})" + _3DLaserGlueInspection.Resources.LanguageDict.CameraSuccessfullyOpened);
                 if (cam.InitSet(camParam, true))
                 {
-                    ShowMessage($"{cam.Name}({cam.SN})" + GlobalVarAndFunc.LanguageTranslate("相机初始化成功"));
+                    ShowMessage($"{cam.Name}({cam.SN})" + _3DLaserGlueInspection.Resources.LanguageDict.CamInitSuccess);
                 }
                 else
                 {
-                    ShowMessage($"{cam.Name}({cam.SN})" + GlobalVarAndFunc.LanguageTranslate("相机初始化失败" + "：") + cam.ErrMsg);
+                    ShowMessage($"{cam.Name}({cam.SN})" + _3DLaserGlueInspection.Resources.LanguageDict.CameraInitializationFailed + ":" + cam.ErrMsg);
                 }
             }
             else
@@ -452,7 +452,7 @@ namespace _3DLaserGlueInspection.subForm
                 }));
                 // 保留 img 供保存按钮使用，显示回调接收并释放独立副本。
                 ShowImage(img.Clone());
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("单帧采集时间") + "：" + sw.ElapsedMilliseconds.ToString() + "ms");
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.SingleFrameAcquisitionTime + ":" + sw.ElapsedMilliseconds.ToString() + "ms");
             }
             else
             {
@@ -466,7 +466,7 @@ namespace _3DLaserGlueInspection.subForm
             continuousCheckButton.IsEnabled = false;
             stopWatch.Restart();
             cam.KeepShot(ShowImage);
-            ShowMessage(GlobalVarAndFunc.LanguageTranslate("连续采集开始"));
+            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ContinuousCollectionBegins);
         }
 
         private void closeCamButton_Click(object sender, RoutedEventArgs e)
@@ -479,14 +479,14 @@ namespace _3DLaserGlueInspection.subForm
             cam.Close();
             //控件复原
             ButtonsEnable(false);
-            ShowMessage($"{cam.Name}({cam.SN})" + GlobalVarAndFunc.LanguageTranslate("相机关闭"));
+            ShowMessage($"{cam.Name}({cam.SN})" + _3DLaserGlueInspection.Resources.LanguageDict.CameraClose);
         }
 
         private void stopCheckButton_Click(object sender, RoutedEventArgs e)
         {
             cam.StopGrabbing();
             stopWatch.Stop();
-            ShowMessage(GlobalVarAndFunc.LanguageTranslate("相机采集停止,采集时间：") + stopWatch.ElapsedMilliseconds.ToString());
+            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.CameraAcquisitionStoppedAcquisitionTime + stopWatch.ElapsedMilliseconds.ToString());
             singleCheckButton.IsEnabled = true;
             continuousCheckButton.IsEnabled = true;
         }
@@ -496,11 +496,11 @@ namespace _3DLaserGlueInspection.subForm
             if (cam.GetExposure(out float value))
             {
                 exportTimeNumericUpDown.Text = Convert.ToString(value);
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("曝光时间：") + value.ToString());
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ExposureTime + value.ToString());
             }
             else
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("曝光时间获取失败:") + cam.ErrMsg);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ExposureTimeAcquisitionFailed + cam.ErrMsg);
             }
         }
 
@@ -509,11 +509,11 @@ namespace _3DLaserGlueInspection.subForm
             double value = Convert.ToDouble(exportTimeNumericUpDown.Text);
             if (cam.SetExposure((float)value))
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("设置曝光：") + exportTimeNumericUpDown.Text);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.SetExposure + exportTimeNumericUpDown.Text);
             }
             else
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("曝光设置失败:") + cam.ErrMsg);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ExposureSettingFailed + cam.ErrMsg);
             }
         }
 
@@ -529,12 +529,12 @@ namespace _3DLaserGlueInspection.subForm
                 bool bValue = (bool)horizontalMirror.IsChecked;
                 if (cam.SetReverseX(bValue))
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("设置水平镜像使能：") + bValue);
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.EnableHorizontalMirroring + bValue);
                 }
                 else
                 {
                     horizontalMirror.IsChecked = !bValue;
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("水平镜像使能设置失败:") + cam.ErrMsg);
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.SetEnableHorizontalMirroringFail + cam.ErrMsg);
                 }
                 busy = false;
             }
@@ -552,12 +552,12 @@ namespace _3DLaserGlueInspection.subForm
                 bool bValue = (bool)horizontalMirror.IsChecked;
                 if (cam.SetReverseY(bValue))
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("设置垂直镜像使能：") + bValue);
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.EnableVerticalMirroring + bValue);
                 }
                 else
                 {
                     horizontalMirror.IsChecked = !bValue;
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("垂直镜像使能设置失败:") + cam.ErrMsg);
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.SetEnableVerticalMirroringFail + cam.ErrMsg);
                 }
                 busy = false;
             }
@@ -568,20 +568,20 @@ namespace _3DLaserGlueInspection.subForm
             if (cam.GetWidthMax(out long value))
             {
                 widthMaxNumericUpDown.Text = Convert.ToString(value);
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("图像最大宽度：") + value.ToString());
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.MaximumWidthOfImage + value.ToString());
             }
             else
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("图像最大宽度获取失败:") + cam.ErrMsg);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.GetMaximumWidthOfImage + cam.ErrMsg);
             }
             if (cam.GetHeightMax(out long value2))
             {
                 heightMaxNumericUpDown.Text = Convert.ToString(value2);
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("图像最大高度：") + value2.ToString());
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.MaximumHeightOfImage + value2.ToString());
             }
             else
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("图像最大高度获取失败:") + cam.ErrMsg);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.GetMaximumHeightOfImage + cam.ErrMsg);
             }
         }
 
@@ -590,20 +590,20 @@ namespace _3DLaserGlueInspection.subForm
             if (cam.GetWidth(out long value))
             {
                 currentWidthNumericUpDown.Text = Convert.ToString(value);
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("图像宽度：") + value.ToString());
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ImageWidth + value.ToString());
             }
             else
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("图像宽度获取失败:") + cam.ErrMsg);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.GetImageWidthFailed + cam.ErrMsg);
             }
             if (cam.GetHeight(out long value2))
             {
                 currentHeightNumericUpDown.Text = Convert.ToString(value2);
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("图像高度：") + value2.ToString());
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ImageHeight + value2.ToString());
             }
             else
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("图像高度获取失败:") + cam.ErrMsg);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.GetImageHeightFailed + cam.ErrMsg);
             }
         }
 
@@ -611,19 +611,19 @@ namespace _3DLaserGlueInspection.subForm
         {
             if (cam.SetWidth((long)Convert.ToInt64(currentWidthNumericUpDown.Text)))
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("设置图像宽度：") + Convert.ToInt64(currentWidthNumericUpDown.Text));
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.SetImageWidth + Convert.ToInt64(currentWidthNumericUpDown.Text));
             }
             else
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("图像宽度设置失败:") + cam.ErrMsg);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.SetImageWidthFail + cam.ErrMsg);
             }
             if (cam.SetHeight((long)Convert.ToInt64(currentHeightNumericUpDown.Text)))
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("设置图像高度：") + Convert.ToInt64(currentHeightNumericUpDown.Text));
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.SetImageHeight + Convert.ToInt64(currentHeightNumericUpDown.Text));
             }
             else
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("图像高度设置失败:") + cam.ErrMsg);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.SetImageHeightFail + cam.ErrMsg);
             }
         }
 
@@ -634,22 +634,22 @@ namespace _3DLaserGlueInspection.subForm
                 long 参数值 = (bool)verticalMirror.IsChecked ? (long)(Convert.ToInt64(widthMaxNumericUpDown.Text)
                     - Convert.ToInt64(currentWidthNumericUpDown.Text) - value) : value;
                 currentOffsetXNumericUpDown.Text = Convert.ToString(参数值);
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("水平偏移参数值：") + 参数值.ToString() + GlobalVarAndFunc.LanguageTranslate("，相机值：") + value.ToString());
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.HorizontalOffsetParameterValue + 参数值.ToString() + _3DLaserGlueInspection.Resources.LanguageDict.CameraValue + value.ToString());
             }
             else
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("水平偏移获取失败:") + cam.ErrMsg);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.GetHorizontalOffsetParameterValueFail + cam.ErrMsg);
             }
             if (cam.GetOffsetY(out long value2))
             {
                 long 参数值 = (bool)horizontalMirror.IsChecked ? (long)(Convert.ToInt64(heightMaxNumericUpDown.Text)
                     - Convert.ToInt64(currentHeightNumericUpDown.Text) - value2) : value2;
                 currentOffsetYNumericUpDown.Text = Convert.ToString(参数值);
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("垂直偏移参数值：") + 参数值.ToString() + GlobalVarAndFunc.LanguageTranslate("，相机值：") + value2.ToString());
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.VerticalOffsetParameterValue + 参数值.ToString() + _3DLaserGlueInspection.Resources.LanguageDict.CameraValue + value2.ToString());
             }
             else
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("垂直偏移获取失败:") + cam.ErrMsg);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.GetVerticalOffsetParameterValue + cam.ErrMsg);
             }
         }
 
@@ -660,22 +660,22 @@ namespace _3DLaserGlueInspection.subForm
                 参数值offsetX) : 参数值offsetX;
             if (cam.SetOffsetX(相机值offsetX))
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("设置水平偏移参数值：") + 参数值offsetX.ToString() + GlobalVarAndFunc.LanguageTranslate("，相机值：") + 相机值offsetX.ToString());
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.SetTheHorizontalOffsetParameterValue + 参数值offsetX.ToString() + _3DLaserGlueInspection.Resources.LanguageDict.CameraValue + 相机值offsetX.ToString());
             }
             else
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("水平偏移设置失败:") + cam.ErrMsg);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.HorizontalOffsetSettingFailed + cam.ErrMsg);
             }
             long 参数值offsetY = Convert.ToInt32(currentOffsetYNumericUpDown.Text);
             long 相机值offsetY = (bool)horizontalMirror.IsChecked ? (long)(Convert.ToInt32(heightMaxNumericUpDown.Text) - Convert.ToInt32(currentHeightNumericUpDown.Text) -
                 参数值offsetY) : 参数值offsetY;
             if (cam.SetOffsetY(相机值offsetY))
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("设置垂直偏移参数值：") + 参数值offsetY.ToString() + GlobalVarAndFunc.LanguageTranslate("，相机值：") + 相机值offsetY.ToString());
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.SetTheVerticalOffsetParameterValue + 参数值offsetY.ToString() + _3DLaserGlueInspection.Resources.LanguageDict.CameraValue + 相机值offsetY.ToString());
             }
             else
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("垂直偏移设置失败:") + cam.ErrMsg);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.VerticalOffsetSettingFailed + cam.ErrMsg);
             }
         }
 
@@ -691,12 +691,12 @@ namespace _3DLaserGlueInspection.subForm
                 bool bValue = (bool)useFPSCheck.IsChecked;
                 if (cam.SetAcquisitionFrameRateEnable(bValue))
                 {
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("设置帧率使能：") + bValue.ToString());
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.EnableFrameRateSetting + bValue.ToString());
                 }
                 else
                 {
                     useFPSCheck.IsChecked = !bValue;
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("帧率使能设置失败:") + cam.ErrMsg);
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.FrameRateEnableSettingFailed + cam.ErrMsg);
                 }
                 busy = false;
             }
@@ -707,19 +707,19 @@ namespace _3DLaserGlueInspection.subForm
             if (cam.GetAcquisitionFrameRate(out float value))
             {
                 currentFPSNumericUpDown.Text = Convert.ToString(value);
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("设置的帧率：") + value.ToString());
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.SetFrameRate + value.ToString());
             }
             else
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("设置的帧率获取失败:") + cam.ErrMsg);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.FailedToRetrieveTheSetFrameRate + cam.ErrMsg);
             }
             if (cam.GetResultingFrameRate(out float value2))
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("实际帧率：") + value2.ToString());
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ActualFrameRate + value2.ToString());
             }
             else
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("实际帧率获取失败:") + cam.ErrMsg);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ActualFrameRateAcquisitionFailed + cam.ErrMsg);
             }
         }
 
@@ -727,11 +727,11 @@ namespace _3DLaserGlueInspection.subForm
         {
             if (cam.SetAcquisitionFrameRate((float)Convert.ToDouble(currentFPSNumericUpDown.Text)))
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("设置帧率：") + currentFPSNumericUpDown.Text);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.SetFrameRate + currentFPSNumericUpDown.Text);
             }
             else
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("帧率设置失败:") + cam.ErrMsg);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.FrameRateSettingFailed + cam.ErrMsg);
             }
         }
 
@@ -740,14 +740,14 @@ namespace _3DLaserGlueInspection.subForm
             if (img != null)
             {
                 System.Windows.Forms.SaveFileDialog sfd = new System.Windows.Forms.SaveFileDialog();
-                sfd.Title = GlobalVarAndFunc.LanguageTranslate("选择要保存的位置");
-                sfd.Filter = "PNG(*.png)|*.png|Bitmap(*.bmp)|*.bmp|Tiff(*.tif)|*.tif|JPEG(*.jpg)|*.jpg|所有文件(*.*)|*.*";
+                sfd.Title = _3DLaserGlueInspection.Resources.LanguageDict.SelectTheLocationToSave;
+                sfd.Filter = _3DLaserGlueInspection.Resources.LanguageDict.ImageFileFilter;
                 if (System.Windows.Forms.DialogResult.OK == sfd.ShowDialog())
                 {
                     string path = sfd.FileName;
                     string format = System.IO.Path.GetExtension(path);
                     Cv2.ImWrite(path, img);
-                    ShowMessage(GlobalVarAndFunc.LanguageTranslate("图片保存成功"));
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ImageSavedSuccessfully);
                 }
                 //sfd.Dispose();
             }
@@ -758,11 +758,11 @@ namespace _3DLaserGlueInspection.subForm
             if (Params.Save())
             {
                 _isAlter = false;
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("参数保存成功"));
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ParameterSavedSuccessfully);
             }
             else
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("参数保存失败：") + Params.ErrMsg);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ParameterSaveFailed + Params.ErrMsg);
             }
         }
 
@@ -812,12 +812,12 @@ namespace _3DLaserGlueInspection.subForm
         {
             if (_isAlter)
             {
-                DialogResult dialogResult = System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("是否保存参数？"), GlobalVarAndFunc.LanguageTranslate("提示"), MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
+                DialogResult dialogResult = System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.DoYouWantToSaveTheParameters, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
                 if (dialogResult == System.Windows.Forms.DialogResult.Yes)
                 {
                     if (!Params.Save())
                     {
-                        System.Windows.Forms.MessageBox.Show(GlobalVarAndFunc.LanguageTranslate("保存失败：") + Params.ErrMsg, GlobalVarAndFunc.LanguageTranslate("提示"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.SaveFailed + Params.ErrMsg, _3DLaserGlueInspection.Resources.LanguageDict.Prompt, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         e.Cancel = true;
                         return;
                     }
@@ -835,7 +835,7 @@ namespace _3DLaserGlueInspection.subForm
             try
             {
                 cam.Close();
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("关闭相机"));
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.CloseCam);
             }
             catch { }
             finally
@@ -851,7 +851,7 @@ namespace _3DLaserGlueInspection.subForm
         {
             if (!cam.SetLine1Inverter((bool)Line1EnableCheck.IsChecked))
             {
-                ShowMessage("Line1" + GlobalVarAndFunc.LanguageTranslate("打开设置失败:") + cam.ErrMsg);
+                ShowMessage("Line1" + _3DLaserGlueInspection.Resources.LanguageDict.FailedToOpenSettings + cam.ErrMsg);
             }
         }
 
@@ -859,7 +859,7 @@ namespace _3DLaserGlueInspection.subForm
         {
             if (!cam.SetLine2Inverter((bool)Line2EnableCheck.IsChecked))
             {
-                ShowMessage("Line2" + GlobalVarAndFunc.LanguageTranslate("打开设置失败:") + cam.ErrMsg);
+                ShowMessage("Line2" + _3DLaserGlueInspection.Resources.LanguageDict.FailedToOpenSettings + cam.ErrMsg);
             }
         }
 
@@ -868,11 +868,11 @@ namespace _3DLaserGlueInspection.subForm
             if (cam.GetGain(out float value))
             {
                 gainNumericUpDown.Text = Convert.ToString(value);
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("增益：") + value.ToString());
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Gain + value.ToString());
             }
             else
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("增益获取失败:") + cam.ErrMsg);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.GetGainFail + cam.ErrMsg);
             }
         }
 
@@ -881,11 +881,11 @@ namespace _3DLaserGlueInspection.subForm
             double value = Convert.ToDouble(gainNumericUpDown.Text);
             if (cam.SetGain((float)value))
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("设置增益：") + gainNumericUpDown.Text);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.SetGain + gainNumericUpDown.Text);
             }
             else
             {
-                ShowMessage(GlobalVarAndFunc.LanguageTranslate("增益设置失败:") + cam.ErrMsg);
+                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.SetGainFail + cam.ErrMsg);
             }
         }
     }
