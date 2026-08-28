@@ -917,6 +917,10 @@ Converter={StaticResource ResultColor}}" />
                     Click="MenuItem_paraSetting_Click"
                     Header="{x:Static resx:LanguageDict.ParaSetting}" Height="50"/>
                 <MenuItem
+                    x:Name="MenuItem_standardBlockTest"
+                    Click="MenuItem_standardBlockTest_Click"
+                    Header="{x:Static resx:LanguageDict.StandardBlockTest}" Height="50"/>
+                <MenuItem
                     x:Name="MenuItem_languageSetting"
                     BorderBrush="#FF3C4451"
                     Header="{x:Static resx:LanguageDict.Language}" Height="50" >

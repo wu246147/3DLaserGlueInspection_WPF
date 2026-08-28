@@ -86,7 +86,7 @@
     </Reference>
     <Reference Include="HslCommunication, Version=12.1.1.0, Culture=neutral, PublicKeyToken=3d72ad3b6b5ec0e3, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>bin\Debug\HslCommunication.dll</HintPath>
+      <HintPath>bin\x64\Debug\HslCommunication.dll</HintPath>
     </Reference>
     <Reference Include="Kitware.mummy.Runtime, Version=1.0.2.599, Culture=neutral, PublicKeyToken=995c7fb9db2c1b44, processorArchitecture=AMD64">
       <HintPath>..\packages\Activiz.NET.x64.5.8.0\lib\net20\Kitware.mummy.Runtime.dll</HintPath>
@@ -201,6 +201,9 @@
     <Compile Include="subForm\WindowVision.xaml.cs">
       <DependentUpon>WindowVision.xaml</DependentUpon>
     </Compile>
+    <Compile Include="subForm\WindowStandardBlockTest.xaml.cs">
+      <DependentUpon>WindowStandardBlockTest.xaml</DependentUpon>
+    </Compile>
     <Compile Include="tool\Controls.cs" />
     <Compile Include="tool\HFileIO.cs" />
     <Compile Include="tool\HMatrixTransform.cs" />
@@ -277,6 +280,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="subForm\WindowVision.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="subForm\WindowStandardBlockTest.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

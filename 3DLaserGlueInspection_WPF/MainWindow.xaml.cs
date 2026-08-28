@@ -213,6 +213,7 @@ namespace _3DLaserGlueInspection
 
                 //禁止菜单
                 MenuItem_paraSetting.IsEnabled = false;
+                MenuItem_standardBlockTest.IsEnabled = false;
                 MenuItem_signalSetting.IsEnabled = false;
                 MenuItem_camSetting.IsEnabled = false;
                 MenuItem_productSetting.IsEnabled = false;
@@ -229,6 +230,7 @@ namespace _3DLaserGlueInspection
 
                 //允许菜单
                 MenuItem_paraSetting.IsEnabled = true;
+                MenuItem_standardBlockTest.IsEnabled = true;
                 MenuItem_signalSetting.IsEnabled = true;
                 MenuItem_camSetting.IsEnabled = true;
                 MenuItem_productSetting.IsEnabled = true;
@@ -342,6 +344,25 @@ namespace _3DLaserGlueInspection
             if (userType == WindowPassWord.PasswordUserType.SuperAdministrator)
             {
                 new WindowVision().ShowDialog();
+            }
+            else
+            {
+                ShowAdministratorPermissionDenied();
+            }
+        }
+
+        private void MenuItem_standardBlockTest_Click(object sender, RoutedEventArgs e)
+        {
+            if (!TryPasswordLogin(out WindowPassWord.PasswordUserType userType))
+            {
+                return;
+            }
+
+            if (userType == WindowPassWord.PasswordUserType.SuperAdministrator)
+            {
+                WindowStandardBlockTest window = new WindowStandardBlockTest();
+                window.Owner = this;
+                window.ShowDialog();
             }
             else
             {

@@ -4004,5 +4004,132 @@ namespace _3DLaserGlueInspection.Resources {
             }
         }
 
+
+        /// <summary>
+        ///     查找资源键 StandardBlockTest 对应的本地化字符串。
+        /// </summary>
+        public static string StandardBlockTest {
+            get {
+                return ResourceManager.GetString("StandardBlockTest", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 StandardBlockSelection 对应的本地化字符串。
+        /// </summary>
+        public static string StandardBlockSelection {
+            get {
+                return ResourceManager.GetString("StandardBlockSelection", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 StandardBlockCamera 对应的本地化字符串。
+        /// </summary>
+        public static string StandardBlockCamera {
+            get {
+                return ResourceManager.GetString("StandardBlockCamera", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 StandardBlockAcquisition 对应的本地化字符串。
+        /// </summary>
+        public static string StandardBlockAcquisition {
+            get {
+                return ResourceManager.GetString("StandardBlockAcquisition", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 StandardBlockMeasurement 对应的本地化字符串。
+        /// </summary>
+        public static string StandardBlockMeasurement {
+            get {
+                return ResourceManager.GetString("StandardBlockMeasurement", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 StandardBlockContourThreshold 对应的本地化字符串。
+        /// </summary>
+        public static string StandardBlockContourThreshold {
+            get {
+                return ResourceManager.GetString("StandardBlockContourThreshold", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 StandardBlockRangeReadOnly 对应的本地化字符串。
+        /// </summary>
+        public static string StandardBlockRangeReadOnly {
+            get {
+                return ResourceManager.GetString("StandardBlockRangeReadOnly", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 StandardBlockReady 对应的本地化字符串。
+        /// </summary>
+        public static string StandardBlockReady {
+            get {
+                return ResourceManager.GetString("StandardBlockReady", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 StandardBlockAcquisitionCompleted 对应的本地化字符串。
+        /// </summary>
+        public static string StandardBlockAcquisitionCompleted {
+            get {
+                return ResourceManager.GetString("StandardBlockAcquisitionCompleted", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 StandardBlockImageSetMissing 对应的本地化字符串。
+        /// </summary>
+        public static string StandardBlockImageSetMissing {
+            get {
+                return ResourceManager.GetString("StandardBlockImageSetMissing", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 StandardBlockPhysicalCameraMissing 对应的本地化字符串。
+        /// </summary>
+        public static string StandardBlockPhysicalCameraMissing {
+            get {
+                return ResourceManager.GetString("StandardBlockPhysicalCameraMissing", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 StandardBlockNoOutline 对应的本地化字符串。
+        /// </summary>
+        public static string StandardBlockNoOutline {
+            get {
+                return ResourceManager.GetString("StandardBlockNoOutline", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 StandardBlockInvalidCrop 对应的本地化字符串。
+        /// </summary>
+        public static string StandardBlockInvalidCrop {
+            get {
+                return ResourceManager.GetString("StandardBlockInvalidCrop", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 StandardBlockCalibrationMissing 对应的本地化字符串。
+        /// </summary>
+        public static string StandardBlockCalibrationMissing {
+            get {
+                return ResourceManager.GetString("StandardBlockCalibrationMissing", resourceCulture);
+            }
+        }
+
     }
 }

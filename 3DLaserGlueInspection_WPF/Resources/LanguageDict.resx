@@ -1440,4 +1440,46 @@
   <data name="ImageFileFilter" xml:space="preserve">
     <value>PNG(*.png)|*.png|Bitmap(*.bmp)|*.bmp|Tiff(*.tif)|*.tif|JPEG(*.jpg)|*.jpg|所有文件(*.*)|*.*</value>
   </data>
+  <data name="StandardBlockTest" xml:space="preserve">
+    <value>标准块测试</value>
+  </data>
+  <data name="StandardBlockSelection" xml:space="preserve">
+    <value>测试选择</value>
+  </data>
+  <data name="StandardBlockCamera" xml:space="preserve">
+    <value>相机编号</value>
+  </data>
+  <data name="StandardBlockAcquisition" xml:space="preserve">
+    <value>采集操作</value>
+  </data>
+  <data name="StandardBlockMeasurement" xml:space="preserve">
+    <value>测量参数</value>
+  </data>
+  <data name="StandardBlockContourThreshold" xml:space="preserve">
+    <value>轮廓检测阈值</value>
+  </data>
+  <data name="StandardBlockRangeReadOnly" xml:space="preserve">
+    <value>合格范围读取自第一个 ImageSet，只读</value>
+  </data>
+  <data name="StandardBlockReady" xml:space="preserve">
+    <value>请选择车型和相机</value>
+  </data>
+  <data name="StandardBlockAcquisitionCompleted" xml:space="preserve">
+    <value>单帧采集完成</value>
+  </data>
+  <data name="StandardBlockImageSetMissing" xml:space="preserve">
+    <value>标准块车型缺少第一个 ImageSet</value>
+  </data>
+  <data name="StandardBlockPhysicalCameraMissing" xml:space="preserve">
+    <value>当前逻辑相机未配置实际相机</value>
+  </data>
+  <data name="StandardBlockNoOutline" xml:space="preserve">
+    <value>未检测到有效轮廓</value>
+  </data>
+  <data name="StandardBlockInvalidCrop" xml:space="preserve">
+    <value>裁剪区域无效</value>
+  </data>
+  <data name="StandardBlockCalibrationMissing" xml:space="preserve">
+    <value>缺少当前相机的内参或光平面参数</value>
+  </data>
 </root>

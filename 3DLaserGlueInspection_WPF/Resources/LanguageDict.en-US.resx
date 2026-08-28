@@ -1443,4 +1443,46 @@ Det Region</value>
   <data name="ImageFileFilter" xml:space="preserve">
     <value>PNG (*.png)|*.png|Bitmap (*.bmp)|*.bmp|TIFF (*.tif)|*.tif|JPEG (*.jpg)|*.jpg|All files (*.*)|*.*</value>
   </data>
+  <data name="StandardBlockTest" xml:space="preserve">
+    <value>Standard Block Test</value>
+  </data>
+  <data name="StandardBlockSelection" xml:space="preserve">
+    <value>Test Selection</value>
+  </data>
+  <data name="StandardBlockCamera" xml:space="preserve">
+    <value>Camera Number</value>
+  </data>
+  <data name="StandardBlockAcquisition" xml:space="preserve">
+    <value>Acquisition</value>
+  </data>
+  <data name="StandardBlockMeasurement" xml:space="preserve">
+    <value>Measurement Parameters</value>
+  </data>
+  <data name="StandardBlockContourThreshold" xml:space="preserve">
+    <value>Contour Detection Threshold</value>
+  </data>
+  <data name="StandardBlockRangeReadOnly" xml:space="preserve">
+    <value>Acceptable ranges are read from the first ImageSet and are read-only</value>
+  </data>
+  <data name="StandardBlockReady" xml:space="preserve">
+    <value>Please select a vehicle model and camera</value>
+  </data>
+  <data name="StandardBlockAcquisitionCompleted" xml:space="preserve">
+    <value>Single-frame acquisition completed</value>
+  </data>
+  <data name="StandardBlockImageSetMissing" xml:space="preserve">
+    <value>The standard-block vehicle has no first ImageSet</value>
+  </data>
+  <data name="StandardBlockPhysicalCameraMissing" xml:space="preserve">
+    <value>No physical camera is configured for the selected logical camera</value>
+  </data>
+  <data name="StandardBlockNoOutline" xml:space="preserve">
+    <value>No valid contour was detected</value>
+  </data>
+  <data name="StandardBlockInvalidCrop" xml:space="preserve">
+    <value>Invalid crop region</value>
+  </data>
+  <data name="StandardBlockCalibrationMissing" xml:space="preserve">
+    <value>Camera intrinsics or light-plane parameters are missing</value>
+  </data>
 </root>
