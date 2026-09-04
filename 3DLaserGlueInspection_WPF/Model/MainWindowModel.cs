@@ -113,15 +113,12 @@ namespace _3DLaserGlueInspection
         //JAKARobot robot = new JAKARobot();
         //FanucRobot robot = new FanucRobot();
         //机器人通讯，获取坐标
-        KukaRobot robot = new KukaRobot();
-        //socket通讯，获取io信号
-        // TCP 通讯
-        TCP_Server Server;
-        Thread threadReconnect = null; // 通讯重连线程
+        public IRobot robot ;
+        public RobotType robotType = RobotType.KukaRobot;
 
         //仿真通讯，获取io信号
         Mmf mmf = new Mmf();
-        ISignal io;
+        //ISignal io;
         public Dictionary<string, Setting> sets = new Dictionary<string, Setting>();
 
         object olockDataGridViewImageList = new object();
@@ -194,293 +191,10 @@ namespace _3DLaserGlueInspection
 
         public string simulationPath = "";
 
-        /// <summary>
-        /// 开始信号
-        /// </summary>
-        
-        bool isStart = false;
+
+     
 
 
-        /// <summary>
-        /// 触发信号
-        /// </summary>
-        bool isPGON = false;
-
-
-        /// <summary>
-        /// 开始信号
-        /// </summary>
-
-        bool isStartEnd = false;
-
-
-        /// <summary>
-        /// 触发信号
-        /// </summary>
-        bool isPGONEnd = false;
-
-        /// <summary>
-        /// 中断信号
-        /// </summary>
-        bool isAbort = false;
-
-        /// <summary>
-        /// 结束信号
-        /// </summary>
-        bool isEND = false;
-
-        //ushort 256
-
-        /// <summary>
-        /// 车型号
-        /// </summary>
-        int CarNumber = -1;
-
-
-        public void resetSignal()
-        {
-            isStart = false;
-            isPGON = false ;
-            isAbort = false ;
-            isEND = false ;
-            isStartEnd = false ;
-            isPGONEnd   = false ;
-        }
-
-
-        /// <summary>
-        /// 根据通讯方式初始化连接线程
-        /// </summary>
-        public void InitCommunicationConnection()
-        {
-
-            IniTCPSocketServer();
-
-        }
-
-        /// <summary>
-        /// 停止通讯线程
-        /// </summary>
-        public void StopCommunicationThread()
-        {
-            if (Server != null)
-            {
-
-                // TCP 停止监听并null
-                if (Server != null)
-                {
-                    Server.StopListen();
-                    Server = null;
-
-                    //_timer.Stop();
-                }
-                // 等待线程结束
-                if (!threadReconnect.Join(1000))  // 等待最多1秒
-                {
-                    try
-                    {
-                        threadReconnect.Abort();  // 强制终止（不推荐，但有时必要）
-                    }
-                    catch { }
-                }
-                threadReconnect = null;
-            }
-        }
-
-        private void IniTCPSocketServer()
-        {
-            threadReconnect = new Thread(IniRobotTCPserver);
-            threadReconnect.Start();
-
-            //// TCP计时器
-            //_timer = new DispatcherTimer();
-            //_timer.Tick += Timer_Tick;
-            //_timer.Interval = TimeSpan.FromMilliseconds(100); // 0.1秒间隔
-            //_timer.Start();
-        }
-        private void IniRobotTCPserver()
-        {
-
-            try
-            {
-                Server = new TCP_Server();
-
-                bool rt = Server.Load();
-                if (rt)
-                {
-                    //绑定委托与事件
-                    Server.reserveInfoSignal += ProcessInfo;
-
-                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ServerSignalLoadedSuccessfully);
-
-                    //开始监听
-                    Server.StartListen();
-
-                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.TCPCommunicationServerSuccessfullyEstablished + "!");
-
-                    return;
-                }
-                else
-                {
-                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ServerSignalLoadingFailed);
-
-                }
-
-
-            }
-
-            catch (Exception ex)
-            {
-                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.TCPCommunicationServerEstablishmentFailed);
-
-                return;
-            }
-        }
-
-        void ProcessInfo(string info)
-        {
-            int PROGRAM_ID = 0;
-            int COMMAND_ID = 0;
-            int POINT_ID = 0;
-            Thread cameraThread;
-            try
-            {
-                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedSignal + ":"+info);
-
-                //string[] tempReceivedParts;
-                //tempReceivedParts = info.Split(',');
-                
-                if(robot.GetType() == typeof(KukaRobot))
-                {
-                    var doc = XDocument.Parse(info);
-                    var root = doc.Root;
-
-                    //车型
-                    int programId = int.Parse(root.Element("PROGRAM_ID").Value);
-                    //指令
-                    int commandId = int.Parse(root.Element("COMMAND_ID").Value);
-                    //指令值
-                    int pointId = int.Parse(root.Element("POINT_ID").Value);
-
-
-                    CarNumber = programId;
-                    switch(commandId)
-                    {
-                        case 0:
-                            //开始信号
-                            if (pointId == 1)
-                            {
-                                isStart = true;
-                            }
-                            else if (pointId == 0)
-                            {
-                                isStart = false;
-                            }
-                            break;
-                        case 1:
-                            //启动信号
-                            if (pointId == 1)
-                            {
-                                isPGON = true;
-                            }
-                            else if (pointId == 0)
-                            {
-                                isPGON = false;
-                            }
-                            break;
-
-                        case 2:
-                            //开始信号结束
-                            if (pointId == 1)
-                            {
-                                isStartEnd = true;
-                            }
-                            else if (pointId == 0)
-                            {
-                                isStartEnd = false;
-                            }
-                            break;
-                        case 3:
-                            //启动信号结束
-                            if (pointId == 1)
-                            {
-                                isPGONEnd = true;
-                            }
-                            else if (pointId == 0)
-                            {
-                                isPGONEnd = false;
-                            }
-                            break;
-                        case 4:
-                            //中断信号
-                            if (pointId == 1)
-                            {
-                                isAbort = true;
-                            }
-                            else if (pointId == 0)
-                            {
-                                isAbort = false;
-                            }
-                            break;
-                        case 5:
-                            //停止信号
-                            if (pointId == 1)
-                            {
-                                isEND = true;
-                            }
-                            else if (pointId == 0)
-                            {
-                                isEND = false;
-                            }
-                            break;
-                    }
-
-                }
-
-            }
-            catch (Exception ex)
-            {
-                
-            }
-        }
-
-
-        public string serializationInfo(double x, double y, double z, double a, double b, double c, int result, string setflat)
-        {
-
-            XElement xml = new XElement("VISION",
-
-
-                new XElement("ROBOTPOS",
-                    new XAttribute("X", x),
-                    new XAttribute("Y", y),
-                    new XAttribute("Z", z),
-                    new XAttribute("A", a),
-                    new XAttribute("B", b),
-                    new XAttribute("C", c),
-                    "" 
-                ),
-
-                new XElement("RESULT", result),
-
-
-                new XAttribute("Set_Flag", setflat), "" 
-
-            );
-
-            return xml.ToString();
-        }
-
-
-        void SocketSend(int RESULT = 0)
-        {
-            if (robot.GetType() == typeof(KukaRobot))
-            {
-                string msg = serializationInfo(0, 0, 0, 0, 0, 0, RESULT, "11");
-                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.SendSignal + ":" + msg);
-                Server.Send(msg);
-            }
-        }
 
         private void SetCurrentRunID(ushort id)
         {
@@ -627,7 +341,13 @@ namespace _3DLaserGlueInspection
 
                 mainModel.softwareRunLabelColorControl = labelColorEnum["green"];
                 //初始化
-                resetSignal();
+                switch (robotType)
+                {
+                    case RobotType.KukaRobot:
+                        ((KukaRobot)robot).resetSignal();
+                        break;
+                }
+                
 
                 while (!stop)
                 {
@@ -647,17 +367,39 @@ namespace _3DLaserGlueInspection
                     while (true)
                     {
                         bool val;
-                        if (isStart)
-                        {
-                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedStartSignal);
-                            break;
-                        }
+                        //if (isStart)
+                        //{
+                        //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedStartSignal);
+                        //    break;
+                        //}
 
+                        //Thread.Sleep(60);
+                        //if (stop) return;
+
+                        if (robot.Read(DI.Start, out val))
+                        {
+                            if (val == true)
+                            {
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedStartSignal);
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            ShowMessage(robot.ErrMsg,LogType.warn);
+                            return;
+                        }
                         Thread.Sleep(60);
                         if (stop) return;
+
                     }
                     //收到信号后，就立刻恢复状态
-                    resetSignal();
+                    switch (robotType)
+                    {
+                        case RobotType.KukaRobot:
+                            ((KukaRobot)robot).resetSignal();
+                            break;
+                    }
 
                     ushort ID;
                     //Car car;
@@ -672,11 +414,15 @@ namespace _3DLaserGlueInspection
                     //回复开始ON信号
                     if (rt)
                     {
-                        SocketSend(0);
+                        if (!robot.Write(DO.Result, 0)) return;
+
+                        //SocketSend(0);
+                       
                     }
                     else
                     {
-                        SocketSend(-1);
+                        if (!robot.Write(DO.Result, -1)) return;
+                        //SocketSend(-1);
                         return;
                     } 
 
@@ -696,32 +442,85 @@ namespace _3DLaserGlueInspection
                                 return;
                             }
 
-                            if (isPGON)
+                            bool val;
+
+                            if (robot.Read(DI.PGON, out val))
                             {
-                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedTriggerSignalOn);
-                                break;
+                                if (val == true)
+                                {
+                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedTriggerSignalOn);
+                                    break;
+                                }
                             }
-                            if (isEND)
+                            else
                             {
-                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedEndSignalExitThePhotoLoop, LogType.warn);
-                                bEnd = true;
-                                break;
+                                ShowMessage(robot.ErrMsg, LogType.warn);
+                                return;
                             }
-                            if (isAbort)
+
+                            if (robot.Read(DI.END, out val))
                             {
-                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedAbortSignalProcessRestarts, LogType.warn);
-                                bAbort = true;
-                                break;
+                                if (val == true)
+                                {
+                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedEndSignalExitThePhotoLoop, LogType.warn);
+                                    bEnd = true;
+                                    break;
+                                }
                             }
+                            else
+                            {
+                                ShowMessage(robot.ErrMsg, LogType.warn);
+                                return;
+                            }
+
+                            if (robot.Read(DI.Abort, out val))
+                            {
+                                if (val == true)
+                                {
+                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedAbortSignalProcessRestarts, LogType.warn);
+                                    bAbort = true;
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                ShowMessage(robot.ErrMsg, LogType.warn);
+                                return;
+                            }
+
+                            //if (isPGON)
+                            //{
+                            //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedTriggerSignalOn);
+                            //    break;
+                            //}
+                            //if (isEND)
+                            //{
+                            //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedEndSignalExitThePhotoLoop, LogType.warn);
+                            //    bEnd = true;
+                            //    break;
+                            //}
+                            //if (isAbort)
+                            //{
+                            //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedAbortSignalProcessRestarts, LogType.warn);
+                            //    bAbort = true;
+                            //    break;
+                            //}
                             Thread.Sleep(1);
                         }
                         if (bEnd) break;
                         if (bAbort) break;
                         //回复触发ON信号
                         //收到信号后，就立刻恢复状态
-                        resetSignal();
+                        switch (robotType)
+                        {
+                            case RobotType.KukaRobot:
+                                ((KukaRobot)robot).resetSignal();
+                                break;
+                        }
+                        //SocketSend(0);
 
-                        SocketSend(0);
+                        if (!robot.Write(DO.Result, 0)) return;
+
 
                         bool bTriggering = true;
                         //int 起点 = dataGridViewImageList.Rows.Count;
@@ -1054,29 +853,79 @@ namespace _3DLaserGlueInspection
                         {
                             if (stop) return;
 
-                            if (isPGONEnd == true)
+                            bool val;
+
+                            if (robot.Read(DI.isPGONEnd, out val))
                             {
-                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedTriggerSignalOff);
-                                break;
+                                if (val == true)
+                                {
+                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedTriggerSignalOff);
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                ShowMessage(robot.ErrMsg, LogType.warn);
+                                return;
                             }
 
-                            if (isEND == true)
+                            if (robot.Read(DI.END, out val))
                             {
-                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedEndSignalExitThePhotoLoop, LogType.warn);
-                                bEnd = true;
-                                break;
+                                if (val == true)
+                                {
+                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedEndSignalExitThePhotoLoop, LogType.warn);
+                         
+                                    break;
+                                }
                             }
-                            if (isAbort == true)
+                            else
                             {
-                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedAbortSignalProcessRestarts, LogType.warn);
-                                bAbort = true;
-                                break;
+                                ShowMessage(robot.ErrMsg, LogType.warn);
+                                return;
                             }
+
+                            if (robot.Read(DI.Abort, out val))
+                            {
+                                if (val == true)
+                                {
+                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedAbortSignalProcessRestarts, LogType.warn);
+                   
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                ShowMessage(robot.ErrMsg, LogType.warn);
+                                return;
+                            }
+
+                            //if (isPGONEnd == true)
+                            //{
+                            //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedTriggerSignalOff);
+                            //    break;
+                            //}
+
+                            //if (isEND == true)
+                            //{
+                            //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedEndSignalExitThePhotoLoop, LogType.warn);
+                            //    bEnd = true;
+                            //    break;
+                            //}
+                            //if (isAbort == true)
+                            //{
+                            //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedAbortSignalProcessRestarts, LogType.warn);
+                            //    bAbort = true;
+                            //    break;
+                            //}
                             Thread.Sleep(1);
                         }
                         //收到信号后，就立刻恢复状态
-                        resetSignal();
-
+                        switch (robotType)
+                        {
+                            case RobotType.KukaRobot:
+                                ((KukaRobot)robot).resetSignal();
+                                break;
+                        }
                         ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForDataConversionToComplete);
 
                         if (!simulation)
@@ -1111,11 +960,15 @@ namespace _3DLaserGlueInspection
 
                         if (partResult)
                         {
-                            SocketSend(0);
+                            //SocketSend(0);
+                            if (!robot.Write(DO.Result, 0)) return;
+
                         }
                         else
                         {
-                            SocketSend(-1);
+                            //SocketSend(-1);
+                            if (!robot.Write(DO.Result, -1)) return;
+
                         }
 
                         //判断段数是否足够
@@ -1446,26 +1299,47 @@ namespace _3DLaserGlueInspection
                     while (true)
                     {
                         bool val;
-                        if (isStartEnd)
+
+                        if (robot.Read(DI.isStartEnd, out val))
                         {
-                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceiveTheStartSignalToTurnOff);
-                            break;
+                            if (val == true)
+                            {
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceiveTheStartSignalToTurnOff);
+                                break;
+                            }
                         }
+                        else
+                        {
+                            ShowMessage(robot.ErrMsg, LogType.warn);
+                            return;
+                        }
+
+                        //if (isStartEnd)
+                        //{
+                        //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceiveTheStartSignalToTurnOff);
+                        //    break;
+                        //}
 
                         Thread.Sleep(60);
                         if (stop) return;
                     }
                     //收到信号后，就立刻恢复状态
-                    resetSignal();
-
+                    switch (robotType)
+                    {
+                        case RobotType.KukaRobot:
+                            ((KukaRobot)robot).resetSignal();
+                            break;
+                    }
                     if (totalResult)
                     {
-                        SocketSend(0);
+                        //SocketSend(0);
+                        if (!robot.Write(DO.Result, 0)) return;
 
                     }
                     else
                     {
-                        SocketSend(-1);
+                        //SocketSend(-1);
+                        if (!robot.Write(DO.Result, -1)) return;
 
                     }
 
@@ -1610,8 +1484,12 @@ namespace _3DLaserGlueInspection
 
                 mainModel.softwareRunLabelColorControl = labelColorEnum["green"];
                 //初始化
-                resetSignal();
-
+                switch (robotType)
+                {
+                    case RobotType.KukaRobot:
+                        ((KukaRobot)robot).resetSignal();
+                        break;
+                }
                 while (!stop)
                 {
                     ClearCurrentRunID();
@@ -1623,18 +1501,36 @@ namespace _3DLaserGlueInspection
                     while (true)
                     {
                         bool val;
-                        if (isStart)
+                        if (robot.Read(DI.Start, out val))
                         {
-                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedStartSignal);
-                            break;
+                            if (val == true)
+                            {
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedStartSignal);
+                                break;
+                            }
                         }
+                        else
+                        {
+                            ShowMessage(robot.ErrMsg, LogType.warn);
+                            return;
+                        }
+
+                        //if (isStart)
+                        //{
+                        //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedStartSignal);
+                        //    break;
+                        //}
 
                         Thread.Sleep(60);
                         if (stop) return;
                     }
                     //收到信号后，就立刻恢复状态
-                    resetSignal();
-
+                    switch (robotType)
+                    {
+                        case RobotType.KukaRobot:
+                            ((KukaRobot)robot).resetSignal();
+                            break;
+                    }
                     ushort ID;
                     //Car car;
                     string inVIN;
@@ -1657,7 +1553,12 @@ namespace _3DLaserGlueInspection
                     //获取产品号
                     ID = 0;
                     car = new Car();
-                    ID = (ushort)CarNumber;
+
+                    ushort CarNumber;
+                    if (!robot.Read(DI.CarNumber, out CarNumber)) return;
+
+
+                    ID = CarNumber;
                     SetCurrentRunID(ID);
                     bool isExist = false;
                     foreach (var item in cars.Cars.Values)
@@ -1847,11 +1748,15 @@ namespace _3DLaserGlueInspection
                     //回复开始ON信号
                     if (true)
                     {
-                        SocketSend(0);
+                        //SocketSend(0);
+                        if (!robot.Write(DO.Result, 0)) return;
+
                     }
                     else
                     {
-                        SocketSend(-1);
+                        //SocketSend(-1);
+                        if (!robot.Write(DO.Result, -1)) return;
+
                         return;
                     }
 
@@ -1870,33 +1775,82 @@ namespace _3DLaserGlueInspection
                             {
                                 return;
                             }
+                            bool val;
+                            if (robot.Read(DI.PGON, out val))
+                            {
+                                if (val == true)
+                                {
+                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedTriggerSignalOn);
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                ShowMessage(robot.ErrMsg, LogType.warn);
+                                return;
+                            }
 
-                            if (isPGON)
+                            if (robot.Read(DI.END, out val))
                             {
-                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedTriggerSignalOn);
-                                break;
+                                if (val == true)
+                                {
+                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedEndSignalExitThePhotoLoop, LogType.warn);
+                                    bEnd = true;
+                                    break;
+                                }
                             }
-                            if (isEND)
+                            else
                             {
-                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedEndSignalExitThePhotoLoop, LogType.warn);
-                                bEnd = true;
-                                break;
+                                ShowMessage(robot.ErrMsg, LogType.warn);
+                                return;
                             }
-                            if (isAbort)
+
+                            if (robot.Read(DI.Abort, out val))
                             {
-                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedAbortSignalProcessRestarts, LogType.warn);
-                                bAbort = true;
-                                break;
+                                if (val == true)
+                                {
+                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedAbortSignalProcessRestarts, LogType.warn);
+                                    bAbort = true;
+                                    break;
+                                }
                             }
+                            else
+                            {
+                                ShowMessage(robot.ErrMsg, LogType.warn);
+                                return;
+                            }
+
+                            //if (isPGON)
+                            //{
+                            //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedTriggerSignalOn);
+                            //    break;
+                            //}
+                            //if (isEND)
+                            //{
+                            //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedEndSignalExitThePhotoLoop, LogType.warn);
+                            //    bEnd = true;
+                            //    break;
+                            //}
+                            //if (isAbort)
+                            //{
+                            //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedAbortSignalProcessRestarts, LogType.warn);
+                            //    bAbort = true;
+                            //    break;
+                            //}
                             Thread.Sleep(1);
                         }
                         if (bEnd) break;
                         if (bAbort) break;
                         //回复触发ON信号
                         //收到信号后，就立刻恢复状态
-                        resetSignal();
-
-                        SocketSend(0);
+                        switch (robotType)
+                        {
+                            case RobotType.KukaRobot:
+                                ((KukaRobot)robot).resetSignal();
+                                break;
+                        }
+                        //SocketSend(0);
+                        if (!robot.Write(DO.Result, 0)) return;
 
                         bool bTriggering = true;
                         //int 起点 = dataGridViewImageList.Rows.Count;
@@ -1981,29 +1935,79 @@ namespace _3DLaserGlueInspection
                         {
                             if (stop) return;
 
-                            if (isPGONEnd == true)
+                            bool val;
+
+                            if (robot.Read(DI.isPGONEnd, out val))
                             {
-                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedTriggerSignalOff);
-                                break;
+                                if (val == true)
+                                {
+                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedTriggerSignalOff);
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                ShowMessage(robot.ErrMsg, LogType.warn);
+                                return;
                             }
 
-                            if (isEND == true)
+                            if (robot.Read(DI.END, out val))
                             {
-                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedEndSignalExitThePhotoLoop, LogType.warn);
-                                bEnd = true;
-                                break;
+                                if (val == true)
+                                {
+                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedEndSignalExitThePhotoLoop, LogType.warn);
+
+                                    break;
+                                }
                             }
-                            if (isAbort == true)
+                            else
                             {
-                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedAbortSignalProcessRestarts, LogType.warn);
-                                bAbort = true;
-                                break;
+                                ShowMessage(robot.ErrMsg, LogType.warn);
+                                return;
                             }
+
+                            if (robot.Read(DI.Abort, out val))
+                            {
+                                if (val == true)
+                                {
+                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedAbortSignalProcessRestarts, LogType.warn);
+
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                ShowMessage(robot.ErrMsg, LogType.warn);
+                                return;
+                            }
+
+                            //if (isPGONEnd == true)
+                            //{
+                            //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedTriggerSignalOff);
+                            //    break;
+                            //}
+
+                            //if (isEND == true)
+                            //{
+                            //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedEndSignalExitThePhotoLoop, LogType.warn);
+                            //    bEnd = true;
+                            //    break;
+                            //}
+                            //if (isAbort == true)
+                            //{
+                            //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedAbortSignalProcessRestarts, LogType.warn);
+                            //    bAbort = true;
+                            //    break;
+                            //}
                             Thread.Sleep(1);
                         }
                         //收到信号后，就立刻恢复状态
-                        resetSignal();
-
+                        switch (robotType)
+                        {
+                            case RobotType.KukaRobot:
+                                ((KukaRobot)robot).resetSignal();
+                                break;
+                        }
                         ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForDataConversionToComplete);
 
                         if (!simulation)
@@ -2038,11 +2042,15 @@ namespace _3DLaserGlueInspection
 
                         if (partResult)
                         {
-                            SocketSend(0);
+                            //SocketSend(0);
+                            if (!robot.Write(DO.Result, 0)) return;
+
                         }
                         else
                         {
-                            SocketSend(-1);
+                            //SocketSend(-1);
+                            if (!robot.Write(DO.Result, -1)) return;
+
                         }
 
                         //判断段数是否足够
@@ -2229,19 +2237,38 @@ namespace _3DLaserGlueInspection
                     while (true)
                     {
                         bool val;
-                        if (isStartEnd)
+                        if (robot.Read(DI.isStartEnd, out val))
                         {
-                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceiveTheStartSignalToTurnOff);
-                            break;
+                            if (val == true)
+                            {
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceiveTheStartSignalToTurnOff);
+                                break;
+                            }
                         }
+                        else
+                        {
+                            ShowMessage(robot.ErrMsg, LogType.warn);
+                            return;
+                        }
+
+                        //if (isStartEnd)
+                        //{
+                        //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceiveTheStartSignalToTurnOff);
+                        //    break;
+                        //}
 
                         Thread.Sleep(60);
                         if (stop) return;
                     }
                     //收到信号后，就立刻恢复状态
-                    resetSignal();
-
-                    SocketSend(0);
+                    switch (robotType)
+                    {
+                        case RobotType.KukaRobot:
+                            ((KukaRobot)robot).resetSignal();
+                            break;
+                    }
+                    //SocketSend(0);
+                    if (!robot.Write(DO.Result, 0)) return;
 
                 }
             }
@@ -2315,7 +2342,11 @@ namespace _3DLaserGlueInspection
             //获取产品号
             ID = 0;
             car = new Car();
-            ID = (ushort)CarNumber;
+
+            ushort CarNumber;
+            if (!robot.Read(DI.CarNumber, out CarNumber)) return false;
+            ID = CarNumber;
+
             SetCurrentRunID(ID);
             bool isExist = false;
             foreach (var item in cars.Cars.Values)
@@ -3784,159 +3815,6 @@ namespace _3DLaserGlueInspection
             }
         }
 
-
-
-        #region 信号读写
-        bool Read(DI di, out bool val)
-        {
-            bool b失败过 = false;
-            while (!stop)
-            {
-                if (io.Read(di, out val))
-                {
-                    if (b失败过)
-                    {
-                        ShowMessage($"{di}" + _3DLaserGlueInspection.Resources.LanguageDict.SignalReReadingSuccessful);
-                    }
-                    return true;
-                }
-                else
-                {
-                    if (!b失败过)
-                    {
-                        ShowMessage($"{di}" + _3DLaserGlueInspection.Resources.LanguageDict.SignalReadFailedRereading + io.ErrMsg, LogType.warn);
-                        b失败过 = true;
-                    }
-                    if (!io.IsOpen)
-                    {
-                        io.Open();
-                    }
-                }
-                Thread.Sleep(1000);
-            }
-            val = false;
-            return false;
-        }
-        bool Read(DO dO, out bool val)
-        {
-            bool b失败过 = false;
-            while (!stop)
-            {
-                if (io.Read(dO, out val))
-                {
-                    if (b失败过)
-                    {
-                        ShowMessage($"{dO}" + _3DLaserGlueInspection.Resources.LanguageDict.SignalReReadingSuccessful);
-                    }
-                    return true;
-                }
-                else
-                {
-                    if (!b失败过)
-                    {
-                        ShowMessage($"{dO}" + _3DLaserGlueInspection.Resources.LanguageDict.SignalReadFailedRereading + io.ErrMsg, LogType.warn);
-                        b失败过 = true;
-                    }
-                    if (!io.IsOpen)
-                    {
-                        io.Open();
-                    }
-                }
-                Thread.Sleep(1000);
-            }
-            val = false;
-            return false;
-        }
-        bool Read(DI di, out ushort val)
-        {
-            bool b失败过 = false;
-            while (!stop)
-            {
-                if (io.Read(di, out val))
-                {
-                    if (b失败过)
-                    {
-                        ShowMessage($"{di}" + _3DLaserGlueInspection.Resources.LanguageDict.SignalReReadingSuccessful);
-                    }
-                    return true;
-                }
-                else
-                {
-                    if (!b失败过)
-                    {
-                        ShowMessage($"{di}" + _3DLaserGlueInspection.Resources.LanguageDict.SignalReadFailedRereading + io.ErrMsg, LogType.warn);
-                        b失败过 = true;
-                    }
-                    if (!io.IsOpen)
-                    {
-                        io.Open();
-                    }
-                }
-                Thread.Sleep(1000);
-            }
-            val = 0;
-            return false;
-        }
-        bool Read(DO dO, out ushort val)
-        {
-            bool b失败过 = false;
-            while (!stop)
-            {
-                if (io.Read(dO, out val))
-                {
-                    if (b失败过)
-                    {
-                        ShowMessage($"{dO}" + _3DLaserGlueInspection.Resources.LanguageDict.SignalReReadingSuccessful);
-                    }
-                    return true;
-                }
-                else
-                {
-                    if (!b失败过)
-                    {
-                        ShowMessage($"{dO}" + _3DLaserGlueInspection.Resources.LanguageDict.SignalReadFailedRereading + io.ErrMsg, LogType.warn);
-                        b失败过 = true;
-                    }
-                    if (!io.IsOpen)
-                    {
-                        io.Open();
-                    }
-                }
-                Thread.Sleep(1000);
-            }
-            val = 0;
-            return false;
-        }
-        bool Write(DO dO, object val)
-        {
-            bool b失败过 = false;
-            while (!stop)
-            {
-                if (io.Write(dO, val))
-                {
-                    if (b失败过)
-                    {
-                        ShowMessage($"{dO}" + _3DLaserGlueInspection.Resources.LanguageDict.SignalReReadingSuccessful);
-                    }
-                    return true;
-                }
-                else
-                {
-                    if (!b失败过)
-                    {
-                        ShowMessage($"{dO}" + _3DLaserGlueInspection.Resources.LanguageDict.SignalReadFailedRereading + io.ErrMsg, LogType.warn);
-                        b失败过 = true;
-                    }
-                    if (!io.IsOpen)
-                    {
-                        io.Open();
-                    }
-                }
-                Thread.Sleep(1000);
-            }
-            return false;
-        }
-        #endregion
 
 
         public void ShowMessage(

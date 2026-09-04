@@ -24,7 +24,6 @@ namespace _3DLaserGlueInspection
         bool Write(DO eDO, object value);
         bool Save();
     }
-
     public enum DO
     {
         //bool 0
@@ -79,6 +78,19 @@ namespace _3DLaserGlueInspection
         /// 触发信号
         /// </summary>
         PGON,
+
+
+         /// <summary>
+        /// 开始信号
+        /// </summary>
+
+        isStartEnd,
+
+
+        /// <summary>
+        /// 触发信号
+        /// </summary>
+        isPGONEnd,
 
         /// <summary>
         /// 结束信号

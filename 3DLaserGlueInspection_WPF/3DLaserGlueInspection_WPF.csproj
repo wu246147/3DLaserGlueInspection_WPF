@@ -205,6 +205,7 @@
       <DependentUpon>WindowStandardBlockTest.xaml</DependentUpon>
     </Compile>
     <Compile Include="tool\Controls.cs" />
+    <Compile Include="tool\CoordinateTransform.cs" />
     <Compile Include="tool\HFileIO.cs" />
     <Compile Include="tool\HMatrixTransform.cs" />
     <Compile Include="Model\MainModel.cs" />

@@ -31,10 +31,6 @@ using _3DLaserGlueInspection.Resources;
 
 namespace _3DLaserGlueInspection
 {
-   
-
-
-
 
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
@@ -67,7 +63,25 @@ namespace _3DLaserGlueInspection
 
             //打开通讯
 
-            model.InitCommunicationConnection();
+            //model.InitCommunicationConnection();
+            switch (model.robotType)
+            {
+                case RobotType.YRCRobot:
+                    //model.robot = new YRCRobot();
+                    break;
+                case RobotType.JAKARobot:
+                    model.robot = new JAKARobot();
+                    break;
+                case RobotType.FanucRobot:
+                    model.robot = new FanucRobot();
+                    break;
+                case RobotType.KukaRobot:
+                    model.robot = new KukaRobot();
+                    break;
+                case RobotType.KawasakiRobot:
+                    model.robot = new KawasakiRobot();
+                    break;
+            }
 
             //语言选择确定
             if (GlobalVarAndFunc.LANGUAGE_ID == "zh-CN")
@@ -116,7 +130,7 @@ namespace _3DLaserGlueInspection
         private void Window_Closing(object sender, CancelEventArgs e)
         {
             model.stop = true;
-            model.StopCommunicationThread();
+            //model.StopCommunicationThread();
 
         }
 
