@@ -999,6 +999,28 @@ namespace _3DLaserGlueInspection.subForm
                         robotAndCamAngleNumericUpDown.Text = "NaN";
                         robotAndCamAngle = double.NaN;
 
+
+                        //获取当前图片的机器人位姿
+                        for (int i = 0; i < robotPoseKeys.Count; i++)
+                        {
+                            if (robotPoseKeys[i] > imageKey)
+                            {
+                                if (i > 0)
+                                {
+                                    HMatrixTransform.mathHPose(robotPoseValues[i - 1],
+                                                        robotPoseValues[i], out currentRobotPose,
+                                                        (imageKey - robotPoseKeys[i - 1]) /
+                                                        (double)(robotPoseKeys[i] - robotPoseKeys[i - 1])
+                                                        );
+                                    break;
+                                }
+                                else
+                                {
+                                    currentRobotPose = null;
+                                }
+                            }
+                        }
+
                         //如果是第一张图片，不用进行检测
                         if (selectPictureListBox.SelectedIndex > 0)
                         {
@@ -1023,33 +1045,11 @@ namespace _3DLaserGlueInspection.subForm
                                         lastRobotPose = null;
                                     }
                                 }
-                            }
-
-
-                            //获取当前图片的机器人位姿
-                            for (int i = 0; i < robotPoseKeys.Count; i++)
-                            {
-                                if (robotPoseKeys[i] > imageKey)
-                                {
-                                    if (i > 0)
-                                    {
-                                        HMatrixTransform.mathHPose(robotPoseValues[i - 1],
-                                                            robotPoseValues[i], out currentRobotPose,
-                                                            (imageKey - robotPoseKeys[i - 1]) /
-                                                            (double)(robotPoseKeys[i] - robotPoseKeys[i - 1])
-                                                            );
-                                        break;
-                                    }
-                                    else
-                                    {
-                                        currentRobotPose = null;
-                                    }
-                                }
-                            }
+                            }                            
                         }
                         else
                         {
-                            currentRobotPose = null;
+                            //currentRobotPose = null;
                             lastRobotPose = null;
 
                             goto showImageEnd;
@@ -3497,7 +3497,7 @@ namespace _3DLaserGlueInspection.subForm
                 }
                 return;
             }
-            if (currentRobotPose == null || lastRobotPose == null)
+            if (currentRobotPose == null )
             {
                 if (!isAuto)
                 {
@@ -3512,18 +3512,22 @@ namespace _3DLaserGlueInspection.subForm
             hXLDCont10mm3D = new Mat();
 
             // 计算机器人移动距离
-            double PoseD = Math.Sqrt(Math.Pow((currentRobotPose.x - lastRobotPose.x), 2) +
+            double PoseD = 0;
+
+            if (currentRobotPose != null && lastRobotPose != null)
+            {
+                PoseD  = Math.Sqrt(Math.Pow((currentRobotPose.x - lastRobotPose.x), 2) +
                 Math.Pow((currentRobotPose.y - lastRobotPose.y), 2) +
                 Math.Pow((currentRobotPose.z - lastRobotPose.z), 2));
-
-            if (PoseD == 0)
-            {
-                if (!isAuto)
+                if (PoseD == 0)
                 {
-                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.DistIsZero);
+                    if (!isAuto)
+                    {
+                        System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.DistIsZero);
 
+                    }
+                    return;
                 }
-                return;
             }
 
             Mat Cam1ToTool = new Mat();
@@ -3804,6 +3808,11 @@ namespace _3DLaserGlueInspection.subForm
                 System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.ActualInputCannotBeZero);
                 return;
             }
+            if (resultData.glueWidth == -1 || resultData.glueHeight == -1)
+            {
+                System.Windows.Forms.MessageBox.Show("当前图片还没有检测结果");
+                return;
+            }
             if (resultData.glueWidth == 0 || resultData.glueHeight == 0)
             {
                 System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.DetectionResultCannotBeZero);
@@ -3834,6 +3843,10 @@ namespace _3DLaserGlueInspection.subForm
 
             System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.CorrectionSuccessful);
 
+            resultData = new Data();
+            isAlter = true;
+
+            runButton_Click2(null, null);
         }
 
         private void coefficientSharingCheck_Checked(object sender, RoutedEventArgs e)
@@ -4142,5 +4155,32 @@ namespace _3DLaserGlueInspection.subForm
             
         }
 
+        private void correctionInitButton_Click(object sender, RoutedEventArgs e)
+        {
+
+            if (cutSet.isCoefficientSharing)
+            {
+                imageSet.correctionScaleSizeX = 1;
+                imageSet.correctionScaleSizeY = 1;
+
+                //遍历修改
+                for (int i = 0; i < set.CutSets[cutSetListBox.SelectedIndex].imageSet[selectCamListBox.SelectedIndex].Count; i++)
+                {
+                    set.CutSets[cutSetListBox.SelectedIndex].imageSet[selectCamListBox.SelectedIndex][i].correctionScaleSizeX = 1;
+                    set.CutSets[cutSetListBox.SelectedIndex].imageSet[selectCamListBox.SelectedIndex][i].correctionScaleSizeY = 1;
+
+                }
+            }
+            else
+            {
+                imageSet.correctionScaleSizeX = 1;
+                imageSet.correctionScaleSizeY = 1;
+            }
+            correctionScaleSizeXNumericUpDown.Text = imageSet.correctionScaleSizeX.ToString();
+            correctionScaleSizeYNumericUpDown.Text = imageSet.correctionScaleSizeY.ToString();
+
+            System.Windows.Forms.MessageBox.Show("矫正初始化成功");
+
+        }
     }
 }

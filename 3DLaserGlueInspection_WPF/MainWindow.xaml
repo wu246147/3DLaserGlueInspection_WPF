@@ -909,6 +909,11 @@ Converter={StaticResource ResultColor}}" />
                     Click="MenuItem_camSetting_Click"
                     Header="{x:Static resx:LanguageDict.CamSetting}" Height="50"/>
                 <MenuItem
+                    x:Name="MenuItem_databaseQuery"
+                    Click="MenuItem_databaseQuery_Click"
+                    Header="&#x6570;&#x636E;&#x5E93;&#x67E5;&#x8BE2;"
+                    Height="50"/>
+                <MenuItem
                     x:Name="MenuItem_productSetting"
                     Click="MenuItem_productSetting_Click"
                     Header="{x:Static resx:LanguageDict.ProductSetting}" Height="50"/>

@@ -292,14 +292,64 @@ namespace _3DLaserGlueInspection
                 return;
             }
 
-            if (userType == WindowPassWord.PasswordUserType.Administrator
-                || userType == WindowPassWord.PasswordUserType.SuperAdministrator)
+            if (userType == WindowPassWord.PasswordUserType.SuperAdministrator)
             {
                 WindowCamera windowCamera = new WindowCamera();
                 windowCamera.ShowDialog();
             }
+            else
+            {
+                ShowAdministratorPermissionDenied();
+            }
         }
 
+        private void MenuItem_databaseQuery_Click(object sender, RoutedEventArgs e)
+        {
+            if (!TryPasswordLogin(out WindowPassWord.PasswordUserType userType))
+            {
+                return;
+            }
+
+            if (userType != WindowPassWord.PasswordUserType.Administrator
+                && userType != WindowPassWord.PasswordUserType.SuperAdministrator)
+            {
+                ShowAdministratorPermissionDenied();
+                return;
+            }
+
+            string sqlExecutablePath = System.IO.Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory,
+                "sqlForm",
+                "sql.exe");
+
+            if (!File.Exists(sqlExecutablePath))
+            {
+                System.Windows.MessageBox.Show(
+                    sqlExecutablePath,
+                    _3DLaserGlueInspection.Resources.LanguageDict.Prompt,
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = sqlExecutablePath,
+                    WorkingDirectory = System.IO.Path.GetDirectoryName(sqlExecutablePath),
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show(
+                    ex.Message,
+                    _3DLaserGlueInspection.Resources.LanguageDict.Prompt,
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
         private void MenuItem_robotSetting_signalSetting_Click(object sender, RoutedEventArgs e)
         {
             if (!TryPasswordLogin(out WindowPassWord.PasswordUserType userType))

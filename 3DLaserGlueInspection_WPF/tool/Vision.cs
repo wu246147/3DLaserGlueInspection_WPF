@@ -363,6 +363,11 @@ namespace _3DLaserGlueInspection
         ///激光提取函数,亚像素
         public static extern int thinningD(IntPtr inputMat, IntPtr outImage, IntPtr outPointMat, int min_thre, int min_width = 1);
 
+        [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
+
+        ///激光提取函数,稳定版
+        public static extern int thinningH(IntPtr inputMat, IntPtr outImage, IntPtr outPointMat, int min_thre, int min_width = 1);
+
 
         [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
         ///获取矩形框内的点
@@ -614,9 +619,10 @@ namespace _3DLaserGlueInspection
         public static void getLaserPosition(Mat Image, double minThreshold,int laserMinWidth, out Mat outlinePoints, int offsetX = 0, int offsetY = 0)
         {
             outlinePoints = new Mat();
+            //Cv2.ImWrite("thinningH.bmp", Image);
             using (Mat outImage = new Mat())
             {
-                thinningD(Image.CvPtr, outImage.CvPtr, outlinePoints.CvPtr, (int)minThreshold, laserMinWidth);
+                thinningH(Image.CvPtr, outImage.CvPtr, outlinePoints.CvPtr, (int)minThreshold, laserMinWidth);
             }
 
             ////添加
@@ -953,19 +959,26 @@ namespace _3DLaserGlueInspection
                 affineTransPoint3d(lightXY4.CvPtr, camXY4.CvPtr, LightToCam.CvPtr, false);
                 affineTransPoint3d(camXY4.CvPtr, toolXY4.CvPtr, CamToTool.CvPtr, false);
 
-                Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z,
-                    robotPose.rx, robotPose.ry, robotPose.rz, toolToRobot.CvPtr);
-                Vision.affineTransPoint3d(toolXY4.CvPtr, robotXY4.CvPtr, toolToRobot.CvPtr, false);
 
                 robotX = new List<double>();
                 robotY = new List<double>();
                 robotZ = new List<double>();
-                for (int i = 0; i < robotXY4.Rows; i++)
+
+                if (robotPose != null)
                 {
-                    robotX.Add(robotXY4.At<double>(i, 0));
-                    robotY.Add(robotXY4.At<double>(i, 1));
-                    robotZ.Add(robotXY4.At<double>(i, 2));
+                    Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z,
+                   robotPose.rx, robotPose.ry, robotPose.rz, toolToRobot.CvPtr);
+                    Vision.affineTransPoint3d(toolXY4.CvPtr, robotXY4.CvPtr, toolToRobot.CvPtr, false);
+
+                  
+                    for (int i = 0; i < robotXY4.Rows; i++)
+                    {
+                        robotX.Add(robotXY4.At<double>(i, 0));
+                        robotY.Add(robotXY4.At<double>(i, 1));
+                        robotZ.Add(robotXY4.At<double>(i, 2));
+                    }
                 }
+               
             }
         }
         /// <summary>
@@ -1502,7 +1515,7 @@ namespace _3DLaserGlueInspection
                 }
                 {
                     string fPath = basePath + "Image.png";
-                    if (!image.Empty())
+                    if (image!= null && !image.Empty())
                     {
                         Cv2.ImWrite(fPath, image);
                     }
@@ -1518,9 +1531,13 @@ namespace _3DLaserGlueInspection
 
 
                 {
-                    //XLDDatas = new List<XLDData>();
-                    string fPath = basePath + "ProjectMapping.json";
-                    result &= mapper.SaveToFile(fPath);
+                    if (mapper.isCalib())
+                    {
+                        //XLDDatas = new List<XLDData>();
+                        string fPath = basePath + "ProjectMapping.json";
+                        result &= mapper.SaveToFile(fPath);
+                    }
+                   
                 }
                     
                

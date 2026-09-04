@@ -433,12 +433,18 @@ namespace _3DLaserGlueInspection.subForm
             currentImage?.Dispose();
             currentImage = null;
 
+            cam.SetLine1Inverter(true);
             if (cam.OneShot(out currentImage))
             {
+                cam.SetLine1Inverter(false);
+
                 ClearImageDisplay();
                 resultStatusTextBlock.Text = global::_3DLaserGlueInspection.Resources.LanguageDict.StandardBlockAcquisitionCompleted;
                 resultStatusTextBlock.Foreground = Brushes.LightGray;
                 ShowMessage(global::_3DLaserGlueInspection.Resources.LanguageDict.StandardBlockAcquisitionCompleted, LogType.ok);
+
+                hWindowModel.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(currentImage));
+
             }
             else
             {
