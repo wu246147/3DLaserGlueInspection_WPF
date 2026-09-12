@@ -36,6 +36,8 @@ namespace Wpf_Replace_halcon
         public double x { get; set; } = 0;
         public double y { get; set; } = 0;
         public double z { get; set; } = 0;
+        // Seventh-axis angle in degrees. Six-axis controllers keep this value at zero.
+        public double R7 { get; set; } = 0;
     }
     static class HMatrixTransform
     {
@@ -98,6 +100,15 @@ namespace Wpf_Replace_halcon
         //    }
 
         //    return 0;
+        // Interpolate a degree value without jumping across the +/-180 degree boundary.
+        private static double InterpolateAngle(double start, double end, double factor)
+        {
+            if (start > 0 && end < 0 && Math.Abs(start - end) > 180)
+                return start + (end + 360 - start) * factor;
+            if (start < 0 && end > 0 && Math.Abs(start - end) > 180)
+                return start + (end - 360 - start) * factor;
+            return start + (end - start) * factor;
+        }
         //}
 
         static public int mathHPose(PoseParameters inputPoseParameters1, PoseParameters inputPoseParameters2, out PoseParameters outputPoseParameters, double s)
@@ -108,6 +119,8 @@ namespace Wpf_Replace_halcon
             outputPoseParameters.x = inputPoseParameters1.x + (inputPoseParameters2.x - inputPoseParameters1.x) * s;
             outputPoseParameters.y = inputPoseParameters1.y + (inputPoseParameters2.y - inputPoseParameters1.y) * s;
             outputPoseParameters.z = inputPoseParameters1.z + (inputPoseParameters2.z - inputPoseParameters1.z) * s;
+            // R7 follows the same shortest-path angle interpolation as rx/ry/rz.
+            outputPoseParameters.R7 = InterpolateAngle(inputPoseParameters1.R7, inputPoseParameters2.R7, s);
 
             if (inputPoseParameters1.rx > 0 && inputPoseParameters2.rx < 0 && Math.Abs(inputPoseParameters1.rx- inputPoseParameters2.rx)>180)
             {

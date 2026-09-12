@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Wpf_Replace_halcon
 {

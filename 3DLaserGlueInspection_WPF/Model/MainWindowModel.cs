@@ -1192,7 +1192,9 @@ namespace _3DLaserGlueInspection
                                     List<double[]> pose = new List<double[]>();
                                     foreach (var poseKey in robotPoseValues)
                                     {
-                                        pose.Add(new double[] { poseKey.x, poseKey.y, poseKey.z, poseKey.rx, poseKey.ry, poseKey.rz, poseKey.PoseType });
+                                        pose.Add(SevenAxisRobotSupport.HasSevenAxisRobot(Params)
+                                             ? new double[] { poseKey.x, poseKey.y, poseKey.z, poseKey.rx, poseKey.ry, poseKey.rz, poseKey.R7, poseKey.PoseType }
+                                             : new double[] { poseKey.x, poseKey.y, poseKey.z, poseKey.rx, poseKey.ry, poseKey.rz, poseKey.PoseType });
                                     }
                                     new XmlSerializer(pose.GetType()).Serialize(stream, pose);
                                 }
@@ -1717,6 +1719,7 @@ namespace _3DLaserGlueInspection
                     // 3D 每隔100毫秒再刷新一下结果
                     RefreshOnEvent(500, true);
                     bRobotRun = true;
+                    bool sevenAxisRobot = SevenAxisRobotSupport.HasSevenAxisRobot(Params);
                     //启动机器人姿态获取(安川20ms)
                     taskRobot = Task.Run(() =>
                     {
@@ -1728,8 +1731,13 @@ namespace _3DLaserGlueInspection
                         double rangeSize = colorLowerLimit - colorUpperLimit;
                         while (bRobotRun)
                         {
-                            if (robot.ReadPose(out Wpf_Replace_halcon.PoseParameters hPose))
+                            Wpf_Replace_halcon.PoseParameters hPose;
+                            double r7 = 0;
+                            bool readOk = sevenAxisRobot ? robot.ReadPose(out hPose, out r7) : robot.ReadPose(out hPose);
+                            if (readOk)
                             {
+                                if (!SevenAxisRobotSupport.IsFinitePose(hPose, sevenAxisRobot)) return;
+                                hPose.R7 = sevenAxisRobot ? r7 : 0;
                                 var key = watch.ElapsedTicks;
                                 {
                                     robotPoseValues.Add(hPose);
@@ -2215,7 +2223,9 @@ namespace _3DLaserGlueInspection
                                     List<double[]> pose = new List<double[]>();
                                     foreach (var poseKey in robotPoseValues)
                                     {
-                                        pose.Add(new double[] { poseKey.x, poseKey.y, poseKey.z, poseKey.rx, poseKey.ry, poseKey.rz, poseKey.PoseType });
+                                        pose.Add(SevenAxisRobotSupport.HasSevenAxisRobot(Params)
+                                            ? new double[] { poseKey.x, poseKey.y, poseKey.z, poseKey.rx, poseKey.ry, poseKey.rz, poseKey.R7, poseKey.PoseType }
+                                            : new double[] { poseKey.x, poseKey.y, poseKey.z, poseKey.rx, poseKey.ry, poseKey.rz, poseKey.PoseType });
                                     }
                                     new XmlSerializer(pose.GetType()).Serialize(stream, pose);
                                 }
@@ -2525,7 +2535,7 @@ namespace _3DLaserGlueInspection
                                 {
                                     if (Params.CenterToCam1.ContainsKey(camParamName) && Params.CenterToCam1[camParamName].ContainsKey(item.Key))
                                     {
-                                        if (Params.CamHandEyeType.ContainsKey(camParamName) && Params.CamHandEyeType[camParamName] == 0)
+                                        if (Params.CamHandEyeType.ContainsKey(camParamName) && Params.CamHandEyeType[camParamName] == CameraHandEyeType.EyeInHand)
                                         {
                                             if (Params.Cam1ToTool.ContainsKey(camParamName) && Params.Cam1ToTool[camParamName].ContainsKey(item.Key))
                                             {
@@ -2534,6 +2544,23 @@ namespace _3DLaserGlueInspection
                                             else
                                             {
                                                 ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + $" ({item.Key}:{item.Value.CamName})" + _3DLaserGlueInspection.Resources.LanguageDict.CoordinateConversionCamtotoolDoesNotExist, LogType.ng);
+                                                return false;
+                                            }
+                                        }
+                                        else if (Params.CamHandEyeType.ContainsKey(camParamName)
+                                            && Params.CamHandEyeType[camParamName] == CameraHandEyeType.SevenAxis)
+                                        {
+                                            SevenAxisCalibrationData calibration = null;
+                                            if (Params.SevenAxisCalibration.ContainsKey(camParamName))
+                                            {
+                                                Params.SevenAxisCalibration[camParamName].TryGetValue(
+                                                    item.Key, out calibration);
+                                            }
+                                            if (calibration == null || calibration.Tbm == null
+                                                || calibration.Tmc == null || calibration.Tbm.Empty()
+                                                || calibration.Tmc.Empty())
+                                            {
+                                                ShowMessage("SevenAxisCalibration", LogType.ng);
                                                 return false;
                                             }
                                         }
@@ -2655,6 +2682,7 @@ namespace _3DLaserGlueInspection
             // 3D 每隔100毫秒再刷新一下结果
             RefreshOnEvent(500, true);
             bRobotRun = true;
+            bool sevenAxisRobot = SevenAxisRobotSupport.HasSevenAxisRobot(Params);
             watch.Restart();
             //启动机器人姿态获取(安川20ms)
             taskRobot = Task.Run(() =>
@@ -2716,14 +2744,13 @@ namespace _3DLaserGlueInspection
                                     //robotPoseValues = paramList;
                                     foreach (var pose in paramList)
                                     {
-                                        PoseParameters posePara = new PoseParameters();
-                                        posePara.x = pose[0];
-                                        posePara.y = pose[1];
-                                        posePara.z = pose[2];
-                                        posePara.rx = pose[3];
-                                        posePara.ry = pose[4];
-                                        posePara.rz = pose[5];
-                                        posePara.PoseType = (int)pose[6];
+                                        if (!SevenAxisRobotSupport.TryReadRecordedPose(
+                                            pose, sevenAxisRobot, out PoseParameters posePara,
+                                            out string poseError))
+                                        {
+                                            ShowMessage(robotPoseValuesPath + ": " + poseError, LogType.ng);
+                                            return;
+                                        }
                                         robotPoseValuesSimulation.Add(posePara);
                                     }
                                 }
@@ -2746,6 +2773,11 @@ namespace _3DLaserGlueInspection
                         return;
                     }
 
+                    if (robotPoseKeysSimulation.Count != robotPoseValuesSimulation.Count)
+                    {
+                        ShowMessage("Robot pose keys and values have different lengths.", LogType.ng);
+                        return;
+                    }
                     for (int i = 0; i < robotPoseKeysSimulation.Count; i++)
                     {
                         if (!bRobotRun)
@@ -2766,8 +2798,13 @@ namespace _3DLaserGlueInspection
                 {
                     while (bRobotRun)
                     {
-                        if (robot.ReadPose(out Wpf_Replace_halcon.PoseParameters hPose))
+                        Wpf_Replace_halcon.PoseParameters hPose;
+                        double r7 = 0;
+                        bool readOk = sevenAxisRobot ? robot.ReadPose(out hPose, out r7) : robot.ReadPose(out hPose);
+                        if (readOk)
                         {
+                            if (!SevenAxisRobotSupport.IsFinitePose(hPose, sevenAxisRobot)) return;
+                            hPose.R7 = sevenAxisRobot ? r7 : 0;
                             var key = watch.ElapsedTicks;
                             {
                                 robotPoseValues.Add(hPose);
@@ -2812,17 +2849,31 @@ namespace _3DLaserGlueInspection
                     Mat Cam1ToBase = null;
                     Mat CamToTool = null;
                     Mat CamToBase = null;
+                    SevenAxisCalibrationData sevenAxisCalibration = null;
+                    // Keep the selected mode strongly typed throughout this frame.
+                    // Seven-axis is converted to the legacy eye-to-hand mode only for angle calculation.
+                    CameraHandEyeType handEyeType = Params.CamHandEyeType[camParamName];
 
-                    if (Params.CamHandEyeType[camParamName] == 0)
+                    if (Params.CamHandEyeType[camParamName] == CameraHandEyeType.EyeInHand)
                     {
                         Cam1ToTool = Params.Cam1ToTool[camParamName][item.Key];
                         CamToTool = Cam1ToTool * CamToCam1;
                     }
-                    else
+                    else if (handEyeType == CameraHandEyeType.EyeToHand)
                     {
                         //眼在手外，求Cam1ToTool,需要机器人pose才可以完成转换
                         Cam1ToBase = Params.Cam1ToBase[camParamName][item.Key];
                         CamToBase = Cam1ToBase * CamToCam1;
+                    }
+                    else if (handEyeType == CameraHandEyeType.SevenAxis)
+                    {
+                        if (!Params.SevenAxisCalibration.ContainsKey(camParamName)
+                            || !Params.SevenAxisCalibration[camParamName].TryGetValue(item.Key, out sevenAxisCalibration)
+                            || sevenAxisCalibration == null)
+                        {
+                            ShowMessage("SevenAxisCalibration", LogType.ng);
+                            return false;
+                        }
                     }
 
                     tasks.Add(item.Key, Task.Run((Action)(() =>
@@ -2958,6 +3009,44 @@ namespace _3DLaserGlueInspection
                                                 (double)(robotPoseKeys[indexRobotPose] - robotPoseKeys[indexRobotPose - 1])
                                                 );
                                             // 计算机器人移动距离
+                                            // 七轴预测结果会随当前帧的 R7 更新 Cam1ToBase 和 CamToBase。
+                                            if (handEyeType == CameraHandEyeType.SevenAxis)
+                                            {
+                                                Mat nextCam1ToBase = null;
+                                                Mat nextCamToBase = null;
+
+                                                try
+                                                {
+                                                    // 七轴预测结果就是当前 R7 对应的 Cam1ToBase。
+                                                    // 写回 Cam1ToBase/CamToBase 后，后续直接复用眼在手外的流程。
+                                                    if (!SevenAxisRobotSupport.TryPredictCam1ToBase(
+                                                        sevenAxisCalibration, robotPose.R7,
+                                                        out nextCam1ToBase, out string predictionError))
+                                                    {
+                                                        ShowMessage("Seven-axis Cam1ToBase prediction failed: "
+                                                            + predictionError, LogType.ng);
+                                                        return;
+                                                    }
+                                                    // 先计算新矩阵，成功后再替换旧矩阵，避免留下半更新状态。
+                                                    nextCamToBase = nextCam1ToBase * CamToCam1;
+
+                                                    // 七轴矩阵由当前任务创建，下一帧替换前释放旧矩阵。
+                                                    // 眼在手外模式引用 Params 中的共享矩阵，不会进入此分支。
+                                                    Cam1ToBase?.Dispose();
+                                                    Cam1ToBase = nextCam1ToBase;
+                                                    nextCam1ToBase = null;
+
+                                                    CamToBase?.Dispose();
+                                                    CamToBase = nextCamToBase;
+                                                    nextCamToBase = null;
+                                                }
+                                                finally
+                                                {
+                                                    // 异常或预测失败时，释放尚未转移所有权的临时矩阵。
+                                                    nextCamToBase?.Dispose();
+                                                    nextCam1ToBase?.Dispose();
+                                                }
+                                            }
                                             if (dictRobotPose.Count > 0)
                                             {
                                                 var last = dictRobotPose.Last();
@@ -2969,7 +3058,7 @@ namespace _3DLaserGlueInspection
                                             }
 
                                             // 三维数据添加机器人坐标
-                                            if (Params.CamHandEyeType[camParamName] == 0)
+                                            if (Params.CamHandEyeType[camParamName] == CameraHandEyeType.EyeInHand)
                                             {
                                                 PoseParameters centerInBase = new PoseParameters();
                                                 using (Mat toolToBase = new Mat())
@@ -3064,7 +3153,10 @@ namespace _3DLaserGlueInspection
                                                     var last = dictRobotPose.Skip(dictRobotPose.Count - intervalCount - 1).First();
                                                     var lastRobotPose = last.Value;
 
-                                                    robotAndCamAngle = Vision.GetRobotAndCamAngle(Params.CamHandEyeType[camParamName], CamToCam1, CenterToCam1, Cam1ToBase, CamToTool, robotPose, lastRobotPose);
+                                                    robotAndCamAngle = Vision.GetRobotAndCamAngle(
+                                                        SevenAxisRobotSupport.GetLegacyAngleType(handEyeType),
+                                                        CamToCam1, CenterToCam1, Cam1ToBase, CamToTool,
+                                                        robotPose, lastRobotPose);
 
                                                     //Console.WriteLine($"imageKey:{imageKey}");
                                                     //Console.WriteLine($"robotAndCamAngle:{robotAndCamAngle}");
@@ -3077,7 +3169,7 @@ namespace _3DLaserGlueInspection
                                                 {
                                                     getOutlineResult = true;
 
-                                                    if (Params.CamHandEyeType[camParamName] == 0)
+                                                    if (Params.CamHandEyeType[camParamName] == CameraHandEyeType.EyeInHand)
                                                     {
                                                         Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToTool,
                                                     robotPose, out lightXY, out robotX, out robotY, out robotZ);

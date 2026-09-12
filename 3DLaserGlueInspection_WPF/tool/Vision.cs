@@ -353,6 +353,29 @@ namespace _3DLaserGlueInspection
         int PoseType, double PoseX, double PoseY, double PoseZ, double PoseRx, double PoseRy, double PoseRz,
         IntPtr srcPoints, IntPtr transformPoints);
 
+
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "transform7HomMat3dN")]
+        /// Seven-parameter pose calibration; poseTypes and r7Poses are contiguous buffers.
+        public static extern int transform7HomMat3dN(
+            int poseCount,
+            IntPtr poseTypes,
+            IntPtr r7Poses,
+            double axisX,
+            double axisY,
+            double axisZ,
+            IntPtr transformMatBm,
+            IntPtr transformMatMc);
+
+        [DllImport(DllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "predict7HomMat3d")]
+        /// Predict a seven-parameter pose from calibration matrices and a rotation axis.
+        public static extern int predict7HomMat3d(
+            IntPtr transformMatBm,
+            IntPtr transformMatMc,
+            double rotationAngle,
+            double axisX,
+            double axisY,
+            double axisZ,
+            IntPtr r7Mat);
         private const string DllName2 = "dll\\RaivasAlgGB.dll"; // Replace with the actual DLL 
 
         [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]

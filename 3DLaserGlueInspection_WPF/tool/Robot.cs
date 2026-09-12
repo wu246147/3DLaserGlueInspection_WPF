@@ -73,12 +73,21 @@ namespace _3DLaserGlueInspection
         /// </summary>
         /// <returns></returns>
         bool Close();
+
         /// <summary>
         /// 获取坐标
         /// </summary>
         /// <param name="hPose"></param>
         /// <returns></returns>
         bool ReadPose(out PoseParameters hPose);
+
+        /// <summary>
+        /// 获取坐标
+        /// </summary>
+        /// <param name="hPose"></param>
+        /// <returns></returns>
+        bool ReadPose(out PoseParameters hPose,out double R7);
+
 
         bool Read(DI eDI, out string value);
         bool Read(DO eDO, out string value);
@@ -246,6 +255,15 @@ namespace _3DLaserGlueInspection
                 return false;
             }
         }
+
+        public bool ReadPose(out PoseParameters hPose, out double R7)
+        {
+            bool rt = ReadPose(out hPose);
+            R7 = 0.0;
+            return rt;
+        }
+
+
         /// <summary>
         /// 读取输出信号DO1~DO128
         /// </summary>
@@ -710,7 +728,12 @@ namespace _3DLaserGlueInspection
             _errMsg = xyzwpr.Message;
             return xyzwpr.IsSuccess;
         }
-
+        public bool ReadPose(out PoseParameters hPose, out double R7)
+        {
+            bool rt = ReadPose(out hPose);
+            R7 = 0.0;
+            return rt;
+        }
         public bool Load()
         {
             bool result = true;
@@ -1379,7 +1402,12 @@ namespace _3DLaserGlueInspection
 
             return rt;
         }
-
+        public bool ReadPose(out PoseParameters hPose, out double R7)
+        {
+            bool rt = ReadPose(out hPose);
+            R7 = 0.0;
+            return rt;
+        }
         public bool Read(string key, out string info)
         {
             var value = robot.ReadString(key);
@@ -1768,7 +1796,15 @@ namespace _3DLaserGlueInspection
             }
             return _isExist;
         }
- 
+
+        public bool ReadPose(out PoseParameters hPose, out double R7)
+        {
+            bool rt = ReadPose(out hPose);
+            R7 = 0.0;
+            return rt;
+        }
+
+
         public bool Load()
         {
             bool result = true;
@@ -2365,6 +2401,13 @@ namespace _3DLaserGlueInspection
 
                 return true;
             }
+        }
+
+        public bool ReadPose(out PoseParameters hPose, out double R7)
+        {
+            bool rt = ReadPose(out hPose);
+            R7 = 0.0;
+            return rt;
         }
 
         #endregion

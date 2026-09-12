@@ -21,6 +21,17 @@ using System.Windows.Ink;
 
 namespace _3DLaserGlueInspection
 {
+    /// <summary>
+    /// Camera hand-eye calibration modes.
+    /// The numeric values remain compatible with the legacy implementation.
+    /// </summary>
+    public enum CameraHandEyeType
+    {
+        EyeInHand = 0,   // Camera moves with the robot flange.
+        EyeToHand = 1,   // Camera is fixed outside the robot work envelope.
+        SevenAxis = 2    // Camera is driven by the additional rotary axis.
+    }
+
 
     public class Cam : MvCamera
     {
@@ -2533,6 +2544,44 @@ namespace _3DLaserGlueInspection
         #endregion
 
     }
+    // Runtime representation of one seven-axis hand-eye calibration set.
+    // The samples are kept for persistence/debugging; Tbm/Tmc are the matrices
+    // returned by transform7HomMat3dN and consumed by predict7HomMat3d.
+    public sealed class SevenAxisCalibrationData : IDisposable
+    {
+        public List<PoseParameters> Samples { get; } = new List<PoseParameters>();
+        // Keep the resolved primary file names so Save() does not create
+        // duplicate files when the original names contain decimal formatting.
+        public List<string> SampleFileNames { get; } = new List<string>();
+
+        public Mat Tbm { get; set; }
+        public Mat Tmc { get; set; }
+
+        public SevenAxisCalibrationData Clone()
+        {
+            var clone = new SevenAxisCalibrationData();
+            foreach (var sample in Samples)
+            {
+                clone.Samples.Add(sample?.Clone());
+            }
+            clone.SampleFileNames.AddRange(SampleFileNames);
+
+            clone.Tbm = Tbm?.Clone();
+            clone.Tmc = Tmc?.Clone();
+            return clone;
+        }
+
+        public void Dispose()
+        {
+            Tbm?.Dispose();
+            Tbm = null;
+            Tmc?.Dispose();
+            Tmc = null;
+            Samples.Clear();
+            SampleFileNames.Clear();
+        }
+    }
+
     public class CamParams
     {
         public string ErrMsg => _errMsg;
@@ -2561,9 +2610,20 @@ namespace _3DLaserGlueInspection
         //兼容眼在手外
         public Dictionary<string, Dictionary<string, PoseParameters>> Cam1InBase = new Dictionary<string, Dictionary<string, PoseParameters>>();    //相机外参（手眼标定，眼在手外，其实都是相机1
         public Dictionary<string, Dictionary<string, Mat>> Cam1ToBase = new Dictionary<string, Dictionary<string, Mat>>();    //手眼标定的旋转矩阵（其实都是相机1的，要右乘CamToCam1才是自己的）
+        // Each camera/camKey owns an independent seven-axis calibration set.
+        public Dictionary<string, Dictionary<string, SevenAxisCalibrationData>> SevenAxisCalibration =
+            new Dictionary<string, Dictionary<string, SevenAxisCalibrationData>>();
+
+        // The current GB algorithm uses a fixed rotation axis. Keep it here so
+        // the default is explicit and can be exposed as a setting later.
+        private const double SevenAxisAxisX = 0.0;
+        private const double SevenAxisAxisY = 0.0;
+        private const double SevenAxisAxisZ = 1.0;
 
 
-        public Dictionary<string, int> CamHandEyeType = new Dictionary<string, int>();    //相机手眼标定类型，0是眼在手上，1是眼在手外
+
+        // The selected mounting mode is shared by all calibration data under one camera parameter name.
+        public Dictionary<string, CameraHandEyeType> CamHandEyeType = new Dictionary<string, CameraHandEyeType>();    //相机手眼标定类型，0是眼在手上，1是眼在手外
 
         ////保存的参数
         //public Dictionary<string, Mat> SensorToTool = new Dictionary<string, Mat>();
@@ -2578,11 +2638,260 @@ namespace _3DLaserGlueInspection
                 }
             }
         }
+        private void DisposeSevenAxisCalibration()
+        {
+            foreach (var cameraGroup in SevenAxisCalibration.Values)
+            {
+                foreach (var calibration in cameraGroup.Values)
+                {
+                    calibration?.Dispose();
+                }
+            }
+        }
+
+
+        private sealed class SevenAxisFileInfo
+        {
+            public string FilePath { get; set; }
+            public double R7 { get; set; }
+            public bool IsBackup { get; set; }
+        }
+
+        // Parse only numeric CamInBase files. This deliberately ignores the
+        // legacy CamInBase.dat and non-numeric backup files.
+        private static bool TryParseSevenAxisFile(string filePath, out double r7, out bool isBackup)
+        {
+            r7 = 0;
+            isBackup = false;
+
+            string fileName = Path.GetFileNameWithoutExtension(filePath);
+            const string prefix = "CamInBase_";
+            if (!fileName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            string value = fileName.Substring(prefix.Length);
+            if (value.EndsWith("_bak", StringComparison.OrdinalIgnoreCase))
+            {
+                isBackup = true;
+                value = value.Substring(0, value.Length - 4);
+            }
+
+            bool parsed = double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out r7)
+                || double.TryParse(value, NumberStyles.Float, CultureInfo.CurrentCulture, out r7);
+            return parsed && !double.IsNaN(r7) && !double.IsInfinity(r7);
+        }
+
+        private static List<SevenAxisFileInfo> GetSevenAxisFiles(string camPath)
+        {
+            var files = new List<SevenAxisFileInfo>();
+            foreach (string filePath in Directory.GetFiles(camPath, "CamInBase_*.dat"))
+            {
+                if (TryParseSevenAxisFile(filePath, out double r7, out bool isBackup))
+                {
+                    files.Add(new SevenAxisFileInfo
+                    {
+                        FilePath = filePath,
+                        R7 = r7,
+                        IsBackup = isBackup
+                    });
+                }
+            }
+
+            return files.OrderBy(file => file.R7).ToList();
+        }
+
+        private static bool IsFinitePose(PoseParameters pose)
+        {
+            return pose != null
+                && !double.IsNaN(pose.x) && !double.IsInfinity(pose.x)
+                && !double.IsNaN(pose.y) && !double.IsInfinity(pose.y)
+                && !double.IsNaN(pose.z) && !double.IsInfinity(pose.z)
+                && !double.IsNaN(pose.rx) && !double.IsInfinity(pose.rx)
+                && !double.IsNaN(pose.ry) && !double.IsInfinity(pose.ry)
+                && !double.IsNaN(pose.rz) && !double.IsInfinity(pose.rz);
+        }
+
+        private static bool TryReadSevenAxisPose(string filePath, double r7, out PoseParameters pose, out string error)
+        {
+            pose = null;
+            error = null;
+            try
+            {
+                pose = HFileIO.ReadPosePara(filePath);
+                if (!IsFinitePose(pose))
+                    throw new InvalidDataException("The pose contains a non-finite value.");
+
+                pose.R7 = r7;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+                pose = null;
+                return false;
+            }
+        }
+
+        private bool TryBuildSevenAxisMatrices(List<PoseParameters> samples, out Mat tbm, out Mat tmc, out string error)
+        {
+            tbm = null;
+            tmc = null;
+            error = null;
+
+            if (samples == null || samples.Count < 3)
+            {
+                error = "At least three seven-axis calibration files are required.";
+                return false;
+            }
+
+            int[] poseTypes = samples.Select(sample => sample.PoseType).ToArray();
+            double[] r7Poses = new double[samples.Count * 7];
+            for (int index = 0; index < samples.Count; index++)
+            {
+                PoseParameters sample = samples[index];
+                int offset = index * 7;
+                r7Poses[offset] = sample.x;
+                r7Poses[offset + 1] = sample.y;
+                r7Poses[offset + 2] = sample.z;
+                r7Poses[offset + 3] = sample.rx;
+                r7Poses[offset + 4] = sample.ry;
+                r7Poses[offset + 5] = sample.rz;
+                r7Poses[offset + 6] = sample.R7;
+            }
+
+            GCHandle poseTypesHandle = default(GCHandle);
+            GCHandle r7PosesHandle = default(GCHandle);
+            Mat resultBm = new Mat();
+            Mat resultMc = new Mat();
+            try
+            {
+                poseTypesHandle = GCHandle.Alloc(poseTypes, GCHandleType.Pinned);
+                r7PosesHandle = GCHandle.Alloc(r7Poses, GCHandleType.Pinned);
+
+                int status = Vision.transform7HomMat3dN(
+                    samples.Count,
+                    poseTypesHandle.AddrOfPinnedObject(),
+                    r7PosesHandle.AddrOfPinnedObject(),
+                    SevenAxisAxisX,
+                    SevenAxisAxisY,
+                    SevenAxisAxisZ,
+                    resultBm.CvPtr,
+                    resultMc.CvPtr);
+
+                if (status != 0)
+                    throw new InvalidOperationException("transform7HomMat3dN returned status " + status + ".");
+                if (resultBm.Empty() || resultMc.Empty() || resultBm.Rows != 4 || resultBm.Cols != 4
+                    || resultMc.Rows != 4 || resultMc.Cols != 4)
+                {
+                    throw new InvalidDataException("transform7HomMat3dN returned invalid calibration matrices.");
+                }
+
+                tbm = resultBm;
+                tmc = resultMc;
+                resultBm = null;
+                resultMc = null;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+                return false;
+            }
+            finally
+            {
+                resultBm?.Dispose();
+                resultMc?.Dispose();
+                if (poseTypesHandle.IsAllocated)
+                    poseTypesHandle.Free();
+                if (r7PosesHandle.IsAllocated)
+                    r7PosesHandle.Free();
+            }
+        }
+
+        private bool LoadSevenAxisCalibration(string camPath, string name, string camKey)
+        {
+            try
+            {
+                List<SevenAxisFileInfo> files = GetSevenAxisFiles(camPath);
+                if (files.Count == 0)
+                {
+                    _errMsg = camPath + "\\CamInBase_<R7>.dat does not exist.";
+                    return false;
+                }
+
+                var samples = new List<PoseParameters>();
+                var calibrationFileNames = new List<string>();
+                foreach (var group in files.GroupBy(file => file.R7).OrderBy(group => group.Key))
+                {
+                    List<SevenAxisFileInfo> primaryFiles = group.Where(file => !file.IsBackup).ToList();
+                    if (primaryFiles.Count > 1)
+                        throw new InvalidDataException("Duplicate CamInBase files use R7=" + group.Key + ".");
+
+                    IEnumerable<SevenAxisFileInfo> candidates = primaryFiles
+                        .Concat(group.Where(file => file.IsBackup));
+                    SevenAxisFileInfo selectedFile = null;
+                    PoseParameters sample = null;
+                    string lastError = "";
+                    foreach (SevenAxisFileInfo candidate in candidates)
+                    {
+                        if (TryReadSevenAxisPose(candidate.FilePath, group.Key, out sample, out lastError))
+                        {
+                            selectedFile = candidate;
+                            break;
+                        }
+                    }
+
+                    if (sample == null)
+                    {
+                        throw new InvalidDataException(
+                            "Cannot read the calibration file for R7=" + group.Key + ". " + lastError);
+                    }
+                    samples.Add(sample);
+                    // Backups are read as a fallback but are always saved as
+                    // the corresponding primary file on the next Save().
+                    string selectedFileName = Path.GetFileName(selectedFile.FilePath);
+                    if (selectedFile.IsBackup)
+                    {
+                        string selectedStem = Path.GetFileNameWithoutExtension(selectedFileName);
+                        selectedStem = selectedStem.Substring(0, selectedStem.Length - 4);
+                        selectedFileName = selectedStem + ".dat";
+                    }
+                    calibrationFileNames.Add(selectedFileName);
+                }
+
+                if (!TryBuildSevenAxisMatrices(samples, out Mat tbm, out Mat tmc, out string matrixError))
+                {
+                    _errMsg = camPath + " seven-axis calibration failed: " + matrixError;
+                    return false;
+                }
+
+                var calibration = new SevenAxisCalibrationData();
+                calibration.Samples.AddRange(samples);
+                calibration.SampleFileNames.AddRange(calibrationFileNames);
+                calibration.Tbm = tbm;
+                calibration.Tmc = tmc;
+
+                // 首次加载时，外层相机字典已经创建，但内部 camKey 还不存在。
+                // 不能直接使用 [camKey] 读取，否则会触发 KeyNotFoundException。
+                if (SevenAxisCalibration[name].TryGetValue(camKey, out SevenAxisCalibrationData oldCalibration))
+                {
+                    oldCalibration?.Dispose();
+                }
+                SevenAxisCalibration[name][camKey] = calibration;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _errMsg = camPath + " seven-axis calibration failed: " + ex.Message;
+                return false;
+            }
+        }
 
         public bool Load()
         {
             bool results = true;
             string basePath = AppDomain.CurrentDomain.BaseDirectory + "Data";
+            DisposeSevenAxisCalibration();
             // 这些字典持有 OpenCV 原生内存，清空前必须先释放旧值。
             DisposeMatDictionaries(LightToCam);
             DisposeMatDictionaries(Cam1ToTool);
@@ -2593,6 +2902,7 @@ namespace _3DLaserGlueInspection
             Param.Clear();
             CamPar.Clear();
             LightInCam.Clear();
+            SevenAxisCalibration.Clear();
             ToolInCam1.Clear();
             LightToCam.Clear();
             Cam1ToTool.Clear();
@@ -2619,6 +2929,7 @@ namespace _3DLaserGlueInspection
                     LightInCam.Add(name, new Dictionary<string, PoseParameters>());
                     //SensorInCam.Add(name, new Dictionary<string, PoseParameters>());
                     ToolInCam1.Add(name, new Dictionary<string, PoseParameters>());
+                    SevenAxisCalibration.Add(name, new Dictionary<string, SevenAxisCalibrationData>());
                     LightToCam.Add(name, new Dictionary<string, Mat>());
                     //CamToSensor.Add(name, new Dictionary<string, Mat>());
                     Cam1ToTool.Add(name, new Dictionary<string, Mat>());
@@ -2629,7 +2940,7 @@ namespace _3DLaserGlueInspection
                     CenterInCam1.Add(name, new Dictionary<string, PoseParameters>());
                     CenterToCam1.Add(name, new Dictionary<string, Mat>());
 
-                    CamHandEyeType.Add(name, 0);
+                    CamHandEyeType.Add(name, CameraHandEyeType.EyeInHand);
                     Cam1ToBase.Add(name, new Dictionary<string, Mat>());
                     Cam1InBase.Add(name, new Dictionary<string, PoseParameters>());
 
@@ -2829,24 +3140,45 @@ namespace _3DLaserGlueInspection
 
                         bool result4 = true;
 
-                        //判断是眼在手上还是眼在手外
+                        // Detect all hand-eye modes in one place.
+                        // The selected enum is used by the mode-specific loading branch below.
+                        // Priority: numeric CamInBase_<R7>.dat files, CamInBase.dat, ToolInCam.dat.
+                        try
                         {
-                            string paramPath = camPath + "\\ToolInCam.dat";
-                            if (File.Exists(paramPath))
+                            string toolInCamPath = camPath + "\\ToolInCam.dat";
+                            string camInBasePath = camPath + "\\CamInBase.dat";
+                            // Only valid numeric R7 files identify seven-axis mode.
+                            // This intentionally ignores the legacy CamInBase_bak.dat file.
+                            List<SevenAxisFileInfo> sevenAxisFiles = GetSevenAxisFiles(camPath);
+
+                            if (sevenAxisFiles.Count > 0)
                             {
-                                CamHandEyeType[name] = 0;
+                                CamHandEyeType[name] = CameraHandEyeType.SevenAxis;
                             }
-                            paramPath = camPath + "\\CamInBase.dat";
-                            if (File.Exists(paramPath))
+                            else if (File.Exists(camInBasePath))
                             {
-                                CamHandEyeType[name] = 1;
+                                CamHandEyeType[name] = CameraHandEyeType.EyeToHand;
+                            }
+                            else if (File.Exists(toolInCamPath))
+                            {
+                                CamHandEyeType[name] = CameraHandEyeType.EyeInHand;
+                            }
+                            else
+                            {
+                                // Keep the legacy default; the read branch reports the missing file.
+                                CamHandEyeType[name] = CameraHandEyeType.EyeInHand;
                             }
                         }
+                        catch (Exception ex)
+                        {
+                            result4 = false;
+                            _errMsg = camPath + " hand-eye type detection failed: " + ex.Message;
+                        }
 
-                        
                         bool result5 = true;
 
-                        if (CamHandEyeType[name] == 0)
+                        // Load calibration files according to the enum selected above.
+                        if (CamHandEyeType[name] == CameraHandEyeType.EyeInHand)
                         {
                             //眼在手上数据读取
                             try
@@ -2910,6 +3242,10 @@ namespace _3DLaserGlueInspection
                                 }
                             }
 
+                        }
+                        else if (CamHandEyeType[name] == CameraHandEyeType.SevenAxis)
+                        {
+                            result5 = LoadSevenAxisCalibration(camPath, name, camKey);
                         }
                         else
                         {
@@ -3129,7 +3465,7 @@ namespace _3DLaserGlueInspection
                                 }
                             }
 
-                            if (CamHandEyeType[name] == 0)
+                            if (CamHandEyeType[name] == CameraHandEyeType.EyeInHand)
                             {
                                 if (ToolInCam1[name].ContainsKey(camKey))
                                 {
@@ -3161,7 +3497,7 @@ namespace _3DLaserGlueInspection
                                     }
                                 }
                             }
-                            else
+                            else if (CamHandEyeType[name] == CameraHandEyeType.EyeToHand)
                             {
                                 if (Cam1InBase[name].ContainsKey(camKey))
                                 {
@@ -3344,7 +3680,7 @@ namespace _3DLaserGlueInspection
 
                 foreach (var name in CamHandEyeType.Keys)
                 {
-                    if (CamHandEyeType[name] == 0)
+                    if (CamHandEyeType[name] == CameraHandEyeType.EyeInHand)
                     {
                         foreach (var key in ToolInCam1[name].Keys)
                         {
@@ -3360,7 +3696,45 @@ namespace _3DLaserGlueInspection
                             File.Copy(paramPath, path + "\\ToolInCam_bak.dat", true);
                         }
                     }
-                    else
+                    else if (CamHandEyeType[name] == CameraHandEyeType.SevenAxis)
+                    {
+                        // Save every calibration angle as one primary file plus
+                        // its backup. R7 is encoded in the file name by design.
+                        foreach (var key in SevenAxisCalibration[name].Keys)
+                        {
+                            string path = $"{basePath}\\CamSet\\{name}\\{key}";
+                            if (!Directory.Exists(path))
+                            {
+                                Directory.CreateDirectory(path);
+                            }
+
+                            SevenAxisCalibrationData calibration = SevenAxisCalibration[name][key];
+                            if (calibration == null || calibration.Samples.Count == 0)
+                            {
+                                throw new InvalidDataException(path + " has no seven-axis calibration samples.");
+                            }
+                            for (int index = 0; index < calibration.Samples.Count; index++)
+                            {
+                                PoseParameters sample = calibration.Samples[index];
+                                if (!IsFinitePose(sample) || double.IsNaN(sample.R7) || double.IsInfinity(sample.R7))
+                                {
+                                    throw new InvalidDataException(path + " contains an invalid seven-axis sample.");
+                                }
+                                string fileName = index < calibration.SampleFileNames.Count
+                                    ? Path.GetFileName(calibration.SampleFileNames[index])
+                                    : string.Empty;
+                                if (string.IsNullOrWhiteSpace(fileName))
+                                {
+                                    fileName = "CamInBase_" + sample.R7.ToString("G17", CultureInfo.InvariantCulture) + ".dat";
+                                }
+                                string paramPath = Path.Combine(path, fileName);
+                                HFileIO.WritePosePara(paramPath, sample);
+                                string backupName = Path.GetFileNameWithoutExtension(fileName) + "_bak.dat";
+                                File.Copy(paramPath, Path.Combine(path, backupName), true);
+                            }
+                        }
+                    }
+                    else if (CamHandEyeType[name] == CameraHandEyeType.EyeToHand)
                     {
                         foreach (var key in Cam1InBase[name].Keys)
                         {
@@ -3487,6 +3861,27 @@ namespace _3DLaserGlueInspection
                 else
                 {
                     Cam1InBase.Add(target, pairs);
+                }
+            }
+
+            if (SevenAxisCalibration.ContainsKey(source) && SevenAxisCalibration[source] != null)
+            {
+                Dictionary<string, SevenAxisCalibrationData> pairs = new Dictionary<string, SevenAxisCalibrationData>();
+                foreach (var key in SevenAxisCalibration[source].Keys)
+                {
+                    pairs.Add(key, SevenAxisCalibration[source][key]?.Clone());
+                }
+                if (SevenAxisCalibration.ContainsKey(target))
+                {
+                    foreach (var oldCalibration in SevenAxisCalibration[target].Values)
+                    {
+                        oldCalibration?.Dispose();
+                    }
+                    SevenAxisCalibration[target] = pairs;
+                }
+                else
+                {
+                    SevenAxisCalibration.Add(target, pairs);
                 }
             }
 
@@ -3618,6 +4013,163 @@ namespace _3DLaserGlueInspection
                 {
                     CenterToCam1.Add(target, pairs);
                 }
+            }
+        }
+    }
+
+
+    // Shared seven-axis helpers used by acquisition, replay and persistence.
+    // Keeping native calls and format validation in one place prevents the
+    // three workflows from silently using different R7 conventions.
+    public static class SevenAxisRobotSupport
+    {
+        // The angle calculation API still uses the legacy integer mode.
+        // Seven-axis keeps its own enum value for calibration and prediction,
+        // but follows the eye-to-hand angle formula in this legacy API.
+        public static int GetLegacyAngleType(CameraHandEyeType handEyeType)
+        {
+            return handEyeType == CameraHandEyeType.EyeInHand
+                ? (int)CameraHandEyeType.EyeInHand
+                : (int)CameraHandEyeType.EyeToHand;
+        }
+        public const double AxisX = 0.0;
+        public const double AxisY = 0.0;
+        public const double AxisZ = 1.0;
+
+        // A seven-axis robot is present when at least one camera parameter uses the SevenAxis mode.
+        public static bool HasSevenAxisRobot(CamParams parameters)
+        {
+            return parameters != null && parameters.CamHandEyeType != null
+                && parameters.CamHandEyeType.Values.Any(type => type == CameraHandEyeType.SevenAxis);
+        }
+
+        public static bool IsFinitePose(PoseParameters pose, bool includeR7)
+        {
+            return pose != null
+                && !double.IsNaN(pose.x) && !double.IsInfinity(pose.x)
+                && !double.IsNaN(pose.y) && !double.IsInfinity(pose.y)
+                && !double.IsNaN(pose.z) && !double.IsInfinity(pose.z)
+                && !double.IsNaN(pose.rx) && !double.IsInfinity(pose.rx)
+                && !double.IsNaN(pose.ry) && !double.IsInfinity(pose.ry)
+                && !double.IsNaN(pose.rz) && !double.IsInfinity(pose.rz)
+                && (!includeR7 || (!double.IsNaN(pose.R7) && !double.IsInfinity(pose.R7)));
+        }
+
+        // Predict Cam1ToBase for the current R7 angle. The caller owns the
+        // returned Mat and must dispose it after the current frame is done.
+        public static bool TryPredictCam1ToBase(
+            SevenAxisCalibrationData calibration, double r7, out Mat cam1ToBase, out string error)
+        {
+            cam1ToBase = null;
+            error = null;
+            if (calibration == null || calibration.Tbm == null || calibration.Tmc == null
+                || calibration.Tbm.Empty() || calibration.Tmc.Empty())
+            {
+                error = "Seven-axis calibration matrices are not available.";
+                return false;
+            }
+            if (double.IsNaN(r7) || double.IsInfinity(r7))
+            {
+                error = "The current R7 value is invalid.";
+                return false;
+            }
+
+            Mat result = new Mat();
+            try
+            {
+                int status = Vision.predict7HomMat3d(
+                    calibration.Tbm.CvPtr, calibration.Tmc.CvPtr, r7,
+                    AxisX, AxisY, AxisZ, result.CvPtr);
+                if (status != 0)
+                    throw new InvalidOperationException("predict7HomMat3d returned status " + status + ".");
+                if (result.Empty() || result.Rows != 4 || result.Cols != 4)
+                    throw new InvalidDataException("predict7HomMat3d returned an invalid matrix.");
+
+                cam1ToBase = result;
+                result = null;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+                return false;
+            }
+            finally
+            {
+                result?.Dispose();
+            }
+        }
+
+        // Legacy XML poses contain 7 values. Seven-axis XML poses contain
+        // [x,y,z,rx,ry,rz,R7,PoseType].
+        public static bool TryReadRecordedPose(
+            double[] rawPose, bool sevenAxis, out PoseParameters pose, out string error)
+        {
+            pose = null;
+            error = null;
+            int requiredLength = sevenAxis ? 8 : 7;
+            if (rawPose == null || rawPose.Length < requiredLength)
+            {
+                error = sevenAxis
+                    ? "A seven-axis robot pose must contain 8 values."
+                    : "A robot pose must contain 7 values.";
+                return false;
+            }
+
+            pose = new PoseParameters
+            {
+                x = rawPose[0],
+                y = rawPose[1],
+                z = rawPose[2],
+                rx = rawPose[3],
+                ry = rawPose[4],
+                rz = rawPose[5],
+                R7 = sevenAxis ? rawPose[6] : 0,
+                PoseType = (int)rawPose[sevenAxis ? 7 : 6]
+            };
+            if (!IsFinitePose(pose, sevenAxis))
+            {
+                pose = null;
+                error = "A recorded robot pose contains a non-finite value.";
+                return false;
+            }
+            return true;
+        }
+
+        // Save both XML and binary recordings. The old seven-value XML layout
+        // remains unchanged for six-axis robots.
+        public static void SaveRobotPoseData(
+            string basePath, SynchronizedList<long> robotPoseKeys,
+            SynchronizedList<PoseParameters> robotPoseValues, bool sevenAxis)
+        {
+            if (string.IsNullOrWhiteSpace(basePath))
+                throw new ArgumentException("The robot pose output path is empty.", nameof(basePath));
+            if (robotPoseKeys == null || robotPoseValues == null)
+                throw new ArgumentNullException("robotPoseKeys");
+            if (robotPoseKeys.Count != robotPoseValues.Count)
+                throw new InvalidDataException("Robot pose keys and values have different lengths.");
+
+            Directory.CreateDirectory(basePath);
+            using (FileStream stream = new FileStream(Path.Combine(basePath, "robotPoseKeys.xml"), FileMode.Create))
+            {
+                new XmlSerializer(robotPoseKeys.GetType()).Serialize(stream, robotPoseKeys);
+            }
+            using (FileStream stream = new FileStream(Path.Combine(basePath, "robotPoseValues.xml"), FileMode.Create))
+            {
+                List<double[]> poses = new List<double[]>();
+                foreach (PoseParameters pose in robotPoseValues)
+                {
+                    if (!IsFinitePose(pose, sevenAxis))
+                        throw new InvalidDataException("Robot pose data contains an invalid value.");
+                    poses.Add(sevenAxis
+                        ? new[] { pose.x, pose.y, pose.z, pose.rx, pose.ry, pose.rz, pose.R7, (double)pose.PoseType }
+                        : new[] { pose.x, pose.y, pose.z, pose.rx, pose.ry, pose.rz, (double)pose.PoseType });
+                }
+                new XmlSerializer(poses.GetType()).Serialize(stream, poses);
+            }
+            using (FileStream stream = new FileStream(Path.Combine(basePath, "robotPoseValues"), FileMode.Create))
+            {
+                new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter().Serialize(stream, robotPoseValues);
             }
         }
     }
