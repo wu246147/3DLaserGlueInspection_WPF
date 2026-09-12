@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:_3DLaserGlueInspection.subForm"
             xmlns:resx="clr-namespace:_3DLaserGlueInspection.Resources"
         mc:Ignorable="d"
-        Title="{x:Static resx:LanguageDict.DetToolParaSetting}" Height="2000" Width="1286" Loaded="WindowVision_Loaded" Closing="WindowVision_Closing">
+        Title="{x:Static resx:LanguageDict.DetToolParaSetting}" Height="1024" Width="1286" Loaded="WindowVision_Loaded" Closing="WindowVision_Closing">
 
     <Window.Resources>
 

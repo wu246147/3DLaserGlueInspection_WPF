@@ -116,8 +116,62 @@ namespace _3DLaserGlueInspection
         public IRobot robot ;
         public RobotType robotType = RobotType.KukaRobot;
 
+        //plc通讯，获取VIN码
+        public IHsl plc ;
+        public PlcType plcType = PlcType.ToyotaPlc;
+
+        public MainWindowModel()
+        {
+            LoadCommunicationTypes();
+        }
+
+        private void LoadCommunicationTypes()
+        {
+            string configPath = System.IO.Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory,
+                "Data",
+                "Other.xml");
+
+            if (!File.Exists(configPath))
+            {
+                return;
+            }
+
+            try
+            {
+                XElement root = XDocument.Load(configPath).Root;
+                if (root == null)
+                {
+                    return;
+                }
+
+                string robotTypeValue = root.Element("robotType")?.Value?.Trim();
+                RobotType parsedRobotType;
+                if (Enum.TryParse(robotTypeValue, true, out parsedRobotType)
+                    && Enum.IsDefined(typeof(RobotType), parsedRobotType))
+                {
+                    robotType = parsedRobotType;
+                }
+
+                string plcTypeValue = root.Element("plcType")?.Value?.Trim();
+                PlcType parsedPlcType;
+                if (Enum.TryParse(plcTypeValue, true, out parsedPlcType)
+                    && Enum.IsDefined(typeof(PlcType), parsedPlcType))
+                {
+                    plcType = parsedPlcType;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to read communication type configuration: {configPath}\r\n{ex}");
+            }
+        }
+
+
+
+
         //仿真通讯，获取io信号
-        Mmf mmf = new Mmf();
+        //Mmf mmf = new Mmf();
         //ISignal io;
         public Dictionary<string, Setting> sets = new Dictionary<string, Setting>();
 
@@ -278,6 +332,16 @@ namespace _3DLaserGlueInspection
                     ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.RobotParameterLoadingFailed + robot.ErrMsg, LogType.ng);
                     return;
                 }
+
+                if (plc.Load())
+                {
+                    ShowMessage("PLC参数读取成功");
+                }
+                else
+                {
+                    ShowMessage("PLC参数读取失败", LogType.ng);
+                    return;
+                }
                 //if (io.Load())
                 //{
                 //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.IO参数加载成功"));
@@ -328,6 +392,18 @@ namespace _3DLaserGlueInspection
                         return;
                     }
                 }
+
+                if (plc.Open())
+                {
+                    ShowMessage("PLC连接成功");
+                }
+                else
+                {
+                    ShowMessage("PLC连接失败" + plc.ErrMsg, LogType.ng);
+                    return;
+                }
+
+
                 //if (io.Open())
                 //{
                 //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.IO连接成功"));
@@ -367,15 +443,6 @@ namespace _3DLaserGlueInspection
                     while (true)
                     {
                         bool val;
-                        //if (isStart)
-                        //{
-                        //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedStartSignal);
-                        //    break;
-                        //}
-
-                        //Thread.Sleep(60);
-                        //if (stop) return;
-
                         if (robot.Read(DI.Start, out val))
                         {
                             if (val == true)
@@ -401,13 +468,17 @@ namespace _3DLaserGlueInspection
                             break;
                     }
 
+                   
+                    
+
+
                     ushort ID;
                     //Car car;
-                    string inVIN;
                     DateTime dateTime;
                     Dictionary<string, CamParam> camParam;
                     Setting set;
-
+                    //读取plc VIN码
+                    string inVIN;
 
                     bool rt = initRun(out ID, out car, out inVIN, out dateTime, out camParam, out set);
 
@@ -1354,6 +1425,7 @@ namespace _3DLaserGlueInspection
             finally
             {
                 robot.Close();
+                plc.Close();
                 //io.Close();
                 //关闭激光和相机
                 foreach (var cam in cams.Values)
@@ -1460,7 +1532,15 @@ namespace _3DLaserGlueInspection
                     ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.RobotParameterLoadingFailed + robot.ErrMsg, LogType.ng);
                     return;
                 }
-
+                if (plc.Load())
+                {
+                    ShowMessage("PLC参数读取成功");
+                }
+                else
+                {
+                    ShowMessage("PLC参数读取失败", LogType.ng);
+                    return;
+                }
                 #endregion
 
                 //连接设备
@@ -1481,6 +1561,16 @@ namespace _3DLaserGlueInspection
 
                         return;
                     }
+                }
+
+                if (plc.Open())
+                {
+                    ShowMessage("PLC连接成功");
+                }
+                else
+                {
+                    ShowMessage("PLC连接失败" + plc.ErrMsg, LogType.ng);
+                    return;
                 }
                 #endregion
 
@@ -1516,7 +1606,7 @@ namespace _3DLaserGlueInspection
                             ShowMessage(robot.ErrMsg, LogType.warn);
                             return;
                         }
-
+                        
                         //if (isStart)
                         //{
                         //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedStartSignal);
@@ -2288,8 +2378,8 @@ namespace _3DLaserGlueInspection
             }
             finally
             {
-                //robot.Close();
-
+                robot.Close();
+                plc.Close();
 
                 //关闭激光和相机
                 foreach (var cam in cams.Values)
@@ -2357,6 +2447,18 @@ namespace _3DLaserGlueInspection
             if (!robot.Read(DI.CarNumber, out CarNumber)) return false;
             ID = CarNumber;
 
+            if (plc.Read(DI.InVIN, out inVIN))
+            {
+
+                ShowMessage($"VIN 读取成功：{inVIN}");
+            }
+            else
+            {
+                ShowMessage(robot.ErrMsg, LogType.warn);
+                return false;
+            }
+
+
             SetCurrentRunID(ID);
             bool isExist = false;
             foreach (var item in cars.Cars.Values)
@@ -2376,7 +2478,6 @@ namespace _3DLaserGlueInspection
 
 
             //获取车架号VIN
-            inVIN = "";
             dateTime = DateTime.Now;
             mainModel.productIDControl = ID.ToString();
             mainModel.nameControl = car.Name;

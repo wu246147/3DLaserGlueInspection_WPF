@@ -1,3 +1,4 @@
+using _3DLaserGlueInspection.subForm;
 using HslCommunication;
 using HslCommunication.Core;
 using HslCommunication.Profinet.Melsec;
@@ -9,8 +10,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Serialization;
+using System.Web.UI.HtmlControls;
 using System.Windows;
+using System.Xml.Serialization;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace _3DLaserGlueInspection
 {
@@ -18,6 +21,7 @@ namespace _3DLaserGlueInspection
     {
         PlcParam Param { get; set; }
         Dictionary<string, IoAddress> IoDict { get; set; }
+
         bool IsOpen { get; }
         string ErrMsg { get; }
         bool Load();
@@ -31,6 +35,8 @@ namespace _3DLaserGlueInspection
         bool Read(DO eDO, out ushort value);
         bool Write(DO eDO, object value);
         bool Save();
+
+        void ShowForm();
     }
 
     [Serializable]
@@ -49,6 +55,12 @@ namespace _3DLaserGlueInspection
         public string Address;
     }
 
+    public enum PlcType
+    {
+        MelsecPlc = 0,  //三菱
+        OmronPlc,       //欧姆龙
+        ToyotaPlc,      //丰田
+    }
 
     public class MelsecPlc : ISignal, IHsl
     {
@@ -348,6 +360,8 @@ namespace _3DLaserGlueInspection
 
         public void ShowForm()
         {
+            new WindowPLC(this, false).ShowDialog();
+
             //new HslForm(this, false).ShowDialog();
         }
 
@@ -690,6 +704,7 @@ namespace _3DLaserGlueInspection
 
         public void ShowForm()
         {
+            new WindowPLC(this, true).ShowDialog();
             //new HslForm(this, true).ShowDialog();
         }
 
@@ -902,6 +917,8 @@ namespace _3DLaserGlueInspection
                 if (result.IsSuccess)
                 {
                     value = result.Content;
+                    value = value.Replace("\0", "");
+
                     return true;
                 }
                 else
@@ -1034,7 +1051,7 @@ namespace _3DLaserGlueInspection
 
         public void ShowForm()
         {
-            //new HslForm(this, false).ShowDialog();
+            new WindowPLC(this,false).ShowDialog();
         }
 
         object iolock = new object();

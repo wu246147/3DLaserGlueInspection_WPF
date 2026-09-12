@@ -39,10 +39,13 @@ namespace _3DLaserGlueInspection
         KawasakiRobot,
     }
 
+
+
     public interface IRobot
     {
         RobotParam Param { get; set; }
         Dictionary<string, IoAddress> IoDict { get; set; }
+
         bool IsOpen { get; }
 
         void ShowForm();
@@ -211,7 +214,7 @@ namespace _3DLaserGlueInspection
         }
     }
 
-    public class JAKARobot : IRobot
+    public class JAKARobot : IRobot, ISignal
     {
         public string ErrMsg => _errMsg;
         string _errMsg;
@@ -678,7 +681,7 @@ namespace _3DLaserGlueInspection
 
     }
 
-    public class FanucRobot : IRobot
+    public class FanucRobot : IRobot,ISignal
     {
         public string ErrMsg => _errMsg;
         string _errMsg;
@@ -1014,7 +1017,7 @@ namespace _3DLaserGlueInspection
         }
     }
 
-    public class KukaRobot : IRobot
+    public class KukaRobot : IRobot, ISignal
     {
         public string ErrMsg => _errMsg;
         string _errMsg;
@@ -1648,7 +1651,7 @@ namespace _3DLaserGlueInspection
     }
 
 
-    public class KawasakiRobotOld : IRobot
+    public class KawasakiRobotOld : IRobot, ISignal
     {
 
         public string serializationInfo(double x, double y, double z, double a, double b, double c, int result, string setflat)
@@ -2038,7 +2041,7 @@ namespace _3DLaserGlueInspection
     }
 
 
-    public class KawasakiRobot : IRobot
+    public class KawasakiRobot : IRobot, ISignal
     {
         #region 基础属性
 

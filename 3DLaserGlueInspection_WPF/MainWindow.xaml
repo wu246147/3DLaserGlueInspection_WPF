@@ -893,9 +893,10 @@ Converter={StaticResource ResultColor}}" />
                         x:Name="MenuItem_computerSetting"
                         BorderBrush="#00000000"
                         BorderThickness="0"
+                        Click="MenuItem_PLCSetting_signalSetting_Click"
                         Foreground="Black"
                         Header="{x:Static resx:LanguageDict.PLCSetting}"
-                        Visibility="Collapsed" />
+                        />
                     <MenuItem
                         x:Name="MenuItem_robotSetting"
                         BorderBrush="#00000000"

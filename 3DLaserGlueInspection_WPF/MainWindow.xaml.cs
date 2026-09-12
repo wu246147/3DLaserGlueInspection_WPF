@@ -41,7 +41,7 @@ namespace _3DLaserGlueInspection
         bool stop = true;
         Thread mainThread = null;
 
-        JAKARobot robot = new JAKARobot();
+        //JAKARobot robot = new JAKARobot();
 
 
         //readonly UserHWindowControl hWindow数模图 = new UserHWindowControl();
@@ -80,6 +80,19 @@ namespace _3DLaserGlueInspection
                     break;
                 case RobotType.KawasakiRobot:
                     model.robot = new KawasakiRobot();
+                    break;
+            }
+
+            switch (model.plcType)
+            {
+                case PlcType.MelsecPlc:
+                    model.plc = new MelsecPlc();
+                    break;
+                case PlcType.OmronPlc:
+                    model.plc = new OmronPlc();
+                    break;
+                case PlcType.ToyotaPlc:
+                    model.plc = new ToyotaPlc();
                     break;
             }
 
@@ -364,6 +377,25 @@ namespace _3DLaserGlueInspection
                     MessageBoxImage.Error);
             }
         }
+
+        private void MenuItem_PLCSetting_signalSetting_Click(object sender, RoutedEventArgs e)
+        {
+            if (!TryPasswordLogin(out WindowPassWord.PasswordUserType userType))
+            {
+                return;
+            }
+
+            if (userType == WindowPassWord.PasswordUserType.SuperAdministrator)
+            {
+                model.plc.ShowForm();
+            }
+            else
+            {
+                ShowAdministratorPermissionDenied();
+            }
+        }
+
+
         private void MenuItem_robotSetting_signalSetting_Click(object sender, RoutedEventArgs e)
         {
             if (!TryPasswordLogin(out WindowPassWord.PasswordUserType userType))
@@ -373,7 +405,7 @@ namespace _3DLaserGlueInspection
 
             if (userType == WindowPassWord.PasswordUserType.SuperAdministrator)
             {
-                robot.ShowForm();
+                model.robot.ShowForm();
             }
             else
             {
