@@ -422,6 +422,10 @@ namespace _3DLaserGlueInspection
                     case RobotType.KukaRobot:
                         ((KukaRobot)robot).resetSignal();
                         break;
+                    case RobotType.KawasakiRobot:
+
+                        ((KawasakiRobot)robot).resetSignal();
+                        break;
                 }
                 
 
@@ -466,6 +470,10 @@ namespace _3DLaserGlueInspection
                         case RobotType.KukaRobot:
                             ((KukaRobot)robot).resetSignal();
                             break;
+                        case RobotType.KawasakiRobot:
+
+                            ((KawasakiRobot)robot).resetSignal();
+                            break;
                     }
 
                    
@@ -485,7 +493,7 @@ namespace _3DLaserGlueInspection
                     //回复开始ON信号
                     if (rt)
                     {
-                        if (!robot.Write(DO.Result, 0)) return;
+                        if (!robot.Write(DO.Result, 1)) return;
 
                         //SocketSend(0);
                        
@@ -498,6 +506,14 @@ namespace _3DLaserGlueInspection
                     } 
 
                     if (stop) return;
+
+                    // 保存姿态文件时也按当前车型的相机类型决定是否写入 R7。
+                    if (!Params.CamHandEyeType.TryGetValue(car.CamParamName, out CameraHandEyeType mainRunHandEyeType))
+                    {
+                        ShowMessage("The hand-eye type of the current camera is missing.", LogType.ng);
+                        return;
+                    }
+                    bool currentCameraIsSevenAxis = mainRunHandEyeType == CameraHandEyeType.SevenAxis;
                     bool bAbort = false;
 
                     //启动采集任务
@@ -587,10 +603,14 @@ namespace _3DLaserGlueInspection
                             case RobotType.KukaRobot:
                                 ((KukaRobot)robot).resetSignal();
                                 break;
+                            case RobotType.KawasakiRobot:
+
+                                ((KawasakiRobot)robot).resetSignal();
+                                break;
                         }
                         //SocketSend(0);
 
-                        if (!robot.Write(DO.Result, 0)) return;
+                        if (!robot.Write(DO.Result, 1)) return;
 
 
                         bool bTriggering = true;
@@ -996,6 +1016,10 @@ namespace _3DLaserGlueInspection
                             case RobotType.KukaRobot:
                                 ((KukaRobot)robot).resetSignal();
                                 break;
+                            case RobotType.KawasakiRobot:
+
+                                ((KawasakiRobot)robot).resetSignal();
+                                break;
                         }
                         ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForDataConversionToComplete);
 
@@ -1032,7 +1056,7 @@ namespace _3DLaserGlueInspection
                         if (partResult)
                         {
                             //SocketSend(0);
-                            if (!robot.Write(DO.Result, 0)) return;
+                            if (!robot.Write(DO.Result, 1)) return;
 
                         }
                         else
@@ -1263,7 +1287,7 @@ namespace _3DLaserGlueInspection
                                     List<double[]> pose = new List<double[]>();
                                     foreach (var poseKey in robotPoseValues)
                                     {
-                                        pose.Add(SevenAxisRobotSupport.HasSevenAxisRobot(Params)
+                                        pose.Add(currentCameraIsSevenAxis
                                              ? new double[] { poseKey.x, poseKey.y, poseKey.z, poseKey.rx, poseKey.ry, poseKey.rz, poseKey.R7, poseKey.PoseType }
                                              : new double[] { poseKey.x, poseKey.y, poseKey.z, poseKey.rx, poseKey.ry, poseKey.rz, poseKey.PoseType });
                                     }
@@ -1402,11 +1426,15 @@ namespace _3DLaserGlueInspection
                         case RobotType.KukaRobot:
                             ((KukaRobot)robot).resetSignal();
                             break;
+                        case RobotType.KawasakiRobot:
+
+                            ((KawasakiRobot)robot).resetSignal();
+                            break;
                     }
                     if (totalResult)
                     {
                         //SocketSend(0);
-                        if (!robot.Write(DO.Result, 0)) return;
+                        if (!robot.Write(DO.Result, 1)) return;
 
                     }
                     else
@@ -1581,6 +1609,10 @@ namespace _3DLaserGlueInspection
                     case RobotType.KukaRobot:
                         ((KukaRobot)robot).resetSignal();
                         break;
+                    case RobotType.KawasakiRobot:
+
+                        ((KawasakiRobot)robot).resetSignal();
+                        break;
                 }
                 while (!stop)
                 {
@@ -1621,6 +1653,10 @@ namespace _3DLaserGlueInspection
                     {
                         case RobotType.KukaRobot:
                             ((KukaRobot)robot).resetSignal();
+                            break;
+                        case RobotType.KawasakiRobot:
+
+                            ((KawasakiRobot)robot).resetSignal();
                             break;
                     }
                     ushort ID;
@@ -1809,7 +1845,14 @@ namespace _3DLaserGlueInspection
                     // 3D 每隔100毫秒再刷新一下结果
                     RefreshOnEvent(500, true);
                     bRobotRun = true;
-                    bool sevenAxisRobot = SevenAxisRobotSupport.HasSevenAxisRobot(Params);
+                    // 机器人姿态读取方式必须以当前车型对应的相机类型为准，
+                    // 不能使用所有相机中是否存在七轴相机的全局判断。
+                    if (!Params.CamHandEyeType.TryGetValue(car.CamParamName, out CameraHandEyeType currentHandEyeType))
+                    {
+                        ShowMessage("The hand-eye type of the current camera is missing.", LogType.ng);
+                        return;
+                    }
+                    bool sevenAxisRobot = currentHandEyeType == CameraHandEyeType.SevenAxis;
                     //启动机器人姿态获取(安川20ms)
                     taskRobot = Task.Run(() =>
                     {
@@ -1847,7 +1890,7 @@ namespace _3DLaserGlueInspection
                     if (true)
                     {
                         //SocketSend(0);
-                        if (!robot.Write(DO.Result, 0)) return;
+                        if (!robot.Write(DO.Result, 1)) return;
 
                     }
                     else
@@ -1944,11 +1987,18 @@ namespace _3DLaserGlueInspection
                         switch (robotType)
                         {
                             case RobotType.KukaRobot:
+
                                 ((KukaRobot)robot).resetSignal();
                                 break;
+
+                            case RobotType.KawasakiRobot:
+
+                                ((KawasakiRobot)robot).resetSignal();
+                                break;
+
                         }
                         //SocketSend(0);
-                        if (!robot.Write(DO.Result, 0)) return;
+                        if (!robot.Write(DO.Result, 1)) return;
 
                         bool bTriggering = true;
                         //int 起点 = dataGridViewImageList.Rows.Count;
@@ -2105,6 +2155,10 @@ namespace _3DLaserGlueInspection
                             case RobotType.KukaRobot:
                                 ((KukaRobot)robot).resetSignal();
                                 break;
+                            case RobotType.KawasakiRobot:
+
+                                ((KawasakiRobot)robot).resetSignal();
+                                break;
                         }
                         ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForDataConversionToComplete);
 
@@ -2141,7 +2195,7 @@ namespace _3DLaserGlueInspection
                         if (partResult)
                         {
                             //SocketSend(0);
-                            if (!robot.Write(DO.Result, 0)) return;
+                            if (!robot.Write(DO.Result, 1)) return;
 
                         }
                         else
@@ -2313,7 +2367,7 @@ namespace _3DLaserGlueInspection
                                     List<double[]> pose = new List<double[]>();
                                     foreach (var poseKey in robotPoseValues)
                                     {
-                                        pose.Add(SevenAxisRobotSupport.HasSevenAxisRobot(Params)
+                                        pose.Add(sevenAxisRobot
                                             ? new double[] { poseKey.x, poseKey.y, poseKey.z, poseKey.rx, poseKey.ry, poseKey.rz, poseKey.R7, poseKey.PoseType }
                                             : new double[] { poseKey.x, poseKey.y, poseKey.z, poseKey.rx, poseKey.ry, poseKey.rz, poseKey.PoseType });
                                     }
@@ -2366,9 +2420,13 @@ namespace _3DLaserGlueInspection
                         case RobotType.KukaRobot:
                             ((KukaRobot)robot).resetSignal();
                             break;
+                        case RobotType.KawasakiRobot:
+
+                            ((KawasakiRobot)robot).resetSignal();
+                            break;
                     }
                     //SocketSend(0);
-                    if (!robot.Write(DO.Result, 0)) return;
+                    if (!robot.Write(DO.Result, 1)) return;
 
                 }
             }
@@ -2783,7 +2841,13 @@ namespace _3DLaserGlueInspection
             // 3D 每隔100毫秒再刷新一下结果
             RefreshOnEvent(500, true);
             bRobotRun = true;
-            bool sevenAxisRobot = SevenAxisRobotSupport.HasSevenAxisRobot(Params);
+            // 仿真姿态文件的 7/8 个字段由当前车型的相机类型决定。
+            if (!Params.CamHandEyeType.TryGetValue(camParamName, out CameraHandEyeType currentHandEyeType))
+            {
+                ShowMessage("The hand-eye type of the current camera is missing.", LogType.ng);
+                return false;
+            }
+            bool sevenAxisRobot = currentHandEyeType == CameraHandEyeType.SevenAxis;
             watch.Restart();
             //启动机器人姿态获取(安川20ms)
             taskRobot = Task.Run(() =>

@@ -1,0 +1,31 @@
+<Window x:Class="_3DLaserGlueInspection.subForm.WindowRobot2"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:_3DLaserGlueInspection.subForm"
+        xmlns:resx="clr-namespace:_3DLaserGlueInspection.Resources"
+        mc:Ignorable="d"
+        Title="{x:Static resx:LanguageDict.RobotSetting}" Height="421" Width="493" ResizeMode="NoResize" Loaded="WindowRobot2_Load" Closing="WindowRobot2_Closing">
+    <Grid Background="#FF242B35">
+        <Label Content="机器人获取坐标通讯：" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="10,20,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.558,0.963" Height="28" Width="150"/>
+        <Label x:Name="IpLabel"  Content="Ip：" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="32,53,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.558,0.963" Height="28" Width="52"/>
+        <Label x:Name="PortLabel"  Content="Port：" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="32,81,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.558,0.963" Height="28" Width="52"/>
+        <TextBox x:Name="PortNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="82,86,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="129" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+        <TextBox x:Name="IpNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="82,57,0,0" TextWrapping="Wrap" Text="192.168.2.152" VerticalAlignment="Top" Width="129" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+        <Button  x:Name="connectButton" Content="{x:Static resx:LanguageDict.Connect}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="80" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="37,118,0,0" Click="connectButton_Click" />
+        <Button  x:Name="disconnectButton" Content="{x:Static resx:LanguageDict.Disconnect}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="80" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="131,118,0,0" Click="disconnectButton_Click" />
+        <Label Content="Ip：" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="32,263,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.558,0.963" Height="28" Width="52"/>
+        <Label  Content="Port：" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="32,291,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.558,0.963" Height="28" Width="52"/>
+        <TextBox x:Name="PortServerNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="82,296,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="129" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+        <TextBox x:Name="IpServerNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="82,267,0,0" TextWrapping="Wrap" Text="192.168.2.152" VerticalAlignment="Top" Width="129" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+        <Button  x:Name="connectServerButton" Content="{x:Static resx:LanguageDict.Connect}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="80" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="37,328,0,0" Click="connectServerButton_Click" />
+        <Button  x:Name="disconnectServerButton" Content="{x:Static resx:LanguageDict.Disconnect}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="80" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="131,328,0,0" Click="disconnectServerButton_Click" />
+        <Label  Content="机器人执行指令通讯：" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="10,220,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.558,0.963" Height="28" Width="161"/>
+        <Label x:Name="logLabel"  Content="{x:Static resx:LanguageDict.Info}" ContentStringFormat="{}{0} :" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="242,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.558,0.963" Height="28" Width="52"/>
+        <TextBox x:Name="logTextBox" FontSize="14"  HorizontalAlignment="Left" Margin="246,43,0,20" TextWrapping="Wrap" Text="" Width="225" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+        <Button  x:Name="getPoseButton" Content="获取姿态"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="80" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="37,168,0,0" Click="getPoseButton_Click" />
+
+
+    </Grid>
+</Window>

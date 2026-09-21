@@ -367,7 +367,7 @@ namespace _3DLaserGlueInspection.subForm
                     camParam.Enable = (bool)checkBoxEnableCam.IsChecked;
                     camParam.CamName = CamNameComboBox.Items[CamNameComboBox.SelectedIndex].ToString();
                     camParam.Exposure = Convert.ToInt32(exportTimeNumericUpDown.Text);
-                    camParam.Gain = Convert.ToInt32(gainNumericUpDown.Text);
+                    camParam.Gain = (float)Convert.ToDouble(gainNumericUpDown.Text);
 
                     camParam.SizeWidth = Convert.ToInt32(currentWidthNumericUpDown.Text);
                     camParam.SizeHeight = Convert.ToInt32(currentHeightNumericUpDown.Text);

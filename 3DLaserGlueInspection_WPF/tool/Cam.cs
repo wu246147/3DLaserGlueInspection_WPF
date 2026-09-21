@@ -982,7 +982,7 @@ namespace _3DLaserGlueInspection
 
                 if (isDebug)
                 {
-                    if (_manufacturerName == "Hikrobot")
+                    if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
                     {
                         //触发模式
                         if (!SetTriggerMode(TriggerMode.Off))
@@ -1039,7 +1039,7 @@ namespace _3DLaserGlueInspection
                 }
                 else
                 {
-                    if (_manufacturerName == "Hikrobot")
+                    if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
                     {
                         if (!SetLine2Mode(LineMode.Strobe))
                         {
@@ -1330,7 +1330,7 @@ namespace _3DLaserGlueInspection
         /// <returns></returns>
         public bool SetAcquisitionMode(AcquisitionMode value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 return SetEnumValue("AcquisitionMode", (uint)value);
 
@@ -1353,7 +1353,7 @@ namespace _3DLaserGlueInspection
         /// <returns></returns>
         public bool SetTriggerCacheEnable(bool value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 return SetBoolValue("TriggerCacheEnable", value);
 
@@ -1375,7 +1375,7 @@ namespace _3DLaserGlueInspection
         /// <returns></returns>
         public bool SetTriggerMode(TriggerMode value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 return SetEnumValue("TriggerMode", (uint)value);
 
@@ -1393,7 +1393,7 @@ namespace _3DLaserGlueInspection
 
         public bool SetExposureAuto(ExposureAuto value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 return SetEnumValue("ExposureAuto", (uint)value);
             }
@@ -1410,21 +1410,22 @@ namespace _3DLaserGlueInspection
 
         public bool SetExposure(float value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
-                if (value < 15)
+                try
                 {
-                    if (!SetEnumValue("ExposureTimeMode", (uint)ExposureTimeMode.UltraShort))
+                    if (value < 15)
                     {
-                        return false;
+                        SetEnumValue("ExposureTimeMode", (uint)ExposureTimeMode.UltraShort);
+                    }
+                    else
+                    {
+                        SetEnumValue("ExposureTimeMode", (uint)ExposureTimeMode.Standard);
                     }
                 }
-                else
+                catch (Exception)
                 {
-                    if (!SetEnumValue("ExposureTimeMode", (uint)ExposureTimeMode.Standard))
-                    {
-                        return false;
-                    }
+
                 }
                 return SetFloatValue("ExposureTime", value);
             }
@@ -1440,7 +1441,7 @@ namespace _3DLaserGlueInspection
         }
         public bool GetExposure(out float value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 return GetFloatValue("ExposureTime", out value);
             }
@@ -1457,7 +1458,7 @@ namespace _3DLaserGlueInspection
 
         public bool SetGain(float value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 return SetFloatValue("Gain", value);
             }
@@ -1473,7 +1474,7 @@ namespace _3DLaserGlueInspection
         }
         public bool GetGain(out float value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 return GetFloatValue("Gain", out value);
             }
@@ -1495,7 +1496,7 @@ namespace _3DLaserGlueInspection
         /// <returns></returns>
         public bool SetAcquisitionFrameRate(float value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 return SetFloatValue("AcquisitionFrameRate", value);
             }
@@ -1515,7 +1516,7 @@ namespace _3DLaserGlueInspection
         /// <returns></returns>
         public bool GetAcquisitionFrameRate(out float value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 return GetFloatValue("AcquisitionFrameRate", out value);
             }
@@ -1540,7 +1541,7 @@ namespace _3DLaserGlueInspection
         public bool SetAcquisitionFrameRateEnable(bool value)
         {
 
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 return SetBoolValue("AcquisitionFrameRateEnable", value);
             }
@@ -1560,7 +1561,7 @@ namespace _3DLaserGlueInspection
         /// <returns></returns>
         public bool GetAcquisitionFrameRateEnable(out bool value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 return GetBoolValue("AcquisitionFrameRateEnable", out value);
             }
@@ -1582,7 +1583,7 @@ namespace _3DLaserGlueInspection
         /// <returns></returns>
         public bool GetResultingFrameRate(out float value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 return GetFloatValue("ResultingFrameRate", out value);
             }
@@ -1600,7 +1601,7 @@ namespace _3DLaserGlueInspection
         }
         public bool SetWidth(long value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 return SetIntValue("Width", value);
             }
@@ -1616,7 +1617,7 @@ namespace _3DLaserGlueInspection
         }
         public bool GetWidth(out long value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 return GetIntValue("Width", out value);
             }
@@ -1632,7 +1633,7 @@ namespace _3DLaserGlueInspection
         }
         public bool GetWidthMax(out long value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 return GetIntValue("WidthMax", out value);
             }
@@ -1648,7 +1649,7 @@ namespace _3DLaserGlueInspection
         }
         public bool SetHeight(long value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 return SetIntValue("Height", value);
             }
@@ -1664,7 +1665,7 @@ namespace _3DLaserGlueInspection
         }
         public bool GetHeight(out long value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 return GetIntValue("Height", out value);
             }
@@ -1680,7 +1681,7 @@ namespace _3DLaserGlueInspection
         }
         public bool GetHeightMax(out long value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 return GetIntValue("HeightMax", out value);
             }
@@ -1696,7 +1697,7 @@ namespace _3DLaserGlueInspection
         }
         public bool SetOffsetX(long value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 return SetIntValue("OffsetX", value);
             }
@@ -1712,7 +1713,7 @@ namespace _3DLaserGlueInspection
         }
         public bool GetOffsetX(out long value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 return GetIntValue("OffsetX", out value);
             }
@@ -1728,7 +1729,7 @@ namespace _3DLaserGlueInspection
         }
         public bool SetOffsetY(long value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 return SetIntValue("OffsetY", value);
             }
@@ -1744,7 +1745,7 @@ namespace _3DLaserGlueInspection
         }
         public bool GetOffsetY(out long value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 return GetIntValue("OffsetY", out value);
             }
@@ -1765,7 +1766,7 @@ namespace _3DLaserGlueInspection
         /// <returns></returns>
         public bool SetReverseX(bool value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 return SetBoolValue("ReverseX", value);
             }
@@ -1787,7 +1788,7 @@ namespace _3DLaserGlueInspection
         /// <returns></returns>
         public bool SetReverseY(bool value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 return SetBoolValue("ReverseY", value);
             }
@@ -1809,7 +1810,7 @@ namespace _3DLaserGlueInspection
         /// <returns></returns>
         bool SetFrameSpecInfoSelector(FrameSpecInfoSelector value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 return SetEnumValue("FrameSpecInfoSelector", (uint)value);
             }
@@ -1830,7 +1831,7 @@ namespace _3DLaserGlueInspection
         /// <returns></returns>
         bool SetFrameSpecInfo(bool value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 return SetBoolValue("FrameSpecInfo", value);
             }
@@ -2129,7 +2130,7 @@ namespace _3DLaserGlueInspection
         /// <returns></returns>
         public bool SetLine2Mode(LineMode value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 if (SetLineSelector(LineSelector.Line2))
                 {
@@ -2236,7 +2237,7 @@ namespace _3DLaserGlueInspection
         /// <returns></returns>
         public bool SetLine1Inverter(bool value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 if (SetLineSelector(LineSelector.Line1))
                 {
@@ -2273,7 +2274,7 @@ namespace _3DLaserGlueInspection
         /// <returns></returns>
         public bool SetLine2Inverter(bool value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 if (SetLineSelector(LineSelector.Line2))
                 {
@@ -2375,7 +2376,7 @@ namespace _3DLaserGlueInspection
         /// <returns></returns>
         public bool SetLine1StrobeEnable(bool value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 if (SetLineSelector(LineSelector.Line1))
                 {
@@ -2404,7 +2405,7 @@ namespace _3DLaserGlueInspection
         /// <returns></returns>
         public bool SetLine2StrobeEnable(bool value)
         {
-            if (_manufacturerName == "Hikrobot")
+            if (_manufacturerName == "Hikrobot"||_manufacturerName == "GEV")
             {
                 if (SetLineSelector(LineSelector.Line2))
                 {

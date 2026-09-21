@@ -1029,10 +1029,10 @@ namespace _3DLaserGlueInspection
         public RobotParam Param { get => param; set => param = value; }
         public Dictionary<string, IoAddress> IoDict { get => ioDict; set => ioDict = value; }
 
-        HslCommunication.Robot.KUKA.KukaTcpNet robot = new HslCommunication.Robot.KUKA.KukaTcpNet();
+        public HslCommunication.Robot.KUKA.KukaTcpNet robot = new HslCommunication.Robot.KUKA.KukaTcpNet();
 
         // TCP 通讯
-        TCP_Server Server;
+        public TCP_Server Server;
         //socket通讯，获取io信号
         Thread threadReconnect = null; // 通讯重连线程
 
@@ -1117,15 +1117,19 @@ namespace _3DLaserGlueInspection
                     //_timer.Stop();
                 }
                 // 等待线程结束
-                if (!threadReconnect.Join(1000))  // 等待最多1秒
+                if (threadReconnect != null)
                 {
-                    try
+                    // 等待线程结束
+                    if (!threadReconnect.Join(1000))  // 等待最多1秒
                     {
-                        threadReconnect.Abort();  // 强制终止（不推荐，但有时必要）
+                        try
+                        {
+                            threadReconnect.Abort();  // 强制终止（不推荐，但有时必要）
+                        }
+                        catch { }
                     }
-                    catch { }
+                    threadReconnect = null;
                 }
-                threadReconnect = null;
             }
             
         }
@@ -1317,7 +1321,7 @@ namespace _3DLaserGlueInspection
 
         public KukaRobot() 
         {
-            InitCommunicationConnection();
+            
         }
 
         
@@ -1328,7 +1332,9 @@ namespace _3DLaserGlueInspection
 
         public void ShowForm()
         {
-            new WindowRobot(this).ShowDialog();
+            StopCommunicationThread();
+            new WindowRobot2(this).ShowDialog();
+            InitCommunicationConnection() ;
         }
 
         public bool FormatTransform(string info, out PoseParameters hPose)
@@ -2076,7 +2082,65 @@ namespace _3DLaserGlueInspection
             set => _ioDict = value;
         }
 
-        private TCP_Client robot;
+        // UDP通讯，只用于获取坐标，并且直接收，不发送
+        public UDP robot;
+
+        // TCP 通讯
+        public TCP_Server Server;
+        //socket通讯，获取io信号
+        Thread threadReconnect = null; // 通讯重连线程
+
+        /// <summary>
+        /// 开始信号
+        /// </summary>
+
+        bool isStart = false;
+
+
+        /// <summary>
+        /// 触发信号
+        /// </summary>
+        bool isPGON = false;
+
+
+        /// <summary>
+        /// 开始信号
+        /// </summary>
+
+        bool isStartEnd = false;
+
+
+        /// <summary>
+        /// 触发信号
+        /// </summary>
+        bool isPGONEnd = false;
+
+        /// <summary>
+        /// 中断信号
+        /// </summary>
+        bool isAbort = false;
+
+        /// <summary>
+        /// 结束信号
+        /// </summary>
+        bool isEND = false;
+
+        //ushort 256
+
+        /// <summary>
+        /// 车型号
+        /// </summary>
+        int CarNumber = 0;
+
+        public void resetSignal()
+        {
+            isStart = false;
+            isPGON = false;
+            isAbort = false;
+            isEND = false;
+            isStartEnd = false;
+            isPGONEnd = false;
+        }
 
         #endregion
 
@@ -2087,17 +2151,6 @@ namespace _3DLaserGlueInspection
         /// 防止多个线程同时发送命令导致响应错位。
         /// </summary>
         private readonly object _ioLock = new object();
-
-        /// <summary>
-        /// 保护接收缓存。
-        /// </summary>
-        private readonly object _receiveLock = new object();
-
-        /// <summary>
-        /// TCP 接收缓存。
-        /// </summary>
-        private readonly StringBuilder _receiveBuffer =
-            new StringBuilder();
 
         /// <summary>
         /// 保护当前等待的响应。
@@ -2143,6 +2196,7 @@ namespace _3DLaserGlueInspection
         private float _RX = 0;
         private float _RY = 0;
         private float _RZ = 0;
+        private float _R7 = 0;
 
         private float _R1 = 0;
         private float _R2 = 0;
@@ -2159,33 +2213,12 @@ namespace _3DLaserGlueInspection
 
         public KawasakiRobot()
         {
+            
         }
-
-        #region 数据序列化和反序列化
-
-        public string serializationInfo(
-            double x,
-            double y,
-            double z,
-            double a,
-            double b,
-            double c,
-            int result,
-            string setflat)
+        public void Dispose()
         {
-            /*
-             * 这里根据 Kawasaki 实际通讯协议生成发送字符串。
-             *
-             * 例如：
-             * return string.Format(
-             *     CultureInfo.InvariantCulture,
-             *     "CMD,{0},{1},{2}#",
-             *     x, y, z);
-             */
-
-            return string.Empty;
+            StopCommunicationThread();
         }
-
         private static bool deserializationInfo(
             string info,
             out float X,
@@ -2200,6 +2233,7 @@ namespace _3DLaserGlueInspection
             out float R4,
             out float R5,
             out float R6,
+            out float R7,
             out int programID,
             out int commandID,
             out int pointID)
@@ -2217,6 +2251,8 @@ namespace _3DLaserGlueInspection
             R4 = 0;
             R5 = 0;
             R6 = 0;
+
+            R7 = 0;
 
             programID = 0;
             commandID = 0;
@@ -2274,13 +2310,6 @@ namespace _3DLaserGlueInspection
                         : defaultValue;
                 }
 
-                // 根据原代码，索引 7~12 为 J1~J6
-                R1 = SafeFloat(7);
-                R2 = SafeFloat(8);
-                R3 = SafeFloat(9);
-                R4 = SafeFloat(10);
-                R5 = SafeFloat(11);
-                R6 = SafeFloat(12);
 
                 /*
                  * 位姿数据从消息末尾读取：
@@ -2288,12 +2317,14 @@ namespace _3DLaserGlueInspection
                  */
                 int total = parts.Length;
 
-                X = SafeFloat(total - 6);
-                Y = SafeFloat(total - 5);
-                Z = SafeFloat(total - 4);
-                RX = SafeFloat(total - 3);
-                RY = SafeFloat(total - 2);
-                RZ = SafeFloat(total - 1);
+                X = SafeFloat(total - 9);
+                Y = SafeFloat(total - 8);
+                Z = SafeFloat(total - 7);
+                RX = SafeFloat(total - 6);
+                RY = SafeFloat(total - 5);
+                RZ = SafeFloat(total - 4);
+
+                R7 = SafeFloat(total - 3);
 
                 /*
                  * Kawasaki 使用 ZYZ，
@@ -2320,14 +2351,6 @@ namespace _3DLaserGlueInspection
                 RY = (float)transformRY;
                 RZ = (float)transformRZ;
 
-                /*
-                 * 以下字段需要根据你的实际协议确定。
-                 * 如果协议中存在程序号、命令号、点号，
-                 * 可以在这里解析。
-                 */
-                programID = SafeInt(0);
-                commandID = SafeInt(1);
-                pointID = SafeInt(2);
 
                 return true;
             }
@@ -2340,76 +2363,265 @@ namespace _3DLaserGlueInspection
             }
         }
 
-        #endregion
 
+        /// <summary>
+        /// 根据通讯方式初始化连接线程
+        /// </summary>
+        public void InitCommunicationConnection()
+        {
+
+            IniTCPSocketServer();
+
+        }
+
+        /// <summary>
+        /// 停止通讯线程
+        /// </summary>
+        public void StopCommunicationThread()
+        {
+            if (Server != null)
+            {
+
+                // TCP 停止监听并null
+                if (Server != null)
+                {
+                    Server.StopListen();
+                    Server = null;
+
+                    //_timer.Stop();
+                }
+                if (threadReconnect != null)
+                {
+                    // 等待线程结束
+                    if (!threadReconnect.Join(1000))  // 等待最多1秒
+                    {
+                        try
+                        {
+                            threadReconnect.Abort();  // 强制终止（不推荐，但有时必要）
+                        }
+                        catch { }
+                    }
+                    threadReconnect = null;
+                }
+                
+            }
+
+        }
+
+        private void IniTCPSocketServer()
+        {
+            threadReconnect = new Thread(IniRobotTCPserver);
+            threadReconnect.Start();
+        }
+        private void IniRobotTCPserver()
+        {
+
+            try
+            {
+                Server = new TCP_Server();
+
+                bool rt = Server.Load();
+                if (rt)
+                {
+                    //绑定委托与事件
+                    Server.reserveInfoSignal += ProcessInfoServer;
+
+                    //ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ServerSignalLoadedSuccessfully);
+
+                    //开始监听
+                    Server.StartListen();
+
+                    //ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.TCPCommunicationServerSuccessfullyEstablished + "!");
+
+                    return;
+                }
+                else
+                {
+                    //ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ServerSignalLoadingFailed);
+
+                }
+            }
+
+            catch (Exception ex)
+            {
+                //ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.TCPCommunicationServerEstablishmentFailed);
+                _errMsg = ex.Message;
+                return;
+            }
+        }
+
+        void ProcessInfoServer(string info)
+        {
+            int PROGRAM_ID = 0;
+            int COMMAND_ID = 0;
+            int POINT_ID = 0;
+            Thread cameraThread;
+            try
+            {
+                //车型
+                int programId , commandId , pointId;
+
+                deserializationInfoServer(info, out programId, out commandId, out pointId);
+
+                CarNumber = programId;
+                switch (commandId)
+                {
+                    case 0:
+                        //开始信号
+                        if (pointId == 1)
+                        {
+                            isStart = true;
+                        }
+                        else if (pointId == 0)
+                        {
+                            isStart = false;
+                        }
+                        break;
+                    case 1:
+                        //启动信号
+                        if (pointId == 1)
+                        {
+                            isPGON = true;
+                        }
+                        else if (pointId == 0)
+                        {
+                            isPGON = false;
+                        }
+                        break;
+
+                    case 2:
+                        //开始信号结束
+                        if (pointId == 1)
+                        {
+                            isStartEnd = true;
+                        }
+                        else if (pointId == 0)
+                        {
+                            isStartEnd = false;
+                        }
+                        break;
+                    case 3:
+                        //启动信号结束
+                        if (pointId == 1)
+                        {
+                            isPGONEnd = true;
+                        }
+                        else if (pointId == 0)
+                        {
+                            isPGONEnd = false;
+                        }
+                        break;
+                    case 4:
+                        //中断信号
+                        if (pointId == 1)
+                        {
+                            isAbort = true;
+                        }
+                        else if (pointId == 0)
+                        {
+                            isAbort = false;
+                        }
+                        break;
+                    case 5:
+                        //停止信号
+                        if (pointId == 1)
+                        {
+                            isEND = true;
+                        }
+                        else if (pointId == 0)
+                        {
+                            isEND = false;
+                        }
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+        }
+
+
+        private static bool deserializationInfoServer(string info, out int programID, out int commandID, out int pointID)
+        {
+            programID = 0;
+            commandID = 0;
+            pointID = 0;
+
+            try
+            {
+                string[] tempReceivedParts;
+                tempReceivedParts = info.Split(',');
+
+                programID = int.Parse(tempReceivedParts[0]);
+                commandID = int.Parse(tempReceivedParts[1]);
+                pointID = int.Parse(tempReceivedParts[2]);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[deserializationInfo] 解析异常: {ex.Message}");
+                return false;
+            }
+        }
+
+        public string serializationInfoServer(int RESULT)
+        {
+            string msg = $"{RESULT},0,0,0,0,0,0,0,0,";
+
+            return "";
+        }
+
+
+        void SocketSend(int RESULT = 0)
+        {
+            string msg = serializationInfoServer(RESULT);
+            //ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.SendSignal + ":" + msg);
+            Server.Send(msg);
+
+        }
         #region 位姿读取
 
         public bool ReadPose(out PoseParameters hPose)
         {
             lock (_poseLock)
             {
-                string command = "";
-                string response;
                 hPose = new PoseParameters();
-
-
-                //发送信息并阻塞等待
-                if (!TrySendAndWait(
-                command,
-                IsReadResponse,
-                out response))
+                if (_isExist)
                 {
-                    return false;
+                    double x = _X / 1000;
+                    double y = _Y / 1000;
+                    double z = _Z / 1000;
+                    double rx = _RX;
+                    double ry = _RY;
+                    double rz = _RZ;
+
+                    hPose = new PoseParameters()
+                    {
+                        x=x,
+                        y= y,
+                        z=z, 
+                        rx=rx,
+                        ry=ry,
+                        rz=rz,
+                    };
                 }
-
-                string value = response
-                    .Trim()
-                    .TrimEnd(FrameEndChar)
-                    .Trim();
-
-                float X, Y, Z, RX, RY, RZ;
-                float R1, R2, R3, R4, R5, R6;
-                int programID, commandID, pointID;
-
-                bool result = deserializationInfo(
-                value,
-                out X,
-                out Y,
-                out Z,
-                out RX,
-                out RY,
-                out RZ,
-                out R1,
-                out R2,
-                out R3,
-                out R4,
-                out R5,
-                out R6,
-                out programID,
-                out commandID,
-                out pointID);
-
-
-                hPose =new PoseParameters()
+                else
                 {
-                    x = X / 1000.0,
-                    y = Y / 1000.0,
-                    z = Z / 1000.0,
-                    rx = RX,
-                    ry = RY,
-                    rz = RZ
-                };
-
-                
-
-                return true;
+                    hPose = null;
+                }
+                return _isExist;
             }
         }
 
         public bool ReadPose(out PoseParameters hPose, out double R7)
         {
             bool rt = ReadPose(out hPose);
-            R7 = 0.0;
+            R7 = _R7;
+
+
             return rt;
         }
 
@@ -2430,106 +2642,39 @@ namespace _3DLaserGlueInspection
             if (string.IsNullOrEmpty(incomingData))
                 return;
 
-            List<string> frames = ExtractFrames(incomingData);
+            ///
+            /// 信号处理
+            ///
 
-            foreach (string frame in frames)
+            //序列化信息
+            float X, Y, Z, RX, RY, RZ, R1, R2, R3, R4, R5, R6,R7;
+            int programID, commandID, pointID;
+
+            bool rt = deserializationInfo(incomingData, out X, out Y, out Z, out RX, out RY, out RZ, out R1, out R2, out R3, out R4, out R5, out R6, out R7, out programID, out commandID, out pointID);
+            // 更新缓存数据
+            if (rt)
             {
-                ProcessFrame(frame);
+                _isExist = true;
             }
-        }
-
-        /// <summary>
-        /// 按照 # 拆分完整消息。
-        /// </summary>
-        private List<string> ExtractFrames(string incomingData)
-        {
-            List<string> frames = new List<string>();
-
-            lock (_receiveLock)
+            else
             {
-                /*
-                 * 如果 TCP_Client 内部已经完成分帧，
-                 * 并且当前消息中没有结束符，
-                 * 则直接认为它是一条完整消息。
-                 */
-                if (_receiveBuffer.Length == 0 &&
-                    incomingData.IndexOf(FrameEndChar) < 0)
-                {
-                    frames.Add(incomingData);
-                    return frames;
-                }
-
-                _receiveBuffer.Append(incomingData);
-
-                while (true)
-                {
-                    string currentData = _receiveBuffer.ToString();
-
-                    int endIndex =
-                        currentData.IndexOf(FrameEndChar);
-
-                    if (endIndex < 0)
-                        break;
-
-                    string frame = currentData.Substring(
-                        0,
-                        endIndex + 1);
-
-                    frames.Add(frame);
-
-                    _receiveBuffer.Remove(
-                        0,
-                        endIndex + 1);
-                }
+                _isExist = false;
             }
+            _X = X;
+            _Y = Y;
+            _Z = Z;
+            _RX = RX;
+            _RY = RY;
+            _RZ = RZ;
 
-            return frames;
-        }
+            _R1 = R1;
+            _R2 = R2;
+            _R3 = R3;
+            _R4 = R4;
+            _R5 = R5;
+            _R6 = R6;
+            _R7 = R7;
 
-        /// <summary>
-        /// 处理一条完整消息。
-        /// </summary>
-        private void ProcessFrame(string frame)
-        {
-
-            /*
-             * 再判断当前消息是否是某个命令等待的响应。
-             */
-            CompletePendingResponse(frame);
-        }
-
-        /// <summary>
-        /// 收到匹配的响应后，唤醒等待线程。
-        /// </summary>
-        private void CompletePendingResponse(string frame)
-        {
-            TaskCompletionSource<string> responseSource = null;
-
-            lock (_responseLock)
-            {
-                if (_pendingResponse == null)
-                    return;
-
-                /*
-                 * 只接收属于当前命令的响应。
-                 * 普通状态消息会被忽略，不会唤醒等待线程。
-                 */
-                if (_pendingResponseMatcher != null &&
-                    !_pendingResponseMatcher(frame))
-                {
-                    return;
-                }
-
-                responseSource = _pendingResponse;
-
-                _pendingResponse = null;
-                _pendingResponseMatcher = null;
-            }
-
-            /*
-             * 不在锁内部唤醒任务，避免锁竞争。
-             */
-            responseSource.TrySetResult(frame);
         }
 
         #endregion
@@ -2548,7 +2693,9 @@ namespace _3DLaserGlueInspection
 
         public void ShowForm()
         {
-            new WindowRobot(this).ShowDialog();
+             StopCommunicationThread();
+            new WindowRobot2(this).ShowDialog();
+            InitCommunicationConnection();
         }
 
         public bool Open()
@@ -2558,10 +2705,10 @@ namespace _3DLaserGlueInspection
                 if (_isOpen)
                     return true;
 
-                robot = new TCP_Client(
+                robot = new UDP(
                     _param.IpAddress,
-                    _param.Port);
-
+                    0);
+                robot.LocalPort = _param.Port;
                 /*
                  * TCP_Client 的后台接收线程收到数据后，
                  * 会调用 ProcessInfo。
@@ -2885,13 +3032,33 @@ namespace _3DLaserGlueInspection
             out bool value)
         {
             value = false;
+            switch (eDI.ToString())
+            {
+                case "Start":
+                    value = isStart;
+                    return true;
+                case "Abort":
+                    value = isAbort;
+                    return true;
+                case "PGON":
+                    value = isPGON;
+                    return true;
+                case "isStartEnd":
+                    value = isStartEnd;
+                    return true;
+                case "isPGONEnd":
+                    value = isPGONEnd;
+                    return true;
+                case "END":
+                    value = isEND;
+                    return true;
 
-            if (!Read(eDI, out string text))
-                return false;
+                default:
+                    _errMsg = eDI.ToString() + _3DLaserGlueInspection.Resources.LanguageDict.AddressNotAssigned;
+                    break;
+            }
 
-            return TryParseBool(
-                text,
-                out value);
+            return false;
         }
 
         public bool Read(
@@ -2913,13 +3080,18 @@ namespace _3DLaserGlueInspection
             out ushort value)
         {
             value = 0;
+            switch (eDI.ToString())
+            {
+                case "CarNumber":
+                    value = (ushort)CarNumber;
+                    return true;
 
-            if (!Read(eDI, out string text))
-                return false;
+                default:
+                    _errMsg = eDI.ToString() + _3DLaserGlueInspection.Resources.LanguageDict.AddressNotAssigned;
+                    break;
+            }
 
-            return TryParseUShort(
-                text,
-                out value);
+            return false;
         }
 
         public bool Read(
@@ -2942,20 +3114,19 @@ namespace _3DLaserGlueInspection
         public bool Write(
             DO eDO,
             object value)
+    
         {
-            string command ="";
-
-            string response;
-
-            if (!TrySendAndWait(
-                command,
-                IsWriteResponse,
-                out response))
+            switch (eDO.ToString())
             {
-                return false;
-            }
+                case "Result":
+                    SocketSend((int)value);
+                    return true;
 
-            return IsSuccessResponse(response);
+                default:
+                    _errMsg = eDO.ToString() + _3DLaserGlueInspection.Resources.LanguageDict.AddressNotAssigned;
+                    break;
+            }
+            return false;
         }
 
         private bool TryParseBool(

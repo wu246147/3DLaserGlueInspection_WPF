@@ -77,9 +77,12 @@ namespace _3DLaserGlueInspection
                     break;
                 case RobotType.KukaRobot:
                     model.robot = new KukaRobot();
+                    ((KukaRobot) model.robot).InitCommunicationConnection();
                     break;
                 case RobotType.KawasakiRobot:
                     model.robot = new KawasakiRobot();
+                    ((KawasakiRobot)model.robot).InitCommunicationConnection();
+
                     break;
             }
 

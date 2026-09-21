@@ -63,6 +63,9 @@ namespace _3DLaserGlueInspection.subForm
         Wpf_Replace_halcon.PoseParameters lastRobotPose = new PoseParameters();     //上一张图片的机器人位姿
 
         SynchronizedList<long> robotPoseKeys = new SynchronizedList<long>();
+        // 姿态文件格式属于整次采集数据，而不是当前选中的相机。
+        // true 表示文件中的姿态包含 R7，false 表示旧的六轴格式，null 表示尚未成功加载。
+        bool? recordedRobotPoseHasR7 = null;
         SynchronizedList<PoseParameters> robotPoseValues = new SynchronizedList<PoseParameters>();  //机器人位姿
         SynchronizedList<Dictionary<string, SynchronizedList<long>>> ImageKeys = new SynchronizedList<Dictionary<string, SynchronizedList<long>>>();//指示拍照位置
         SynchronizedList<Dictionary<string, Dictionary<long, Mat>>> Images = new SynchronizedList<Dictionary<string, Dictionary<long, Mat>>>();//分段-相机-时间-图片
@@ -374,6 +377,72 @@ namespace _3DLaserGlueInspection.subForm
                 System.Windows.Forms.MessageBox.Show("Seven-axis Cam1ToBase prediction failed: " + error);
                 return false;
             }
+            return true;
+        }
+
+        // CamHandEyeType 按相机参数组保存。这里必须读取当前车型对应的参数组，
+        // 不能使用“所有相机中是否存在七轴相机”的全局判断。
+        private bool TryGetCurrentCameraHandEyeType(out CameraHandEyeType handEyeType)
+        {
+            handEyeType = CameraHandEyeType.EyeInHand;
+            if (Params == null || string.IsNullOrWhiteSpace(CamParamName)
+                || !Params.CamHandEyeType.TryGetValue(CamParamName, out handEyeType))
+            {
+                System.Windows.Forms.MessageBox.Show("The hand-eye type of the current camera is missing.");
+                return false;
+            }
+
+            return true;
+        }
+
+        // 七轴相机必须使用带 R7 的采集数据。普通相机可以读取带 R7 的文件，
+        // 但后续坐标转换不会使用 R7。
+        private bool ValidateCurrentCameraRobotPoseFormat(CameraHandEyeType handEyeType)
+        {
+            if (handEyeType != CameraHandEyeType.SevenAxis)
+                return true;
+
+            if (recordedRobotPoseHasR7 != true)
+            {
+                System.Windows.Forms.MessageBox.Show(
+                    "The selected seven-axis camera requires robot pose data containing R7.");
+                return false;
+            }
+
+            return true;
+        }
+
+        // robotPoseValues.xml 的格式由当前相机类型决定：普通相机为 7 个字段，
+        // 七轴相机为 8 个字段。读取时严格校验，避免把 R7 误当成 PoseType。
+        private static bool TryValidateRecordedRobotPoseFormat(
+            IEnumerable<double[]> rawPoses, bool sevenAxis, out string error)
+        {
+            error = null;
+
+            if (rawPoses == null)
+            {
+                error = "Recorded robot pose data is null.";
+                return false;
+            }
+
+            int expectedLength = sevenAxis ? 8 : 7;
+            int poseIndex = 0;
+            foreach (double[] rawPose in rawPoses)
+            {
+                poseIndex++;
+                if (rawPose == null || rawPose.Length != expectedLength)
+                {
+                    error = $"Robot pose {poseIndex} must contain exactly {expectedLength} values for the selected camera.";
+                    return false;
+                }
+            }
+
+            if (poseIndex == 0)
+            {
+                error = "Recorded robot pose data is empty.";
+                return false;
+            }
+
             return true;
         }
         private void TextBox_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
@@ -1090,7 +1159,18 @@ namespace _3DLaserGlueInspection.subForm
                             return;
                         }
 
-                        if (Params.CamHandEyeType[CamParamName] == CameraHandEyeType.EyeInHand)
+                        if (!TryGetCurrentCameraHandEyeType(out CameraHandEyeType handEyeType)
+                            || !ValidateCurrentCameraRobotPoseFormat(handEyeType))
+                        {
+                            return;
+                        }
+                        if (handEyeType == CameraHandEyeType.SevenAxis && currentRobotPose == null)
+                        {
+                            System.Windows.Forms.MessageBox.Show("The current image has no valid robot pose containing R7.");
+                            return;
+                        }
+
+                        if (handEyeType == CameraHandEyeType.EyeInHand)
                         {
                             if (!Params.Cam1ToTool.TryGetValue(CamParamName, out var CamToTools) || !CamToTools.TryGetValue(camKey, out Cam1ToTool))
                             {
@@ -1100,7 +1180,7 @@ namespace _3DLaserGlueInspection.subForm
                             //Cam1ToTool = Params.Cam1ToTool[CamParamName][camKey];
                             CamToTool = Cam1ToTool * CamToCam1;
                         }
-                        else if (Params.CamHandEyeType[CamParamName] == CameraHandEyeType.SevenAxis)
+                        else if (handEyeType == CameraHandEyeType.SevenAxis)
                         {
                             if (!Params.CenterToCam1.TryGetValue(CamParamName, out var CenterToCam1s)
                                 || !CenterToCam1s.TryGetValue(camKey, out CenterToCam1))
@@ -1131,7 +1211,7 @@ namespace _3DLaserGlueInspection.subForm
                         }
 
 
-                        robotAndCamAngle = Vision.GetRobotAndCamAngle(SevenAxisRobotSupport.GetLegacyAngleType(Params.CamHandEyeType[CamParamName]), CamToCam1, CenterToCam1, Cam1ToBase, CamToTool, currentRobotPose, lastRobotPose, null);
+                        robotAndCamAngle = Vision.GetRobotAndCamAngle(SevenAxisRobotSupport.GetLegacyAngleType(handEyeType), CamToCam1, CenterToCam1, Cam1ToBase, CamToTool, currentRobotPose, lastRobotPose, null);
 
 
                         robotAndCamAngleNumericUpDown.Text = robotAndCamAngle.ToString("F5");
@@ -1540,6 +1620,9 @@ namespace _3DLaserGlueInspection.subForm
 
         private void dataScoreComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // 无论是否选中了新的数据源，都不能沿用上一次数据源的姿态格式状态。
+            recordedRobotPoseHasR7 = null;
+
             //数据清空
             robotPoseKeys.Clear();
             robotPoseValues.Clear();
@@ -1600,6 +1683,8 @@ namespace _3DLaserGlueInspection.subForm
                 }
                 try
                 {
+                    // 切换数据源时先清除格式状态，只有完整解析成功后才写入新状态。
+                    recordedRobotPoseHasR7 = null;
                     string robotPoseValuesPath = $"{basePath}\\robotPoseValues.xml";
                     if (File.Exists(robotPoseValuesPath))
                     {
@@ -1609,19 +1694,46 @@ namespace _3DLaserGlueInspection.subForm
                             var paramList = (SynchronizedList<double[]>)xml.Deserialize(stream);
                             if (paramList != null)
                             {
-                                robotPoseValues.Clear();
-                                //robotPoseValues = paramList;
+                                // 数据源可以来自不同车型，姿态字段必须按当前相机类型读取。
+                                if (!TryGetCurrentCameraHandEyeType(out CameraHandEyeType dataHandEyeType))
+                                {
+                                    return;
+                                }
+                                bool dataHasR7 = dataHandEyeType == CameraHandEyeType.SevenAxis;
+                                if (!TryValidateRecordedRobotPoseFormat(
+                                    paramList, dataHasR7, out string formatError))
+                                {
+                                    System.Windows.Forms.MessageBox.Show(robotPoseValuesPath + ": " + formatError);
+                                    return;
+                                }
+
+                                // 先解析到临时列表，避免中途遇到坏数据时留下半套姿态。
+                                List<PoseParameters> parsedRobotPoses = new List<PoseParameters>();
                                 foreach (var pose in paramList)
                                 {
                                     if (!SevenAxisRobotSupport.TryReadRecordedPose(
-                                        pose, SevenAxisRobotSupport.HasSevenAxisRobot(Params),
+                                        pose, dataHasR7,
                                         out PoseParameters posePara, out string poseError))
                                     {
                                         System.Windows.Forms.MessageBox.Show(robotPoseValuesPath + ": " + poseError);
                                         return;
                                     }
+                                    parsedRobotPoses.Add(posePara);
+                                }
+
+                                if (robotPoseKeys.Count != parsedRobotPoses.Count)
+                                {
+                                    System.Windows.Forms.MessageBox.Show(
+                                        robotPoseValuesPath + ": robot pose keys and values have different lengths.");
+                                    return;
+                                }
+
+                                robotPoseValues.Clear();
+                                foreach (PoseParameters posePara in parsedRobotPoses)
+                                {
                                     robotPoseValues.Add(posePara);
                                 }
+                                recordedRobotPoseHasR7 = dataHasR7;
                             }
                             else
                             {
@@ -1840,8 +1952,19 @@ namespace _3DLaserGlueInspection.subForm
                 return;
             }
 
+            if (!TryGetCurrentCameraHandEyeType(out CameraHandEyeType handEyeType)
+                || !ValidateCurrentCameraRobotPoseFormat(handEyeType))
+            {
+                return;
+            }
+            if (handEyeType == CameraHandEyeType.SevenAxis && currentRobotPose == null)
+            {
+                System.Windows.Forms.MessageBox.Show("The current image has no valid robot pose containing R7.");
+                return;
+            }
+
             //根据情况提取手眼标定参数
-            if (Params.CamHandEyeType[CamParamName] == CameraHandEyeType.EyeInHand)
+            if (handEyeType == CameraHandEyeType.EyeInHand)
             {
                 if (!Params.Cam1ToTool.TryGetValue(CamParamName, out var CamToTools) || !CamToTools.TryGetValue(camKey, out Cam1ToTool))
                 {
@@ -1851,7 +1974,7 @@ namespace _3DLaserGlueInspection.subForm
                 Cam1ToTool = Params.Cam1ToTool[CamParamName][camKey];
                 CamToTool = Cam1ToTool * CamToCam1;
             }
-            else if (Params.CamHandEyeType[CamParamName] == CameraHandEyeType.SevenAxis)
+            else if (handEyeType == CameraHandEyeType.SevenAxis)
             {
                 if (!TryPredictSevenAxisCam1ToBase(CamParamName, camKey, currentRobotPose.R7, out Cam1ToBase))
                     return;
@@ -1936,7 +2059,7 @@ namespace _3DLaserGlueInspection.subForm
                     //{
 
 
-                    if (Params.CamHandEyeType[CamParamName] == CameraHandEyeType.EyeInHand)
+                    if (handEyeType == CameraHandEyeType.EyeInHand)
                     {
                         Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToTool,
                     currentRobotPose, out lightXY, out robotX, out robotY, out robotZ);
@@ -2490,13 +2613,19 @@ namespace _3DLaserGlueInspection.subForm
                          || !Params.CamToCam1.TryGetValue(CamParamName, out var CamToCam1s) || !CamToCam1s.TryGetValue(camKey, out var CamToCam1)
                          || !Params.CenterToCam1.TryGetValue(CamParamName, out var CenterToCam1s) || !CenterToCam1s.TryGetValue(camKey, out var CenterToCam1))
 
+                         {
+                             System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoCameraParameters);
+                             goto showCamPoseFinish;
+                         }
+
+                        if (!TryGetCurrentCameraHandEyeType(out CameraHandEyeType handEyeType)
+                            || !ValidateCurrentCameraRobotPoseFormat(handEyeType))
                         {
-                            System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoCameraParameters);
                             goto showCamPoseFinish;
                         }
 
                         //根据情况提取手眼标定参数
-                        if (Params.CamHandEyeType[CamParamName] == CameraHandEyeType.EyeInHand)
+                        if (handEyeType == CameraHandEyeType.EyeInHand)
                         {
                             if (!Params.Cam1ToTool.TryGetValue(CamParamName, out var CamToTools) || !CamToTools.TryGetValue(camKey, out Cam1ToTool))
                             {
@@ -2506,7 +2635,7 @@ namespace _3DLaserGlueInspection.subForm
                             Cam1ToTool = Params.Cam1ToTool[CamParamName][camKey];
                             CamToTool = Cam1ToTool * CamToCam1;
                         }
-                        else if (Params.CamHandEyeType[CamParamName] == CameraHandEyeType.EyeToHand)
+                        else if (handEyeType == CameraHandEyeType.EyeToHand)
                         {
                             if (!Params.Cam1ToBase.TryGetValue(CamParamName, out var Cam1ToBases) || !Cam1ToBases.TryGetValue(camKey, out Cam1ToBase))
                             {
@@ -2518,7 +2647,7 @@ namespace _3DLaserGlueInspection.subForm
                             CamToBase = Cam1ToBase * CamToCam1;
 
                         }
-                        else if (Params.CamHandEyeType[CamParamName] == CameraHandEyeType.SevenAxis)
+                        else if (handEyeType == CameraHandEyeType.SevenAxis)
                         {
                             // Cam1ToBase is predicted separately for every recorded R7 value.
                         }
@@ -2526,7 +2655,7 @@ namespace _3DLaserGlueInspection.subForm
                         for (int i = 0; i < robotPoseValues.Count; i++)
                         {
                             var dictRobotPoseVal = robotPoseValues[i];
-                            if (Params.CamHandEyeType[CamParamName] == CameraHandEyeType.SevenAxis)
+                            if (handEyeType == CameraHandEyeType.SevenAxis)
                             {
                                 Mat predictedCam1ToBase;
                                 if (!TryPredictSevenAxisCam1ToBase(CamParamName, camKey, dictRobotPoseVal.R7, out predictedCam1ToBase))
@@ -2535,7 +2664,7 @@ namespace _3DLaserGlueInspection.subForm
                                 Cam1ToBase = predictedCam1ToBase;
                             }
 
-                            if (Params.CamHandEyeType[CamParamName] == CameraHandEyeType.EyeInHand)
+                            if (handEyeType == CameraHandEyeType.EyeInHand)
                             {
                                 //改为添加相机中心的坐标
                                 Mat ToolToBase = new Mat();
@@ -2624,7 +2753,7 @@ namespace _3DLaserGlueInspection.subForm
                                                                    (imageKey - robotPoseKeys[indexRobotPose - 1]) /
                                                                    (double)(robotPoseKeys[indexRobotPose] - robotPoseKeys[indexRobotPose - 1])
                                                                    );
-                            if (Params.CamHandEyeType[CamParamName] == CameraHandEyeType.SevenAxis)
+                            if (handEyeType == CameraHandEyeType.SevenAxis)
                             {
                                 Mat predictedCam1ToBase;
                                 if (!TryPredictSevenAxisCam1ToBase(CamParamName, camKey, robotPose.R7, out predictedCam1ToBase))
@@ -2634,7 +2763,7 @@ namespace _3DLaserGlueInspection.subForm
                             }
 
                             //计算相机位姿
-                            if (Params.CamHandEyeType[CamParamName] == CameraHandEyeType.EyeInHand)
+                            if (handEyeType == CameraHandEyeType.EyeInHand)
                             {
                                 Mat ToolToBase = new Mat();
                                 Vision.poseToHomMat3d(robotPose.PoseType, robotPose.x, robotPose.y, robotPose.z, robotPose.rx, robotPose.ry, robotPose.rz, ToolToBase.CvPtr);
@@ -2719,10 +2848,21 @@ namespace _3DLaserGlueInspection.subForm
                                 return;
                             }
 
+                            if (!TryGetCurrentCameraHandEyeType(out CameraHandEyeType handEyeType)
+                                || !ValidateCurrentCameraRobotPoseFormat(handEyeType))
+                            {
+                                return;
+                            }
+                            if (handEyeType == CameraHandEyeType.SevenAxis && currentRobotPose == null)
+                            {
+                                System.Windows.Forms.MessageBox.Show("The current image has no valid robot pose containing R7.");
+                                return;
+                            }
+
                             //根据情况提取手眼标定参数
                             double row = 0, col = 0, angle = 0;
 
-                            if (Params.CamHandEyeType[CamParamName] == CameraHandEyeType.EyeInHand)
+                            if (handEyeType == CameraHandEyeType.EyeInHand)
                             {
                                 if (!Params.Cam1ToTool.TryGetValue(CamParamName, out var CamToTools) || !CamToTools.TryGetValue(camKey, out Cam1ToTool))
                                 {
@@ -2732,7 +2872,7 @@ namespace _3DLaserGlueInspection.subForm
                                 Cam1ToTool = Params.Cam1ToTool[CamParamName][camKey];
                                 CamToTool = Cam1ToTool * CamToCam1;
                             }
-                            else if (Params.CamHandEyeType[CamParamName] == CameraHandEyeType.SevenAxis)
+                            else if (handEyeType == CameraHandEyeType.SevenAxis)
                             {
                                 if (!TryPredictSevenAxisCam1ToBase(CamParamName, camKey, currentRobotPose.R7, out Cam1ToBase))
                                     return;
@@ -2753,7 +2893,7 @@ namespace _3DLaserGlueInspection.subForm
 
                             Wpf_Replace_halcon.PoseParameters CamCenter3DPose = new PoseParameters();
                             //转为机器人坐标
-                            if (Params.CamHandEyeType[CamParamName] == CameraHandEyeType.EyeInHand)
+                            if (handEyeType == CameraHandEyeType.EyeInHand)
                             {
                                 //改为添加相机中心的坐标
                                 Mat ToolToBase = new Mat();
@@ -2860,6 +3000,12 @@ namespace _3DLaserGlueInspection.subForm
         }
         private void get3DDataButton_Click(object sender, RoutedEventArgs e)
         {
+            if (!TryGetCurrentCameraHandEyeType(out CameraHandEyeType handEyeType)
+                || !ValidateCurrentCameraRobotPoseFormat(handEyeType))
+            {
+                return;
+            }
+
             _3DShowControl.ClearPointCloud();
             Thread.Sleep(100);
 
@@ -2993,7 +3139,7 @@ namespace _3DLaserGlueInspection.subForm
                             }
 
                             //根据情况提取手眼标定参数
-                            if (Params.CamHandEyeType[CamParamName] == CameraHandEyeType.EyeInHand)
+                            if (handEyeType == CameraHandEyeType.EyeInHand)
                             {
                                 if (!Params.Cam1ToTool.TryGetValue(CamParamName, out var CamToTools) || !CamToTools.TryGetValue(camKey, out Cam1ToTool))
                                 {
@@ -3003,7 +3149,7 @@ namespace _3DLaserGlueInspection.subForm
                                 Cam1ToTool = Params.Cam1ToTool[CamParamName][camKey];
                                 CamToTool = Cam1ToTool * CamToCam1;
                             }
-                            else if (Params.CamHandEyeType[CamParamName] == CameraHandEyeType.EyeToHand)
+                            else if (handEyeType == CameraHandEyeType.EyeToHand)
                             {
                                 if (!Params.Cam1ToBase.TryGetValue(CamParamName, out var Cam1ToBases) || !Cam1ToBases.TryGetValue(camKey, out Cam1ToBase))
                                 {
@@ -3015,7 +3161,7 @@ namespace _3DLaserGlueInspection.subForm
                                 CamToBase = Cam1ToBase * CamToCam1;
 
                             }
-                            else if (Params.CamHandEyeType[CamParamName] == CameraHandEyeType.SevenAxis)
+                            else if (handEyeType == CameraHandEyeType.SevenAxis)
                             {
                                 // Cam1ToBase is predicted below for each recorded R7 value.
                             }
@@ -3046,7 +3192,7 @@ namespace _3DLaserGlueInspection.subForm
                                                                    );
                             // 计算机器人移动距离
                             // For seven-axis robots, R7 changes the camera-to-base matrix for every frame.
-                            if (Params.CamHandEyeType[CamParamName] == CameraHandEyeType.SevenAxis)
+                            if (handEyeType == CameraHandEyeType.SevenAxis)
                             {
                                 Mat predictedCam1ToBase;
                                 if (!TryPredictSevenAxisCam1ToBase(CamParamName, camKey, robotPose.R7, out predictedCam1ToBase))
@@ -3067,7 +3213,7 @@ namespace _3DLaserGlueInspection.subForm
                             }
 
                             //三维数据添加(机器人坐标)
-                            if (Params.CamHandEyeType[CamParamName] == CameraHandEyeType.EyeInHand)
+                            if (handEyeType == CameraHandEyeType.EyeInHand)
                             {
                                 //改为添加相机中心的坐标
                                 Mat ToolToBase = new Mat();
@@ -3165,7 +3311,7 @@ namespace _3DLaserGlueInspection.subForm
 
                                         Mat robotPoseMat = new Mat();
 
-                                        robotAndCamAngle = Vision.GetRobotAndCamAngle(SevenAxisRobotSupport.GetLegacyAngleType(Params.CamHandEyeType[CamParamName]), CamToCam1, CenterToCam1, Cam1ToBase, CamToTool, robotPose, lastRobotPose);
+                                        robotAndCamAngle = Vision.GetRobotAndCamAngle(SevenAxisRobotSupport.GetLegacyAngleType(handEyeType), CamToCam1, CenterToCam1, Cam1ToBase, CamToTool, robotPose, lastRobotPose);
 
 
                                     }
@@ -3180,7 +3326,7 @@ namespace _3DLaserGlueInspection.subForm
                                         List<double> robotX, robotY, robotZ, colorScale;
 
                                         ////测试
-                                        if (Params.CamHandEyeType[CamParamName] == CameraHandEyeType.EyeInHand)
+                                        if (handEyeType == CameraHandEyeType.EyeInHand)
                                         {
                                             
                                             Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToTool,
@@ -3373,6 +3519,12 @@ namespace _3DLaserGlueInspection.subForm
 
         private void runButton_Click(object sender, RoutedEventArgs e)
         {
+            if (!TryGetCurrentCameraHandEyeType(out CameraHandEyeType handEyeType)
+                || !ValidateCurrentCameraRobotPoseFormat(handEyeType))
+            {
+                return;
+            }
+
             camKey = null;
 
             if (cutSetListBox.SelectedIndex >= 0 && selectCamListBox.SelectedIndex >= 0 && selectPictureListBox.SelectedIndex >= 0)
@@ -3519,7 +3671,7 @@ namespace _3DLaserGlueInspection.subForm
                                 {
                                     Vision.TrajectoryDiscreteFilter(points, out hXLDCont10mm3D, imageSet.分段距离 * cutSet.scaleSize, imageSet.成段点数);
                                 }
-             else if (Params.CamHandEyeType[CamParamName] == CameraHandEyeType.EyeToHand || Params.CamHandEyeType[CamParamName] == CameraHandEyeType.SevenAxis)
+             else if (handEyeType == CameraHandEyeType.EyeToHand || handEyeType == CameraHandEyeType.SevenAxis)
                                 {
                                     hXLDCont10mm3D = points.Clone();
                                 }
@@ -3619,13 +3771,19 @@ namespace _3DLaserGlueInspection.subForm
              || !Params.CamToCam1.TryGetValue(CamParamName, out var CamToCam1s) || !CamToCam1s.TryGetValue(camKey, out var CamToCam1)
              || !Params.CenterToCam1.TryGetValue(CamParamName, out var CenterToCam1s) || !CenterToCam1s.TryGetValue(camKey, out var CenterToCam1))
 
+             {
+                 System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoCameraParameters);
+                 return;
+             }
+
+            if (!TryGetCurrentCameraHandEyeType(out CameraHandEyeType handEyeType)
+                || !ValidateCurrentCameraRobotPoseFormat(handEyeType))
             {
-                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoCameraParameters);
                 return;
             }
 
             //根据情况提取手眼标定参数
-            if (Params.CamHandEyeType[CamParamName] == CameraHandEyeType.EyeInHand)
+            if (handEyeType == CameraHandEyeType.EyeInHand)
             {
                 if (!Params.Cam1ToTool.TryGetValue(CamParamName, out var CamToTools) || !CamToTools.TryGetValue(camKey, out Cam1ToTool))
                 {
@@ -3635,7 +3793,7 @@ namespace _3DLaserGlueInspection.subForm
                 Cam1ToTool = Params.Cam1ToTool[CamParamName][camKey];
                 CamToTool = Cam1ToTool * CamToCam1;
             }
-             else if (Params.CamHandEyeType[CamParamName] == CameraHandEyeType.EyeToHand)
+             else if (handEyeType == CameraHandEyeType.EyeToHand)
             {
                 if (!Params.Cam1ToBase.TryGetValue(CamParamName, out var Cam1ToBases) || !Cam1ToBases.TryGetValue(camKey, out Cam1ToBase))
                 {
@@ -3656,7 +3814,7 @@ namespace _3DLaserGlueInspection.subForm
 
             //Dictionary<string, Task> tasks = new Dictionary<string, Task>();
             //开始检测
-            if (Params.CamHandEyeType[CamParamName] == CameraHandEyeType.SevenAxis)
+            if (handEyeType == CameraHandEyeType.SevenAxis)
             {
                 if (!TryPredictSevenAxisCam1ToBase(CamParamName, camKey, currentRobotPose.R7, out Cam1ToBase))
                     return;
@@ -3716,7 +3874,7 @@ namespace _3DLaserGlueInspection.subForm
 
 
 
-                        if (Params.CamHandEyeType[CamParamName] == CameraHandEyeType.EyeInHand)
+                        if (handEyeType == CameraHandEyeType.EyeInHand)
                         {
                             Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToTool,
                         currentRobotPose, out lightXY, out robotX, out robotY, out robotZ);
