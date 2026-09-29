@@ -737,7 +737,7 @@ Converter={StaticResource ResultColor}}" />
                                     Width="*"
                                     Binding="{Binding GlueV}"
                                     Foreground="White"
-                                    Header="{x:Static resx:LanguageDict.GlueV}" />              
+                                    Header="{x:Static resx:LanguageDict.GlueV}" />
                                 <DataGridTextColumn
                                     Width="*"
                                     Binding="{Binding GlueLenth}"
@@ -860,7 +860,7 @@ Converter={StaticResource ResultColor}}" />
                 HorizontalAlignment="Left"
                 Background="#FF3C4451"
                 Foreground="#FFFDFEFF" Height="48">
-                
+
                 <Menu.Resources>
                     <!-- 设置横向菜单项的 Padding -->
                     <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
@@ -945,6 +945,15 @@ Converter={StaticResource ResultColor}}" />
                         Header="English"  IsCheckable="True" Click="MenuItem_englishLanguage_Click"  />
                 </MenuItem>
             </Menu>
+            <CheckBox
+                x:Name="DemoCheck"
+                Margin="0,0,28,0"
+                VerticalAlignment="Center"
+                Content="空跑"
+                Foreground="White"
+                IsChecked="False"
+                Visibility="Hidden"
+                Unchecked="DemoCheck_Checked" Checked="DemoCheck_Checked" HorizontalAlignment="Right" Width="44" />
         </Grid>
 
     </Grid>

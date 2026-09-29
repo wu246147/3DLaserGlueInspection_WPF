@@ -242,7 +242,7 @@ namespace _3DLaserGlueInspection
                 model.mainModel.buttonRunTagControl = "\uE67A";
 
                 //禁止菜单
-                MenuItem_paraSetting.IsEnabled = false;
+                //MenuItem_paraSetting.IsEnabled = false;
                 MenuItem_standardBlockTest.IsEnabled = false;
                 MenuItem_signalSetting.IsEnabled = false;
                 MenuItem_camSetting.IsEnabled = false;
@@ -259,7 +259,7 @@ namespace _3DLaserGlueInspection
                 model.mainModel.buttonRunTagControl = "\uE658";
 
                 //允许菜单
-                MenuItem_paraSetting.IsEnabled = true;
+                //MenuItem_paraSetting.IsEnabled = true;
                 MenuItem_standardBlockTest.IsEnabled = true;
                 MenuItem_signalSetting.IsEnabled = true;
                 MenuItem_camSetting.IsEnabled = true;
@@ -280,11 +280,14 @@ namespace _3DLaserGlueInspection
                 {
                     simulationCheck.Visibility = Visibility.Hidden;
                     simulationPath.Visibility = Visibility.Hidden;
+                    DemoCheck.Visibility = Visibility.Hidden;
                 }
                 else
                 {
                     simulationCheck.Visibility = Visibility.Visible;
                     simulationPath.Visibility = Visibility.Visible;
+                    DemoCheck.Visibility = Visibility.Visible;
+
                 }
             }
         }
@@ -620,6 +623,11 @@ namespace _3DLaserGlueInspection
         private void menuItem_custom_Click(object sender, RoutedEventArgs e)
         {
 
+        }
+
+        private void DemoCheck_Checked(object sender, RoutedEventArgs e)
+        {
+            model.isDemoMode = (bool)DemoCheck.IsChecked;
         }
 
         //void ShowImageData(int showWidth, int showHeight, Mat hXLDCont10mm)

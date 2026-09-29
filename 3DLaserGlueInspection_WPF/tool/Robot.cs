@@ -2317,14 +2317,14 @@ namespace _3DLaserGlueInspection
                  */
                 int total = parts.Length;
 
-                X = SafeFloat(total - 9);
-                Y = SafeFloat(total - 8);
-                Z = SafeFloat(total - 7);
-                RX = SafeFloat(total - 6);
-                RY = SafeFloat(total - 5);
-                RZ = SafeFloat(total - 4);
-
-                R7 = SafeFloat(total - 3);
+                // ---- 末端位姿 X,Y,Z,RX,RY,RZ (倒数第 7~2 位) ----
+                X = SafeFloat(total - 14);   // -2446.65137
+                Y = SafeFloat(total - 13);   // 218.11565
+                Z = SafeFloat(total - 12);   // 2085.89941
+                RX = SafeFloat(total - 11);   // 87.2569
+                RY = SafeFloat(total - 10);   // 86.23324
+                RZ = SafeFloat(total - 9);   // -3.54589
+                R7 = SafeFloat(total - 8);
 
                 /*
                  * Kawasaki 使用 ZYZ，
@@ -2461,7 +2461,7 @@ namespace _3DLaserGlueInspection
                 //车型
                 int programId , commandId , pointId;
 
-                deserializationInfoServer(info, out programId, out commandId, out pointId);
+                deserializationInfoServer(info, out commandId, out programId, out pointId);
 
                 CarNumber = programId;
                 switch (commandId)

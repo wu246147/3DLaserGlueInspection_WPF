@@ -120,6 +120,9 @@ namespace _3DLaserGlueInspection
         public IHsl plc ;
         public PlcType plcType = PlcType.ToyotaPlc;
 
+        // 空跑模式
+        public bool isDemoMode = false;
+
         public MainWindowModel()
         {
             LoadCommunicationTypes();
@@ -427,7 +430,7 @@ namespace _3DLaserGlueInspection
                         ((KawasakiRobot)robot).resetSignal();
                         break;
                 }
-                
+
 
                 while (!stop)
                 {
@@ -457,7 +460,7 @@ namespace _3DLaserGlueInspection
                         }
                         else
                         {
-                            ShowMessage(robot.ErrMsg,LogType.warn);
+                            ShowMessage(robot.ErrMsg, LogType.warn);
                             return;
                         }
                         Thread.Sleep(60);
@@ -476,8 +479,8 @@ namespace _3DLaserGlueInspection
                             break;
                     }
 
-                   
-                    
+
+
 
 
                     ushort ID;
@@ -496,14 +499,14 @@ namespace _3DLaserGlueInspection
                         if (!robot.Write(DO.Result, 1)) return;
 
                         //SocketSend(0);
-                       
+
                     }
                     else
                     {
                         if (!robot.Write(DO.Result, -1)) return;
                         //SocketSend(-1);
                         return;
-                    } 
+                    }
 
                     if (stop) return;
 
@@ -635,7 +638,7 @@ namespace _3DLaserGlueInspection
 
                                 var dictResultCenter3DPoint = new Dictionary<long, Point3D>();
                                 ResultCenter3DPoint[item.Key].Add(dictResultCenter3DPoint);
-                                
+
 
                                 var dictX = new Dictionary<long, List<double>>();
                                 Point3DXs[item.Key].Add(dictX);
@@ -661,7 +664,7 @@ namespace _3DLaserGlueInspection
 
                                 var dict2DCheckPoint = new Dictionary<long, System.Windows.Point>();
                                 glue2DCheckPoint[item.Key].Add(dict2DCheckPoint);
-                                
+
 
 
                                 var glueLenth = -1;
@@ -774,19 +777,19 @@ namespace _3DLaserGlueInspection
                                                     dictImage.Add(key, image);
                                                     dictImageKey.Add(key);
                                                     image = null;
-                                                    
+
 
                                                     double fps = dictImageKey.Count * 1000.0 * 1000.0 / key;
                                                     //Console.WriteLine("fps:{0}", fps);
 
-                                                    
+
                                                 }
                                                 else
                                                 {
                                                     // 已达到当前段的采集数量，当前帧不再入队。
                                                     image?.Dispose();
                                                 }
-                                                }
+                                            }
                                         }));
                                         if (flag)
                                         {
@@ -911,7 +914,7 @@ namespace _3DLaserGlueInspection
                                                                 dictImage.Add(key, image);
                                                                 dictImageKey.Add(key);
                                                                 image = null;
-                                                                
+
 
                                                             }
                                                             catch (Exception ex)
@@ -965,7 +968,7 @@ namespace _3DLaserGlueInspection
                                 if (val == true)
                                 {
                                     ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedEndSignalExitThePhotoLoop, LogType.warn);
-                         
+
                                     break;
                                 }
                             }
@@ -980,7 +983,7 @@ namespace _3DLaserGlueInspection
                                 if (val == true)
                                 {
                                     ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedAbortSignalProcessRestarts, LogType.warn);
-                   
+
                                     break;
                                 }
                             }
@@ -1053,7 +1056,7 @@ namespace _3DLaserGlueInspection
 
                         //回复触发OFF信号
 
-                        if (partResult)
+                        if (partResult || isDemoMode)
                         {
                             //SocketSend(0);
                             if (!robot.Write(DO.Result, 1)) return;
@@ -1174,7 +1177,7 @@ namespace _3DLaserGlueInspection
                     //获取胶长结果
                     double glueLenthShow = -1;
                     //目前只支持检测一个胶长，显示也只显示一个
-                    for (int i = 0; i < set.CutSets.Count;i++)
+                    for (int i = 0; i < set.CutSets.Count; i++)
                     {
                         if (set.CutSets[i].glueLenthDetEnable)
                         {
@@ -1186,7 +1189,7 @@ namespace _3DLaserGlueInspection
                                     glueLenthShow = item2.Value[i];
                                     break;
                                 }
-                                
+
                             }
                         }
                         //只取所有段的第一个
@@ -1226,7 +1229,7 @@ namespace _3DLaserGlueInspection
 
                         if (glueLenthShow != -1)
                         {
-                            carResultRecord.GlueLenth = glueLenthShow.ToString("f2") +"mm";
+                            carResultRecord.GlueLenth = glueLenthShow.ToString("f2") + "mm";
                         }
                         else
                         {
@@ -1334,10 +1337,10 @@ namespace _3DLaserGlueInspection
                                     foreach (var camKey in glueDataDict.Keys)
                                     {
                                         //sql.InsertRow(sql.Database + ".测点数据表", sqlValuePairs[item]);
-                                       for (int segID = 0; segID < glueDataDict[camKey].Count; segID++)
-                                       {
-                                           foreach (var imgID in glueDataDict[camKey][segID].Keys)
-                                           {
+                                        for (int segID = 0; segID < glueDataDict[camKey].Count; segID++)
+                                        {
+                                            foreach (var imgID in glueDataDict[camKey][segID].Keys)
+                                            {
                                                 Dictionary<string, string> sqlValue = new Dictionary<string, string>
                                                {
                                                     { "时间", dateTime.ToString("yyyy-MM-dd HH:mm:ss") },
@@ -1349,11 +1352,11 @@ namespace _3DLaserGlueInspection
                                                      { "胶宽", glueDataDict[camKey][segID][imgID].glueWidth.ToString() },
                                                      { "胶高", glueDataDict[camKey][segID][imgID].glueHeight.ToString() },
                                                      { "胶面积", glueDataDict[camKey][segID][imgID].glueArea.ToString() },
-                                                     { "检测结果", glueResultDict[camKey][segID][imgID].Result?"1":"0" },                                                   
+                                                     { "检测结果", glueResultDict[camKey][segID][imgID].Result?"1":"0" },
                                                };
                                                 sql.InsertRow(sql.Database + ".测点数据表", sqlValue);
                                             }
-                                       }
+                                        }
 
                                     }
 
@@ -1431,7 +1434,7 @@ namespace _3DLaserGlueInspection
                             ((KawasakiRobot)robot).resetSignal();
                             break;
                     }
-                    if (totalResult)
+                    if (totalResult || isDemoMode)
                     {
                         //SocketSend(0);
                         if (!robot.Write(DO.Result, 1)) return;
@@ -2192,7 +2195,7 @@ namespace _3DLaserGlueInspection
 
                         //回复触发OFF信号
 
-                        if (partResult)
+                        if (partResult || isDemoMode)
                         {
                             //SocketSend(0);
                             if (!robot.Write(DO.Result, 1)) return;
@@ -2490,11 +2493,11 @@ namespace _3DLaserGlueInspection
         private bool initRun(out ushort ID, out Car car, out string inVIN, out DateTime dateTime, out Dictionary<string, CamParam> camParam, out Setting set)
         {
             set = new Setting("1");
-            inVIN = "";
+            inVIN = "1";
             camParam = new Dictionary<string, CamParam>();
             dateTime = DateTime.Now;
 
-            //清除数据
+            //清除数据s
             clearData();
 
             //获取产品号
@@ -2505,16 +2508,16 @@ namespace _3DLaserGlueInspection
             if (!robot.Read(DI.CarNumber, out CarNumber)) return false;
             ID = CarNumber;
 
-            if (plc.Read(DI.InVIN, out inVIN))
-            {
+            //if (plc.Read(DI.InVIN, out inVIN))
+            //{
 
-                ShowMessage($"VIN 读取成功：{inVIN}");
-            }
-            else
-            {
-                ShowMessage(robot.ErrMsg, LogType.warn);
-                return false;
-            }
+            //    ShowMessage($"VIN 读取成功：{inVIN}");
+            //}
+            //else
+            //{
+            //    ShowMessage(robot.ErrMsg, LogType.warn);
+            //    return false;
+            //}
 
 
             SetCurrentRunID(ID);
