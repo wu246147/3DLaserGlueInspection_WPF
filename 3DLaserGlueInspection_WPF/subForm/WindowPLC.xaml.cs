@@ -48,14 +48,19 @@ namespace _3DLaserGlueInspection.subForm
 
         private void UpData(object sender, EventArgs e)
         {
-            param.IpAddress = IpNumericUpDown.Text;
-            param.Port = Convert.ToInt32(PortNumericUpDown.Text);
+            try
+            {
+                param.IpAddress = IpNumericUpDown.Text;
+                param.Port = Convert.ToInt32(PortNumericUpDown.Text);
 
-            param.DataFormat = (HslCommunication.Core.DataFormat )Enum.Parse(typeof(HslCommunication.Core.DataFormat), dataFormatComboBox.Text);
-            param.DA2 = Convert.ToByte( DA2NumericUpDown.Text);
+                param.DataFormat = (HslCommunication.Core.DataFormat)Enum.Parse(typeof(HslCommunication.Core.DataFormat), dataFormatComboBox.Text);
+                param.DA2 = Convert.ToByte(DA2NumericUpDown.Text);
 
-            param.IsStringReverseByteWord = (bool)isStringReverseByteWordCheck.IsChecked;
-
+                param.IsStringReverseByteWord = (bool)isStringReverseByteWordCheck.IsChecked;
+            }
+            catch(Exception ex)
+            { 
+            }
 
             isAlter = true;
         }

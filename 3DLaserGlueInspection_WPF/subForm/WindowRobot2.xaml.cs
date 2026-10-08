@@ -57,20 +57,28 @@ namespace _3DLaserGlueInspection.subForm
             param.IpAddress = IpNumericUpDown.Text;
             param.Port = Convert.ToInt32(PortNumericUpDown.Text);
 
-            if (signal is KukaRobot kuka)
+            try
             {
-                ((KukaRobot)this.signal).Server.ipAndPoint.Address = IPAddress.Parse(IpServerNumericUpDown.Text);
-                ((KukaRobot)this.signal).Server.ipAndPoint.Port = Convert.ToInt32(PortServerNumericUpDown.Text);
+                if (signal is KukaRobot kuka)
+                {
+                    ((KukaRobot)this.signal).Server.ipAndPoint.Address = IPAddress.Parse(IpServerNumericUpDown.Text);
+                    ((KukaRobot)this.signal).Server.ipAndPoint.Port = Convert.ToInt32(PortServerNumericUpDown.Text);
+                }
+                else if (signal is KawasakiRobot kawasaki)
+                {
+                    ((KawasakiRobot)this.signal).Server.ipAndPoint.Address = IPAddress.Parse(IpServerNumericUpDown.Text);
+                    ((KawasakiRobot)this.signal).Server.ipAndPoint.Port = Convert.ToInt32(PortServerNumericUpDown.Text);
+                }
+                else
+                {
+                    Console.WriteLine("未知的 IRobot 类型");
+                }
             }
-            else if (signal is KawasakiRobot kawasaki)
+            catch (Exception ex)
             {
-                ((KawasakiRobot)this.signal).Server.ipAndPoint.Address = IPAddress.Parse(IpServerNumericUpDown.Text);
-                ((KawasakiRobot)this.signal).Server.ipAndPoint.Port = Convert.ToInt32(PortServerNumericUpDown.Text);
+
             }
-            else
-            {
-                Console.WriteLine("未知的 IRobot 类型");
-            }
+            
 
             isAlter = true;
         }

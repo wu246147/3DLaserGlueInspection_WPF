@@ -398,11 +398,20 @@ namespace _3DLaserGlueInspection.subForm
                     CamNameComboBox.Items.Add((SNs[i]).ToString());
                 }
 
-                if (!CamNameComboBox.Items.Contains(camParam.CamName))
-                {
-                    CamNameComboBox.SelectedValue = camParam.CamName;
-                }
+                //if (!CamNameComboBox.Items.Contains(camParam.CamName))
+                //{
+                //    CamNameComboBox.Items.Add(camParam.CamName);
 
+                //    CamNameComboBox.SelectedValue = camParam.CamName;
+                //}
+                if (SNs.Length > 0)
+                {
+                    CamNameComboBox.SelectedValue = (SNs[0]).ToString();
+                }
+                else
+                {
+                    CamNameComboBox.SelectedValue = "";
+                }
             }
             else
             {
@@ -414,7 +423,13 @@ namespace _3DLaserGlueInspection.subForm
 
         private void openCamButton_Click(object sender, RoutedEventArgs e)
         {
-            if ("" == CamNameComboBox.SelectedValue.ToString() ? cam.Open() : cam.OpenBySN(CamNameComboBox.SelectedValue.ToString()))
+            if ("" == CamNameComboBox.SelectedValue.ToString())
+            {
+                ShowMessage("选择相机为空，请先选择相机。");
+                return;
+            }
+
+            if (cam.OpenBySN(CamNameComboBox.SelectedValue.ToString()))
             {
                 //关闭光源
                 Line1EnableCheck.IsChecked = false;
