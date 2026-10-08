@@ -385,6 +385,7 @@
                     FontFamily="Assets/Fonts/#iconfont"
                     Tag="{Binding buttonRunTagControl}"
                     Template="{StaticResource IconTextButtonTemplate}" />
+                <Button Content="test" HorizontalAlignment="Center" Margin="0,144,0,0" Grid.Row="1" VerticalAlignment="Top" Click="Button_Click" Visibility="Hidden"/>
 
             </Grid>
 

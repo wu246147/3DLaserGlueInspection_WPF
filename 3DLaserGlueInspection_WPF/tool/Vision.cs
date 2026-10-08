@@ -391,6 +391,10 @@ namespace _3DLaserGlueInspection
         ///激光提取函数,稳定版
         public static extern int thinningH(IntPtr inputMat, IntPtr outImage, IntPtr outPointMat, int min_thre, int min_width = 1);
 
+        [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
+        ///thinningF：基于 thinningH 的候选提取和轨迹跟踪流程，
+        /// 在候选生成阶段增加反射噪声的方向过滤。
+        public static extern int thinningF(IntPtr inputMat, IntPtr outImage, IntPtr outPointMat, int min_thre, int min_width = 1);
 
         [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
         ///获取矩形框内的点
@@ -645,7 +649,7 @@ namespace _3DLaserGlueInspection
             //Cv2.ImWrite("thinningH.bmp", Image);
             using (Mat outImage = new Mat())
             {
-                thinningH(Image.CvPtr, outImage.CvPtr, outlinePoints.CvPtr, (int)minThreshold, laserMinWidth);
+                thinningF(Image.CvPtr, outImage.CvPtr, outlinePoints.CvPtr, (int)minThreshold, laserMinWidth);
             }
 
             ////添加

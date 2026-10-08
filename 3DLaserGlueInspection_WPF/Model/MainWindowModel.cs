@@ -396,15 +396,15 @@ namespace _3DLaserGlueInspection
                     }
                 }
 
-                if (plc.Open())
-                {
-                    ShowMessage("PLC连接成功");
-                }
-                else
-                {
-                    ShowMessage("PLC连接失败" + plc.ErrMsg, LogType.ng);
-                    return;
-                }
+                //if (plc.Open())
+                //{
+                //    ShowMessage("PLC连接成功");
+                //}
+                //else
+                //{
+                //    ShowMessage("PLC连接失败" + plc.ErrMsg, LogType.ng);
+                //    return;
+                //}
 
 
                 //if (io.Open())

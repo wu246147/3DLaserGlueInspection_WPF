@@ -298,8 +298,8 @@ namespace _3DLaserGlueInspection.subForm
             currentOffsetYNumericUpDown.Text = Convert.ToString(camParam.OffsetY);
             currentFPSNumericUpDown.Text = Convert.ToString(camParam.Hz);
             useFPSCheck.IsChecked = camParam.HzEnable;
-            verticalMirror.IsChecked = camParam.ReverseX;
-            horizontalMirror.IsChecked = camParam.ReverseY;
+            horizontalMirror.IsChecked = camParam.ReverseX;
+            verticalMirror.IsChecked = camParam.ReverseY;
             saveImgTypeComboBox.SelectedValue = camParam.ImageFormat;
 
             EnableUpData();
@@ -377,8 +377,8 @@ namespace _3DLaserGlueInspection.subForm
                     camParam.OffsetY = Convert.ToInt32(currentOffsetYNumericUpDown.Text);
                     camParam.Hz = (float)Convert.ToDouble(currentFPSNumericUpDown.Text);
                     camParam.HzEnable = (bool)useFPSCheck.IsChecked;
-                    camParam.ReverseX = (bool)verticalMirror.IsChecked;
-                    camParam.ReverseY = (bool)horizontalMirror.IsChecked;
+                    camParam.ReverseX = (bool)horizontalMirror.IsChecked;
+                    camParam.ReverseY = (bool)verticalMirror.IsChecked;
                     camParam.ImageFormat = saveImgTypeComboBox.SelectedValue.ToString();
                 }
                 catch
@@ -549,14 +549,14 @@ namespace _3DLaserGlueInspection.subForm
             if (!busy)
             {
                 busy = true;
-                bool bValue = (bool)horizontalMirror.IsChecked;
+                bool bValue = (bool)verticalMirror.IsChecked;
                 if (cam.SetReverseY(bValue))
                 {
                     ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.EnableVerticalMirroring + bValue);
                 }
                 else
                 {
-                    horizontalMirror.IsChecked = !bValue;
+                    verticalMirror.IsChecked = !bValue;
                     ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.SetEnableVerticalMirroringFail + cam.ErrMsg);
                 }
                 busy = false;

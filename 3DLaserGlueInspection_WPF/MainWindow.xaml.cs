@@ -630,6 +630,18 @@ namespace _3DLaserGlueInspection
             model.isDemoMode = (bool)DemoCheck.IsChecked;
         }
 
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            double transformRX =0, transformRY = 0, transformRZ = 0;
+            CoordinateTransform.transformCartPose2(
+                    -179.779, 178.588, -3.603,
+                    2,
+                    ref transformRX,
+                    ref transformRY,
+                    ref transformRZ,
+                    0);
+        }
+
         //void ShowImageData(int showWidth, int showHeight, Mat hXLDCont10mm)
         //{
         //    if (!showing)
