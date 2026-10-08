@@ -2571,7 +2571,7 @@ namespace _3DLaserGlueInspection
         {
             string msg = $"{RESULT},0,0,0,0,0,0,0,0,";
 
-            return "";
+            return msg;
         }
 
 
