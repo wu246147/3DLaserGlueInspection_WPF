@@ -194,6 +194,12 @@ namespace _3DLaserGlueInspection.subForm
                 CreateRightClickMenu((System.Windows.Controls.ContextMenu)s, CopyUseBaseLine);
             };
 
+            useHalfGlueWidthCheck.ContextMenu = new System.Windows.Controls.ContextMenu();
+            useHalfGlueWidthCheck.ContextMenu.Opened += (s, e) =>
+            {
+                CreateRightClickMenu((System.Windows.Controls.ContextMenu)s, CopyUseHalfGlueWidth);
+            };
+
 
             baseLineGrid.ContextMenu = new System.Windows.Controls.ContextMenu();
             baseLineGrid.ContextMenu.Opened += (s, e) =>
@@ -540,8 +546,15 @@ namespace _3DLaserGlueInspection.subForm
             srcImageSet.isUseBaseLine = dstImageSet.isUseBaseLine;
             isAlter = true;
         }
+        private void CopyUseHalfGlueWidth(ImageSet srcImageSet, ImageSet dstImageSet)
+        {
+            srcImageSet.isUseHalfGlueWidth = dstImageSet.isUseHalfGlueWidth;
+            isAlter = true;
+        }
+
         private void CopyBaseLine(ImageSet srcImageSet, ImageSet dstImageSet)
         {
+            srcImageSet.glueWidthSide = dstImageSet.glueWidthSide;
             srcImageSet.distBaseLineThre = dstImageSet.distBaseLineThre;
             srcImageSet.distBaseLineRangeLower = dstImageSet.distBaseLineRangeLower;
             srcImageSet.distBaseLineRangeUpper = dstImageSet.distBaseLineRangeUpper;
@@ -613,6 +626,10 @@ namespace _3DLaserGlueInspection.subForm
         {
             srcImageSet.widthMin = dstImageSet.widthMin;
             srcImageSet.widthMax = dstImageSet.widthMax;
+            srcImageSet.leftGlueWidthMin = dstImageSet.leftGlueWidthMin;
+            srcImageSet.leftGlueWidthMax = dstImageSet.leftGlueWidthMax;
+            srcImageSet.rightGlueWidthMin = dstImageSet.rightGlueWidthMin;
+            srcImageSet.rightGlueWidthMax = dstImageSet.rightGlueWidthMax;
             srcImageSet.heightMin = dstImageSet.heightMin;
             srcImageSet.heightMax = dstImageSet.heightMax;
             srcImageSet.areaMin = dstImageSet.areaMin;
@@ -847,6 +864,10 @@ namespace _3DLaserGlueInspection.subForm
 
             glueWidthMinNumericUpDown.TextChanged += UpData;
             glueWidthMaxNumericUpDown.TextChanged += UpData;
+            leftGlueWidthMinNumericUpDown.TextChanged += UpData;
+            leftGlueWidthMaxNumericUpDown.TextChanged += UpData;
+            rightGlueWidthMinNumericUpDown.TextChanged += UpData;
+            rightGlueWidthMaxNumericUpDown.TextChanged += UpData;
             glueHeightMinNumericUpDown.TextChanged += UpData;
             glueHeightMaxNumericUpDown.TextChanged += UpData;
             glueAreaMinNumericUpDown.TextChanged += UpData;
@@ -879,6 +900,9 @@ namespace _3DLaserGlueInspection.subForm
 
             useBaseLineDetCheck.Checked += UpData;
             useBaseLineDetCheck.Unchecked += UpData;
+            useHalfGlueWidthCheck.Checked += UpData;
+            useHalfGlueWidthCheck.Unchecked += UpData;
+            glueWidthSideComboBox.SelectionChanged += UpData;
 
             IgnoreHighNumericUpDown.TextChanged += UpData;
             baseLineRangeLowerNumericUpDown.TextChanged += UpData;
@@ -922,6 +946,10 @@ namespace _3DLaserGlueInspection.subForm
 
             glueWidthMinNumericUpDown.TextChanged -= UpData;
             glueWidthMaxNumericUpDown.TextChanged -= UpData;
+            leftGlueWidthMinNumericUpDown.TextChanged -= UpData;
+            leftGlueWidthMaxNumericUpDown.TextChanged -= UpData;
+            rightGlueWidthMinNumericUpDown.TextChanged -= UpData;
+            rightGlueWidthMaxNumericUpDown.TextChanged -= UpData;
             glueHeightMinNumericUpDown.TextChanged -= UpData;
             glueHeightMaxNumericUpDown.TextChanged -= UpData;
             glueAreaMinNumericUpDown.TextChanged -= UpData;
@@ -961,6 +989,9 @@ namespace _3DLaserGlueInspection.subForm
 
             useBaseLineDetCheck.Checked -= UpData;
             useBaseLineDetCheck.Unchecked -= UpData;
+            useHalfGlueWidthCheck.Checked -= UpData;
+            useHalfGlueWidthCheck.Unchecked -= UpData;
+            glueWidthSideComboBox.SelectionChanged -= UpData;
 
             IgnoreHighNumericUpDown.TextChanged -= UpData;
             baseLineRangeLowerNumericUpDown.TextChanged -= UpData;
@@ -1037,6 +1068,10 @@ namespace _3DLaserGlueInspection.subForm
                 imageSet._3DGlueDet = (bool)_3DCloudDetCheck.IsChecked;
                 imageSet.widthMin = Convert.ToDouble(glueWidthMinNumericUpDown.Text);
                 imageSet.widthMax = Convert.ToDouble(glueWidthMaxNumericUpDown.Text);
+                imageSet.leftGlueWidthMin = Convert.ToDouble(leftGlueWidthMinNumericUpDown.Text);
+                imageSet.leftGlueWidthMax = Convert.ToDouble(leftGlueWidthMaxNumericUpDown.Text);
+                imageSet.rightGlueWidthMin = Convert.ToDouble(rightGlueWidthMinNumericUpDown.Text);
+                imageSet.rightGlueWidthMax = Convert.ToDouble(rightGlueWidthMaxNumericUpDown.Text);
                 imageSet.heightMin = Convert.ToDouble(glueHeightMinNumericUpDown.Text);
                 imageSet.heightMax = Convert.ToDouble(glueHeightMaxNumericUpDown.Text);
                 imageSet.areaMin = Convert.ToDouble(glueAreaMinNumericUpDown.Text);
@@ -1058,6 +1093,8 @@ namespace _3DLaserGlueInspection.subForm
 
 
                 imageSet.isUseBaseLine = (bool)useBaseLineDetCheck.IsChecked;
+                imageSet.isUseHalfGlueWidth = useHalfGlueWidthCheck.IsChecked == true;
+                imageSet.glueWidthSide = glueWidthSideComboBox.SelectedIndex == 1 ? 2 : 1;
                 imageSet.distBaseLineThre = Convert.ToDouble(IgnoreHighNumericUpDown.Text);
                 imageSet.distBaseLineRangeLower = Convert.ToDouble(baseLineRangeLowerNumericUpDown.Text);
                 imageSet.distBaseLineRangeUpper = Convert.ToDouble(baseLineRangeUpperNumericUpDown.Text);
@@ -1256,6 +1293,10 @@ namespace _3DLaserGlueInspection.subForm
                     _3DCloudDetCheck.IsChecked = imageSet._3DGlueDet;
                     glueWidthMinNumericUpDown.Text = imageSet.widthMin.ToString();
                     glueWidthMaxNumericUpDown.Text = imageSet.widthMax.ToString();
+                    leftGlueWidthMinNumericUpDown.Text = imageSet.leftGlueWidthMin.ToString();
+                    leftGlueWidthMaxNumericUpDown.Text = imageSet.leftGlueWidthMax.ToString();
+                    rightGlueWidthMinNumericUpDown.Text = imageSet.rightGlueWidthMin.ToString();
+                    rightGlueWidthMaxNumericUpDown.Text = imageSet.rightGlueWidthMax.ToString();
                     glueHeightMinNumericUpDown.Text = imageSet.heightMin.ToString();
                     glueHeightMaxNumericUpDown.Text = imageSet.heightMax.ToString();
                     glueAreaMinNumericUpDown.Text = imageSet.areaMin.ToString();
@@ -1275,6 +1316,8 @@ namespace _3DLaserGlueInspection.subForm
                     correctionScaleSizeYNumericUpDown.Text = imageSet.correctionScaleSizeY.ToString();
 
                     useBaseLineDetCheck.IsChecked = imageSet.isUseBaseLine;
+                    useHalfGlueWidthCheck.IsChecked = imageSet.isUseHalfGlueWidth;
+                    glueWidthSideComboBox.SelectedIndex = imageSet.glueWidthSide == 2 ? 1 : 0;
                     IgnoreHighNumericUpDown.Text = imageSet.distBaseLineThre.ToString();
                     baseLineRangeLowerNumericUpDown.Text = imageSet.distBaseLineRangeLower.ToString();
                     baseLineRangeUpperNumericUpDown.Text = imageSet.distBaseLineRangeUpper.ToString();
@@ -3765,24 +3808,24 @@ namespace _3DLaserGlueInspection.subForm
             outRegionRectangle2 = new Mat();
             hXLDCont10mm3D = new Mat();
 
-            // 计算机器人移动距离
-            double PoseD = 0;
+            //// 计算机器人移动距离
+            //double PoseD = 0;
 
-            if (currentRobotPose != null && lastRobotPose != null)
-            {
-                PoseD  = Math.Sqrt(Math.Pow((currentRobotPose.x - lastRobotPose.x), 2) +
-                Math.Pow((currentRobotPose.y - lastRobotPose.y), 2) +
-                Math.Pow((currentRobotPose.z - lastRobotPose.z), 2));
-                if (PoseD == 0)
-                {
-                    if (!isAuto)
-                    {
-                        System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.DistIsZero);
+            //if (currentRobotPose != null && lastRobotPose != null)
+            //{
+            //    PoseD  = Math.Sqrt(Math.Pow((currentRobotPose.x - lastRobotPose.x), 2) +
+            //    Math.Pow((currentRobotPose.y - lastRobotPose.y), 2) +
+            //    Math.Pow((currentRobotPose.z - lastRobotPose.z), 2));
+            //    if (PoseD == 0)
+            //    {
+            //        if (!isAuto)
+            //        {
+            //            System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.DistIsZero);
 
-                    }
-                    return;
-                }
-            }
+            //        }
+            //        return;
+            //    }
+            //}
 
             Mat Cam1ToTool = new Mat();
             Mat Cam1ToBase = new Mat();
@@ -4064,11 +4107,11 @@ namespace _3DLaserGlueInspection.subForm
             if (isCorrectingRange || cutSet == null || cutSet.isCoefficientSharing)
                 return;
 
-            if (!double.TryParse(actualGlueWidthNumericUpDown.Text, out double actualWidth)
-                || !double.TryParse(actualGlueHeightNumericUpDown.Text, out double actualHeight)
-                || !IsPositiveCorrectionValue(actualWidth) || !IsPositiveCorrectionValue(actualHeight))
+            if (!double.TryParse(actualGlueHeightNumericUpDown.Text, out double actualHeight)
+                || !IsPositiveCorrectionValue(actualHeight))
             {
-                System.Windows.Forms.MessageBox.Show("实际胶宽和胶高必须为大于零的有效数值。");
+                System.Windows.Forms.MessageBox.Show(string.Format(_3DLaserGlueInspection.Resources.LanguageDict.ActualCorrectionValueInvalid,
+                    _3DLaserGlueInspection.Resources.LanguageDict.ActuallyGlueHeight));
                 return;
             }
 
@@ -4117,6 +4160,19 @@ namespace _3DLaserGlueInspection.subForm
             // 拖动直接更新本图的 RectData；只读取对应帧的参数，避免残留界面框写入其他帧。
             // 后续每张仅在独立副本上计算，复检有效后才提交。
             var frameParameters = cutSet.imageSet[cameraIndex];
+            // 在 UI 线程按每张图片的检测方式取真实胶宽，允许同一范围混合整胶、左侧和右侧。
+            var actualWidths = new Dictionary<int, double>();
+            try
+            {
+                for (int index = startId; index <= endId; index++)
+                    if (index < frameParameters.Count && frameParameters[index] != null)
+                        actualWidths[index] = GetActualCorrectionWidth(frameParameters[index]);
+            }
+            catch (Exception ex)
+            {
+                System.Windows.Forms.MessageBox.Show(ex.Message);
+                return;
+            }
             var failures = new List<string>();
             int successCount = 0;
             isCorrectingRange = true;
@@ -4149,7 +4205,7 @@ namespace _3DLaserGlueInspection.subForm
 
                         // 串行执行原生算法，后台计算使界面能持续显示进度。
                         using (CorrectionFrameResult outcome = await Task.Run(() => CorrectCalibrationFrame(
-                            frameImage, candidate, cameraKey, imageKey, previousKey, handEyeType, actualWidth, actualHeight)))
+                            frameImage, candidate, cameraKey, imageKey, previousKey, handEyeType, actualWidths[index], actualHeight)))
                         {
                             if (outcome.Error != null)
                             {
@@ -4612,13 +4668,25 @@ namespace _3DLaserGlueInspection.subForm
             }
         }
 
+        private double GetActualCorrectionWidth(ImageSet frameSet)
+        {
+            int side = Vision.GetGlueWidthSide(frameSet);
+            string text = side == 1 ? actualLeftGlueWidthNumericUpDown.Text
+                : side == 2 ? actualRightGlueWidthNumericUpDown.Text : actualGlueWidthNumericUpDown.Text;
+            string label = side == 1 ? _3DLaserGlueInspection.Resources.LanguageDict.ActualLeftGlueWidth
+                : side == 2 ? _3DLaserGlueInspection.Resources.LanguageDict.ActualRightGlueWidth : _3DLaserGlueInspection.Resources.LanguageDict.ActuallyGlueWidth;
+            if (!double.TryParse(text, out double width) || !IsPositiveCorrectionValue(width))
+                throw new InvalidOperationException(string.Format(_3DLaserGlueInspection.Resources.LanguageDict.ActualCorrectionValueInvalid, label));
+            return width;
+        }
+
         private void correctionButton_Click(object sender, RoutedEventArgs e)
         {
             double actualGlueSizeX = 0;
             double actualGlueSizeY = 0;
             try
             {
-                actualGlueSizeX = Convert.ToDouble(actualGlueWidthNumericUpDown.Text);
+                actualGlueSizeX = GetActualCorrectionWidth(imageSet);
                 actualGlueSizeY = Convert.ToDouble(actualGlueHeightNumericUpDown.Text);
             }
             catch (Exception ex)
@@ -4626,7 +4694,7 @@ namespace _3DLaserGlueInspection.subForm
                 System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.InputDataFormatError + ex.Message + "!");
                 return;
             }
-            if (actualGlueSizeX == 0 || actualGlueSizeY == 0)
+            if (!IsPositiveCorrectionValue(actualGlueSizeX) || !IsPositiveCorrectionValue(actualGlueSizeY))
             {
                 System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.ActualInputCannotBeZero);
                 return;
@@ -4639,6 +4707,12 @@ namespace _3DLaserGlueInspection.subForm
             if (resultData.glueWidth == 0 || resultData.glueHeight == 0)
             {
                 System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.DetectionResultCannotBeZero);
+                return;
+            }
+
+            if (resultData.glueWidthSide != Vision.GetGlueWidthSide(imageSet))
+            {
+                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.GlueWidthModeChanged);
                 return;
             }
 

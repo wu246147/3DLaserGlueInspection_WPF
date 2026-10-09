@@ -434,6 +434,12 @@ namespace _3DLaserGlueInspection
                 double upperDist,
                 IntPtr filteredPoints);
 
+        /// <summary>按相对基准线的最高点保留左侧（1）或右侧（2）涂胶点。</summary>
+        [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
+        public static extern int FilterGluePointsBySide(
+            IntPtr inputPoints, double item0, double item1, double item2, double item3,
+            int keepSide, IntPtr filteredPoints);
+
         [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
         ///基于基准面的涂胶检测
         public static extern int glueDet(
@@ -853,16 +859,29 @@ namespace _3DLaserGlueInspection
             
         }
 
-        /// <summary>
-        /// 分析涂胶结果
-        /// </summary>
-        /// <param name="imageSet"></param>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
-        /// <param name="phi"></param>
-        /// <param name="maxArea"></param>
-        /// <param name="resultData"></param>
-        /// <param name="bResult"></param>
+        /// <summary>当前有效的胶宽检测方式：0 整胶，1 左侧，2 右侧。</summary>
+        public static int GetGlueWidthSide(ImageSet imageSet)
+        {
+            return imageSet.isUseBaseLine && imageSet.isUseHalfGlueWidth ? imageSet.glueWidthSide : 0;
+        }
+
+        public static void GetGlueWidthRange(ImageSet imageSet, int side, out double minimum, out double maximum)
+        {
+            minimum = side == 1 ? imageSet.leftGlueWidthMin : side == 2 ? imageSet.rightGlueWidthMin : imageSet.widthMin;
+            maximum = side == 1 ? imageSet.leftGlueWidthMax : side == 2 ? imageSet.rightGlueWidthMax : imageSet.widthMax;
+        }
+
+        private static bool IsRectangleHorizontal(double phi)
+        {
+            double normalizedPhi = phi % Math.PI;
+            if (normalizedPhi >= Math.PI / 2)
+                normalizedPhi -= Math.PI;
+            else if (normalizedPhi < -Math.PI / 2)
+                normalizedPhi += Math.PI;
+            return Math.Abs(normalizedPhi) <= Math.PI / 4;
+        }
+
+        /// <summary>按最终检测区域的胶宽、胶高和面积判定结果。</summary>
         public static void judgeGlueResult(ImageSet imageSet,int scaleSize,double centerX,double centerY, double width, double height, double phi, double maxArea, out Data resultData, out BResult bResult)
         {
             resultData = new Data();
@@ -873,19 +892,10 @@ namespace _3DLaserGlueInspection
 
             // 最小外接矩形的 width/height 是沿矩形自身方向的尺寸，
             // 转换为图像坐标系尺寸：竖直方向为 glueHeight，横向为 glueWidth。
-            double normalizedPhi = phi % Math.PI;
-            if (normalizedPhi >= Math.PI / 2)
-            {
-                normalizedPhi -= Math.PI;
-            }
-            else if (normalizedPhi < -Math.PI / 2)
-            {
-                normalizedPhi += Math.PI;
-            }
-
-            bool rectangleIsHorizontal = Math.Abs(normalizedPhi) <= Math.PI / 4;
+            bool rectangleIsHorizontal = IsRectangleHorizontal(phi);
             resultData.glueHeight = (rectangleIsHorizontal ? height : width) / scaleSize;
             resultData.glueWidth = (rectangleIsHorizontal ? width : height) / scaleSize;
+            resultData.glueWidthSide = GetGlueWidthSide(imageSet);
             //resultData.glueArea = (heng ? width : height) / scaleSize;
 
             resultData.glueArea = maxArea / (scaleSize * scaleSize);
@@ -893,7 +903,8 @@ namespace _3DLaserGlueInspection
             {
                 bResult.glueHeight = true;
             }
-            if (resultData.glueWidth >= imageSet.widthMin && resultData.glueWidth <= imageSet.widthMax)
+            GetGlueWidthRange(imageSet, resultData.glueWidthSide, out double widthMinimum, out double widthMaximum);
+            if (resultData.glueWidth >= widthMinimum && resultData.glueWidth <= widthMaximum)
             {
                 bResult.glueWidth = true;
             }
@@ -1167,6 +1178,8 @@ namespace _3DLaserGlueInspection
             double item1 = 0;
             double item2 = 0;
             double item3 = 0;
+            int glueWidthSide = GetGlueWidthSide(imageSet);
+            singleFrameExistGlue = false;
 
            
             //////开始检测
@@ -1207,9 +1220,36 @@ namespace _3DLaserGlueInspection
                         imageSet.distBaseLineRangeLower * cutSet.scaleSize,
                         imageSet.distBaseLineRangeUpper * cutSet.scaleSize, selectRangePoints.CvPtr);
 
-                    Vision.glueDet(selectRangePoints.CvPtr, item0, item1, item2, item3,
-                        out existGlue, out centerX, out centerY, out phi, out width, out height,
-                        out maxArea, outMaxRegion.CvPtr, outRegionRectangle2.CvPtr);
+                    if (glueWidthSide == 0)
+                    {
+                        Vision.glueDet(selectRangePoints.CvPtr, item0, item1, item2, item3,
+                            out existGlue, out centerX, out centerY, out phi, out width, out height,
+                            out maxArea, outMaxRegion.CvPtr, outRegionRectangle2.CvPtr);
+                    }
+                    else
+                    {
+                        // 半侧筛选后直接检测，全部尺寸、中心和显示区域均使用所选半侧结果。
+                        using (Mat sidePoints = new Mat())
+                        {
+                            outMaxRegion.Create(0, 0, MatType.CV_64FC1);
+                            outRegionRectangle2.Create(0, 0, MatType.CV_64FC1);
+                            if (Vision.FilterGluePointsBySide(selectRangePoints.CvPtr, item0, item1, item2, item3,
+                                glueWidthSide, sidePoints.CvPtr) == 0 && !sidePoints.Empty())
+                            {
+                                Vision.glueDet(sidePoints.CvPtr, item0, item1, item2, item3,
+                                    out existGlue, out centerX, out centerY, out phi,
+                                    out width, out height, out maxArea,
+                                    outMaxRegion.CvPtr, outRegionRectangle2.CvPtr);
+                                existGlue = existGlue && maxArea > 0;
+                            }
+                            if (!existGlue)
+                            {
+                                // 半侧检测失败时清空本次区域，不能退回整胶区域或沿用上一帧结果。
+                                outMaxRegion.Create(0, 0, MatType.CV_64FC1);
+                                outRegionRectangle2.Create(0, 0, MatType.CV_64FC1);
+                            }
+                        }
+                    }
                 }
             }
             else
@@ -1244,7 +1284,7 @@ namespace _3DLaserGlueInspection
             bResult = new BResult();
             resultData = new Data();
 
-            if (maxArea > 0)
+            if (existGlue && maxArea > 0)
             {
                 //stopwatch = new Stopwatch();
                 //stopwatch.Start();
@@ -1267,6 +1307,7 @@ namespace _3DLaserGlueInspection
             resultData.item1 = item1;
             resultData.item2 = item2;
             resultData.item3 = item3;
+            resultData.glueWidthSide = glueWidthSide;
 
 
 
@@ -1726,6 +1767,8 @@ namespace _3DLaserGlueInspection
         public bool 单帧检测 = false;
         public bool _3DGlueDet = false;
         public double widthMin = 2, widthMax = 4;
+        public double leftGlueWidthMin = 1, leftGlueWidthMax = 2;
+        public double rightGlueWidthMin = 1, rightGlueWidthMax = 2;
         public double heightMin = 2, heightMax = 4;
         public double areaMin = 4, areaMax = 16;
         public bool 启用裁剪 = false;
@@ -1746,6 +1789,9 @@ namespace _3DLaserGlueInspection
 
         // 是否使用基线
         public bool isUseBaseLine = false;
+        // 每张图片独立启用、选择半侧；需同时启用基准面检测。1 为左侧，2 为右侧。
+        public bool isUseHalfGlueWidth = false;
+        public int glueWidthSide = 1;
         public double distBaseLineThre = 0.5;
         // 基准面距离屏蔽区间，单位为 mm；旧配置未包含这两个参数时默认均为 0。
         public double distBaseLineRangeLower = 0;
@@ -1795,6 +1841,8 @@ namespace _3DLaserGlueInspection
         public double glueHeight = -1;
         public double glueWidth = -1;
         public double glueArea = -1;
+        // 本次结果的胶宽检测方式：0 整胶，1 左侧，2 右侧。
+        public int glueWidthSide = 0;
 
         // 基准线拟合参数：方向向量 (item0, item1) 和线上一点 (item2, item3)。
         public double item0;
@@ -1823,6 +1871,7 @@ namespace _3DLaserGlueInspection
                 glueHeight = this.glueHeight,
                 glueWidth = this.glueWidth,
                 glueArea = this.glueArea,
+                glueWidthSide = this.glueWidthSide,
                 item0 = this.item0,
                 item1 = this.item1,
                 item2 = this.item2,

@@ -1004,7 +1004,7 @@ Cloud</value>
     <value>Correct range</value>
   </data>
   <data name="RangeSizeCorrectionDescription" xml:space="preserve">
-    <value>Select start and end image IDs to correct each frame using the entered actual glue width and height. Disable shared correction coefficients first.</value>
+    <value>Select start and end image IDs. Correct each frame using its whole, left or right actual glue width and the actual height of that detection region. Disable shared correction coefficients first.</value>
   </data>
   <data name="SoftwareRun" xml:space="preserve">
     <value>Software</value>
@@ -1305,6 +1305,36 @@ Det Region</value>
   <data name="ignoreHigh" xml:space="preserve">
     <value>ignore high</value>
   </data>
+  <data name="HalfGlueWidthDetection" xml:space="preserve">
+    <value>Half</value>
+  </data>
+  <data name="HalfGlueWidthDescription" xml:space="preserve">
+    <value>Requires baseline detection. Width, height, area and the displayed region all use the selected image side of the glue peak.</value>
+  </data>
+  <data name="GlueWidthSideLeft" xml:space="preserve">
+    <value>Left</value>
+  </data>
+  <data name="GlueWidthSideRight" xml:space="preserve">
+    <value>Right</value>
+  </data>
+  <data name="LeftGlueWidth" xml:space="preserve">
+    <value>Left width</value>
+  </data>
+  <data name="RightGlueWidth" xml:space="preserve">
+    <value>Right width</value>
+  </data>
+  <data name="ActualLeftGlueWidth" xml:space="preserve">
+    <value>Actual left width</value>
+  </data>
+  <data name="ActualRightGlueWidth" xml:space="preserve">
+    <value>Actual right width</value>
+  </data>
+  <data name="ActualCorrectionValueInvalid" xml:space="preserve">
+    <value>{0} must be a valid number greater than zero.</value>
+  </data>
+  <data name="GlueWidthModeChanged" xml:space="preserve">
+    <value>The width detection mode changed. Run single-frame detection again before correcting.</value>
+  </data>
   <data name="BaseLineRangeLower" xml:space="preserve">
     <value>Exclude min</value>
   </data>
@@ -1499,5 +1529,8 @@ Det Region</value>
   </data>
   <data name="StandardBlockCalibrationMissing" xml:space="preserve">
     <value>Camera intrinsics or light-plane parameters are missing</value>
+  </data>
+  <data name="GlueWidthSide" xml:space="preserve">
+    <value>Keep side</value>
   </data>
 </root>

@@ -3591,6 +3591,96 @@ namespace _3DLaserGlueInspection.Resources {
         }
 
         /// <summary>
+        ///     查找资源键 HalfGlueWidthDetection 对应的本地化字符串。
+        /// </summary>
+        public static string HalfGlueWidthDetection {
+            get {
+                return ResourceManager.GetString("HalfGlueWidthDetection", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 HalfGlueWidthDescription 对应的本地化字符串。
+        /// </summary>
+        public static string HalfGlueWidthDescription {
+            get {
+                return ResourceManager.GetString("HalfGlueWidthDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 GlueWidthSideLeft 对应的本地化字符串。
+        /// </summary>
+        public static string GlueWidthSideLeft {
+            get {
+                return ResourceManager.GetString("GlueWidthSideLeft", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 GlueWidthSideRight 对应的本地化字符串。
+        /// </summary>
+        public static string GlueWidthSideRight {
+            get {
+                return ResourceManager.GetString("GlueWidthSideRight", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 LeftGlueWidth 对应的本地化字符串。
+        /// </summary>
+        public static string LeftGlueWidth {
+            get {
+                return ResourceManager.GetString("LeftGlueWidth", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 RightGlueWidth 对应的本地化字符串。
+        /// </summary>
+        public static string RightGlueWidth {
+            get {
+                return ResourceManager.GetString("RightGlueWidth", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 ActualLeftGlueWidth 对应的本地化字符串。
+        /// </summary>
+        public static string ActualLeftGlueWidth {
+            get {
+                return ResourceManager.GetString("ActualLeftGlueWidth", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 ActualRightGlueWidth 对应的本地化字符串。
+        /// </summary>
+        public static string ActualRightGlueWidth {
+            get {
+                return ResourceManager.GetString("ActualRightGlueWidth", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 ActualCorrectionValueInvalid 对应的本地化字符串。
+        /// </summary>
+        public static string ActualCorrectionValueInvalid {
+            get {
+                return ResourceManager.GetString("ActualCorrectionValueInvalid", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 GlueWidthModeChanged 对应的本地化字符串。
+        /// </summary>
+        public static string GlueWidthModeChanged {
+            get {
+                return ResourceManager.GetString("GlueWidthModeChanged", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///     查找资源键 BaseLineRangeLower 对应的本地化字符串。
         /// </summary>
         public static string BaseLineRangeLower {
@@ -4173,6 +4263,15 @@ namespace _3DLaserGlueInspection.Resources {
         public static string StandardBlockCalibrationMissing {
             get {
                 return ResourceManager.GetString("StandardBlockCalibrationMissing", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 GlueWidthSide 对应的本地化字符串。
+        /// </summary>
+        public static string GlueWidthSide {
+            get {
+                return ResourceManager.GetString("GlueWidthSide", resourceCulture);
             }
         }
 

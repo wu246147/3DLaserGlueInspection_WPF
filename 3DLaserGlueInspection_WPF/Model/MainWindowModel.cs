@@ -4263,13 +4263,13 @@ namespace _3DLaserGlueInspection
                             DispPolygonjHWindowControlEvent(regionSmallestRectangle2Points, Colors.Blue, "margin");
 
                             string text = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight + $":{data.glueHeight:0.00}\r\n"
-                               + _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth + $":{data.glueWidth:0.00}\r\n"
+                               + GlobalVarAndFunc.GetGlueWidthLabel(data.glueWidthSide) + $":{data.glueWidth:0.00}\r\n"
                                + _3DLaserGlueInspection.Resources.LanguageDict.Area+ $":{data.glueArea:0.00}";
                             DispTextInImageHWindowControlEvent(text, Colors.White, (int)data.column + (int)(data.glueWidth / 2 * cutSet.scaleSize + offsetX),
                                 (int)data.row + (int)(data.glueHeight / 2 * cutSet.scaleSize + offsetY));
 
                             //hWindowControl.DispTextInImage(text, data.row, data.column);
-                            string textWindow1 = _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth +":"+ (bResult.glueWidth ? "OK" : "NG");
+                            string textWindow1 = GlobalVarAndFunc.GetGlueWidthLabel(data.glueWidthSide) +":"+ (bResult.glueWidth ? "OK" : "NG");
                             string textWindow2 = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight + ":" + (bResult.glueHeight ? "OK" : "NG");
                             string textWindow3 = _3DLaserGlueInspection.Resources.LanguageDict.Area + ":" + (bResult.glueArea ? "OK" : "NG");
                             string textWindow = textWindow1 + "\r\n" + textWindow2 + "\r\n" + textWindow3;

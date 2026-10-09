@@ -899,6 +899,12 @@ namespace _3DLaserGlueInspection
                 showing = false;
             }
         }
+        public static string GetGlueWidthLabel(int side)
+        {
+            return side == 1 ? Resources.LanguageDict.LeftGlueWidth
+                : side == 2 ? Resources.LanguageDict.RightGlueWidth : Resources.LanguageDict.GlueWidth;
+        }
+
         public static void ShowImageData(int showWidth, int showHeight, CutSet cutSet,ImageSet set, Mat hXLDCont10mm, Mat hRegion, Mat hRegionSmallestRectangle2, Data data, BResult bResult,
              ref ImageControl2 imageControl, ref bool showing, ref object olockShow, double offsetX = 0, double offsetY = 0)
         {
@@ -940,7 +946,7 @@ namespace _3DLaserGlueInspection
                         if (!hRegion.Empty())
                         {
                             //Console.WriteLine($"text value :");
-                            string text1 = _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth+":" + $"{data.glueWidth:0.00}mm";
+                            string text1 = GetGlueWidthLabel(data.glueWidthSide) + ":" + $"{data.glueWidth:0.00}mm";
                             string text2 = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight+":" + $"{data.glueHeight:0.00}mm";
                             string text3 = _3DLaserGlueInspection.Resources.LanguageDict.Area+":" + $"{data.glueArea:0.00}mm²";
 
@@ -1040,8 +1046,9 @@ namespace _3DLaserGlueInspection
 
                         // 字体结果显示最后
 
-                        string textWindow1 = _3DLaserGlueInspection.Resources.LanguageDict.GlueWidth + ":" + (bResult.glueWidth ? Resources.LanguageDict.OK : Resources.LanguageDict.NG) + " " + _3DLaserGlueInspection.Resources.LanguageDict.DetRange +
-                             $": {set.widthMin}~{set.widthMax}mm";
+                        Vision.GetGlueWidthRange(set, data.glueWidthSide, out double widthMinimum, out double widthMaximum);
+                        string textWindow1 = GetGlueWidthLabel(data.glueWidthSide) + ":" + (bResult.glueWidth ? Resources.LanguageDict.OK : Resources.LanguageDict.NG) + " " + _3DLaserGlueInspection.Resources.LanguageDict.DetRange +
+                             $": {widthMinimum}~{widthMaximum}mm";
                         string textWindow2 = _3DLaserGlueInspection.Resources.LanguageDict.GlueHeight + ":" + (bResult.glueHeight ? Resources.LanguageDict.OK : Resources.LanguageDict.NG) + " " + _3DLaserGlueInspection.Resources.LanguageDict.DetRange +
                             $": {set.heightMin}~{set.heightMax}mm";
                         string textWindow3 = _3DLaserGlueInspection.Resources.LanguageDict.Area + ":" + (bResult.glueArea ? Resources.LanguageDict.OK : Resources.LanguageDict.NG) + " " + _3DLaserGlueInspection.Resources.LanguageDict.DetRange +

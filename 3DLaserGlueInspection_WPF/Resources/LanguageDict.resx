@@ -1001,7 +1001,7 @@
     <value>局部图片矫正</value>
   </data>
   <data name="RangeSizeCorrectionDescription" xml:space="preserve">
-    <value>选择起止图像 ID，使用当前实际胶宽、胶高逐张矫正；需关闭公共矫正系数。</value>
+    <value>选择起止图像 ID，按每张图片的检测方式选择整胶、左侧或右侧的实际胶宽，并填写对应检测区域的实际胶高逐张矫正；需关闭公共矫正系数。</value>
   </data>
   <data name="SoftwareRun" xml:space="preserve">
     <value>软件运行</value>
@@ -1302,6 +1302,36 @@
   <data name="ignoreHigh" xml:space="preserve">
     <value>忽略高度</value>
   </data>
+  <data name="HalfGlueWidthDetection" xml:space="preserve">
+    <value>半侧胶宽</value>
+  </data>
+  <data name="HalfGlueWidthDescription" xml:space="preserve">
+    <value>需启用基准面检测；按胶峰选择图像左侧或右侧，胶宽、胶高、面积及显示区域均使用所选半侧结果。</value>
+  </data>
+  <data name="GlueWidthSideLeft" xml:space="preserve">
+    <value>左侧</value>
+  </data>
+  <data name="GlueWidthSideRight" xml:space="preserve">
+    <value>右侧</value>
+  </data>
+  <data name="LeftGlueWidth" xml:space="preserve">
+    <value>左侧胶宽</value>
+  </data>
+  <data name="RightGlueWidth" xml:space="preserve">
+    <value>右侧胶宽</value>
+  </data>
+  <data name="ActualLeftGlueWidth" xml:space="preserve">
+    <value>实际左侧胶宽</value>
+  </data>
+  <data name="ActualRightGlueWidth" xml:space="preserve">
+    <value>实际右侧胶宽</value>
+  </data>
+  <data name="ActualCorrectionValueInvalid" xml:space="preserve">
+    <value>{0}必须为大于零的有效数值。</value>
+  </data>
+  <data name="GlueWidthModeChanged" xml:space="preserve">
+    <value>胶宽检测方式已改变，请重新执行单帧检测后再矫正。</value>
+  </data>
   <data name="BaseLineRangeLower" xml:space="preserve">
     <value>屏蔽高度下限</value>
   </data>
@@ -1496,5 +1526,8 @@
   </data>
   <data name="StandardBlockCalibrationMissing" xml:space="preserve">
     <value>缺少当前相机的内参或光平面参数</value>
+  </data>
+  <data name="GlueWidthSide" xml:space="preserve">
+    <value>保留侧</value>
   </data>
 </root>
