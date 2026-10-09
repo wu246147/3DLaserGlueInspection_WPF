@@ -1244,12 +1244,6 @@ namespace _3DLaserGlueInspection
             bResult = new BResult();
             resultData = new Data();
 
-            // 保存基准线拟合参数，供结果显示时直接使用。
-            resultData.item0 = 0;
-            resultData.item1 = 0;
-            resultData.item2 = 0;
-            resultData.item3 = 0;
-
             if (maxArea > 0)
             {
                 //stopwatch = new Stopwatch();
@@ -1258,10 +1252,6 @@ namespace _3DLaserGlueInspection
                 singleFrameExistGlue = true;
                 Vision.judgeGlueResult(imageSet, cutSet.scaleSize, centerX, centerY, width, height, phi, maxArea, out resultData, out bResult);
 
-                resultData.item0 = item0;
-                resultData.item1 = item1;
-                resultData.item2 = item2;
-                resultData.item3 = item3;
                 ////结束检测
                 //elapsedTime = stopwatch.Elapsed;
                 //useTime = elapsedTime.TotalMilliseconds;
@@ -1271,6 +1261,12 @@ namespace _3DLaserGlueInspection
             {
                 bResult.Result = false;
             }
+
+            // 未检出涂胶时也保留基准线，供结果界面显示屏蔽区间。
+            resultData.item0 = item0;
+            resultData.item1 = item1;
+            resultData.item2 = item2;
+            resultData.item3 = item3;
 
 
 

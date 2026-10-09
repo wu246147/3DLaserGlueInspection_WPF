@@ -4250,7 +4250,7 @@ namespace _3DLaserGlueInspection
                                 regionPoints.Add(point);
                             }
 
-                            DispPolygonjHWindowControlEvent(regionPoints, Colors.Red, "fill");
+                            DispPolygonjHWindowControlEvent(regionPoints, System.Windows.Media.Color.FromArgb(128, 255, 0, 0), "fill");
                             PointCollection regionSmallestRectangle2Points = new PointCollection();
                             for (int i = 0; i < hRegionSmallestRectangle2.Rows; i++)
                             {

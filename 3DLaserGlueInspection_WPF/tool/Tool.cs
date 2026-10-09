@@ -975,7 +975,7 @@ namespace _3DLaserGlueInspection
                                 //Console.WriteLine($"point:{point}");
                             }
 
-                            imageControl.AddPolygon(regionPoints, Colors.Red, "fill");
+                            imageControl.AddPolygon(regionPoints, Color.FromArgb(128, 255, 0, 0), "fill");
 
                             //DispPolygonjHWindowControlEvent(regionPoints, Colors.Red, "fill");
 
@@ -1003,11 +1003,29 @@ namespace _3DLaserGlueInspection
                                 showWidth * cutSet.scaleSize, showHeight * cutSet.scaleSize, offsetX, offsetY, 0);
                             PointCollection ignoredHeightPoints = CreateLinePoints(data.item0, data.item1, data.item2, data.item3,
                                 showWidth * cutSet.scaleSize, showHeight * cutSet.scaleSize, offsetX, offsetY, baselineOffset);
+                            PointCollection rangeUpperPoints = CreateLinePoints(data.item0, data.item1, data.item2, data.item3,
+                                showWidth * cutSet.scaleSize, showHeight * cutSet.scaleSize, offsetX, offsetY,
+                                set.distBaseLineRangeUpper * cutSet.scaleSize);
+                            PointCollection rangeLowerPoints = CreateLinePoints(data.item0, data.item1, data.item2, data.item3,
+                                showWidth * cutSet.scaleSize, showHeight * cutSet.scaleSize, offsetX, offsetY,
+                                set.distBaseLineRangeLower * cutSet.scaleSize);
+                            
+                            // 屏蔽区间上限为红色，下限为绿色，距离与原生过滤算法一致。
+                            if (rangeUpperPoints.Count >= 2)
+                            {
+                                imageControl.AddPolyline(rangeUpperPoints, Colors.Red);
+                            }
+                            if (rangeLowerPoints.Count >= 2)
+                            {
+                                imageControl.AddPolyline(rangeLowerPoints, Colors.Green);
+                            }
 
+                            // 基准线
                             if (baselinePoints.Count >= 2)
                             {
                                 imageControl.AddPolyline(baselinePoints, Colors.Blue);
                             }
+                            // 忽略线
                             if (ignoredHeightPoints.Count >= 2)
                             {
                                 imageControl.AddPolyline(ignoredHeightPoints, Colors.Yellow);
@@ -1015,6 +1033,7 @@ namespace _3DLaserGlueInspection
 
                             }
 
+                           
                         }
 
 
