@@ -1000,6 +1000,12 @@ Cloud</value>
   <data name="SizeCorrection" xml:space="preserve">
     <value>Size Correction</value>
   </data>
+  <data name="RangeSizeCorrection" xml:space="preserve">
+    <value>Correct range</value>
+  </data>
+  <data name="RangeSizeCorrectionDescription" xml:space="preserve">
+    <value>Select start and end image IDs to correct each frame using the entered actual glue width and height. Disable shared correction coefficients first.</value>
+  </data>
   <data name="SoftwareRun" xml:space="preserve">
     <value>Software</value>
   </data>
@@ -1298,6 +1304,15 @@ Det Region</value>
   </data>
   <data name="ignoreHigh" xml:space="preserve">
     <value>ignore high</value>
+  </data>
+  <data name="BaseLineRangeLower" xml:space="preserve">
+    <value>Exclude min</value>
+  </data>
+  <data name="BaseLineRangeUpper" xml:space="preserve">
+    <value>Exclude max</value>
+  </data>
+  <data name="BaseLineRangeDescription" xml:space="preserve">
+    <value>Remove points whose signed distance from the baseline falls within the inclusive range. Above is positive; below is negative. Min must not exceed max.</value>
   </data>
   <data name="BaseLineDet" xml:space="preserve">
     <value>Base Line Det</value>

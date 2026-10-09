@@ -18,7 +18,7 @@
 
     </Window.Resources>
 
-    <Grid Background="#FF242B35">
+    <Grid x:Name="visionSettingsGrid" Background="#FF242B35">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="152*"/>
             <ColumnDefinition Width="1135*"/>
@@ -182,7 +182,7 @@
 
 
                                 <CheckBox  x:Name="_3DCloudDetCheck" Content="{x:Static resx:LanguageDict._3DGluingDetection}" HorizontalAlignment="Left" Margin="5,108,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
-                                <Grid x:Name="imageSetOther" Margin="0,597,0,0">
+                                <Grid x:Name="imageSetOther" Margin="0,667,0,0">
                                     <Label  Content="{x:Static resx:LanguageDict.CameraAndMovementDirectionAngle}" FontSize="14" Foreground="White" HorizontalAlignment="Left" Width="183" Height="55" Margin="0,12,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
                                     <TextBox x:Name="robotAndCamAngleNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="188,27,0,0" TextWrapping="Wrap" Text="0" Width="75" InputMethod.IsInputMethodEnabled="False" IsEnabled="False" VerticalAlignment="Top" />
                                     <CheckBox  x:Name="isUseAngleOptCheck" Content="{x:Static resx:LanguageDict.UseAngleOptimization}" HorizontalAlignment="Left" Margin="10,70,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
@@ -192,7 +192,7 @@
                                     <Button x:Name="runButton" Content="{x:Static resx:LanguageDict._3DGluingFrameDetection}" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,204,0,0" Click="runButton_Click2"/>
                                     <CheckBox  x:Name="saveCloudPointCheck" Content="{x:Static resx:LanguageDict.SavePointCloud}" HorizontalAlignment="Left" Margin="173,167,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Checked="saveCloudPointCheck_Checked" Unchecked="saveCloudPointCheck_Checked" />
 
-                                    <Border BorderBrush="White" BorderThickness="1" Height="220" Margin="5,244,10,0" VerticalAlignment="Top" Grid.ColumnSpan="2">
+                                    <Border BorderBrush="White" BorderThickness="1" Height="295" Margin="5,244,10,0" VerticalAlignment="Top" Grid.ColumnSpan="2">
                                         <Grid x:Name="correctionGrid" ShowGridLines="True" >
                                             <Button x:Name="correctionButton" Content="{x:Static resx:LanguageDict.SizeCorrection}" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="6,150,0,0" Click="correctionButton_Click"/>
                                             <Label Content="{x:Static resx:LanguageDict.CorrectionX}" FontSize="14" Foreground="White" Margin="0,10,99,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="153"/>
@@ -203,14 +203,26 @@
                                             <TextBox x:Name="correctionScaleSizeYNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="158,45,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="84" InputMethod.IsInputMethodEnabled="False" IsEnabled="False" />
                                             <TextBox x:Name="actualGlueWidthNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="158,80,0,0" TextWrapping="Wrap" Text="0" Width="84" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" VerticalAlignment="Top" />
                                             <TextBox x:Name="actualGlueHeightNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="158,115,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="84" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
-                                            <CheckBox  x:Name="coefficientSharingCheck" Content="{x:Static resx:LanguageDict.CommonCorrectionCoefficient}" HorizontalAlignment="Left" Margin="6,191,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" IsChecked="True" />
+                                            <Button x:Name="correctionRangeButton" Content="{x:Static resx:LanguageDict.RangeSizeCorrection}" FontSize="14" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="6,185,0,0" Click="correctionRangeButton_Click" ToolTip="{x:Static resx:LanguageDict.RangeSizeCorrectionDescription}" ToolTipService.ShowOnDisabled="True">
+                                                <Button.Style>
+                                                    <Style TargetType="Button">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsChecked, ElementName=coefficientSharingCheck}" Value="True">
+                                                                <Setter Property="IsEnabled" Value="False" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                            <TextBlock x:Name="correctionRangeStatusText" Text="-" FontSize="14" Foreground="White" Margin="6,217,6,0" VerticalAlignment="Top" TextWrapping="Wrap" />
+                                            <CheckBox  x:Name="coefficientSharingCheck" Content="{x:Static resx:LanguageDict.CommonCorrectionCoefficient}" HorizontalAlignment="Left" Margin="6,261,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" IsChecked="True" />
                                             <Button x:Name="correctionInitButton" Content="矫正初始化" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="145,150,0,0" Click="correctionInitButton_Click"/>
                                         </Grid>
                                     </Border>
 
                                 </Grid>
                                 <CheckBox  x:Name="useBaseLineDetCheck" Content="{x:Static resx:LanguageDict.useBaseLineDet}" HorizontalAlignment="Left" Margin="5,378,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
-                                <Grid Name="baseLineGrid" Margin="5,373,10,0" Height="125" VerticalAlignment="Top" Visibility="Visible">
+                                <Grid Name="baseLineGrid" Margin="5,373,10,0" Height="195" VerticalAlignment="Top" Visibility="Visible">
                                     <Border BorderBrush="White" BorderThickness="1" Margin="0,33,0,0">
                                         <Grid Margin="0,0,0,0"  Visibility="Visible">
                                             <Label  Content="mm" FontSize="14" Foreground="White" Margin="0,46,10,0" VerticalAlignment="Top" HorizontalAlignment="Right"/>
@@ -218,14 +230,20 @@
                                             <Button x:Name="runBaseLineCheck" Content="{x:Static resx:LanguageDict.BaseLineDet}" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="130,10,0,0" Visibility="Hidden"/>
                                             <Label  Content="{x:Static resx:LanguageDict.ignoreHigh}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="10,45,0,0" VerticalAlignment="Top"/>
                                             <TextBox x:Name="IgnoreHighNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="130,48,0,0" TextWrapping="Wrap" Text="0" Width="70" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" VerticalAlignment="Top" />
+                                            <Label Content="{x:Static resx:LanguageDict.BaseLineRangeLower}" FontSize="14" Foreground="White" HorizontalAlignment="Left" Margin="10,80,0,0" VerticalAlignment="Top"/>
+                                            <TextBox x:Name="baseLineRangeLowerNumericUpDown" FontSize="14" HorizontalAlignment="Left" Margin="130,83,0,0" TextWrapping="Wrap" Text="0" Width="70" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" VerticalAlignment="Top" IsEnabled="{Binding IsChecked, ElementName=useBaseLineDetCheck}" ToolTip="{x:Static resx:LanguageDict.BaseLineRangeDescription}" />
+                                            <Label Content="mm" FontSize="14" Foreground="White" Margin="0,81,10,0" VerticalAlignment="Top" HorizontalAlignment="Right"/>
+                                            <Label Content="{x:Static resx:LanguageDict.BaseLineRangeUpper}" FontSize="14" Foreground="White" HorizontalAlignment="Left" Margin="10,115,0,0" VerticalAlignment="Top"/>
+                                            <TextBox x:Name="baseLineRangeUpperNumericUpDown" FontSize="14" HorizontalAlignment="Left" Margin="130,118,0,0" TextWrapping="Wrap" Text="0" Width="70" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" VerticalAlignment="Top" IsEnabled="{Binding IsChecked, ElementName=useBaseLineDetCheck}" ToolTip="{x:Static resx:LanguageDict.BaseLineRangeDescription}" />
+                                            <Label Content="mm" FontSize="14" Foreground="White" Margin="0,116,10,0" VerticalAlignment="Top" HorizontalAlignment="Right"/>
                                         </Grid>
                                     </Border>
 
                                 </Grid>
 
                                 <!-- 气泡检测参数：每个图像参数可单独启用，并设置点间最小间隔。 -->
-                                <CheckBox x:Name="useBubbleDetCheck" Content="{x:Static resx:LanguageDict.EnableBubbleDetection}" HorizontalAlignment="Left" Margin="5,510,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
-                                <Grid x:Name="bubbleGrid" Margin="5,505,10,0" Height="83" VerticalAlignment="Top" Visibility="Visible">
+                                <CheckBox x:Name="useBubbleDetCheck" Content="{x:Static resx:LanguageDict.EnableBubbleDetection}" HorizontalAlignment="Left" Margin="5,580,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
+                                <Grid x:Name="bubbleGrid" Margin="5,575,10,0" Height="83" VerticalAlignment="Top" Visibility="Visible">
                                     <Border BorderBrush="White" BorderThickness="1" Margin="0,33,0,0">
                                         <Grid Margin="0,0,0,0"  Visibility="Visible">
                                             <Label  Content="mm" FontSize="14" Foreground="White" Margin="0,10,9,0" VerticalAlignment="Top" HorizontalAlignment="Right"/>

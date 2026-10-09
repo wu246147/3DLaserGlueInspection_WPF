@@ -997,6 +997,12 @@
   <data name="SizeCorrection" xml:space="preserve">
     <value>尺寸矫正</value>
   </data>
+  <data name="RangeSizeCorrection" xml:space="preserve">
+    <value>局部图片矫正</value>
+  </data>
+  <data name="RangeSizeCorrectionDescription" xml:space="preserve">
+    <value>选择起止图像 ID，使用当前实际胶宽、胶高逐张矫正；需关闭公共矫正系数。</value>
+  </data>
   <data name="SoftwareRun" xml:space="preserve">
     <value>软件运行</value>
   </data>
@@ -1295,6 +1301,15 @@
   </data>
   <data name="ignoreHigh" xml:space="preserve">
     <value>忽略高度</value>
+  </data>
+  <data name="BaseLineRangeLower" xml:space="preserve">
+    <value>屏蔽高度下限</value>
+  </data>
+  <data name="BaseLineRangeUpper" xml:space="preserve">
+    <value>屏蔽高度上限</value>
+  </data>
+  <data name="BaseLineRangeDescription" xml:space="preserve">
+    <value>删除相对基准面距离处于上下限之间的点（含边界）；上方为正，下方为负；下限不得大于上限。</value>
   </data>
   <data name="BaseLineDet" xml:space="preserve">
     <value>基准面检测</value>

@@ -2682,6 +2682,24 @@ namespace _3DLaserGlueInspection.Resources {
         }
 
         /// <summary>
+        ///     查找资源键 RangeSizeCorrection 对应的本地化字符串。
+        /// </summary>
+        public static string RangeSizeCorrection {
+            get {
+                return ResourceManager.GetString("RangeSizeCorrection", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 RangeSizeCorrectionDescription 对应的本地化字符串。
+        /// </summary>
+        public static string RangeSizeCorrectionDescription {
+            get {
+                return ResourceManager.GetString("RangeSizeCorrectionDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///     查找资源键 SoftwareRun 对应的本地化字符串。
         /// </summary>
         public static string SoftwareRun {
@@ -3569,6 +3587,33 @@ namespace _3DLaserGlueInspection.Resources {
         public static string ignoreHigh {
             get {
                 return ResourceManager.GetString("ignoreHigh", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 BaseLineRangeLower 对应的本地化字符串。
+        /// </summary>
+        public static string BaseLineRangeLower {
+            get {
+                return ResourceManager.GetString("BaseLineRangeLower", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 BaseLineRangeUpper 对应的本地化字符串。
+        /// </summary>
+        public static string BaseLineRangeUpper {
+            get {
+                return ResourceManager.GetString("BaseLineRangeUpper", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///     查找资源键 BaseLineRangeDescription 对应的本地化字符串。
+        /// </summary>
+        public static string BaseLineRangeDescription {
+            get {
+                return ResourceManager.GetString("BaseLineRangeDescription", resourceCulture);
             }
         }
 

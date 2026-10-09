@@ -543,6 +543,8 @@ namespace _3DLaserGlueInspection.subForm
         private void CopyBaseLine(ImageSet srcImageSet, ImageSet dstImageSet)
         {
             srcImageSet.distBaseLineThre = dstImageSet.distBaseLineThre;
+            srcImageSet.distBaseLineRangeLower = dstImageSet.distBaseLineRangeLower;
+            srcImageSet.distBaseLineRangeUpper = dstImageSet.distBaseLineRangeUpper;
             // 每张图片拥有独立的检测框，避免后续拖动或矫正影响其他图片。
             srcImageSet.baseLineRegion1 = CloneCorrectionRegion(dstImageSet.baseLineRegion1);
             srcImageSet.baseLineRegion2 = CloneCorrectionRegion(dstImageSet.baseLineRegion2);
@@ -879,6 +881,8 @@ namespace _3DLaserGlueInspection.subForm
             useBaseLineDetCheck.Unchecked += UpData;
 
             IgnoreHighNumericUpDown.TextChanged += UpData;
+            baseLineRangeLowerNumericUpDown.TextChanged += UpData;
+            baseLineRangeUpperNumericUpDown.TextChanged += UpData;
 
             useBubbleDetCheck.Checked += UpData;
             useBubbleDetCheck.Unchecked += UpData;
@@ -959,6 +963,8 @@ namespace _3DLaserGlueInspection.subForm
             useBaseLineDetCheck.Unchecked -= UpData;
 
             IgnoreHighNumericUpDown.TextChanged -= UpData;
+            baseLineRangeLowerNumericUpDown.TextChanged -= UpData;
+            baseLineRangeUpperNumericUpDown.TextChanged -= UpData;
 
             useBubbleDetCheck.Checked -= UpData;
             useBubbleDetCheck.Unchecked -= UpData;
@@ -1053,6 +1059,8 @@ namespace _3DLaserGlueInspection.subForm
 
                 imageSet.isUseBaseLine = (bool)useBaseLineDetCheck.IsChecked;
                 imageSet.distBaseLineThre = Convert.ToDouble(IgnoreHighNumericUpDown.Text);
+                imageSet.distBaseLineRangeLower = Convert.ToDouble(baseLineRangeLowerNumericUpDown.Text);
+                imageSet.distBaseLineRangeUpper = Convert.ToDouble(baseLineRangeUpperNumericUpDown.Text);
 
                 // 保存气泡检测开关和点间隔阈值到 ImageSet。
                 imageSet.isUseBubbleDet = (bool)useBubbleDetCheck.IsChecked;
@@ -1268,6 +1276,8 @@ namespace _3DLaserGlueInspection.subForm
 
                     useBaseLineDetCheck.IsChecked = imageSet.isUseBaseLine;
                     IgnoreHighNumericUpDown.Text = imageSet.distBaseLineThre.ToString();
+                    baseLineRangeLowerNumericUpDown.Text = imageSet.distBaseLineRangeLower.ToString();
+                    baseLineRangeUpperNumericUpDown.Text = imageSet.distBaseLineRangeUpper.ToString();
 
                     // 切换图像参数时同步加载气泡检测设置。
                     useBubbleDetCheck.IsChecked = imageSet.isUseBubbleDet;
@@ -2270,6 +2280,11 @@ namespace _3DLaserGlueInspection.subForm
                         //{
                         //    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoImageSet);
                         //}
+                        if (!CamCenter3DPoseDict.ContainsKey(camKey))
+                        {
+                            System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.ThreeDTrackEmptyRunFirst);
+                            return;
+                        }
 
                         var poseKey = CamCenter3DPoseDict[camKey][cutSetListBox.SelectedIndex].Keys.ToList();
 

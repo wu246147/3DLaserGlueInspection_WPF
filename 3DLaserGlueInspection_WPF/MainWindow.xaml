@@ -79,7 +79,7 @@
                     Background="#FF242B35"
                     BorderBrush="{x:Null}"
                     Content="{x:Static resx:LanguageDict.log}" 
-                    ContentStringFormat="{}   {0} 1.8.1 "
+                    ContentStringFormat="{}   {0} 1.9.1 "
                     FontSize="22"
                     Foreground="#FF1679D0" />
 

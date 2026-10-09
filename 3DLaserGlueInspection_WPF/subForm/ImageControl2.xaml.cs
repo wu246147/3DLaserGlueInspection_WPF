@@ -44,8 +44,8 @@ namespace _3DLaserGlueInspection.subForm
             Id = "";
             X = 10;
             Y = 10;
-            Width = 10;
-            Height = 10;
+            Width = 50;
+            Height = 50;
             Angle = 0;
             IsDraggable = true;
             IsRotatable = true;

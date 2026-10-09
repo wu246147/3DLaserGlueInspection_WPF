@@ -423,6 +423,18 @@ namespace _3DLaserGlueInspection
                 IntPtr filteredPoints);
 
         [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
+        ///删除相对基准面的距离位于上下限闭区间内的点
+        public static extern int FilterPointsByLineRange(
+                IntPtr inputPoints,
+                double item0,
+                double item1,
+                double item2,
+                double item3,
+                double lowerDist,
+                double upperDist,
+                IntPtr filteredPoints);
+
+        [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
         ///基于基准面的涂胶检测
         public static extern int glueDet(
             IntPtr inputPoints,
@@ -1170,6 +1182,7 @@ namespace _3DLaserGlueInspection
                 using (Mat selectBaseLinePoints2 = new Mat())
                 using (Mat selectBaseLinePoints = new Mat())
                 using (Mat selectSpongeStripPoints = new Mat())
+                using (Mat selectRangePoints = new Mat())
                 {
                     Vision.GetPointsInRotatedRect(OutLine.CvPtr, selectBaseLinePoints1.CvPtr,
                         imageSet.baseLineRegion1.CenterX, imageSet.baseLineRegion1.CenterY,
@@ -1190,7 +1203,11 @@ namespace _3DLaserGlueInspection
                     Vision.FilterPointsByLine(OutLine.CvPtr, item0, item1, item2, item3,
                         imageSet.distBaseLineThre * cutSet.scaleSize, selectSpongeStripPoints.CvPtr);
 
-                    Vision.glueDet(selectSpongeStripPoints.CvPtr, item0, item1, item2, item3,
+                    Vision.FilterPointsByLineRange(selectSpongeStripPoints.CvPtr, item0, item1, item2, item3,
+                        imageSet.distBaseLineRangeLower * cutSet.scaleSize,
+                        imageSet.distBaseLineRangeUpper * cutSet.scaleSize, selectRangePoints.CvPtr);
+
+                    Vision.glueDet(selectRangePoints.CvPtr, item0, item1, item2, item3,
                         out existGlue, out centerX, out centerY, out phi, out width, out height,
                         out maxArea, outMaxRegion.CvPtr, outRegionRectangle2.CvPtr);
                 }
@@ -1734,6 +1751,9 @@ namespace _3DLaserGlueInspection
         // 是否使用基线
         public bool isUseBaseLine = false;
         public double distBaseLineThre = 0.5;
+        // 基准面距离屏蔽区间，单位为 mm；旧配置未包含这两个参数时默认均为 0。
+        public double distBaseLineRangeLower = 0;
+        public double distBaseLineRangeUpper = 0;
 
         // 是否启用气泡检测
         public bool isUseBubbleDet = false;
