@@ -889,7 +889,10 @@ namespace _3DLaserGlueInspection
                             points.Add(point);
                         }
                         //DispPolylinejHWindowControlEvent(points, Colors.Gray);
-                        imageControl.AddPolyline(points, Colors.Gray);
+                        //imageControl.AddPolyline(points, Colors.Gray);
+
+                        // 改成用点来显示
+                        imageControl.AddPoints(points, Colors.Gray);
                     }
                 }
                 catch (Exception ex)
@@ -937,7 +940,10 @@ namespace _3DLaserGlueInspection
 
                         }
                         //DispPolylinejHWindowControlEvent(points, Colors.Gray);
-                        imageControl.AddPolyline(points, Colors.Gray);
+                        //imageControl.AddPolyline(points, Colors.Gray);
+
+                        // 改成用点来显示
+                        imageControl.AddPoints(points, Colors.Gray);
 
 
                       

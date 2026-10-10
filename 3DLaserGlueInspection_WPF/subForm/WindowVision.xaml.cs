@@ -2372,9 +2372,8 @@ namespace _3DLaserGlueInspection.subForm
                                     point.Y = results[i][1];
                                     points.Add(point);
 
-                                    hWindowModel.AddCircle(point, 1, Colors.Blue);
-
                                 }
+                                hWindowModel.AddPoints(points, Colors.Blue);
                                 //hWindowModel.AddPolyline(points, Colors.Red);
                             }
                             else
@@ -4904,9 +4903,8 @@ namespace _3DLaserGlueInspection.subForm
                                     point.Y = results[i][1];
                                     points.Add(point);
 
-                                    hWindowModel.AddCircle(point, 1, Colors.Blue);
-
                                 }
+                                hWindowModel.AddPoints(points, Colors.Blue);
                                 //hWindowModel.AddPolyline(points, Colors.Red);
                             }
                             else

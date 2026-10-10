@@ -396,6 +396,10 @@ namespace _3DLaserGlueInspection
         /// 在候选生成阶段增加反射噪声的方向过滤。
         public static extern int thinningF(IntPtr inputMat, IntPtr outImage, IntPtr outPointMat, int min_thre, int min_width = 1);
 
+        [DllImport(DllName2, CallingConvention = CallingConvention.StdCall)]
+        ///激光提取函数，默认局部灰度差为1，辅助追踪轮廓可选
+        public static extern int thinningL(IntPtr inputMat, IntPtr outImage, IntPtr outPointMat, double minContrast = 1.0, IntPtr trackingProfile = default(IntPtr));
+
         [DllImport(DllName2, CallingConvention = CallingConvention.Cdecl)]
         ///获取矩形框内的点
         public static extern int GetPointsInRotatedRect(IntPtr laserPoints,IntPtr selectLaserPoints, double centerX, double centerY, double width, double height, double angle
@@ -664,10 +668,10 @@ namespace _3DLaserGlueInspection
         public static void getLaserPosition(Mat Image, double minThreshold,int laserMinWidth, out Mat outlinePoints, int offsetX = 0, int offsetY = 0)
         {
             outlinePoints = new Mat();
-            //Cv2.ImWrite("thinningH.bmp", Image);
             using (Mat outImage = new Mat())
             {
-                thinningF(Image.CvPtr, outImage.CvPtr, outlinePoints.CvPtr, (int)minThreshold, laserMinWidth);
+                // thinningL 使用默认局部灰度差 1.0，无最小线宽参数；保留旧入参以兼容调用方。
+                thinningL(Image.CvPtr, outImage.CvPtr, outlinePoints.CvPtr);
             }
 
             ////添加

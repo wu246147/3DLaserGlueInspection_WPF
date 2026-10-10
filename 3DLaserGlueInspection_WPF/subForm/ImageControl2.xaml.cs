@@ -158,6 +158,8 @@ namespace _3DLaserGlueInspection.subForm
 
         private PointCollection drawPoints = new PointCollection();
 
+        private readonly PointLayer _pointLayer;
+
         #region 可拖拉矩形参数
 
         // ============ 矩形系统 ============
@@ -182,6 +184,10 @@ namespace _3DLaserGlueInspection.subForm
         public ImageControl2()
         {
             InitializeComponent();
+
+            // 点共用一个绘图对象，不为每个点创建 Shape 或布局元素。
+            _pointLayer = new PointLayer();
+            grid.Children.Insert(1, _pointLayer);
 
 
             // 创建矩形专用覆盖层（不影响原有 canvas）
@@ -301,6 +307,7 @@ namespace _3DLaserGlueInspection.subForm
         }
         public void ClearChildren()
         {
+            ClearPoints();
             childrenImagePointsList.Clear();
             childrenImageXList.Clear();
             childrenImageYList.Clear();
@@ -619,7 +626,7 @@ namespace _3DLaserGlueInspection.subForm
             //canvas.EndInit();
 
             PointCollection points = new PointCollection();
-            int segments = 64;
+            int segments = 16;
             for (int i = 0; i <= segments; i++)
             {
                 double angle = 2.0 * Math.PI * i / segments;
@@ -631,6 +638,154 @@ namespace _3DLaserGlueInspection.subForm
 
 
             return polygon;
+        }
+
+
+        /// <summary>
+        /// 添加实心点。point 使用图像坐标，pointSize 为适配视图中的直径（DIP），随滚轮缩放。
+        /// 与其他绘图接口一样在 UI 线程调用；连续添加会合并到一次绘制。
+        /// </summary>
+        public void AddPoint(Point point, Color color, double pointSize = 2)
+        {
+            _pointLayer.AddPoint(point, color, pointSize);
+        }
+
+        /// <summary>
+        /// 批量添加实心点，大量点或每帧数据优先使用此方法。忽略非有限坐标。
+        /// 实时更新可先 ClearPoints，再添加当前帧；SetImageSource/ClearChildren 也会清除点。
+        /// </summary>
+        public void AddPoints(IEnumerable<Point> points, Color color, double pointSize = 2)
+        {
+            _pointLayer.AddPoints(points, color, pointSize);
+        }
+
+        public void ClearPoints()
+        {
+            _pointLayer.Clear();
+        }
+
+        private sealed class PointLayer : FrameworkElement
+        {
+            private struct PointMarker
+            {
+                public Point Position;
+                public SolidColorBrush Brush;
+                public double Radius;
+            }
+
+            private readonly DrawingVisual _visual = new DrawingVisual();
+            private readonly List<PointMarker> _points = new List<PointMarker>();
+            private readonly Dictionary<Color, SolidColorBrush> _brushes = new Dictionary<Color, SolidColorBrush>();
+            private bool _redrawPending;
+            private double _scaleX = 1, _scaleY = 1, _offsetX, _offsetY;
+
+            public PointLayer()
+            {
+                IsHitTestVisible = false;
+                AddVisualChild(_visual);
+            }
+
+            protected override int VisualChildrenCount => 1;
+
+            protected override Visual GetVisualChild(int index)
+            {
+                if (index != 0) throw new ArgumentOutOfRangeException(nameof(index));
+                return _visual;
+            }
+
+            public void AddPoint(Point point, Color color, double pointSize)
+            {
+                VerifyAccess();
+                ValidatePointSize(pointSize);
+                if (!IsFinite(point.X) || !IsFinite(point.Y)) return;
+                AppendPoint(point, GetBrush(color), pointSize / 2);
+                QueueRedraw();
+            }
+
+            public void AddPoints(IEnumerable<Point> points, Color color, double pointSize)
+            {
+                VerifyAccess();
+                if (points == null) throw new ArgumentNullException(nameof(points));
+                ValidatePointSize(pointSize);
+                SolidColorBrush brush = GetBrush(color);
+                double radius = pointSize / 2;
+                foreach (Point point in points)
+                {
+                    if (IsFinite(point.X) && IsFinite(point.Y))
+                        AppendPoint(point, brush, radius);
+                }
+                QueueRedraw();
+            }
+
+            private void AppendPoint(Point point, SolidColorBrush brush, double radius)
+            {
+                _points.Add(new PointMarker { Position = point, Brush = brush, Radius = radius });
+            }
+
+            private SolidColorBrush GetBrush(Color color)
+            {
+                SolidColorBrush brush;
+                if (!_brushes.TryGetValue(color, out brush))
+                {
+                    brush = new SolidColorBrush(color);
+                    brush.Freeze();
+                    _brushes.Add(color, brush);
+                }
+                return brush;
+            }
+
+            private static bool IsFinite(double value)
+            {
+                return !double.IsNaN(value) && !double.IsInfinity(value);
+            }
+
+            private static void ValidatePointSize(double pointSize)
+            {
+                if (!IsFinite(pointSize) || pointSize <= 0)
+                    throw new ArgumentOutOfRangeException(nameof(pointSize), "点的直径必须为正的有限数值。");
+            }
+
+            public void UpdateViewport(double scaleX, double scaleY, double offsetX, double offsetY)
+            {
+                if (_scaleX == scaleX && _scaleY == scaleY && _offsetX == offsetX && _offsetY == offsetY)
+                    return;
+                _scaleX = scaleX;
+                _scaleY = scaleY;
+                _offsetX = offsetX;
+                _offsetY = offsetY;
+                QueueRedraw();
+            }
+
+            public void Clear()
+            {
+                VerifyAccess();
+                _points.Clear();
+                _brushes.Clear();
+                using (DrawingContext context = _visual.RenderOpen()) { }
+            }
+
+            private void QueueRedraw()
+            {
+                if (_redrawPending) return;
+                _redrawPending = true;
+                Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Render,
+                    new Action(Redraw));
+            }
+
+            private void Redraw()
+            {
+                _redrawPending = false;
+                using (DrawingContext context = _visual.RenderOpen())
+                {
+                    foreach (PointMarker marker in _points)
+                    {
+                        Point center = new Point(
+                            _offsetX + marker.Position.X * _scaleX,
+                            _offsetY + marker.Position.Y * _scaleY);
+                        context.DrawEllipse(marker.Brush, null, center, marker.Radius, marker.Radius);
+                    }
+                }
+            }
         }
 
 
@@ -700,6 +855,7 @@ namespace _3DLaserGlueInspection.subForm
         /// </summary>
         public void UpdataChildren()
         {
+            _pointLayer.UpdateViewport(scaleX, scaleY, leftRightSpace, topBottomSpace);
             for (int i = 0; i < childrenList.Count; i++)
             {
                 int imageX = childrenImageXList[i];
