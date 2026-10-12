@@ -645,6 +645,24 @@ namespace _3DLaserGlueInspection
                     0);
         }
 
+        private void handVinCheck_Click(object sender, RoutedEventArgs e)
+        {
+            model.isHandVIN = (bool)handVinCheck.IsChecked;
+            if (model.isHandVIN)
+            {
+                handVIN.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                handVIN.Visibility = Visibility.Hidden;
+            }
+        }
+
+        private void handVIN_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            model.handVIN = handVIN.Text;
+        }
+
         //void ShowImageData(int showWidth, int showHeight, Mat hXLDCont10mm)
         //{
         //    if (!showing)

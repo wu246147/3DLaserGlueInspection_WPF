@@ -378,7 +378,7 @@
                     x:Name="ButtonRun"
                     Grid.Row="1"
                     Width="150"
-                    Margin="0,64,0,63"
+                    Margin="0,106,0,21"
                     HorizontalAlignment="Center"
                     Click="ButtonRun_Click"
                     Content="{Binding buttonRunContentControl}"
@@ -386,6 +386,38 @@
                     Tag="{Binding buttonRunTagControl}"
                     Template="{StaticResource IconTextButtonTemplate}" />
                 <Button Content="test" HorizontalAlignment="Center" Margin="0,144,0,0" Grid.Row="1" VerticalAlignment="Top" Click="Button_Click" Visibility="Hidden"/>
+                <Label
+                    Grid.Row="1"
+                    Margin="10,47,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Content="VIN码:"
+                    FontSize="14"
+                    Foreground="White" />
+                <CheckBox
+                     x:Name="handVinCheck"
+                     FontSize="14"
+                     Margin="18,13,0,0"
+                     HorizontalAlignment="Left"
+                     VerticalAlignment="Top"
+                     Content="手动设置VIN"
+                     Foreground="White"
+                     IsChecked="False"
+                     Visibility="Visible"
+                     Unchecked="handVinCheck_Click" Grid.Row="1" Checked="handVinCheck_Click" />
+
+
+                <TextBox
+                x:Name="handVIN"
+                Width="142"
+                Margin="68,48,0,0"
+                HorizontalAlignment="Left"
+                Background="#FF2A3440"
+                Foreground="White"
+                Visibility="Visible"
+                TextChanged="handVIN_TextChanged"
+                IsEnabled = "False"
+                TextWrapping="Wrap" VerticalAlignment="Top" Grid.Row="1" />
 
             </Grid>
 

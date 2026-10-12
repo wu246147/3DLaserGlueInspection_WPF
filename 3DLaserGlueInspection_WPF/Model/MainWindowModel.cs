@@ -125,6 +125,10 @@ namespace _3DLaserGlueInspection
         // 空跑模式
         public bool isDemoMode = false;
 
+        // 手动输入VIN模式
+        public bool isHandVIN = false;
+        public string handVIN = "";
+
         public MainWindowModel()
         {
             LoadCommunicationTypes();
@@ -2535,19 +2539,27 @@ namespace _3DLaserGlueInspection
             if (!robot.Read(DI.CarNumber, out CarNumber)) return false;
             ID = CarNumber;
 
-            if (isUsePLC)
+            if (isHandVIN)
             {
-                if (plc.Read(DI.InVIN, out inVIN))
+                inVIN = handVIN;
+            }
+            else
+            {
+                if (isUsePLC)
                 {
+                    if (plc.Read(DI.InVIN, out inVIN))
+                    {
 
-                    ShowMessage($"VIN 读取成功：{inVIN}");
-                }
-                else
-                {
-                    ShowMessage(robot.ErrMsg, LogType.warn);
-                    return false;
+                        ShowMessage($"VIN 读取成功：{inVIN}");
+                    }
+                    else
+                    {
+                        ShowMessage(robot.ErrMsg, LogType.warn);
+                        return false;
+                    }
                 }
             }
+            
 
 
 
