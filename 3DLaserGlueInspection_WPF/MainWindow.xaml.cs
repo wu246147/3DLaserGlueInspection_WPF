@@ -97,6 +97,9 @@ namespace _3DLaserGlueInspection
                 case PlcType.ToyotaPlc:
                     model.plc = new ToyotaPlc();
                     break;
+                case PlcType.PISerialPort:
+                    model.plc = new PISerialPort();
+                    break;
             }
 
             //语言选择确定

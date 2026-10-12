@@ -60,6 +60,7 @@ namespace _3DLaserGlueInspection
         MelsecPlc = 0,  //三菱
         OmronPlc,       //欧姆龙
         ToyotaPlc,      //丰田
+        PISerialPort,   //PI 工具卡 RS232
     }
 
     public class MelsecPlc : ISignal, IHsl
@@ -1135,4 +1136,7 @@ namespace _3DLaserGlueInspection
             return plc.Write(address, value);
         }
     }
+
+
+
 }

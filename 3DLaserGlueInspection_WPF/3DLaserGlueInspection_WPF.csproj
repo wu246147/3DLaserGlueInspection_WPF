@@ -204,6 +204,9 @@
     <Compile Include="subForm\WindowRobot2.xaml.cs">
       <DependentUpon>WindowRobot2.xaml</DependentUpon>
     </Compile>
+    <Compile Include="subForm\WindowSerialPort.xaml.cs">
+      <DependentUpon>WindowSerialPort.xaml</DependentUpon>
+    </Compile>
     <Compile Include="subForm\WindowVision.xaml.cs">
       <DependentUpon>WindowVision.xaml</DependentUpon>
     </Compile>
@@ -213,6 +216,7 @@
     <Compile Include="tool\Controls.cs" />
     <Compile Include="tool\HFileIO.cs" />
     <Compile Include="tool\HMatrixTransform.cs" />
+    <Compile Include="tool\PISerialPort.cs" />
     <Compile Include="Model\MainModel.cs" />
     <Compile Include="subForm\User3DShowControl_H.xaml.cs">
       <DependentUpon>User3DShowControl_H.xaml</DependentUpon>
@@ -292,6 +296,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="subForm\WindowRobot2.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="subForm\WindowSerialPort.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

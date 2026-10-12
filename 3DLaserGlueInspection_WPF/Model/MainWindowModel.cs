@@ -120,6 +120,8 @@ namespace _3DLaserGlueInspection
         public IHsl plc ;
         public PlcType plcType = PlcType.ToyotaPlc;
 
+        public bool isUsePLC = false;
+
         // 空跑模式
         public bool isDemoMode = false;
 
@@ -163,6 +165,9 @@ namespace _3DLaserGlueInspection
                 {
                     plcType = parsedPlcType;
                 }
+                
+                bool isUsePLCValue= bool.Parse(root.Element("isUsePLC").Value);
+                isUsePLC = isUsePLCValue;
             }
             catch (Exception ex)
             {
@@ -396,15 +401,18 @@ namespace _3DLaserGlueInspection
                     }
                 }
 
-                //if (plc.Open())
-                //{
-                //    ShowMessage("PLC连接成功");
-                //}
-                //else
-                //{
-                //    ShowMessage("PLC连接失败" + plc.ErrMsg, LogType.ng);
-                //    return;
-                //}
+                if (isUsePLC)
+                {
+                    if (plc.Open())
+                    {
+                        ShowMessage("PLC连接成功");
+                    }
+                    else
+                    {
+                        ShowMessage("PLC连接失败" + plc.ErrMsg, LogType.ng);
+                        return;
+                    }
+                }
 
 
                 //if (io.Open())
@@ -1447,6 +1455,22 @@ namespace _3DLaserGlueInspection
 
                     }
 
+                    // 发送信号给PLC
+                    if (isUsePLC)
+                    {
+                        if (totalResult || isDemoMode)
+                        {
+                            //SocketSend(0);
+                            if (!plc.Write(DO.Result, 1)) return;
+
+                        }
+                        else
+                        {
+                            //SocketSend(-1);
+                            if (!plc.Write(DO.Result, 0)) return;
+
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -1593,16 +1617,19 @@ namespace _3DLaserGlueInspection
                         return;
                     }
                 }
-
-                if (plc.Open())
+                if (isUsePLC)
                 {
-                    ShowMessage("PLC连接成功");
+                    if (plc.Open())
+                    {
+                        ShowMessage("PLC连接成功");
+                    }
+                    else
+                    {
+                        ShowMessage("PLC连接失败" + plc.ErrMsg, LogType.ng);
+                        return;
+                    }
                 }
-                else
-                {
-                    ShowMessage("PLC连接失败" + plc.ErrMsg, LogType.ng);
-                    return;
-                }
+                
                 #endregion
 
                 mainModel.softwareRunLabelColorControl = labelColorEnum["green"];
@@ -2508,16 +2535,20 @@ namespace _3DLaserGlueInspection
             if (!robot.Read(DI.CarNumber, out CarNumber)) return false;
             ID = CarNumber;
 
-            //if (plc.Read(DI.InVIN, out inVIN))
-            //{
+            if (isUsePLC)
+            {
+                if (plc.Read(DI.InVIN, out inVIN))
+                {
 
-            //    ShowMessage($"VIN 读取成功：{inVIN}");
-            //}
-            //else
-            //{
-            //    ShowMessage(robot.ErrMsg, LogType.warn);
-            //    return false;
-            //}
+                    ShowMessage($"VIN 读取成功：{inVIN}");
+                }
+                else
+                {
+                    ShowMessage(robot.ErrMsg, LogType.warn);
+                    return false;
+                }
+            }
+
 
 
             SetCurrentRunID(ID);
