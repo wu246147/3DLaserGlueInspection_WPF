@@ -632,16 +632,7 @@ namespace _3DLaserGlueInspection.subForm
 
         private void ApplyCorrectionScale(Mat points, ImageSet detectionImageSet)
         {
-            if (points == null)
-            {
-                return;
-            }
-
-            for (int i = 0; i < points.Rows; i++)
-            {
-                points.At<double>(i, 0) *= detectionImageSet.correctionScaleSizeX;
-                points.At<double>(i, 1) *= detectionImageSet.correctionScaleSizeY;
-            }
+            Vision.ApplySizeCorrection(points, detectionImageSet);
         }
 
         private void UpdateResultStatus()

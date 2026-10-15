@@ -404,7 +404,7 @@
                      Foreground="White"
                      IsChecked="False"
                      Visibility="Visible"
-                     Unchecked="handVinCheck_Click" Grid.Row="1" Checked="handVinCheck_Click" />
+                     Unchecked="handVinCheck_Click" Grid.Row="1" Checked="handVinCheck_Click" FontFamily="Microsoft YaHei" />
 
 
                 <TextBox

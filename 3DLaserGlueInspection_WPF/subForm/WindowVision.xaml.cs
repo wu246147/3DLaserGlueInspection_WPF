@@ -589,8 +589,7 @@ namespace _3DLaserGlueInspection.subForm
 
         private void CopyCorrectionScaleSize(ImageSet srcImageSet, ImageSet dstImageSet)
         {
-            srcImageSet.correctionScaleSizeX = dstImageSet.correctionScaleSizeX;
-            srcImageSet.correctionScaleSizeY = dstImageSet.correctionScaleSizeY;
+            ApplyCorrectionMatrix(srcImageSet, dstImageSet.GetSizeCorrectionMatrix());
 
             isAlter = true;
 
@@ -1312,8 +1311,7 @@ namespace _3DLaserGlueInspection.subForm
 
                     isUseAngleOptCheck.IsChecked = imageSet.isUseAngleOpt;
 
-                    correctionScaleSizeXNumericUpDown.Text = imageSet.correctionScaleSizeX.ToString();
-                    correctionScaleSizeYNumericUpDown.Text = imageSet.correctionScaleSizeY.ToString();
+                    ShowCorrectionRatios(imageSet);
 
                     useBaseLineDetCheck.IsChecked = imageSet.isUseBaseLine;
                     useHalfGlueWidthCheck.IsChecked = imageSet.isUseHalfGlueWidth;
@@ -1419,6 +1417,39 @@ namespace _3DLaserGlueInspection.subForm
 
         }
 
+
+        private void saveParametersButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (isCorrectingRange)
+                return;
+            if (set == null || carTypeComboBox.SelectedIndex < 0)
+            {
+                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.PleaseSelectTheVehicleModelFirst);
+                return;
+            }
+            try
+            {
+                UpData(null, EventArgs.Empty);
+                if (imageSet != null)
+                    updateBaseLineRegion();
+                if (!set.Save())
+                {
+                    isAlter = true;
+                    System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.SaveFailed + set.ErrMsg,
+                        _3DLaserGlueInspection.Resources.LanguageDict.Prompt,
+                        System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                    return;
+                }
+                isAlter = false;
+                System.Windows.Forms.MessageBox.Show(string.Format(
+                    _3DLaserGlueInspection.Resources.LanguageDict.VisionParametersSaved, set.Name));
+            }
+            catch (Exception ex)
+            {
+                isAlter = true;
+                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.SaveFailed + ex.Message);
+            }
+        }
 
         private void carTypeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -2155,23 +2186,7 @@ namespace _3DLaserGlueInspection.subForm
                     }
 
 
-                    {
-                        //对两个方向进行矫正
-                        double scaleX = imageSet.correctionScaleSizeX;
-                        double scaleY = imageSet.correctionScaleSizeY;
-
-                        Mat correctionPoints = new Mat();
-                        correctionPoints = hXLDCont10mm.Clone();
-
-                        for (int id = 0; id < correctionPoints.Rows; id++)
-                        {
-                            correctionPoints.At<double>(id, 0) = correctionPoints.At<double>(id, 0) * scaleX;
-                            correctionPoints.At<double>(id, 1) = correctionPoints.At<double>(id, 1) * scaleY;
-
-                        }
-
-                        hXLDCont10mm = correctionPoints.Clone();
-                    }
+                    Vision.ApplySizeCorrection(hXLDCont10mm, imageSet);
 
                 }
             }
@@ -3456,23 +3471,7 @@ namespace _3DLaserGlueInspection.subForm
 
                                                 hXLDCont10mm = correctionPoints.Clone();
                                             }
-                                            {
-                                                //对两个方向进行矫正
-                                                double scaleX = imageSet.correctionScaleSizeX;
-                                                double scaleY = imageSet.correctionScaleSizeY;
-
-                                                Mat correctionPoints = new Mat();
-                                                correctionPoints = hXLDCont10mm.Clone();
-
-                                                for (int id = 0; id < correctionPoints.Rows; id++)
-                                                {
-                                                    correctionPoints.At<double>(id, 0) = correctionPoints.At<double>(id, 0) * scaleX;
-                                                    correctionPoints.At<double>(id, 1) = correctionPoints.At<double>(id, 1) * scaleY;
-
-                                                }
-
-                                                hXLDCont10mm = correctionPoints.Clone();
-                                            }
+                                            Vision.ApplySizeCorrection(hXLDCont10mm, imageSet);
 
                                             //如果存在
                                             if (!hXLDCont10mm.Empty())
@@ -3890,7 +3889,7 @@ namespace _3DLaserGlueInspection.subForm
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < 1; i++)
             {
                 if (imageSet.轮廓检测)
                 {
@@ -3999,23 +3998,7 @@ namespace _3DLaserGlueInspection.subForm
                             }
 
 
-                            {
-                                //对两个方向进行矫正
-                                double scaleX = imageSet.correctionScaleSizeX;
-                                double scaleY = imageSet.correctionScaleSizeY;
-
-                                Mat correctionPoints = new Mat();
-                                correctionPoints = hXLDCont10mm.Clone();
-
-                                for (int id = 0; id < correctionPoints.Rows; id++)
-                                {
-                                    correctionPoints.At<double>(id, 0) = correctionPoints.At<double>(id, 0) * scaleX;
-                                    correctionPoints.At<double>(id, 1) = correctionPoints.At<double>(id, 1) * scaleY;
-
-                                }
-
-                                hXLDCont10mm = correctionPoints.Clone();
-                            }
+                            Vision.ApplySizeCorrection(hXLDCont10mm, imageSet);
 
                             //Vision.showMatPoint(hXLDCont10mm, "hXLDCont10mm");
                             ////添加
@@ -4174,6 +4157,7 @@ namespace _3DLaserGlueInspection.subForm
             }
             var failures = new List<string>();
             int successCount = 0;
+            int relaxedCount = 0;
             isCorrectingRange = true;
             visionSettingsGrid.IsEnabled = false;
             correctionRangeStatusText.Text = $"0 / {selectedImageCount}";
@@ -4198,7 +4182,7 @@ namespace _3DLaserGlueInspection.subForm
                         long imageKey = imageKeys[index];
                         ImageSet original = frameParameters[index];
                         ImageSet candidate = original.Clone();
-                        // 检测阶段只读取原框；ApplyCorrectionScale 仅在启用基准线时复制并偏移。
+                        // 在副本上校准；矩阵和外接旋转矩形通过尺寸复检后才提交。
                         // 运动方向仍使用原图像序列的前一帧，不能把所选起始 ID 当成第一帧。
                         long? previousKey = index > 0 ? (long?)imageKeys[index - 1] : null;
 
@@ -4212,11 +4196,10 @@ namespace _3DLaserGlueInspection.subForm
                             }
                             else
                             {
-                                original.correctionScaleSizeX = candidate.correctionScaleSizeX;
-                                original.correctionScaleSizeY = candidate.correctionScaleSizeY;
-                                original.baseLineRegion1 = candidate.baseLineRegion1;
-                                original.baseLineRegion2 = candidate.baseLineRegion2;
+                                CommitCorrectionParameters(original, candidate);
                                 successCount++;
+                                if (outcome.UsedRelaxedTolerance)
+                                    relaxedCount++;
                                 isAlter = true;
 
                                 // 只刷新原来选中的图片，避免切图事件触发额外检测。
@@ -4240,6 +4223,8 @@ namespace _3DLaserGlueInspection.subForm
             }
 
             string summary = $"局部图片矫正完成（图像 ID {startId}～{endId}）：成功 {successCount} 张，失败 {failures.Count} 项。";
+            if (relaxedCount > 0)
+                summary += $"\r\n其中 {relaxedCount} 张按放宽精度 ±{CorrectionRelaxedSizeTolerance:F2} mm 通过。";
             if (failures.Count > 0)
                 summary += "\r\n失败图片保留原系数和原检测框：\r\n" + string.Join("\r\n", failures);
             System.Windows.Forms.MessageBox.Show(summary);
@@ -4249,6 +4234,7 @@ namespace _3DLaserGlueInspection.subForm
         private sealed class CorrectionFrameResult : IDisposable
         {
             public string Error;
+            public bool UsedRelaxedTolerance;
             public double MotionAngle;
             public Mat CorrectedContour;
             public Mat DetectionContour;
@@ -4274,25 +4260,10 @@ namespace _3DLaserGlueInspection.subForm
             CorrectionFrameResult verified = null;
             try
             {
-                if (!IsPositiveCorrectionValue(candidate.correctionScaleSizeX)
-                    || !IsPositiveCorrectionValue(candidate.correctionScaleSizeY))
-                    throw new InvalidOperationException("原矫正系数无效，请先初始化。");
-
+                candidate.GetSizeCorrectionMatrix().Validate();
                 originalContour = GetCorrectionContour(frameImage, candidate, cameraKey, imageKey,
                     previousKey, handEyeType, out double motionAngle);
-                double oldScaleX = candidate.correctionScaleSizeX;
-                double oldScaleY = candidate.correctionScaleSizeY;
-                double newScaleX, newScaleY;
-                using (CorrectionFrameResult before = DetectCorrectionContour(originalContour, candidate))
-                {
-                    // 检测值已经包含旧系数，必须先消除旧系数再计算新值。
-                    newScaleX = actualWidth / (before.Measurement.glueWidth / oldScaleX);
-                    newScaleY = actualHeight / (before.Measurement.glueHeight / oldScaleY);
-                }
-                // 单张和局部图片矫正使用同一规则：仅启用基准线检测时偏移检测框。
-                ApplyCorrectionScale(candidate, newScaleX, newScaleY);
-
-                verified = DetectCorrectionContour(originalContour, candidate);
+                verified = CalibrateCorrectionContour(originalContour, candidate, actualWidth, actualHeight);
                 verified.MotionAngle = motionAngle;
                 return verified;
             }
@@ -4305,6 +4276,119 @@ namespace _3DLaserGlueInspection.subForm
             {
                 originalContour?.Dispose();
             }
+        }
+
+        private const double CorrectionSizeTolerance = 0.005; // mm，与界面两位小数的显示精度一致。
+        private const double CorrectionRelaxedSizeTolerance = 0.05; // 严格迭代不能继续改善时的最大可接受误差。
+
+        private CorrectionFrameResult CalibrateCorrectionContour(Mat originalContour, ImageSet candidate,
+            double actualWidth, double actualHeight)
+        {
+            // 始终从本次校准前的框生成外接矩形，避免多次近似不断扩大选点范围。
+            ImageSet reference = candidate.Clone();
+            ImageSet currentParameters = candidate.Clone();
+            CorrectionFrameResult current = null;
+            string lastRejection = null;
+            try
+            {
+                // 初始检测失败不能靠调整比例补救，明确区分它和矩阵调整后的失败。
+                try
+                {
+                    current = DetectCorrectionContour(originalContour, currentParameters);
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException("矫正前检测失败：" + ex.Message, ex);
+                }
+                for (int iteration = 0; iteration <= 20; iteration++)
+                {
+                    Data measurement = current.Measurement;
+                    if (!IsFiniteCorrectionValue(measurement.glueWidthAngle))
+                        throw new InvalidOperationException("没有有效的胶宽检测方向，请重新检测。");
+                    double error = GetCorrectionSizeError(measurement, actualWidth, actualHeight);
+                    if (error <= CorrectionSizeTolerance)
+                    {
+                        CorrectionFrameResult verified = AcceptCorrectionCalibration(candidate, currentParameters, current, false);
+                        current = null;
+                        return verified;
+                    }
+                    if (iteration == 20)
+                        break;
+
+                    bool improved = false;
+                    // 全量调整可能跨过高度/离散筛选阈值。拒绝失效或变差的试探，再逐次减半步长。
+                    for (int backtrack = 0; backtrack < 6; backtrack++)
+                    {
+                        CorrectionFrameResult trial = null;
+                        try
+                        {
+                            double step = Math.Pow(0.5, backtrack);
+                            SizeCorrectionMatrix increment = SizeCorrectionMatrix.AlongMeasurementAxes(
+                                Math.Pow(actualWidth / measurement.glueWidth, step),
+                                Math.Pow(actualHeight / measurement.glueHeight, step),
+                                measurement.glueWidthAngle, measurement.column, measurement.row);
+                            ImageSet trialParameters = currentParameters.Clone();
+                            ApplyCorrectionMatrix(trialParameters,
+                                currentParameters.GetSizeCorrectionMatrix().Then(increment), reference);
+                            trial = DetectCorrectionContour(originalContour, trialParameters);
+                            double trialError = GetCorrectionSizeError(trial.Measurement, actualWidth, actualHeight);
+                            if (trialError + 1e-8 < error)
+                            {
+                                current.Dispose();
+                                current = trial;
+                                trial = null;
+                                currentParameters = trialParameters;
+                                improved = true;
+                                lastRejection = null;
+                                break;
+                            }
+                            lastRejection = "缩小调整步长后，尺寸误差仍未改善。";
+                        }
+                        catch (Exception ex)
+                        {
+                            lastRejection = "调整后检测失败：" + ex.Message;
+                        }
+                        finally
+                        {
+                            trial?.Dispose();
+                        }
+                    }
+                    if (!improved)
+                        break;
+                }
+                Data best = current.Measurement;
+                if (GetCorrectionSizeError(best, actualWidth, actualHeight) <= CorrectionRelaxedSizeTolerance)
+                {
+                    CorrectionFrameResult verified = AcceptCorrectionCalibration(candidate, currentParameters, current, true);
+                    current = null;
+                    return verified;
+                }
+                string message = $"矫正复检未达到可接受精度（优先 ±{CorrectionSizeTolerance:F3} mm，最大 ±{CorrectionRelaxedSizeTolerance:F2} mm）。最佳有效结果："
+                    + $"胶宽 {best.glueWidth:F4}/{actualWidth:F4}（误差 {best.glueWidth - actualWidth:+0.0000;-0.0000;0.0000} mm），"
+                    + $"胶高 {best.glueHeight:F4}/{actualHeight:F4}（误差 {best.glueHeight - actualHeight:+0.0000;-0.0000;0.0000} mm）。";
+                if (lastRejection != null)
+                    message += "\r\n" + lastRejection;
+                throw new InvalidOperationException(message + "\r\n原参数未修改。");
+            }
+            finally
+            {
+                current?.Dispose();
+            }
+        }
+
+        private static CorrectionFrameResult AcceptCorrectionCalibration(ImageSet candidate, ImageSet parameters,
+            CorrectionFrameResult result, bool relaxed)
+        {
+            parameters.sizeCorrectionMatrix = parameters.GetSizeCorrectionMatrix().Clone();
+            parameters.sizeCorrectionMatrix.WidthAngle = result.Measurement.glueWidthAngle;
+            CommitCorrectionParameters(candidate, parameters);
+            result.UsedRelaxedTolerance = relaxed;
+            return result;
+        }
+
+        private static double GetCorrectionSizeError(Data measurement, double actualWidth, double actualHeight)
+        {
+            return Math.Max(Math.Abs(measurement.glueWidth - actualWidth), Math.Abs(measurement.glueHeight - actualHeight));
         }
 
         /// <summary>提取未乘尺寸矫正系数的轮廓，复用现有激光坐标及角度优化算法。</summary>
@@ -4474,14 +4558,7 @@ namespace _3DLaserGlueInspection.subForm
             try
             {
                 result.CorrectedContour = originalContour.Clone();
-                for (int index = 0; index < result.CorrectedContour.Rows; index++)
-                {
-                    result.CorrectedContour.At<double>(index, 0) *= frameSet.correctionScaleSizeX;
-                    result.CorrectedContour.At<double>(index, 1) *= frameSet.correctionScaleSizeY;
-                    if (!IsFiniteCorrectionValue(result.CorrectedContour.At<double>(index, 0))
-                        || !IsFiniteCorrectionValue(result.CorrectedContour.At<double>(index, 1)))
-                        throw new InvalidOperationException("矫正轮廓包含无效坐标。");
-                }
+                Vision.ApplySizeCorrection(result.CorrectedContour, frameSet);
                 if (frameSet.离散去噪)
                 {
                     if (!IsPositiveCorrectionValue(frameSet.分段距离) || frameSet.成段点数 <= 0)
@@ -4499,13 +4576,14 @@ namespace _3DLaserGlueInspection.subForm
                     ValidateCorrectionBaseLine(result.DetectionContour, frameSet);
 
                 bool existGlue = false;
+                var detectionTrace = new List<string>();
                 Vision.singleFrameDetAndResult(result.DetectionContour, frameSet, cutSet, ref existGlue,
                     ref result.Measurement, ref result.Inspection, ref result.MaxRegion, ref result.Rectangle,
-                    result.CorrectedContour);
+                    result.CorrectedContour, detectionTrace.Add);
                 if (!existGlue || !IsPositiveCorrectionValue(result.Measurement.glueWidth)
                     || !IsPositiveCorrectionValue(result.Measurement.glueHeight)
                     || !IsPositiveCorrectionValue(result.Measurement.glueArea))
-                    throw new InvalidOperationException("没有检测到有效胶宽、胶高。");
+                    throw new InvalidOperationException("没有检测到有效胶宽、胶高。" + string.Join("；", detectionTrace));
                 if (frameSet.isUseBaseLine && (!IsFiniteCorrectionValue(result.Measurement.item0)
                     || !IsFiniteCorrectionValue(result.Measurement.item1)
                     || !IsFiniteCorrectionValue(result.Measurement.item2)
@@ -4585,43 +4663,60 @@ namespace _3DLaserGlueInspection.subForm
             };
         }
 
-        private static void OffsetCorrectionRegion(RectData region, double ratioX, double ratioY)
+        private static RectData TransformCorrectionRegion(RectData region, SizeCorrectionMatrix matrix)
         {
             if (region == null)
-                return;
-            // CenterX/CenterY 为只读计算属性，通过左上角坐标落实新的中心位置。
-            region.X = region.CenterX * ratioX - region.Width / 2;
-            region.Y = region.CenterY * ratioY - region.Height / 2;
-            if (!IsFiniteCorrectionValue(region.X) || !IsFiniteCorrectionValue(region.Y))
-                throw new InvalidOperationException("矫正后的基准线检测框位置无效。");
+                return null;
+            matrix.TransformRectangle(region.CenterX, region.CenterY, region.Width, region.Height, region.Angle,
+                out double centerX, out double centerY, out double width, out double height, out double angle);
+            RectData transformed = CloneCorrectionRegion(region);
+            transformed.Width = width;
+            transformed.Height = height;
+            transformed.X = centerX - width / 2;
+            transformed.Y = centerY - height / 2;
+            transformed.Angle = angle;
+            return transformed;
         }
 
-        /// <summary>更新非共享矫正系数；仅启用基准线检测时同步偏移两个检测框。</summary>
-        private static void ApplyCorrectionScale(ImageSet frameSet, double newScaleX, double newScaleY)
+        /// <summary>从参考参数到新矩阵，变换两个框的四角并用外接旋转矩形近似。</summary>
+        private static void ApplyCorrectionMatrix(ImageSet frameSet, SizeCorrectionMatrix matrix, ImageSet reference = null)
         {
-            if (!IsPositiveCorrectionValue(newScaleX) || !IsPositiveCorrectionValue(newScaleY))
-                throw new InvalidOperationException("计算得到的矫正系数无效。");
+            matrix.Validate();
+            reference = reference ?? frameSet;
+            SizeCorrectionMatrix delta = reference.GetSizeCorrectionMatrix().Inverse().Then(matrix);
+            RectData region1 = reference.isUseBaseLine
+                ? TransformCorrectionRegion(reference.baseLineRegion1, delta) : CloneCorrectionRegion(reference.baseLineRegion1);
+            RectData region2 = reference.isUseBaseLine
+                ? TransformCorrectionRegion(reference.baseLineRegion2, delta) : CloneCorrectionRegion(reference.baseLineRegion2);
+            frameSet.sizeCorrectionMatrix = matrix.Clone();
+            frameSet.correctionScaleSizeX = 1;
+            frameSet.correctionScaleSizeY = 1;
+            frameSet.baseLineRegion1 = region1;
+            frameSet.baseLineRegion2 = region2;
+        }
 
-            if (frameSet.isUseBaseLine)
+        private static void CommitCorrectionParameters(ImageSet target, ImageSet candidate)
+        {
+            target.sizeCorrectionMatrix = candidate.GetSizeCorrectionMatrix().Clone();
+            target.correctionScaleSizeX = 1;
+            target.correctionScaleSizeY = 1;
+            target.baseLineRegion1 = CloneCorrectionRegion(candidate.baseLineRegion1);
+            target.baseLineRegion2 = CloneCorrectionRegion(candidate.baseLineRegion2);
+        }
+
+        private void ShowCorrectionRatios(ImageSet frameSet)
+        {
+            try
             {
-                if (!IsPositiveCorrectionValue(frameSet.correctionScaleSizeX)
-                    || !IsPositiveCorrectionValue(frameSet.correctionScaleSizeY))
-                    throw new InvalidOperationException("原矫正系数无效，请先初始化。");
-
-                // 点云绕原点缩放。按新旧系数之比移动中心，保持框的宽高、角度不变。
-                // 在副本上完成两个框的计算，避免共用引用或计算失败时留下半套参数。
-                RectData region1 = CloneCorrectionRegion(frameSet.baseLineRegion1);
-                RectData region2 = CloneCorrectionRegion(frameSet.baseLineRegion2);
-                double ratioX = newScaleX / frameSet.correctionScaleSizeX;
-                double ratioY = newScaleY / frameSet.correctionScaleSizeY;
-                OffsetCorrectionRegion(region1, ratioX, ratioY);
-                OffsetCorrectionRegion(region2, ratioX, ratioY);
-                frameSet.baseLineRegion1 = region1;
-                frameSet.baseLineRegion2 = region2;
+                SizeCorrectionMatrix matrix = frameSet.GetSizeCorrectionMatrix();
+                correctionScaleSizeXNumericUpDown.Text = matrix.WidthRatio.ToString("G8");
+                correctionScaleSizeYNumericUpDown.Text = matrix.HeightRatio.ToString("G8");
             }
-
-            frameSet.correctionScaleSizeX = newScaleX;
-            frameSet.correctionScaleSizeY = newScaleY;
+            catch (InvalidOperationException)
+            {
+                correctionScaleSizeXNumericUpDown.Text = "-";
+                correctionScaleSizeYNumericUpDown.Text = "-";
+            }
         }
 
         private void ShowCorrectionFrameResult(CorrectionFrameResult outcome, ImageSet frameSet)
@@ -4639,8 +4734,7 @@ namespace _3DLaserGlueInspection.subForm
             resultData = outcome.Measurement;
             bResult = outcome.Inspection;
             robotAndCamAngle = outcome.MotionAngle;
-            correctionScaleSizeXNumericUpDown.Text = imageSet.correctionScaleSizeX.ToString();
-            correctionScaleSizeYNumericUpDown.Text = imageSet.correctionScaleSizeY.ToString();
+            ShowCorrectionRatios(imageSet);
             robotAndCamAngleNumericUpDown.Text = outcome.MotionAngle.ToString("F5");
 
             hWindowModel.RemoveRect("baseLineRegion1");
@@ -4681,80 +4775,63 @@ namespace _3DLaserGlueInspection.subForm
 
         private void correctionButton_Click(object sender, RoutedEventArgs e)
         {
-            double actualGlueSizeX = 0;
-            double actualGlueSizeY = 0;
+            if (isCorrectingRange || cutSet == null || imageSet == null || hImage == null || hImage.Empty())
+                return;
             try
             {
-                actualGlueSizeX = GetActualCorrectionWidth(imageSet);
-                actualGlueSizeY = Convert.ToDouble(actualGlueHeightNumericUpDown.Text);
+                double actualWidth = GetActualCorrectionWidth(imageSet);
+                if (!double.TryParse(actualGlueHeightNumericUpDown.Text, out double actualHeight)
+                    || !IsPositiveCorrectionValue(actualHeight))
+                    throw new InvalidOperationException("请输入有效的实际胶高。");
+                int cutIndex = cutSetListBox.SelectedIndex;
+                int cameraIndex = selectCamListBox.SelectedIndex;
+                int pictureIndex = selectPictureListBox.SelectedIndex;
+                if (cutIndex < 0 || cameraIndex < 0 || pictureIndex < 0 || string.IsNullOrEmpty(camKey)
+                    || cutIndex >= ImageKeys.Count || !ImageKeys[cutIndex].TryGetValue(camKey, out var imageKeys)
+                    || pictureIndex >= imageKeys.Count)
+                    throw new InvalidOperationException("当前图片没有对应的采集记录。");
+                if (!TryGetCurrentCameraHandEyeType(out CameraHandEyeType handEyeType)
+                    || !ValidateCurrentCameraRobotPoseFormat(handEyeType))
+                    return;
+
+                ImageSet candidate = imageSet.Clone();
+                string completionMessage = _3DLaserGlueInspection.Resources.LanguageDict.CorrectionSuccessful;
+                long? previousKey = pictureIndex > 0 ? (long?)imageKeys[pictureIndex - 1] : null;
+                using (CorrectionFrameResult outcome = CorrectCalibrationFrame(hImage, candidate, camKey,
+                    imageKeys[pictureIndex], previousKey, handEyeType, actualWidth, actualHeight))
+                {
+                    if (outcome.Error != null)
+                        throw new InvalidOperationException(outcome.Error);
+                    var changes = new List<KeyValuePair<ImageSet, ImageSet>>
+                    {
+                        new KeyValuePair<ImageSet, ImageSet>(imageSet, candidate)
+                    };
+                    if (cutSet.isCoefficientSharing)
+                    {
+                        // 共享同一个绝对矩阵；各帧的框从各自原矩阵变换，且不共用对象引用。
+                        foreach (ImageSet frame in cutSet.imageSet[cameraIndex])
+                        {
+                            if (ReferenceEquals(frame, imageSet))
+                                continue;
+                            ImageSet shared = frame.Clone();
+                            ApplyCorrectionMatrix(shared, candidate.GetSizeCorrectionMatrix());
+                            changes.Add(new KeyValuePair<ImageSet, ImageSet>(frame, shared));
+                        }
+                    }
+                    foreach (var change in changes)
+                        CommitCorrectionParameters(change.Key, change.Value);
+                    isAlter = true;
+                    ShowCorrectionFrameResult(outcome, imageSet);
+                    if (outcome.UsedRelaxedTolerance)
+                        completionMessage += $"\r\n按放宽精度 ±{CorrectionRelaxedSizeTolerance:F2} mm 通过。"
+                            + $"复检胶宽 {outcome.Measurement.glueWidth:F4} mm，胶高 {outcome.Measurement.glueHeight:F4} mm。";
+                }
+                System.Windows.Forms.MessageBox.Show(completionMessage);
             }
             catch (Exception ex)
             {
-                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.InputDataFormatError + ex.Message + "!");
-                return;
+                System.Windows.Forms.MessageBox.Show(ex.Message);
             }
-            if (!IsPositiveCorrectionValue(actualGlueSizeX) || !IsPositiveCorrectionValue(actualGlueSizeY))
-            {
-                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.ActualInputCannotBeZero);
-                return;
-            }
-            if (resultData.glueWidth == -1 || resultData.glueHeight == -1)
-            {
-                System.Windows.Forms.MessageBox.Show("当前图片还没有检测结果");
-                return;
-            }
-            if (resultData.glueWidth == 0 || resultData.glueHeight == 0)
-            {
-                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.DetectionResultCannotBeZero);
-                return;
-            }
-
-            if (resultData.glueWidthSide != Vision.GetGlueWidthSide(imageSet))
-            {
-                System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.GlueWidthModeChanged);
-                return;
-            }
-
-            if (cutSet.isCoefficientSharing)
-            {
-                double oldScaleSizeX = imageSet.correctionScaleSizeX;
-                double oldScaleSizeY = imageSet.correctionScaleSizeY;
-
-                //遍历修改
-                for (int i = 0; i < set.CutSets[cutSetListBox.SelectedIndex].imageSet[selectCamListBox.SelectedIndex].Count; i++)
-                {
-                    set.CutSets[cutSetListBox.SelectedIndex].imageSet[selectCamListBox.SelectedIndex][i].correctionScaleSizeX = actualGlueSizeX / (resultData.glueWidth / oldScaleSizeX);
-                    set.CutSets[cutSetListBox.SelectedIndex].imageSet[selectCamListBox.SelectedIndex][i].correctionScaleSizeY = actualGlueSizeY / (resultData.glueHeight / oldScaleSizeY);
-
-                }
-            }
-            else 
-            {
-                double newScaleX = actualGlueSizeX / (resultData.glueWidth / imageSet.correctionScaleSizeX);
-                double newScaleY = actualGlueSizeY / (resultData.glueHeight / imageSet.correctionScaleSizeY);
-                try
-                {
-                    // 共享模式保持原逻辑；非共享单张矫正才按本图的基准线开关处理检测框。
-                    ApplyCorrectionScale(imageSet, newScaleX, newScaleY);
-                }
-                catch (Exception ex)
-                {
-                    System.Windows.Forms.MessageBox.Show(ex.Message);
-                    return;
-                }
-            }
-
-            correctionScaleSizeXNumericUpDown.Text = imageSet.correctionScaleSizeX.ToString();
-            correctionScaleSizeYNumericUpDown.Text = imageSet.correctionScaleSizeY.ToString();
-
-            System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.CorrectionSuccessful);
-
-            resultData = new Data();
-            isAlter = true;
-
-            runButton_Click2(null, null);
-            if (!cutSet.isCoefficientSharing && imageSet.isUseBaseLine)
-                RefreshCorrectionBaseLineRegions();
         }
 
         private void coefficientSharingCheck_Checked(object sender, RoutedEventArgs e)
@@ -5062,32 +5139,115 @@ namespace _3DLaserGlueInspection.subForm
             
         }
 
+        /// <summary>所有候选参数计算成功后才提交，范围外图片和失败前的原参数均不受影响。</summary>
+        private static int InitializeCorrectionFrames(IList<ImageSet> frames, int startId, int endId)
+        {
+            if (frames == null || startId < 0 || endId < startId || endId >= frames.Count)
+                throw new InvalidOperationException("初始化图像范围没有对应的图像参数。");
+            var changes = new List<KeyValuePair<ImageSet, ImageSet>>();
+            for (int index = startId; index <= endId; index++)
+            {
+                ImageSet frame = frames[index];
+                if (frame == null)
+                    throw new InvalidOperationException($"图像 ID {index} 没有对应的图像参数，未执行初始化。");
+                ImageSet candidate = frame.Clone();
+                bool oldMatrixValid;
+                try { oldMatrixValid = frame.GetSizeCorrectionMatrix().IsValid; }
+                catch (InvalidOperationException) { oldMatrixValid = false; }
+                if (oldMatrixValid)
+                    ApplyCorrectionMatrix(candidate, new SizeCorrectionMatrix());
+                else
+                {
+                    // 损坏的旧参数无法求逆；仍允许初始化，保留框供用户重新调整。
+                    candidate.sizeCorrectionMatrix = new SizeCorrectionMatrix();
+                }
+                changes.Add(new KeyValuePair<ImageSet, ImageSet>(frame, candidate));
+            }
+            foreach (var change in changes)
+                CommitCorrectionParameters(change.Key, change.Value);
+            return changes.Count;
+        }
+
+        private void correctionRangeInitButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (isCorrectingRange || cutSet == null || cutSet.isCoefficientSharing)
+                return;
+            int cameraIndex = selectCamListBox.SelectedIndex;
+            if (cameraIndex < 0 || cameraIndex >= cutSet.imageSet.Count || cutSet.ImageNum <= 0)
+            {
+                System.Windows.Forms.MessageBox.Show("请先选择检测段和相机，并配置图像数量。");
+                return;
+            }
+            int maxImageId = cutSet.ImageNum - 1;
+            int defaultImageId = Math.Min(Math.Max(0, selectPictureListBox.SelectedIndex), maxImageId);
+            var rangeWindow = new WindowCopy(defaultImageId, maxImageId)
+            {
+                Owner = this,
+                Title = _3DLaserGlueInspection.Resources.LanguageDict.RangeSizeCorrectionInit
+            };
+            if (rangeWindow.ShowDialog() != true)
+                return;
+            int startId = rangeWindow.startID, endId = rangeWindow.endID;
+            if (startId < 0 || endId > maxImageId || startId > endId)
+            {
+                System.Windows.Forms.MessageBox.Show($"图像 ID 必须在 0～{maxImageId} 之间，且起始 ID 不能大于终止 ID。");
+                return;
+            }
+            try
+            {
+                isCorrectingRange = true;
+                visionSettingsGrid.IsEnabled = false;
+                int count = InitializeCorrectionFrames(cutSet.imageSet[cameraIndex], startId, endId);
+                isAlter = true;
+                correctionRangeStatusText.Text = $"已初始化 {count} 张";
+                string summary = $"局部图片矫正初始化完成（图像 ID {startId}～{endId}）：共 {count} 张。";
+                // 仅刷新范围内的当前图片，不切换选中项，也不依赖采集图像或机器人位姿。
+                if (imageSet != null && selectPictureListBox.SelectedIndex >= startId
+                    && selectPictureListBox.SelectedIndex <= endId)
+                {
+                    resultData = new Data();
+                    ShowCorrectionRatios(imageSet);
+                    RefreshCorrectionBaseLineRegions();
+                    if (hImage != null && currentRobotPose != null)
+                    {
+                        try { runButton_Click2(null, null); }
+                        catch (Exception ex) { summary += "\r\n参数已初始化，但当前图片重检失败：" + ex.Message; }
+                    }
+                }
+                System.Windows.Forms.MessageBox.Show(summary);
+            }
+            catch (Exception ex)
+            {
+                System.Windows.Forms.MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                isCorrectingRange = false;
+                visionSettingsGrid.IsEnabled = true;
+            }
+        }
+
         private void correctionInitButton_Click(object sender, RoutedEventArgs e)
         {
-
-            if (cutSet.isCoefficientSharing)
+            if (isCorrectingRange || cutSet == null || imageSet == null)
+                return;
+            try
             {
-                imageSet.correctionScaleSizeX = 1;
-                imageSet.correctionScaleSizeY = 1;
-
-                //遍历修改
-                for (int i = 0; i < set.CutSets[cutSetListBox.SelectedIndex].imageSet[selectCamListBox.SelectedIndex].Count; i++)
-                {
-                    set.CutSets[cutSetListBox.SelectedIndex].imageSet[selectCamListBox.SelectedIndex][i].correctionScaleSizeX = 1;
-                    set.CutSets[cutSetListBox.SelectedIndex].imageSet[selectCamListBox.SelectedIndex][i].correctionScaleSizeY = 1;
-
-                }
+                var frames = cutSet.isCoefficientSharing
+                    ? cutSet.imageSet[selectCamListBox.SelectedIndex] : new List<ImageSet> { imageSet };
+                InitializeCorrectionFrames(frames, 0, frames.Count - 1);
+                isAlter = true;
+                resultData = new Data();
+                ShowCorrectionRatios(imageSet);
+                RefreshCorrectionBaseLineRegions();
+                if (hImage != null && currentRobotPose != null)
+                    runButton_Click2(null, null);
+                System.Windows.Forms.MessageBox.Show("矫正初始化成功");
             }
-            else
+            catch (Exception ex)
             {
-                imageSet.correctionScaleSizeX = 1;
-                imageSet.correctionScaleSizeY = 1;
+                System.Windows.Forms.MessageBox.Show(ex.Message);
             }
-            correctionScaleSizeXNumericUpDown.Text = imageSet.correctionScaleSizeX.ToString();
-            correctionScaleSizeYNumericUpDown.Text = imageSet.correctionScaleSizeY.ToString();
-
-            System.Windows.Forms.MessageBox.Show("矫正初始化成功");
-
         }
     }
 }

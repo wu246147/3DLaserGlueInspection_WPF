@@ -650,11 +650,11 @@ namespace _3DLaserGlueInspection
             model.isHandVIN = (bool)handVinCheck.IsChecked;
             if (model.isHandVIN)
             {
-                handVIN.Visibility = Visibility.Visible;
+                handVIN.IsEnabled = true;
             }
             else
             {
-                handVIN.Visibility = Visibility.Hidden;
+                handVIN.IsEnabled = false;
             }
         }
 

@@ -3376,7 +3376,7 @@ namespace _3DLaserGlueInspection
                                                 #endregion
 
                                                 //需要保证检测到有点，并且机器人已经处于移动状态
-                                                if (xy != null && xy.Rows > 0 && dictRobotPose.Count > 0 && PoseD > 0)
+                                                if (xy != null && xy.Rows > 0 && dictRobotPose.Count > 0)
                                                 {
                                                     getOutlineResult = true;
 
@@ -3392,9 +3392,9 @@ namespace _3DLaserGlueInspection
                                                         Vision.pointTransform2CamAndRobot(xy, hCamPar, LightInCam, LightToCam, CamToBase,
                                                             BaseInTool, out lightXY, out robotX, out robotY, out robotZ);
                                                     }
-
-
                                                 }
+
+
                                             }
 
                                             // 单帧检测
@@ -3416,13 +3416,7 @@ namespace _3DLaserGlueInspection
                                                                 hXLDCont10mm.At<double>(id, 0) = hXLDCont10mm.At<double>(id, 0) * scaleX;
                                                             }
                                                         }
-                                                        double correctionScaleX = imageSet.correctionScaleSizeX;
-                                                        double correctionScaleY = imageSet.correctionScaleSizeY;
-                                                        for (int id = 0; id < hXLDCont10mm.Rows; id++)
-                                                        {
-                                                            hXLDCont10mm.At<double>(id, 0) = hXLDCont10mm.At<double>(id, 0) * correctionScaleX;
-                                                            hXLDCont10mm.At<double>(id, 1) = hXLDCont10mm.At<double>(id, 1) * correctionScaleY;
-                                                        }
+                                                        Vision.ApplySizeCorrection(hXLDCont10mm, imageSet);
                                                         //如果存在
                                                         if (!hXLDCont10mm.Empty())
                                                         {

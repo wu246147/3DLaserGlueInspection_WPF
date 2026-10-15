@@ -541,10 +541,20 @@ namespace _3DLaserGlueInspection
                 byte[] command;
                 lock (stateLock)
                     command = lastCommand;
-                if (command == null)
-                    return Fail("PI 尚未收到 B 指令，无法发送结果。");
-                if (!SendResult(command, judgement[0]))
-                    return false;
+                if (command != null)
+                {
+                    //return Fail("PI 尚未收到 B 指令，无法发送结果。");
+                    if (!SendResult(command, judgement[0]))
+                        return false;
+                }
+                else
+                {
+                    command = new byte[3] { 0, 0, 1 };
+                    if (!SendResult(command, judgement[0]))
+                        return false;
+                }
+                        
+
                 lock (stateLock)
                 {
                     if (ReferenceEquals(command, lastCommand))

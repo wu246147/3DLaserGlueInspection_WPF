@@ -863,6 +863,84 @@ namespace _3DLaserGlueInspection
             
         }
 
+        /// <summary>所有检测入口统一应用尺寸矩阵；旧参数自动使用 X/Y 对角矩阵。</summary>
+        public static void ApplySizeCorrection(Mat points, ImageSet imageSet)
+        {
+            if (points == null)
+                return;
+            ApplySizeCorrectionMatrix(points, imageSet.GetSizeCorrectionMatrix());
+        }
+
+        private static void ApplySizeCorrectionMatrix(Mat points, SizeCorrectionMatrix matrix)
+        {
+            matrix.Validate();
+            for (int index = 0; index < points.Rows; index++)
+            {
+                matrix.Transform(points.At<double>(index, 0), points.At<double>(index, 1), out double x, out double y);
+                if (!SizeCorrectionMatrix.IsFinite(x) || !SizeCorrectionMatrix.IsFinite(y))
+                    throw new InvalidOperationException("矫正轮廓包含无效坐标。");
+                points.At<double>(index, 0) = x;
+                points.At<double>(index, 1) = y;
+            }
+        }
+
+        /// <summary>
+        /// 半侧归属在尺寸矫正前的坐标中判断。矩阵交叉项可能把原右侧点移到峰顶的图像左侧，
+        /// 因此不能直接用矫正后的 X 分半；只将筛选结果变换回当前检测坐标。
+        /// </summary>
+        public static int FilterGlueSideBeforeSizeCorrection(Mat correctedPoints, ImageSet imageSet,
+            double lineX, double lineY, double anchorX, double anchorY, int keepSide, Mat filteredPoints)
+        {
+            SizeCorrectionMatrix matrix = imageSet.GetSizeCorrectionMatrix();
+            SizeCorrectionMatrix inverse = matrix.Inverse();
+            using (Mat originalPoints = correctedPoints.Clone())
+            using (Mat originalSidePoints = new Mat())
+            {
+                // 基准线方向只应用逆矩阵的线性部分，线上一点还需应用逆平移。
+                double originalLineX = inverse.M00 * lineX + inverse.M01 * lineY;
+                double originalLineY = inverse.M10 * lineX + inverse.M11 * lineY;
+                inverse.Transform(anchorX, anchorY, out double originalAnchorX, out double originalAnchorY);
+                ApplySizeCorrectionMatrix(originalPoints, inverse);
+                filteredPoints.Create(0, 0, MatType.CV_64FC1);
+                int status = FilterGluePointsBySide(originalPoints.CvPtr,
+                    originalLineX, originalLineY, originalAnchorX, originalAnchorY, keepSide, originalSidePoints.CvPtr);
+                if (status == 0 && !originalSidePoints.Empty())
+                {
+                    ApplySizeCorrectionMatrix(originalSidePoints, matrix);
+                    originalSidePoints.CopyTo(filteredPoints);
+                }
+                return status;
+            }
+        }
+
+        /// <summary>先在矫正前坐标拟合，再变换整条基准线，避免比例改变 RANSAC 的内点集合。</summary>
+        public static int FitBaseLineBeforeSizeCorrection(Mat correctedPoints, ImageSet imageSet, double distanceThreshold,
+            out double lineX, out double lineY, out double anchorX, out double anchorY)
+        {
+            lineX = lineY = anchorX = anchorY = 0;
+            SizeCorrectionMatrix matrix = imageSet.GetSizeCorrectionMatrix();
+            using (Mat originalPoints = correctedPoints.Clone())
+            {
+                ApplySizeCorrectionMatrix(originalPoints, matrix.Inverse());
+                int status = ransacFitLineFast(originalPoints.CvPtr, out double originalLineX, out double originalLineY,
+                    out double originalAnchorX, out double originalAnchorY, (float)distanceThreshold);
+                if (status != 0)
+                    return status;
+                double vx = matrix.M00 * originalLineX + matrix.M01 * originalLineY;
+                double vy = matrix.M10 * originalLineX + matrix.M11 * originalLineY;
+                double length = Math.Sqrt(vx * vx + vy * vy);
+                matrix.Transform(originalAnchorX, originalAnchorY, out double x, out double y);
+                if (!SizeCorrectionMatrix.IsFinite(length) || length < 1e-12
+                    || !SizeCorrectionMatrix.IsFinite(x) || !SizeCorrectionMatrix.IsFinite(y))
+                    return -1;
+                lineX = vx / length;
+                lineY = vy / length;
+                anchorX = x;
+                anchorY = y;
+                return 0;
+            }
+        }
+
         /// <summary>当前有效的胶宽检测方式：0 整胶，1 左侧，2 右侧。</summary>
         public static int GetGlueWidthSide(ImageSet imageSet)
         {
@@ -899,6 +977,7 @@ namespace _3DLaserGlueInspection
             bool rectangleIsHorizontal = IsRectangleHorizontal(phi);
             resultData.glueHeight = (rectangleIsHorizontal ? height : width) / scaleSize;
             resultData.glueWidth = (rectangleIsHorizontal ? width : height) / scaleSize;
+            resultData.glueWidthAngle = rectangleIsHorizontal ? phi : phi + Math.PI / 2;
             resultData.glueWidthSide = GetGlueWidthSide(imageSet);
             //resultData.glueArea = (heng ? width : height) / scaleSize;
 
@@ -1168,7 +1247,7 @@ namespace _3DLaserGlueInspection
             return maxDistance <= maxAllowedDistance;
         }
 
-        public static void singleFrameDetAndResult(Mat OutLine,ImageSet imageSet,CutSet cutSet, ref bool singleFrameExistGlue, ref Data resultData, ref BResult bResult, ref Mat outMaxRegion, ref Mat outRegionRectangle2, Mat bubblePoints = null)
+        public static void singleFrameDetAndResult(Mat OutLine,ImageSet imageSet,CutSet cutSet, ref bool singleFrameExistGlue, ref Data resultData, ref BResult bResult, ref Mat outMaxRegion, ref Mat outRegionRectangle2, Mat bubblePoints = null, Action<string> detectionTrace = null)
         {
 
             bool existGlue = false;
@@ -1212,23 +1291,37 @@ namespace _3DLaserGlueInspection
                         imageSet.baseLineRegion2.Angle);
 
                     Cv2.VConcat(selectBaseLinePoints1, selectBaseLinePoints2, selectBaseLinePoints);
+                    detectionTrace?.Invoke($"基准线框内 {selectBaseLinePoints1.Rows}+{selectBaseLinePoints2.Rows} 点");
 
                     float disThre = 0.5f;
-                    Vision.ransacFitLineFast(selectBaseLinePoints.CvPtr, out item0, out item1,
-                        out item2, out item3, disThre * cutSet.scaleSize);
+                    int baselineStatus = FitBaseLineBeforeSizeCorrection(selectBaseLinePoints, imageSet,
+                        disThre * cutSet.scaleSize, out item0, out item1, out item2, out item3);
+                    if (baselineStatus != 0)
+                    {
+                        detectionTrace?.Invoke($"基准线拟合失败（状态 {baselineStatus}）");
+                        outMaxRegion.Create(0, 0, MatType.CV_64FC1);
+                        outRegionRectangle2.Create(0, 0, MatType.CV_64FC1);
+                        resultData = new Data { glueWidthSide = glueWidthSide };
+                        bResult = new BResult { Result = false };
+                        return;
+                    }
 
                     Vision.FilterPointsByLine(OutLine.CvPtr, item0, item1, item2, item3,
                         imageSet.distBaseLineThre * cutSet.scaleSize, selectSpongeStripPoints.CvPtr);
+                    detectionTrace?.Invoke($"忽略高度 {imageSet.distBaseLineThre:F3} mm 后剩 {selectSpongeStripPoints.Rows} 点");
 
                     Vision.FilterPointsByLineRange(selectSpongeStripPoints.CvPtr, item0, item1, item2, item3,
                         imageSet.distBaseLineRangeLower * cutSet.scaleSize,
                         imageSet.distBaseLineRangeUpper * cutSet.scaleSize, selectRangePoints.CvPtr);
+                    detectionTrace?.Invoke($"屏蔽区间 [{imageSet.distBaseLineRangeLower:F3}, {imageSet.distBaseLineRangeUpper:F3}] mm 后剩 {selectRangePoints.Rows} 点");
 
                     if (glueWidthSide == 0)
                     {
-                        Vision.glueDet(selectRangePoints.CvPtr, item0, item1, item2, item3,
+                        int status = Vision.glueDet(selectRangePoints.CvPtr, item0, item1, item2, item3,
                             out existGlue, out centerX, out centerY, out phi, out width, out height,
                             out maxArea, outMaxRegion.CvPtr, outRegionRectangle2.CvPtr);
+                        if (!existGlue || maxArea <= 0)
+                            detectionTrace?.Invoke($"整胶区域构建失败（状态 {status}）");
                     }
                     else
                     {
@@ -1237,13 +1330,17 @@ namespace _3DLaserGlueInspection
                         {
                             outMaxRegion.Create(0, 0, MatType.CV_64FC1);
                             outRegionRectangle2.Create(0, 0, MatType.CV_64FC1);
-                            if (Vision.FilterGluePointsBySide(selectRangePoints.CvPtr, item0, item1, item2, item3,
-                                glueWidthSide, sidePoints.CvPtr) == 0 && !sidePoints.Empty())
+                            int sideStatus = Vision.FilterGlueSideBeforeSizeCorrection(selectRangePoints, imageSet,
+                                item0, item1, item2, item3, glueWidthSide, sidePoints);
+                            detectionTrace?.Invoke($"{(glueWidthSide == 1 ? "左" : "右")}侧筛选后 {sidePoints.Rows} 点（状态 {sideStatus}）");
+                            if (sideStatus == 0 && !sidePoints.Empty())
                             {
-                                Vision.glueDet(sidePoints.CvPtr, item0, item1, item2, item3,
+                                int status = Vision.glueDet(sidePoints.CvPtr, item0, item1, item2, item3,
                                     out existGlue, out centerX, out centerY, out phi,
                                     out width, out height, out maxArea,
                                     outMaxRegion.CvPtr, outRegionRectangle2.CvPtr);
+                                if (!existGlue || maxArea <= 0)
+                                    detectionTrace?.Invoke($"半侧区域构建失败（状态 {status}）");
                                 existGlue = existGlue && maxArea > 0;
                             }
                             if (!existGlue)
@@ -1258,8 +1355,10 @@ namespace _3DLaserGlueInspection
             }
             else
             {
-                Vision.singleFrameDet(OutLine.CvPtr, out existGlue, out centerX, out centerY, out phi, out width, out height, out maxArea,
+                int status = Vision.singleFrameDet(OutLine.CvPtr, out existGlue, out centerX, out centerY, out phi, out width, out height, out maxArea,
                 outMaxRegion.CvPtr, outRegionRectangle2.CvPtr, imageSet.isUseAngleOpt, false);
+                if (!existGlue || maxArea <= 0)
+                    detectionTrace?.Invoke($"轮廓 {OutLine.Rows} 点，区域构建失败（状态 {status}）");
             }
 
             //stopwatch.Stop();
@@ -1787,9 +1886,16 @@ namespace _3DLaserGlueInspection
         // 是否使用角度优化
         public bool isUseAngleOpt = true;
 
-        // 矫正缩放系数
+        // 历史 X/Y 系数：旧 XML 没有 sizeCorrectionMatrix 时按对角矩阵使用。
         public double correctionScaleSizeX = 1;
         public double correctionScaleSizeY = 1;
+
+        public SizeCorrectionMatrix sizeCorrectionMatrix;
+
+        public SizeCorrectionMatrix GetSizeCorrectionMatrix()
+        {
+            return sizeCorrectionMatrix ?? SizeCorrectionMatrix.FromLegacyScale(correctionScaleSizeX, correctionScaleSizeY);
+        }
 
         // 是否使用基线
         public bool isUseBaseLine = false;
@@ -1813,7 +1919,12 @@ namespace _3DLaserGlueInspection
             this.Index = index;
         }
         ImageSet() { }
-        public ImageSet Clone() { return (ImageSet)this.MemberwiseClone(); }
+        public ImageSet Clone()
+        {
+            var clone = (ImageSet)MemberwiseClone();
+            clone.sizeCorrectionMatrix = sizeCorrectionMatrix?.Clone();
+            return clone;
+        }
     }
 
     [Serializable]
@@ -1845,6 +1956,8 @@ namespace _3DLaserGlueInspection
         public double glueHeight = -1;
         public double glueWidth = -1;
         public double glueArea = -1;
+        // 与最终 glueWidth 对应的矩形方向，单位为弧度；无有效检测时禁止用于矫正。
+        public double glueWidthAngle = double.NaN;
         // 本次结果的胶宽检测方式：0 整胶，1 左侧，2 右侧。
         public int glueWidthSide = 0;
 
@@ -1875,6 +1988,7 @@ namespace _3DLaserGlueInspection
                 glueHeight = this.glueHeight,
                 glueWidth = this.glueWidth,
                 glueArea = this.glueArea,
+                glueWidthAngle = this.glueWidthAngle,
                 glueWidthSide = this.glueWidthSide,
                 item0 = this.item0,
                 item1 = this.item1,

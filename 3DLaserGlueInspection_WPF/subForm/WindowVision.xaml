@@ -283,6 +283,17 @@
                                                     </Style>
                                                 </Button.Style>
                                             </Button>
+                                            <Button x:Name="correctionRangeInitButton" Content="{x:Static resx:LanguageDict.RangeSizeCorrectionInit}" FontSize="12" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="125" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="132,255,0,0" Click="correctionRangeInitButton_Click" ToolTip="{x:Static resx:LanguageDict.RangeSizeCorrectionInitDescription}" ToolTipService.ShowOnDisabled="True">
+                                                <Button.Style>
+                                                    <Style TargetType="Button">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsChecked, ElementName=coefficientSharingCheck}" Value="True">
+                                                                <Setter Property="IsEnabled" Value="False" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
                                             <TextBlock x:Name="correctionRangeStatusText" Text="-" FontSize="14" Foreground="White" Margin="6,287,6,0" VerticalAlignment="Top" TextWrapping="Wrap" />
                                             <CheckBox  x:Name="coefficientSharingCheck" Content="{x:Static resx:LanguageDict.CommonCorrectionCoefficient}" HorizontalAlignment="Left" Margin="6,331,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" IsChecked="True" />
                                             <Button x:Name="correctionInitButton" Content="矫正初始化" FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="145,220,0,0" Click="correctionInitButton_Click"/>
@@ -412,9 +423,20 @@
         <ComboBox x:Name="dataScoreComboBox" FontSize="14"  BorderBrush="#FFDDDDDD" Background="#FF263851" HorizontalAlignment="Left" Margin="82,0,0,0" VerticalAlignment="Center" Width="410" SelectionChanged="dataScoreComboBox_SelectionChanged" Grid.ColumnSpan="2"/>
         <Label   Content="{x:Static resx:LanguageDict.DataDir}" 
         ContentStringFormat="{}{0} :" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="7,0,0,0"/>
-        <ComboBox x:Name="carTypeComboBox" FontSize="14"  BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="1010,0,26,0" VerticalAlignment="Center" SelectionChanged="carTypeComboBox_SelectionChanged" Grid.Column="1"/>
+        <ComboBox x:Name="carTypeComboBox" FontSize="14"  BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="898,0,110,0" VerticalAlignment="Center" SelectionChanged="carTypeComboBox_SelectionChanged" Grid.Column="1"/>
+        <Button x:Name="saveParametersButton" Content="{x:Static resx:LanguageDict.SavePara}" FontSize="14" Foreground="White" HorizontalAlignment="Right" VerticalAlignment="Center" Height="24" Width="76" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="0,0,26,0" Click="saveParametersButton_Click" Grid.Column="1">
+            <Button.Style>
+                <Style TargetType="Button">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding SelectedIndex, ElementName=carTypeComboBox}" Value="-1">
+                            <Setter Property="IsEnabled" Value="False" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Button.Style>
+        </Button>
         <Label  Content="{x:Static resx:LanguageDict.CarType}" 
-        ContentStringFormat="{}{0} :" FontSize="14" Foreground="White" Margin="912,0,129,0" Grid.Column="1"/>
+        ContentStringFormat="{}{0} :" FontSize="14" Foreground="White" Margin="798,0,243,0" Grid.Column="1"/>
 
         <Button x:Name="openDirButton" Content="{x:Static resx:LanguageDict.Open}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Center" Height="24" Width="51" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="344,0,0,0" Click="openDirButton_Click" Grid.Column="1"  />
         <Button x:Name="lastSourecButton" Content="{x:Static resx:LanguageDict.Last}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Center" Height="24" Width="51" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="412,0,0,0" Click="lastSourecButton_Click" Grid.Column="1"  />

@@ -2699,6 +2699,27 @@ namespace _3DLaserGlueInspection.Resources {
             }
         }
 
+        /// <summary>查找资源键 RangeSizeCorrectionInit 对应的本地化字符串。</summary>
+        public static string RangeSizeCorrectionInit {
+            get {
+                return ResourceManager.GetString("RangeSizeCorrectionInit", resourceCulture);
+            }
+        }
+
+        /// <summary>查找资源键 RangeSizeCorrectionInitDescription 对应的本地化字符串。</summary>
+        public static string RangeSizeCorrectionInitDescription {
+            get {
+                return ResourceManager.GetString("RangeSizeCorrectionInitDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>查找资源键 VisionParametersSaved 对应的本地化字符串。</summary>
+        public static string VisionParametersSaved {
+            get {
+                return ResourceManager.GetString("VisionParametersSaved", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///     查找资源键 SoftwareRun 对应的本地化字符串。
         /// </summary>
