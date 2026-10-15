@@ -414,6 +414,13 @@
                             </Border>
                             <CheckBox  x:Name="useOverlappingAdhesiveLehgthDetecctCheck" Content="{x:Static resx:LanguageDict.EnableOverlappingAdhesiveLengthDetection}" HorizontalAlignment="Left" Margin="10,140,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
 
+                            <Border BorderBrush="White" BorderThickness="1" Height="55" Margin="5,510,5,0" VerticalAlignment="Top" IsEnabled="{Binding IsEnabled, ElementName=publicParaGridBox}">
+                                <Grid ToolTip="{x:Static resx:LanguageDict.ConsecutiveNGCountDescription}">
+                                    <Label Content="{x:Static resx:LanguageDict.ConsecutiveNGCount}" FontSize="14" Foreground="White" Margin="10,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Left" />
+                                    <TextBox x:Name="consecutiveNGCountNumericUpDown" FontSize="14" HorizontalAlignment="Left" Margin="158,0,0,0" Text="5" VerticalAlignment="Center" Width="84" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="consecutiveNGCountNumericUpDown_PreviewTextInput" LostFocus="consecutiveNGCountNumericUpDown_LostFocus" />
+                                </Grid>
+                            </Border>
+
                         </Grid>
                     </TabItem>
                 </TabControl>

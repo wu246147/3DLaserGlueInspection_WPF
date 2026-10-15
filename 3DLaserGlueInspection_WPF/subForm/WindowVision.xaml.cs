@@ -460,6 +460,19 @@ namespace _3DLaserGlueInspection.subForm
             e.Handled = new Regex(@"[^0-9+\-.]+").IsMatch(e.Text);
 
         }
+        private void consecutiveNGCountNumericUpDown_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
+        {
+            e.Handled = new Regex(@"[^0-9]+").IsMatch(e.Text);
+        }
+
+        private void consecutiveNGCountNumericUpDown_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (cutSet != null)
+            {
+                // 空值、0、负数、粘贴的非整数及溢出值均恢复为最后一个有效值。
+                consecutiveNGCountNumericUpDown.Text = cutSet.consecutiveNGCount.ToString();
+            }
+        }
         private void finishCreatePolylineEven(PointCollection drawPoints)
         {
             var XLDData = set.XLDDatas[cutSetListBox.SelectedIndex];
@@ -847,6 +860,7 @@ namespace _3DLaserGlueInspection.subForm
             glueLenthStartDetIDNumericUpDown.TextChanged += UpData;
             glueWidthThreNumericUpDown.TextChanged += UpData;
             useOverlappingAdhesiveLehgthDetecctCheck.Checked += UpData;
+            consecutiveNGCountNumericUpDown.TextChanged += UpData;
 
 
 
@@ -984,6 +998,7 @@ namespace _3DLaserGlueInspection.subForm
             glueLenthStartDetIDNumericUpDown.TextChanged -= UpData;
             glueWidthThreNumericUpDown.TextChanged -= UpData;
             useOverlappingAdhesiveLehgthDetecctCheck.Checked -= UpData;
+            consecutiveNGCountNumericUpDown.TextChanged -= UpData;
 
 
             useBaseLineDetCheck.Checked -= UpData;
@@ -1018,6 +1033,11 @@ namespace _3DLaserGlueInspection.subForm
                     //cutSet.isUseAngleOpt = (bool)isUseAngleOptCheck.IsChecked;
 
                     cutSet.isCoefficientSharing = (bool)coefficientSharingCheck.IsChecked;
+
+                    if (int.TryParse(consecutiveNGCountNumericUpDown.Text, out int consecutiveNGCount) && consecutiveNGCount > 0)
+                    {
+                        cutSet.consecutiveNGCount = consecutiveNGCount;
+                    }
 
                     try
                     {
@@ -1566,6 +1586,7 @@ namespace _3DLaserGlueInspection.subForm
                     glueLenthStartDetIDNumericUpDown.Text = cutSet.glueStartID.ToString();
                     glueLenthEndDetIDNumericUpDown.Text = cutSet.glueEndID.ToString();
                     useOverlappingAdhesiveLehgthDetecctCheck.IsChecked = cutSet.glueLenthDetEnable;
+                    consecutiveNGCountNumericUpDown.Text = cutSet.consecutiveNGCount.ToString();
 
                     //SelectedCamAndImage();
 

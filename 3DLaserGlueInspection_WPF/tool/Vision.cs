@@ -1820,12 +1820,19 @@ namespace _3DLaserGlueInspection
         public int glueStartID = 0;
         public int glueEndID = 99999;
 
+        // 同一相机、同一检测段连续 NG 达到此图片数后，段结果和总结果才置为 NG。
+        public int consecutiveNGCount = 5;
+
         
 
 
 
         public void AfterDeserialize()
         {
+            if (consecutiveNGCount < 1)
+            {
+                consecutiveNGCount = 5;
+            }
             // 如果 JSON 里没有这个字段（旧存档），给默认值
             if (CamEnabled == null || CamEnabled.Count == 0)
             {

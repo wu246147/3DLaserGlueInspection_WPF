@@ -3476,6 +3476,18 @@ namespace _3DLaserGlueInspection.Resources {
             }
         }
 
+        public static string ConsecutiveNGCount {
+            get {
+                return ResourceManager.GetString("ConsecutiveNGCount", resourceCulture);
+            }
+        }
+
+        public static string ConsecutiveNGCountDescription {
+            get {
+                return ResourceManager.GetString("ConsecutiveNGCountDescription", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///     查找资源键 GlueWidthThre 对应的本地化字符串。
         /// </summary>

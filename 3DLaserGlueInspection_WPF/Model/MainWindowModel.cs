@@ -3130,6 +3130,8 @@ namespace _3DLaserGlueInspection
                             var glueLenthResultStartPose =  glueLenthResultStartPoseDict[item.Key][indexImageCutProcessDict[item.Key]];
 
                             int indexImage = 0;
+                            // 计数仅属于当前相机、当前检测段，每次采集重新开始。
+                            int consecutiveNGCount = 0;
                             bool bRun = true;
                             while (bRun)//段内循环
                             {
@@ -3535,7 +3537,16 @@ namespace _3DLaserGlueInspection
                                             //胶检测结果整理
                                             if (imageSet.轮廓检测)
                                             {
-                                                if (!bResult.Result)
+                                                int requiredNGCount = cutSet.consecutiveNGCount > 0 ? cutSet.consecutiveNGCount : 5;
+                                                if (bResult.Result)
+                                                {
+                                                    consecutiveNGCount = 0;
+                                                }
+                                                else if (consecutiveNGCount < requiredNGCount)
+                                                {
+                                                    consecutiveNGCount++;
+                                                }
+                                                if (consecutiveNGCount >= requiredNGCount)
                                                 {
                                                     partResult = false;
                                                     totalResult = false;
@@ -3611,6 +3622,10 @@ namespace _3DLaserGlueInspection
                                                     }
                                                 }
                                             }
+                                            else
+                                            {
+                                                consecutiveNGCount = 0;
+                                            }
                                             if (dictResult.ContainsKey(imageKey))
                                             {
                                                 dictResult[imageKey] = bResult;
@@ -3635,10 +3650,12 @@ namespace _3DLaserGlueInspection
                                         else
                                         {
                                             //无检测参数
+                                            consecutiveNGCount = 0;
                                         }
                                     }
                                     catch (Exception ex)
                                     {
+                                        consecutiveNGCount = 0;
                                         Console.WriteLine($"ex:{ex.Message}");
                                     }
                                     finally

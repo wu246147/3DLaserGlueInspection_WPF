@@ -317,10 +317,10 @@
     <value>复制至范围图片</value>
   </data>
   <data name="CorrectionX" xml:space="preserve">
-    <value>矫正系数x</value>
+    <value>胶宽矫正比例</value>
   </data>
   <data name="CorrectionY" xml:space="preserve">
-    <value>矫正系数y</value>
+    <value>胶高矫正比例</value>
   </data>
   <data name="CtrlRightClickToDeleteCompleteDrawing" xml:space="preserve">
     <value>Ctrl:删除点 右键:完成绘制</value>
@@ -1003,6 +1003,15 @@
   <data name="RangeSizeCorrectionDescription" xml:space="preserve">
     <value>选择起止图像 ID，按每张图片的检测方式选择整胶、左侧或右侧的实际胶宽，并填写对应检测区域的实际胶高逐张矫正；需关闭公共矫正系数。</value>
   </data>
+  <data name="RangeSizeCorrectionInit" xml:space="preserve">
+    <value>局部图片矫正初始化</value>
+  </data>
+  <data name="RangeSizeCorrectionInitDescription" xml:space="preserve">
+    <value>选择起止图像 ID，将当前检测段、当前相机中该范围的矫正比例重置为 1，并同步调整基准线检测框；无需填写实际尺寸，需关闭公共矫正系数。</value>
+  </data>
+  <data name="VisionParametersSaved" xml:space="preserve">
+    <value>车型“{0}”参数已保存。</value>
+  </data>
   <data name="SoftwareRun" xml:space="preserve">
     <value>软件运行</value>
   </data>
@@ -1255,6 +1264,12 @@
   </data>
   <data name="EnableOverlappingAdhesiveLengthDetection" xml:space="preserve">
     <value>启用重叠胶长检测</value>
+  </data>
+  <data name="ConsecutiveNGCount" xml:space="preserve">
+    <value>连续NG图片数</value>
+  </data>
+  <data name="ConsecutiveNGCountDescription" xml:space="preserve">
+    <value>同一相机、同一检测段连续达到该数量的NG图片后，段结果和总结果才判为NG；遇到OK或未检测图片重新计数。请输入大于0的整数，默认为5。</value>
   </data>
   <data name="GlueWidthThre" xml:space="preserve">
     <value>胶宽阈值</value>

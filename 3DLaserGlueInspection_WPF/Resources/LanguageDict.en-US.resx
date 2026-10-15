@@ -317,10 +317,10 @@ Direction Angle</value>
     <value>Copy to Range Image</value>
   </data>
   <data name="CorrectionX" xml:space="preserve">
-    <value>CorrectionX</value>
+    <value>Width correction ratio</value>
   </data>
   <data name="CorrectionY" xml:space="preserve">
-    <value>CorrectionY</value>
+    <value>Height correction ratio</value>
   </data>
   <data name="CtrlRightClickToDeleteCompleteDrawing" xml:space="preserve">
     <value>Ctrl: Right click to delete: complete drawing</value>
@@ -1006,6 +1006,15 @@ Cloud</value>
   <data name="RangeSizeCorrectionDescription" xml:space="preserve">
     <value>Select start and end image IDs. Correct each frame using its whole, left or right actual glue width and the actual height of that detection region. Disable shared correction coefficients first.</value>
   </data>
+  <data name="RangeSizeCorrectionInit" xml:space="preserve">
+    <value>Reset range</value>
+  </data>
+  <data name="RangeSizeCorrectionInitDescription" xml:space="preserve">
+    <value>Reset correction ratios to 1 for the selected image ID range in the current segment and camera, and update baseline ROIs. Actual dimensions are not required. Disable shared correction coefficients first.</value>
+  </data>
+  <data name="VisionParametersSaved" xml:space="preserve">
+    <value>Parameters for "{0}" have been saved.</value>
+  </data>
   <data name="SoftwareRun" xml:space="preserve">
     <value>Software</value>
   </data>
@@ -1258,6 +1267,12 @@ Optimization</value>
   </data>
   <data name="EnableOverlappingAdhesiveLengthDetection" xml:space="preserve">
     <value>Enable overlapping adhesive length detection</value>
+  </data>
+  <data name="ConsecutiveNGCount" xml:space="preserve">
+    <value>Consecutive NG frames</value>
+  </data>
+  <data name="ConsecutiveNGCountDescription" xml:space="preserve">
+    <value>The part and total results become NG only after this many consecutive NG frames from the same camera in the same inspection segment. An OK or uninspected frame resets the count. Enter a positive integer; the default is 5.</value>
   </data>
   <data name="GlueWidthThre" xml:space="preserve">
     <value>Glue Width Thre</value>
