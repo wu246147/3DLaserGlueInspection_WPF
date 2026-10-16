@@ -126,7 +126,7 @@ namespace _3DLaserGlueInspection.subForm
             };
             resetBaseLineItem.Click += (s, e) =>
             {
-                if (isCorrectingRange || imageSet == null || cutSet == null || hImage == null || hImage.Empty()) return;
+                if (isCorrectingRange || imageSet == null || cutSet == null || hImage == null || hImage.IsDisposed || hImage.Empty()) return;
                 EnsureImageBaseLineRegions(true);
                 showBaseLineDetRegion.IsChecked = true;
                 showImageComboBox.SelectedIndex = 0;
@@ -1977,61 +1977,79 @@ namespace _3DLaserGlueInspection.subForm
         {
             SaveRoiRegion(updateControls);
             updateBaseLineRegion();
-            if (imageSet != null && hImage != null && !hImage.Empty()
-                && ReferenceEquals(baseLineDragFrame, imageSet) && baseLineDragRegions != null)
+
+            try
             {
-                RectData[] current = { imageSet.baseLineRegion1, imageSet.baseLineRegion2 };
-                for (int i = 0; i < current.Length; i++)
+                if (imageSet != null && hImage != null && !hImage.Empty()
+                    && ReferenceEquals(baseLineDragFrame, imageSet) && baseLineDragRegions != null)
                 {
-                    RectData before = baseLineDragRegions[i], after = current[i];
-                    if (before != null && after != null && (before.X != after.X || before.Y != after.Y
-                        || before.Width != after.Width || before.Height != after.Height || before.Angle != after.Angle))
+                    RectData[] current = { imageSet.baseLineRegion1, imageSet.baseLineRegion2 };
+                    for (int i = 0; i < current.Length; i++)
                     {
-                        imageSet.baseLineImageWidth = hImage.Cols;
-                        imageSet.baseLineImageHeight = hImage.Rows;
-                        isAlter = true;
+                        RectData before = baseLineDragRegions[i], after = current[i];
+                        if (before != null && after != null && (before.X != after.X || before.Y != after.Y
+                            || before.Width != after.Width || before.Height != after.Height || before.Angle != after.Angle))
+                        {
+                            imageSet.baseLineImageWidth = hImage.Cols;
+                            imageSet.baseLineImageHeight = hImage.Rows;
+                            isAlter = true;
+                        }
                     }
                 }
+                baseLineDragFrame = null;
+                baseLineDragRegions = null;
             }
-            baseLineDragFrame = null;
-            baseLineDragRegions = null;
+            catch (Exception ex)
+            {
+            }
+          
         }
 
         private void SaveRoiRegion(bool updateControls)
         {
-            if (imageSet == null || hImage == null || hImage.Empty() || !hWindowModel.RectExists("detRect")) return;
-            RectData rect = hWindowModel.GetRectData("detRect");
-            double left = Math.Max(0, Math.Min(1, rect.X / hImage.Cols));
-            double right = Math.Max(0, Math.Min(1, (rect.X + rect.Width) / hImage.Cols));
-            double top = Math.Max(0, Math.Min(1, rect.Y / hImage.Rows));
-            double bottom = Math.Max(0, Math.Min(1, (rect.Y + rect.Height) / hImage.Rows));
-            if (!(right > left) || !(bottom > top)) return;
-            if (Math.Abs(imageSet.LeftX - left) > 1e-12 || Math.Abs(imageSet.RightX - right) > 1e-12
-                || Math.Abs(imageSet.TopY - top) > 1e-12 || Math.Abs(imageSet.DownY - bottom) > 1e-12)
-                isAlter = true;
-            imageSet.LeftX = left;
-            imageSet.RightX = right;
-            imageSet.TopY = top;
-            imageSet.DownY = bottom;
-            if (updateControls)
+            try
             {
-                // 直接更新当前帧，不通过 UpData 按已经切换的列表索引写入其他帧。
-                isUpdatingRoiControls = true;
-                try
+                if (imageSet == null || hImage == null || hImage.IsDisposed || hImage.Empty() || !hWindowModel.RectExists("detRect")) return;
+                RectData rect = hWindowModel.GetRectData("detRect");
+                double left = Math.Max(0, Math.Min(1, rect.X / hImage.Cols));
+                double right = Math.Max(0, Math.Min(1, (rect.X + rect.Width) / hImage.Cols));
+                double top = Math.Max(0, Math.Min(1, rect.Y / hImage.Rows));
+                double bottom = Math.Max(0, Math.Min(1, (rect.Y + rect.Height) / hImage.Rows));
+                if (!(right > left) || !(bottom > top)) return;
+                if (Math.Abs(imageSet.LeftX - left) > 1e-12 || Math.Abs(imageSet.RightX - right) > 1e-12
+                    || Math.Abs(imageSet.TopY - top) > 1e-12 || Math.Abs(imageSet.DownY - bottom) > 1e-12)
+                    isAlter = true;
+                imageSet.LeftX = left;
+                imageSet.RightX = right;
+                imageSet.TopY = top;
+                imageSet.DownY = bottom;
+                if (updateControls)
                 {
-                    leftRangeMinNumericUpDown.Text = left.ToString();
-                    leftRangeMaxNumericUpDown.Text = right.ToString();
-                    topRangeMinNumericUpDown.Text = top.ToString();
-                    topRangeMaxNumericUpDown.Text = bottom.ToString();
+                    // 直接更新当前帧，不通过 UpData 按已经切换的列表索引写入其他帧。
+                    isUpdatingRoiControls = true;
+                    try
+                    {
+                        leftRangeMinNumericUpDown.Text = left.ToString();
+                        leftRangeMaxNumericUpDown.Text = right.ToString();
+                        topRangeMinNumericUpDown.Text = top.ToString();
+                        topRangeMaxNumericUpDown.Text = bottom.ToString();
+                    }
+                    finally { isUpdatingRoiControls = false; }
+                    UpdateRoiSizeLabels();
                 }
-                finally { isUpdatingRoiControls = false; }
-                UpdateRoiSizeLabels();
+                
             }
+            catch (Exception ex)
+            {
+                
+
+            }
+            
         }
 
         private void UpdateRoiSizeLabels()
         {
-            if (hImage == null || hImage.Empty() || imageSet == null || cutSet == null || CamParamName == null || camKey == null) return;
+            if (hImage == null || hImage.IsDisposed || hImage.Empty() || imageSet == null || cutSet == null || CamParamName == null || camKey == null) return;
             if (Params.CamPar.TryGetValue(CamParamName, out var hCamPars) && hCamPars.TryGetValue(camKey, out var hCamPar)
                 && Params.LightInCam.TryGetValue(CamParamName, out var lightInCams) && lightInCams.TryGetValue(camKey, out var lightInCam))
             {
@@ -2072,7 +2090,7 @@ namespace _3DLaserGlueInspection.subForm
 
         private void ShowOriginalImage()
         {
-            if (hImage == null || hImage.Empty()) return;
+            if (hImage == null || hImage.IsDisposed || hImage.Empty()) return;
             hWindowModel.SetImageSource(GlobalVarAndFunc.ConvertMatToBitmapImage(hImage).Clone());
             RefreshRoiRegion();
             RefreshCorrectionBaseLineRegions();
@@ -2082,7 +2100,7 @@ namespace _3DLaserGlueInspection.subForm
         {
             if (showRangeCheck.IsChecked == true)
             {
-                if (hImage == null || hImage.Empty() || imageSet == null) return;
+                if (hImage == null || hImage.IsDisposed || hImage.Empty() || imageSet == null) return;
                 if (showImageComboBox.SelectedIndex != 0) showImageComboBox.SelectedIndex = 0;
             }
             else
@@ -2094,7 +2112,7 @@ namespace _3DLaserGlueInspection.subForm
 
         private void runOutLineButton_Click(object sender, RoutedEventArgs e)
         {
-            if (hImage == null)
+            if (hImage == null || hImage.IsDisposed || hImage.Empty())
             {
                 System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.NoImage);
                 return;
@@ -3851,7 +3869,8 @@ namespace _3DLaserGlueInspection.subForm
 
         private void runButton_Click2(object sender, RoutedEventArgs e)
         {
-            if (hImage == null)
+            
+            if (hImage == null || hImage.IsDisposed || hImage.Empty())
             {
                 if (!isAuto)
                 {

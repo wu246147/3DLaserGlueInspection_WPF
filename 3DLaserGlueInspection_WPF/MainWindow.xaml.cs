@@ -197,7 +197,18 @@ namespace _3DLaserGlueInspection
 
         private void btnClose_Click(object sender, RoutedEventArgs e)
         {
-            this.Close();
+            if (!TryPasswordLogin(out WindowPassWord.PasswordUserType userType))
+            {
+                return;
+            }
+
+            if (userType != WindowPassWord.PasswordUserType.Administrator
+                 && userType != WindowPassWord.PasswordUserType.SuperAdministrator)
+            {
+                model.ShowMessage($"{userType} 关闭软件");
+               this.Close();
+            }
+           
         }
 
         private void TopMain_MouseLeftBtnDown(object sender, MouseButtonEventArgs e)
