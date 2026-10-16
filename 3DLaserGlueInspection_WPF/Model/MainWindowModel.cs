@@ -3438,7 +3438,9 @@ namespace _3DLaserGlueInspection
                                                                 // 气泡检测使用修正后的 hXLDCont10mm 原始点，胶水检测仍使用离散滤波后的点。
                                                                 Vision.singleFrameDetAndResult(hXLDContPorcess, imageSet, cutSet,
                                                                     ref singleFrameExistGlue, ref resultData, ref bResult,
-                                                                    ref outMaxRegion, ref outRegionRectangle2, hXLDCont10mm);
+                                                                    ref outMaxRegion, ref outRegionRectangle2, hXLDCont10mm,
+                                                                    baseLine: Vision.PrepareImageBaseLine(dictImage[imageKey], item.Value, hCamPar, LightInCam, imageSet, cutSet,
+                                                                        imageSet.isUseAngleOpt ? Math.Cos(robotAndCamAngle / 180 * Math.PI) : 1, extractedPixels: xy));
                                                             }
                                                             finally
                                                             {

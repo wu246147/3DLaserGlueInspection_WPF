@@ -941,6 +941,283 @@ namespace _3DLaserGlueInspection
             }
         }
 
+        /// <summary>复制框几何和显示属性，避免跨图片共享可变对象。</summary>
+        public static RectData CloneBaseLineRegion(RectData region)
+        {
+            if (region == null) return null;
+            return new RectData
+            {
+                Id = region.Id, X = region.X, Y = region.Y,
+                Width = region.Width, Height = region.Height, Angle = region.Angle,
+                IsDraggable = region.IsDraggable, IsRotatable = region.IsRotatable,
+                StrokeColor = region.StrokeColor, StrokeThickness = region.StrokeThickness
+            };
+        }
+
+        private static void ValidateBaseLineRegion(RectData region)
+        {
+            if (region == null || !SizeCorrectionMatrix.IsFinite(region.CenterX)
+                || !SizeCorrectionMatrix.IsFinite(region.CenterY) || !SizeCorrectionMatrix.IsFinite(region.Angle)
+                || !SizeCorrectionMatrix.IsFinite(region.Width) || !SizeCorrectionMatrix.IsFinite(region.Height)
+                || region.Width <= 0 || region.Height <= 0)
+                throw new InvalidOperationException("基准线检测框无效。");
+        }
+
+        /// <summary>原图框使用当前图像像素坐标；传给标定的点保留相机偏移。</summary>
+        public static Mat ExtractImageBaseLinePoints(Mat image, CamParam camera, ImageSet frame, Mat extractedPixels = null)
+        {
+            if (image == null || image.Empty()) throw new InvalidOperationException("基准线原图为空。");
+            if ((frame.baseLineImageWidth > 0 && frame.baseLineImageWidth != image.Cols)
+                || (frame.baseLineImageHeight > 0 && frame.baseLineImageHeight != image.Rows))
+                throw new InvalidOperationException("原图尺寸已改变，请重新设置基准线框。");
+            var points = new List<OpenCvSharp.Point2d>();
+            var seen = new HashSet<long>();
+            int left = frame.启用裁剪 ? (int)(frame.LeftX * image.Cols) : 0;
+            int top = frame.启用裁剪 ? (int)(frame.TopY * image.Rows) : 0;
+            int width = frame.启用裁剪 ? (int)((frame.RightX - frame.LeftX) * image.Cols) : image.Cols;
+            int height = frame.启用裁剪 ? (int)((frame.DownY - frame.TopY) * image.Rows) : image.Rows;
+            if (left < 0 || top < 0 || width <= 0 || height <= 0 || left + width > image.Cols || top + height > image.Rows)
+                throw new InvalidOperationException("裁剪范围无效。");
+            Mat ownedPixels = null, additionalPixels = null;
+            try
+            {
+                if (extractedPixels == null)
+                {
+                    using (Mat crop = new Mat(image, new OpenCvSharp.Rect(left, top, width, height)))
+                        getLaserPosition(crop, frame.minThreshold, frame.laserMinWidth, out ownedPixels, camera.OffsetX + left, camera.OffsetY + top);
+                    extractedPixels = ownedPixels;
+                }
+                bool needsAdditionalPoints = false;
+                foreach (RectData region in new[] { frame.baseLineRegion1, frame.baseLineRegion2 })
+                {
+                    ValidateBaseLineRegion(region);
+                    double angle = region.Angle * Math.PI / 180;
+                    double halfX = (Math.Abs(Math.Cos(angle)) * region.Width + Math.Abs(Math.Sin(angle)) * region.Height) / 2;
+                    double halfY = (Math.Abs(Math.Sin(angle)) * region.Width + Math.Abs(Math.Cos(angle)) * region.Height) / 2;
+                    needsAdditionalPoints |= region.CenterX - halfX < left || region.CenterX + halfX >= left + width
+                        || region.CenterY - halfY < top || region.CenterY + halfY >= top + height;
+                }
+                // ROI 内复用胶轮廓提取结果；仅对 ROI 外的基准区域补充完整原图的点。
+                if (frame.启用裁剪 && needsAdditionalPoints)
+                    getLaserPosition(image, frame.minThreshold, frame.laserMinWidth, out additionalPixels, camera.OffsetX, camera.OffsetY);
+                Mat[] sources = { extractedPixels, additionalPixels };
+                foreach (RectData region in new[] { frame.baseLineRegion1, frame.baseLineRegion2 })
+                {
+                    ValidateBaseLineRegion(region);
+                    double angle = region.Angle * Math.PI / 180, cos = Math.Cos(angle), sin = Math.Sin(angle);
+                    int selectedCount = 0;
+                    for (int source = 0; source < sources.Length; source++)
+                    {
+                        Mat pixels = sources[source];
+                        if (pixels == null || pixels.Empty()) continue;
+                        if (pixels.Cols != 2 || pixels.Type() != MatType.CV_64FC1)
+                            throw new InvalidOperationException("激光点坐标格式无效。");
+                        for (int i = 0; i < pixels.Rows; i++)
+                        {
+                            double x = pixels.At<double>(i, 0), y = pixels.At<double>(i, 1);
+                            if (!SizeCorrectionMatrix.IsFinite(x) || !SizeCorrectionMatrix.IsFinite(y)) continue;
+                            double rawX = x - camera.OffsetX, rawY = y - camera.OffsetY;
+                            if (source == 1 && rawX >= left && rawX < left + width && rawY >= top && rawY < top + height) continue;
+                            double dx = rawX - region.CenterX, dy = rawY - region.CenterY;
+                            if (Math.Abs(dx * cos + dy * sin) > region.Width / 2
+                                || Math.Abs(-dx * sin + dy * cos) > region.Height / 2) continue;
+                            selectedCount++;
+                            if (seen.Add(((long)source << 32) + i)) points.Add(new OpenCvSharp.Point2d(x, y));
+                        }
+                    }
+                    if (selectedCount < 2) throw new InvalidOperationException("基准线检测框内没有足够的有效激光点。");
+                }
+            }
+            finally { ownedPixels?.Dispose(); additionalPixels?.Dispose(); }
+            var result = new Mat(points.Count, 2, MatType.CV_64FC1);
+            for (int i = 0; i < points.Count; i++)
+            {
+                result.At<double>(i, 0) = points[i].X;
+                result.At<double>(i, 1) = points[i].Y;
+            }
+            return result;
+        }
+
+        /// <summary>基准点先标定到物理平面；拟合容差与旧流程一致，最终线再同步尺寸矫正。</summary>
+        public static BaseLineResult PrepareImageBaseLine(Mat image, CamParam camera, CameraParameters calibration,
+            PoseParameters lightPose, ImageSet frame, CutSet cut, double angleScale = 1, bool applySizeCorrection = true, Mat extractedPixels = null)
+        {
+            if (!frame.isUseBaseLine || !frame.baseLineInImageCoordinates) return null;
+            try
+            {
+                if (cut.scaleSize <= 0 || !SizeCorrectionMatrix.IsFinite(angleScale) || angleScale <= 1e-6)
+                    throw new InvalidOperationException("基准线坐标转换比例无效。");
+                using (Mat pixels = ExtractImageBaseLinePoints(image, camera, frame, extractedPixels))
+                {
+                    GetXY(calibration, lightPose, pixels, out Mat physical);
+                    using (physical)
+                    {
+                        scalePoint(physical, cut, 90 - lightPose.rx, out Mat scaled);
+                        using (scaled)
+                        {
+                            for (int i = 0; i < scaled.Rows; i++) scaled.At<double>(i, 0) *= angleScale;
+                            int status = ransacFitLineFast(scaled.CvPtr, out double vx, out double vy,
+                                out double x, out double y, 0.5f * cut.scaleSize);
+                            if (status != 0) return BaseLineResult.Failure("原图基准点拟合失败（状态 " + status + "）。");
+                            BaseLineResult line = BaseLineResult.Create(vx, vy, x, y);
+                            return applySizeCorrection ? TransformBaseLine(line, frame.GetSizeCorrectionMatrix()) : line;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex) { return BaseLineResult.Failure(ex.Message); }
+        }
+
+        public static BaseLineResult TransformBaseLine(BaseLineResult line, SizeCorrectionMatrix matrix)
+        {
+            if (line == null || !line.IsValid) return line;
+            matrix.Validate();
+            // 方向只应用线性部分，线上一点同时应用平移。
+            matrix.Transform(line.X, line.Y, out double x, out double y);
+            return BaseLineResult.Create(matrix.M00 * line.Vx + matrix.M01 * line.Vy,
+                matrix.M10 * line.Vx + matrix.M11 * line.Vy, x, y);
+        }
+
+        /// <summary>
+        /// 旧轮廓框通过标定映射的反向采样迁移到原图，避免假定像素到物理平面为仿射变换。
+        /// 不写磁盘；两个框均转换成功后才由调用方提交。采样外接矩形需要调试人员复核。
+        /// </summary>
+        public static RectData[] ConvertLegacyBaseLineRegions(Mat image, CamParam camera, CameraParameters calibration,
+            PoseParameters lightPose, ImageSet frame, CutSet cut, double angleScale)
+        {
+            if (image == null || image.Empty() || cut.scaleSize <= 0 || !SizeCorrectionMatrix.IsFinite(angleScale) || angleScale <= 1e-6)
+                throw new InvalidOperationException("没有有效的原图或基准线转换参数。");
+            List<OpenCvSharp.Point2f>[] support = GetLegacyBaseLineSupport(image, camera, calibration, lightPose, frame, cut, angleScale);
+            const int step = 2;
+            int columns = (image.Cols + step - 1) / step, rows = (image.Rows + step - 1) / step;
+            using (Mat pixels = new Mat(columns * rows, 2, MatType.CV_64FC1))
+            {
+                for (int row = 0; row < rows; row++)
+                    for (int col = 0; col < columns; col++)
+                    {
+                        int index = row * columns + col;
+                        pixels.At<double>(index, 0) = col * step + camera.OffsetX;
+                        pixels.At<double>(index, 1) = row * step + camera.OffsetY;
+                    }
+                GetXY(calibration, lightPose, pixels, out Mat physical);
+                using (physical)
+                {
+                    scalePoint(physical, cut, 90 - lightPose.rx, out Mat contour);
+                    using (contour)
+                    {
+                        for (int i = 0; i < contour.Rows; i++) contour.At<double>(i, 0) *= angleScale;
+                        ApplySizeCorrection(contour, frame);
+                        var converted = new List<RectData>();
+                        foreach (RectData region in new[] { frame.baseLineRegion1, frame.baseLineRegion2 })
+                        {
+                            ValidateBaseLineRegion(region);
+                            double angle = region.Angle * Math.PI / 180, cos = Math.Cos(angle), sin = Math.Sin(angle);
+                            var selected = new List<OpenCvSharp.Point2f>();
+                            for (int i = 0; i < contour.Rows; i++)
+                            {
+                                double dx = contour.At<double>(i, 0) - region.CenterX, dy = contour.At<double>(i, 1) - region.CenterY;
+                                if (Math.Abs(dx * cos + dy * sin) <= region.Width / 2
+                                    && Math.Abs(-dx * sin + dy * cos) <= region.Height / 2)
+                                    selected.Add(new OpenCvSharp.Point2f((float)(pixels.At<double>(i, 0) - camera.OffsetX),
+                                        (float)(pixels.At<double>(i, 1) - camera.OffsetY)));
+                            }
+                            if (selected.Count < 3) throw new InvalidOperationException("旧基准框无法映射到当前原图，请检查标定、图像和角度补偿参数。");
+                            RotatedRect bounds = Cv2.MinAreaRect(selected);
+                            RectData mapped = CloneBaseLineRegion(region);
+                            mapped.Width = Math.Max(4, bounds.Size.Width + 2 * step);
+                            mapped.Height = Math.Max(4, bounds.Size.Height + 2 * step);
+                            mapped.X = bounds.Center.X - mapped.Width / 2;
+                            mapped.Y = bounds.Center.Y - mapped.Height / 2;
+                            mapped.Angle = bounds.Angle;
+                            // 反投影外接框会扩大切向选点范围；用旧框实际选中的激光点恢复取点跨度。
+                            List<OpenCvSharp.Point2f> laserPoints = support[converted.Count];
+                            if (laserPoints.Count >= 2)
+                            {
+                                double a = mapped.Angle * Math.PI / 180, c = Math.Cos(a), s = Math.Sin(a);
+                                double minU = double.PositiveInfinity, maxU = double.NegativeInfinity;
+                                double minV = double.PositiveInfinity, maxV = double.NegativeInfinity;
+                                foreach (OpenCvSharp.Point2f point in laserPoints)
+                                {
+                                    double dx = point.X - bounds.Center.X, dy = point.Y - bounds.Center.Y;
+                                    double u = dx * c + dy * s, v = -dx * s + dy * c;
+                                    minU = Math.Min(minU, u); maxU = Math.Max(maxU, u);
+                                    minV = Math.Min(minV, v); maxV = Math.Max(maxV, v);
+                                }
+                                double cx = bounds.Center.X, cy = bounds.Center.Y;
+                                if (maxU - minU >= maxV - minV)
+                                {
+                                    mapped.Width = Math.Max(2, maxU - minU + 0.5);
+                                    double mid = (minU + maxU) / 2; cx += mid * c; cy += mid * s;
+                                }
+                                else
+                                {
+                                    mapped.Height = Math.Max(2, maxV - minV + 0.5);
+                                    double mid = (minV + maxV) / 2; cx -= mid * s; cy += mid * c;
+                                }
+                                mapped.X = cx - mapped.Width / 2;
+                                mapped.Y = cy - mapped.Height / 2;
+                            }
+                            converted.Add(mapped);
+                        }
+                        return converted.ToArray();
+                    }
+                }
+            }
+        }
+
+        private static List<OpenCvSharp.Point2f>[] GetLegacyBaseLineSupport(Mat image, CamParam camera,
+            CameraParameters calibration, PoseParameters lightPose, ImageSet frame, CutSet cut, double angleScale)
+        {
+            var support = new[] { new List<OpenCvSharp.Point2f>(), new List<OpenCvSharp.Point2f>() };
+            int left = frame.启用裁剪 ? (int)(frame.LeftX * image.Cols) : 0;
+            int top = frame.启用裁剪 ? (int)(frame.TopY * image.Rows) : 0;
+            int width = frame.启用裁剪 ? (int)((frame.RightX - frame.LeftX) * image.Cols) : image.Cols;
+            int height = frame.启用裁剪 ? (int)((frame.DownY - frame.TopY) * image.Rows) : image.Rows;
+            using (Mat crop = new Mat(image, new OpenCvSharp.Rect(left, top, width, height)))
+            {
+                getLaserPosition(crop, frame.minThreshold, frame.laserMinWidth, out Mat pixels, camera.OffsetX + left, camera.OffsetY + top);
+                using (pixels)
+                {
+                    if (pixels.Empty()) return support;
+                    GetXY(calibration, lightPose, pixels, out Mat physical);
+                    using (physical)
+                    {
+                        scalePoint(physical, cut, 90 - lightPose.rx, out Mat contour);
+                        using (contour)
+                        {
+                            for (int i = 0; i < contour.Rows; i++) contour.At<double>(i, 0) *= angleScale;
+                            ApplySizeCorrection(contour, frame);
+                            Mat filtered;
+                            if (frame.离散去噪)
+                                TrajectoryDiscreteFilter(contour, out filtered, frame.分段距离 * cut.scaleSize, frame.成段点数);
+                            else filtered = contour.Clone();
+                            using (filtered)
+                            {
+                                var kept = new HashSet<Tuple<double, double>>();
+                                for (int i = 0; i < filtered.Rows; i++) kept.Add(Tuple.Create(filtered.At<double>(i, 0), filtered.At<double>(i, 1)));
+                                RectData[] regions = { frame.baseLineRegion1, frame.baseLineRegion2 };
+                                for (int r = 0; r < regions.Length; r++)
+                                {
+                                    RectData region = regions[r]; ValidateBaseLineRegion(region);
+                                    double a = region.Angle * Math.PI / 180, c = Math.Cos(a), s = Math.Sin(a);
+                                    for (int i = 0; i < contour.Rows; i++)
+                                    {
+                                        double x = contour.At<double>(i, 0), y = contour.At<double>(i, 1);
+                                        if (!kept.Contains(Tuple.Create(x, y))) continue;
+                                        double dx = x - region.CenterX, dy = y - region.CenterY;
+                                        if (Math.Abs(dx * c + dy * s) <= region.Width / 2 && Math.Abs(-dx * s + dy * c) <= region.Height / 2)
+                                            support[r].Add(new OpenCvSharp.Point2f((float)(pixels.At<double>(i, 0) - camera.OffsetX),
+                                                (float)(pixels.At<double>(i, 1) - camera.OffsetY)));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return support;
+        }
+
         /// <summary>当前有效的胶宽检测方式：0 整胶，1 左侧，2 右侧。</summary>
         public static int GetGlueWidthSide(ImageSet imageSet)
         {
@@ -1247,7 +1524,7 @@ namespace _3DLaserGlueInspection
             return maxDistance <= maxAllowedDistance;
         }
 
-        public static void singleFrameDetAndResult(Mat OutLine,ImageSet imageSet,CutSet cutSet, ref bool singleFrameExistGlue, ref Data resultData, ref BResult bResult, ref Mat outMaxRegion, ref Mat outRegionRectangle2, Mat bubblePoints = null, Action<string> detectionTrace = null)
+        public static void singleFrameDetAndResult(Mat OutLine,ImageSet imageSet,CutSet cutSet, ref bool singleFrameExistGlue, ref Data resultData, ref BResult bResult, ref Mat outMaxRegion, ref Mat outRegionRectangle2, Mat bubblePoints = null, Action<string> detectionTrace = null, BaseLineResult baseLine = null)
         {
 
             bool existGlue = false;
@@ -1280,22 +1557,35 @@ namespace _3DLaserGlueInspection
                 using (Mat selectSpongeStripPoints = new Mat())
                 using (Mat selectRangePoints = new Mat())
                 {
-                    Vision.GetPointsInRotatedRect(OutLine.CvPtr, selectBaseLinePoints1.CvPtr,
-                        imageSet.baseLineRegion1.CenterX, imageSet.baseLineRegion1.CenterY,
-                        imageSet.baseLineRegion1.Width, imageSet.baseLineRegion1.Height,
-                        imageSet.baseLineRegion1.Angle);
+                    int baselineStatus;
+                    if (imageSet.baseLineInImageCoordinates)
+                    {
+                        baselineStatus = baseLine != null && baseLine.IsValid ? 0 : -1;
+                        if (baselineStatus == 0)
+                        {
+                            item0 = baseLine.Vx; item1 = baseLine.Vy; item2 = baseLine.X; item3 = baseLine.Y;
+                        }
+                        else detectionTrace?.Invoke(baseLine?.Error ?? "本帧缺少由原图基准框计算的基准线。");
+                    }
+                    else
+                    {
+                        Vision.GetPointsInRotatedRect(OutLine.CvPtr, selectBaseLinePoints1.CvPtr,
+                            imageSet.baseLineRegion1.CenterX, imageSet.baseLineRegion1.CenterY,
+                            imageSet.baseLineRegion1.Width, imageSet.baseLineRegion1.Height,
+                            imageSet.baseLineRegion1.Angle);
 
-                    Vision.GetPointsInRotatedRect(OutLine.CvPtr, selectBaseLinePoints2.CvPtr,
-                        imageSet.baseLineRegion2.CenterX, imageSet.baseLineRegion2.CenterY,
-                        imageSet.baseLineRegion2.Width, imageSet.baseLineRegion2.Height,
-                        imageSet.baseLineRegion2.Angle);
+                        Vision.GetPointsInRotatedRect(OutLine.CvPtr, selectBaseLinePoints2.CvPtr,
+                            imageSet.baseLineRegion2.CenterX, imageSet.baseLineRegion2.CenterY,
+                            imageSet.baseLineRegion2.Width, imageSet.baseLineRegion2.Height,
+                            imageSet.baseLineRegion2.Angle);
 
-                    Cv2.VConcat(selectBaseLinePoints1, selectBaseLinePoints2, selectBaseLinePoints);
-                    detectionTrace?.Invoke($"基准线框内 {selectBaseLinePoints1.Rows}+{selectBaseLinePoints2.Rows} 点");
+                        Cv2.VConcat(selectBaseLinePoints1, selectBaseLinePoints2, selectBaseLinePoints);
+                        detectionTrace?.Invoke($"基准线框内 {selectBaseLinePoints1.Rows}+{selectBaseLinePoints2.Rows} 点");
 
-                    float disThre = 0.5f;
-                    int baselineStatus = FitBaseLineBeforeSizeCorrection(selectBaseLinePoints, imageSet,
-                        disThre * cutSet.scaleSize, out item0, out item1, out item2, out item3);
+                        float disThre = 0.5f;
+                        baselineStatus = FitBaseLineBeforeSizeCorrection(selectBaseLinePoints, imageSet,
+                            disThre * cutSet.scaleSize, out item0, out item1, out item2, out item3);
+                    }
                     if (baselineStatus != 0)
                     {
                         detectionTrace?.Invoke($"基准线拟合失败（状态 {baselineStatus}）");
@@ -1866,6 +2156,31 @@ namespace _3DLaserGlueInspection
         }
     }
 
+    /// <summary>仅属于本帧的基准线，不存入车型参数；坐标必须与检测轮廓一致。</summary>
+    public sealed class BaseLineResult
+    {
+        public bool IsValid { get; private set; }
+        public string Error { get; private set; }
+        public double Vx { get; private set; }
+        public double Vy { get; private set; }
+        public double X { get; private set; }
+        public double Y { get; private set; }
+
+        public static BaseLineResult Failure(string error)
+        {
+            return new BaseLineResult { Error = error };
+        }
+
+        public static BaseLineResult Create(double vx, double vy, double x, double y)
+        {
+            double length = Math.Sqrt(vx * vx + vy * vy);
+            if (!SizeCorrectionMatrix.IsFinite(length) || length < 1e-12
+                || !SizeCorrectionMatrix.IsFinite(x) || !SizeCorrectionMatrix.IsFinite(y))
+                return Failure("基准线拟合结果无效。");
+            return new BaseLineResult { IsValid = true, Vx = vx / length, Vy = vy / length, X = x, Y = y };
+        }
+    }
+
     [Serializable]
     public class ImageSet
     {
@@ -1920,6 +2235,10 @@ namespace _3DLaserGlueInspection
         public double bubblePointMinDistance = 5;
         public RectData baseLineRegion1 = new RectData();
         public RectData baseLineRegion2 = new RectData();
+        // 旧 XML 默认为轮廓坐标；原图示教后明确标记，禁止混用两种坐标。
+        public bool baseLineInImageCoordinates = false;
+        public int baseLineImageWidth = 0;
+        public int baseLineImageHeight = 0;
 
         public ImageSet(int index)
         {
@@ -1930,6 +2249,8 @@ namespace _3DLaserGlueInspection
         {
             var clone = (ImageSet)MemberwiseClone();
             clone.sizeCorrectionMatrix = sizeCorrectionMatrix?.Clone();
+            clone.baseLineRegion1 = Vision.CloneBaseLineRegion(baseLineRegion1);
+            clone.baseLineRegion2 = Vision.CloneBaseLineRegion(baseLineRegion2);
             return clone;
         }
     }

@@ -1311,8 +1311,11 @@ Optimization</value>
     <value>Current Location 2D</value>
   </data>
   <data name="ShowBaseLineDetRegion" xml:space="preserve">
-    <value>Show Base Line 
-Det Region</value>
+    <value>Show Baseline Regions
+on Original Image</value>
+  </data>
+  <data name="ResetImageBaseLineRegions" xml:space="preserve">
+    <value>Reset original-image baseline regions for this frame</value>
   </data>
   <data name="useBaseLineDet" xml:space="preserve">
     <value>use base line det</value>

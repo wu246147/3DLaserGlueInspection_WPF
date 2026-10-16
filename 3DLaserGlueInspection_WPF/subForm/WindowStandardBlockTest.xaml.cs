@@ -575,7 +575,9 @@ namespace _3DLaserGlueInspection.subForm
                 outRegionRectangle2 = new Mat();
                 Vision.singleFrameDetAndResult(contourPointsForDetection, detectionImageSet,
                     detectionCutSet, ref existGlue, ref resultData, ref bResult,
-                    ref outMaxRegion, ref outRegionRectangle2, contourPoints);
+                    ref outMaxRegion, ref outRegionRectangle2, contourPoints,
+                    baseLine: Vision.PrepareImageBaseLine(currentImage, camParam, hCamPar, lightInCam,
+                        detectionImageSet, detectionCutSet, extractedPixels: outline));
 
                 ClearImageDisplay();
                 GlobalVarAndFunc.ShowImageData(detectionCutSet.ShowWidth, detectionCutSet.ShowHeight,

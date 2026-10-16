@@ -3605,6 +3605,13 @@ namespace _3DLaserGlueInspection.Resources {
             }
         }
 
+        /// <summary>重新设置当前图片的原图基准框。</summary>
+        public static string ResetImageBaseLineRegions {
+            get {
+                return ResourceManager.GetString("ResetImageBaseLineRegions", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///     查找资源键 useBaseLineDet 对应的本地化字符串。
         /// </summary>

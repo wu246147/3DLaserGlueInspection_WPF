@@ -1308,8 +1308,11 @@
     <value>当前位置2D</value>
   </data>
   <data name="ShowBaseLineDetRegion" xml:space="preserve">
-    <value>显示基准面
-检测框</value>
+    <value>显示原图
+基准线框</value>
+  </data>
+  <data name="ResetImageBaseLineRegions" xml:space="preserve">
+    <value>重新设置当前图片的原图基准框</value>
   </data>
   <data name="useBaseLineDet" xml:space="preserve">
     <value>启用基准线检测</value>

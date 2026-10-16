@@ -242,7 +242,7 @@
                                         </Grid>
                                     </Border>
                                     <CheckBox  x:Name="useCroppintCheck" Content="{x:Static resx:LanguageDict.EnableCropping}" HorizontalAlignment="Left" Margin="10,8,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
-                                    <Button x:Name="showRangeButton" Content="{x:Static resx:LanguageDict.ShowRange}"      FontSize="14" Foreground="White"    HorizontalAlignment="Left" VerticalAlignment="Top" Height="24" Width="110" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="127,4,0,0" Click="showRangeButton_Click"  />
+                                    <CheckBox x:Name="showRangeCheck" Content="{x:Static resx:LanguageDict.ShowRange}" HorizontalAlignment="Left" Margin="127,8,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Checked="showRangeCheck_Checked" Unchecked="showRangeCheck_Checked" />
                                 </Grid>
 
 
