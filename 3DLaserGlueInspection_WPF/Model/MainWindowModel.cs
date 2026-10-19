@@ -122,6 +122,7 @@ namespace _3DLaserGlueInspection
 
         public bool isUsePLC = false;
 
+        public RobotConnectType robotConnectType = RobotConnectType.TCPIP;
         // 空跑模式
         public bool isDemoMode = false;
 
@@ -172,6 +173,9 @@ namespace _3DLaserGlueInspection
                 
                 bool isUsePLCValue= bool.Parse(root.Element("isUsePLC").Value);
                 isUsePLC = isUsePLCValue;
+
+                robotConnectType = (RobotConnectType)Enum.Parse(typeof(RobotConnectType), root.Element("RobotConnectType").Value);
+
             }
             catch (Exception ex)
             {
@@ -447,10 +451,12 @@ namespace _3DLaserGlueInspection
                 while (!stop)
                 {
                     ClearCurrentRunID();
-                    //if (!Write(DO.Running, false)) return;
-                    //if (!Write(DO.Triggering, false)) return;
+                   
+
+                    if (!robot.Write(DO.Running, false)) return;
+                    if (!robot.Write(DO.Triggering, false)) return;
                     //输出准备号好
-                    //if (!Write(DO.Ready, true)) return;
+                    if (!robot.Write(DO.Ready, true)) return;
 
                     totalResult = true;
 
@@ -479,6 +485,10 @@ namespace _3DLaserGlueInspection
                         if (stop) return;
 
                     }
+
+                    // 复位
+                    if (!robot.Write(DO.TotalResultOK, false)) return;
+                    if (!robot.Write(DO.TotalResultNG, false)) return;
                     //收到信号后，就立刻恢复状态
                     switch (robotType)
                     {
@@ -508,14 +518,14 @@ namespace _3DLaserGlueInspection
                     //回复开始ON信号
                     if (rt)
                     {
-                        if (!robot.Write(DO.Result, 1)) return;
+                        if (!robot.Write(DO.Running, true)) return;
 
                         //SocketSend(0);
 
                     }
                     else
                     {
-                        if (!robot.Write(DO.Result, -1)) return;
+                        if (!robot.Write(DO.Running, false)) return;
                         //SocketSend(-1);
                         return;
                     }
@@ -534,6 +544,9 @@ namespace _3DLaserGlueInspection
                     //启动采集任务
                     while (true)
                     {
+
+                        if (!robot.Write(DO.Triggering, false)) return;
+
                         bool bEnd = false;
                         //等触发信号ON
                         ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForTriggerSignalOn);
@@ -624,8 +637,11 @@ namespace _3DLaserGlueInspection
                                 break;
                         }
                         //SocketSend(0);
+                        // 复位
+                        if (!robot.Write(DO.PartResultOK, false)) return;
+                        if (!robot.Write(DO.PartResultNG, false)) return;
 
-                        if (!robot.Write(DO.Result, 1)) return;
+                        if (!robot.Write(DO.Triggering, true)) return;
 
 
                         bool bTriggering = true;
@@ -1071,13 +1087,13 @@ namespace _3DLaserGlueInspection
                         if (partResult || isDemoMode)
                         {
                             //SocketSend(0);
-                            if (!robot.Write(DO.Result, 1)) return;
+                            if (!robot.Write(DO.PartResultOK, true)) return;
 
                         }
                         else
                         {
                             //SocketSend(-1);
-                            if (!robot.Write(DO.Result, -1)) return;
+                            if (!robot.Write(DO.PartResultNG, true)) return;
 
                         }
 
@@ -1449,13 +1465,13 @@ namespace _3DLaserGlueInspection
                     if (totalResult || isDemoMode)
                     {
                         //SocketSend(0);
-                        if (!robot.Write(DO.Result, 1)) return;
+                        if (!robot.Write(DO.TotalResultOK, true)) return;
 
                     }
                     else
                     {
                         //SocketSend(-1);
-                        if (!robot.Write(DO.Result, -1)) return;
+                        if (!robot.Write(DO.TotalResultNG, true)) return;
 
                     }
 
@@ -1483,6 +1499,8 @@ namespace _3DLaserGlueInspection
             }
             finally
             {
+                robot.Write(DO.Ready, false);
+
                 robot.Close();
                 plc.Close();
                 //io.Close();
@@ -1531,995 +1549,6 @@ namespace _3DLaserGlueInspection
                 catch { }
             }
         }
-
-
-        public void AcqAndRobotTest()
-        {
-            try
-            {
-
-                //加载参数
-                #region 加载参数
-                if (Params.Load())
-                {
-                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.CameraParametersLoadedSuccessfully);
-                }
-                else
-                {
-                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.CameraParameterLoadingFailed + Params.ErrMsg, LogType.ng);
-                    return;
-                }
-                if (cars.Load())
-                {
-                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ProductConfigurationParametersLoadedSuccessfully);
-                    foreach (var oldSetting in sets.Values)
-                    {
-                        oldSetting?.Dispose();
-                    }
-                    sets.Clear();
-                    bool bLoad = true;
-                    foreach (var item in cars.Cars.Values)
-                    {
-                        Setting set = new Setting(item.Name);
-                        if (set.Load())
-                        {
-                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ProductParameters + " " + item.Name + " " + _3DLaserGlueInspection.Resources.LanguageDict.LoadingSuccessful);
-                        }
-                        else
-                        {
-                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ProductParameters + " " + item.Name + " " + _3DLaserGlueInspection.Resources.LanguageDict.LoadingFailed + set.ErrMsg, LogType.ng);
-                            bLoad = false;
-                        }
-                        sets.Add(item.Name, set);
-                    }
-                    if (!bLoad)
-                    {
-                        return;
-                    }
-                }
-                else
-                {
-                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ProductConfigurationParameterLoadingFailed + cars.ErrMsg, LogType.ng);
-                    return;
-                }
-                if (robot.Load())
-                {
-                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.RobotParametersLoadedSuccessfully);
-                }
-                else
-                {
-                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.RobotParameterLoadingFailed + robot.ErrMsg, LogType.ng);
-                    return;
-                }
-                if (plc.Load())
-                {
-                    ShowMessage("PLC参数读取成功");
-                }
-                else
-                {
-                    ShowMessage("PLC参数读取失败", LogType.ng);
-                    return;
-                }
-                #endregion
-
-                //连接设备
-                #region 连接设备
-                if (!simulation)
-                {
-                    if (robot.Open())
-                    {
-                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.RobotSuccessfullyConnected);
-
-                        mainModel.robotCommunicationLabelColorControl = labelColorEnum["green"];
-                    }
-                    else
-                    {
-                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.RobotConnectionFailed + robot.ErrMsg, LogType.ng);
-
-                        mainModel.robotCommunicationLabelColorControl = labelColorEnum["red"];
-
-                        return;
-                    }
-                }
-                if (isUsePLC)
-                {
-                    if (plc.Open())
-                    {
-                        ShowMessage("PLC连接成功");
-                    }
-                    else
-                    {
-                        ShowMessage("PLC连接失败" + plc.ErrMsg, LogType.ng);
-                        return;
-                    }
-                }
-                
-                #endregion
-
-                mainModel.softwareRunLabelColorControl = labelColorEnum["green"];
-                //初始化
-                switch (robotType)
-                {
-                    case RobotType.KukaRobot:
-                        ((KukaRobot)robot).resetSignal();
-                        break;
-                    case RobotType.KawasakiRobot:
-
-                        ((KawasakiRobot)robot).resetSignal();
-                        break;
-                }
-                while (!stop)
-                {
-                    ClearCurrentRunID();
-
-                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.OutputReadySignal);
-
-                    //等待开始信号
-                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForTheStartSignal);
-                    while (true)
-                    {
-                        bool val;
-                        if (robot.Read(DI.Start, out val))
-                        {
-                            if (val == true)
-                            {
-                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedStartSignal);
-                                break;
-                            }
-                        }
-                        else
-                        {
-                            ShowMessage(robot.ErrMsg, LogType.warn);
-                            return;
-                        }
-                        
-                        //if (isStart)
-                        //{
-                        //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedStartSignal);
-                        //    break;
-                        //}
-
-                        Thread.Sleep(60);
-                        if (stop) return;
-                    }
-                    //收到信号后，就立刻恢复状态
-                    switch (robotType)
-                    {
-                        case RobotType.KukaRobot:
-                            ((KukaRobot)robot).resetSignal();
-                            break;
-                        case RobotType.KawasakiRobot:
-
-                            ((KawasakiRobot)robot).resetSignal();
-                            break;
-                    }
-                    ushort ID;
-                    //Car car;
-                    string inVIN;
-                    DateTime dateTime;
-                    Dictionary<string, CamParam> camParam;
-                    Setting set;
-
-
-                    set = new Setting("1");
-                    inVIN = "";
-                    camParam = new Dictionary<string, CamParam>();
-                    dateTime = DateTime.Now;
-
-                    //清除数据
-                    clearData();
-
-                    //开始计时
-                    watch.Restart();
-
-                    //获取产品号
-                    ID = 0;
-                    car = new Car();
-
-                    ushort CarNumber;
-                    if (!robot.Read(DI.CarNumber, out CarNumber)) return;
-
-
-                    ID = CarNumber;
-                    SetCurrentRunID(ID);
-                    bool isExist = false;
-                    foreach (var item in cars.Cars.Values)
-                    {
-                        if (item.IDs.Contains(ID))
-                        {
-                            car = item;
-                            isExist = true;
-                            break;
-                        }
-                    }
-                    if (!isExist)
-                    {
-                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ThereIsNoVehicleModelAvailable + " " + ID, LogType.ng);
-                        return ;
-                    }
-
-
-                    //获取车架号VIN
-                    inVIN = "";
-                    dateTime = DateTime.Now;
-                    mainModel.productIDControl = ID.ToString();
-                    mainModel.nameControl = car.Name;
-                    mainModel.VINControl = inVIN;
-                    mainModel.timeControl = dateTime.ToString("G");
-                    mainModel.resultControl = "--";
-                    mainModel.resultColorControl = "White";
-
-
-                    //检测参数是否存在
-                    string camParamName = car.CamParamName;
-                    if (!Params.Param.TryGetValue(camParamName, out camParam))
-                    {
-                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.NoCameraParametersExist + camParamName, LogType.ng);
-                        return ;
-                    }
-                    if (!sets.TryGetValue(car.Name, out set))
-                    {
-                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.NoProductParametersExist + car.Name, LogType.ng);
-                        return ;
-                    }
-                    if (stop) return ;
-
-                    Setting set_copy = set;
-                    //显示NumericalModelDiagram
-                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        DispImageHWindowNumericalModelDiagramEvent(GlobalVarAndFunc.ConvertMatToBitmapImage(set_copy.image));
-                    });
-
-
-
-                    List<double>[] rowss = new List<double>[set.XLDDatas.Count];
-                    List<double>[] colss = new List<double>[set.XLDDatas.Count];
-                    List<double>[] angless = new List<double>[set.XLDDatas.Count];
-                    for (int i = 0; i < set.XLDDatas.Count; i++)
-                    {
-                        if (set.XLDDatas[i].ControlRows.Length < 2)
-                        {
-                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.TheDisplayedTrajectoryIsNotSetProperly);
-                            return ;
-
-                        }
-                        if (set.CutSets[i].EndImageIndex > set.CutSets[i].StartImageIndex)
-                        {
-                            int setCount = set.CutSets[i].EndImageIndex - set.CutSets[i].StartImageIndex + 1;
-                            if (setCount < 1) setCount = 1;
-                            Vision.XLDDataDivide(set.XLDDatas[i], setCount, out rowss[i], out colss[i], out angless[i]);
-
-                            for (int j = 0; j < setCount; j++)
-                            {
-                                hWindowNumericalModelDiagramDispCross(rowss[i][j], colss[i][j], angless[i][j], set.CutSets[i].Size, Colors.Blue);
-                            }
-                        }
-                        else
-                        {
-                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.TheStartingAndEndingImageNumbersDisplayedAreNotSetProperly);
-
-                            return ;
-                        }
-                    }
-                    if (stop) return ;
-
-                    //连相机
-                    foreach (var item in camParam)
-                    {
-                        item.Value.Key = item.Key;
-                        if (item.Value.Enable)
-                        {
-                            if (!cams.TryGetValue(item.Value.CamName, out Cam cam))
-                            {
-                                cam = new Cam();
-
-                                cams.Add(item.Value.CamName, cam);
-                            }
-                            if (!simulation)
-                            {
-                                if (!cam.IsOpen)
-                                {
-                                    if (cam.OpenBySN(item.Value.CamName))
-                                    {
-                                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + $" ({item.Key}:{item.Value.CamName})" + _3DLaserGlueInspection.Resources.LanguageDict.OpenSuccessful);
-                                    }
-                                    else
-                                    {
-                                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + $" ({item.Key}:{item.Value.CamName})" + _3DLaserGlueInspection.Resources.LanguageDict.OpenFailed + cam.ErrMsg, LogType.ng);
-                                        //Invoke(new Action(() =>
-                                        //{
-                                        //    e灯颜色 = 灯颜色.红;
-                                        //    label相机.Refresh();
-                                        //}));
-                                        mainModel.camCommunicationLabelColorControl = labelColorEnum["red"];
-
-                                        return ;
-                                    }
-                                }
-                                if (cam.InitSet(item.Value, false))
-                                {
-                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + $" ({item.Key}:{item.Value.CamName})" + _3DLaserGlueInspection.Resources.LanguageDict.InitializationSettingsSuccessful);
-                                }
-                                else
-                                {
-                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + $" ({item.Key}:{item.Value.CamName})" + _3DLaserGlueInspection.Resources.LanguageDict.InitializationSettingsFailed + cam.ErrMsg, LogType.ng);
-                                    //return;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + " " + item.Value.CamName + _3DLaserGlueInspection.Resources.LanguageDict.NotEnabled);
-                        }
-                    }
-                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.CameraConnectionCompleted);
-                    mainModel.camCommunicationLabelColorControl = labelColorEnum["green"];
-
-
-                    //初始化数据
-                    foreach (var item in camParam)
-                    {
-                        if (item.Value.Enable)
-                        {
-                            var dictImageKey = new SynchronizedList<SynchronizedList<long>>();
-                            ImageKeys.Add(item.Key, dictImageKey);
-                            var dictImage = new SynchronizedList<Dictionary<long, Mat>>();
-                            Images.Add(item.Key, dictImage);
-
-                            displaySize.Add(item.Key, new SynchronizedList<System.Windows.Size>());
-                        }
-                    }
-                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.InitializeDataSuccessfully);
-
-                    indexImageCut = -1;//指示正在图像采集段数
-                    partResult = true;
-                    if (stop) return;
-
-                    // 3D 每隔100毫秒再刷新一下结果
-                    RefreshOnEvent(500, true);
-                    bRobotRun = true;
-                    // 机器人姿态读取方式必须以当前车型对应的相机类型为准，
-                    // 不能使用所有相机中是否存在七轴相机的全局判断。
-                    if (!Params.CamHandEyeType.TryGetValue(car.CamParamName, out CameraHandEyeType currentHandEyeType))
-                    {
-                        ShowMessage("The hand-eye type of the current camera is missing.", LogType.ng);
-                        return;
-                    }
-                    bool sevenAxisRobot = currentHandEyeType == CameraHandEyeType.SevenAxis;
-                    //启动机器人姿态获取(安川20ms)
-                    taskRobot = Task.Run(() =>
-                    {
-                        // 暂时屏蔽
-                        RefreshOnEvent(500, true);
-                        //form3DShow.RefreshOn(10, true);
-                        double colorUpperLimit = -0.5;
-                        double colorLowerLimit = 0.5;
-                        double rangeSize = colorLowerLimit - colorUpperLimit;
-                        while (bRobotRun)
-                        {
-                            Wpf_Replace_halcon.PoseParameters hPose;
-                            double r7 = 0;
-                            bool readOk = sevenAxisRobot ? robot.ReadPose(out hPose, out r7) : robot.ReadPose(out hPose);
-                            if (readOk)
-                            {
-                                if (!SevenAxisRobotSupport.IsFinitePose(hPose, sevenAxisRobot)) return;
-                                hPose.R7 = sevenAxisRobot ? r7 : 0;
-                                var key = watch.ElapsedTicks;
-                                {
-                                    robotPoseValues.Add(hPose);
-                                    robotPoseKeys.Add(key);
-                                }
-                                //form3DShow.InsertNextPoint(hPose.RawData[0], hPose.RawData[1], hPose.RawData[2], (hPose.RawData[2].D - 颜色下限值) / 范围);
-                            }
-                            Thread.Sleep(30);
-
-                            if (stop) break;
-                        }
-
-                    });
-                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.RobotAttitudeAcquisitionTaskHasBeenInitiatedAndCompleted);
-
-                    //回复开始ON信号
-                    if (true)
-                    {
-                        //SocketSend(0);
-                        if (!robot.Write(DO.Result, 1)) return;
-
-                    }
-                    else
-                    {
-                        //SocketSend(-1);
-                        if (!robot.Write(DO.Result, -1)) return;
-
-                        return;
-                    }
-
-                    if (stop) return;
-                    bool bAbort = false;
-
-                    //启动采集任务
-                    while (true)
-                    {
-                        bool bEnd = false;
-                        //等触发信号ON
-                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForTriggerSignalOn);
-                        while (true)
-                        {
-                            if (stop)
-                            {
-                                return;
-                            }
-                            bool val;
-                            if (robot.Read(DI.PGON, out val))
-                            {
-                                if (val == true)
-                                {
-                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedTriggerSignalOn);
-                                    break;
-                                }
-                            }
-                            else
-                            {
-                                ShowMessage(robot.ErrMsg, LogType.warn);
-                                return;
-                            }
-
-                            if (robot.Read(DI.END, out val))
-                            {
-                                if (val == true)
-                                {
-                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedEndSignalExitThePhotoLoop, LogType.warn);
-                                    bEnd = true;
-                                    break;
-                                }
-                            }
-                            else
-                            {
-                                ShowMessage(robot.ErrMsg, LogType.warn);
-                                return;
-                            }
-
-                            if (robot.Read(DI.Abort, out val))
-                            {
-                                if (val == true)
-                                {
-                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedAbortSignalProcessRestarts, LogType.warn);
-                                    bAbort = true;
-                                    break;
-                                }
-                            }
-                            else
-                            {
-                                ShowMessage(robot.ErrMsg, LogType.warn);
-                                return;
-                            }
-
-                            //if (isPGON)
-                            //{
-                            //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedTriggerSignalOn);
-                            //    break;
-                            //}
-                            //if (isEND)
-                            //{
-                            //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedEndSignalExitThePhotoLoop, LogType.warn);
-                            //    bEnd = true;
-                            //    break;
-                            //}
-                            //if (isAbort)
-                            //{
-                            //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedAbortSignalProcessRestarts, LogType.warn);
-                            //    bAbort = true;
-                            //    break;
-                            //}
-                            Thread.Sleep(1);
-                        }
-                        if (bEnd) break;
-                        if (bAbort) break;
-                        //回复触发ON信号
-                        //收到信号后，就立刻恢复状态
-                        switch (robotType)
-                        {
-                            case RobotType.KukaRobot:
-
-                                ((KukaRobot)robot).resetSignal();
-                                break;
-
-                            case RobotType.KawasakiRobot:
-
-                                ((KawasakiRobot)robot).resetSignal();
-                                break;
-
-                        }
-                        //SocketSend(0);
-                        if (!robot.Write(DO.Result, 1)) return;
-
-                        bool bTriggering = true;
-                        //int 起点 = dataGridViewImageList.Rows.Count;
-                        int startPoint = mainModel.ImageResultRecords.Count;
-                        dataGridViewImageListRowsStartPoint.Add(startPoint);
-                        //拍照
-                        foreach (var item in camParam)
-                        {
-                            if (item.Value.Enable)
-                            {
-                                var dictImageKey = new SynchronizedList<long>();
-                                ImageKeys[item.Key].Add(dictImageKey);
-                                var dictImage = new Dictionary<long, Mat>(new Dictionary<long, Mat>());
-                                Images[item.Key].Add(dictImage);
-
-
-                                var cam = cams[item.Value.CamName];
-                                int segmentIndex = indexImageCut + 1;
-                                bool CamEnabled = item.Key == "Cam1" ? set.CutSets[segmentIndex].CamEnabled[0] :
-                                    item.Key == "Cam2" ? set.CutSets[segmentIndex].CamEnabled[1] :
-                                    item.Key == "Cam3" ? set.CutSets[segmentIndex].CamEnabled[2] :
-                                    set.CutSets[segmentIndex].CamEnabled[3];
-                                displaySize[item.Key].Add(new System.Windows.Size(set.CutSets[segmentIndex].ShowWidth, set.CutSets[segmentIndex].ShowHeight));
-                                if (CamEnabled)
-                                {
-                                    {
-                                        bool flag = cam.KeepShot(new Action<Mat>(image =>
-                                        {
-                                            long key = watch.ElapsedTicks;
-                                            {
-                                                if (dictImageKey.Count < set.CutSets[segmentIndex].ImageNum)
-                                                {
-                                                    dictImage.Add(key, image);
-                                                    dictImageKey.Add(key);
-                                                    image = null;
-                                                    var dictImageKeyCount = dictImageKey.Count;
-
-                                                }
-                                                else
-                                                {
-                                                    // 已达到当前段的采集数量，当前帧不再入队。
-                                                    image?.Dispose();
-                                                }
-                                                }
-                                        }));
-                                        if (flag)
-                                        {
-                                            ShowMessage(item.Key);
-                                            //相机1要软触发启动
-                                            if (item.Key == "Cam1")
-                                            {
-                                                bool rt2 = cam.TriggerSoftwareExecute();
-                                                if (rt2)
-                                                {
-                                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + item.Key + ":" + item.Value.CamName + _3DLaserGlueInspection.Resources.LanguageDict.SoftwareTriggerSuccess);
-                                                }
-                                                else
-                                                {
-                                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + item.Key + ":" + item.Value.CamName + _3DLaserGlueInspection.Resources.LanguageDict.SoftwareTriggerFailure);
-                                                }
-
-                                            }
-                                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + item.Key + ":" + item.Value.CamName + _3DLaserGlueInspection.Resources.LanguageDict.StartingContinuousCollectionSuccessfully);
-                                        }
-                                        else
-                                        {
-                                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + item.Key + ":" + item.Value.CamName + _3DLaserGlueInspection.Resources.LanguageDict.StartingContinuousCollectionFailed + cams[item.Value.CamName].ErrMsg, LogType.ng);
-                                        }
-                                    }
-                                    
-                                }
-                            }
-                        }
-                        indexImageCut++;
-
-                        ////输出拍照中信号
-                        //if (!Write(DO.Triggering, true)) return;
-
-                        //等触发信号OFF
-                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForTriggerSignalOff);
-                        while (true)
-                        {
-                            if (stop) return;
-
-                            bool val;
-
-                            if (robot.Read(DI.isPGONEnd, out val))
-                            {
-                                if (val == true)
-                                {
-                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedTriggerSignalOff);
-                                    break;
-                                }
-                            }
-                            else
-                            {
-                                ShowMessage(robot.ErrMsg, LogType.warn);
-                                return;
-                            }
-
-                            if (robot.Read(DI.END, out val))
-                            {
-                                if (val == true)
-                                {
-                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedEndSignalExitThePhotoLoop, LogType.warn);
-
-                                    break;
-                                }
-                            }
-                            else
-                            {
-                                ShowMessage(robot.ErrMsg, LogType.warn);
-                                return;
-                            }
-
-                            if (robot.Read(DI.Abort, out val))
-                            {
-                                if (val == true)
-                                {
-                                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedAbortSignalProcessRestarts, LogType.warn);
-
-                                    break;
-                                }
-                            }
-                            else
-                            {
-                                ShowMessage(robot.ErrMsg, LogType.warn);
-                                return;
-                            }
-
-                            //if (isPGONEnd == true)
-                            //{
-                            //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedTriggerSignalOff);
-                            //    break;
-                            //}
-
-                            //if (isEND == true)
-                            //{
-                            //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedEndSignalExitThePhotoLoop, LogType.warn);
-                            //    bEnd = true;
-                            //    break;
-                            //}
-                            //if (isAbort == true)
-                            //{
-                            //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedAbortSignalProcessRestarts, LogType.warn);
-                            //    bAbort = true;
-                            //    break;
-                            //}
-                            Thread.Sleep(1);
-                        }
-                        //收到信号后，就立刻恢复状态
-                        switch (robotType)
-                        {
-                            case RobotType.KukaRobot:
-                                ((KukaRobot)robot).resetSignal();
-                                break;
-                            case RobotType.KawasakiRobot:
-
-                                ((KawasakiRobot)robot).resetSignal();
-                                break;
-                        }
-                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForDataConversionToComplete);
-
-                        if (!simulation)
-                        {
-                            //停止拍照
-                            foreach (var item in camParam)
-                            {
-                                if (item.Value.Enable)
-                                {
-                                    if (!cams[item.Value.CamName].IsGrabbing || cams[item.Value.CamName].StopGrabbing())
-                                    {
-                                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + $" ({item.Key}:{item.Value.CamName})" + _3DLaserGlueInspection.Resources.LanguageDict.StopCollectionSuccessfully);
-                                    }
-                                    else
-                                    {
-                                        ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + $" ({item.Key}:{item.Value.CamName})" + _3DLaserGlueInspection.Resources.LanguageDict.StopCollectionFailed + cams[item.Value.CamName].ErrMsg, LogType.ng);
-                                    }
-                                }
-                            }
-
-                        }
-                        bTriggering = false;
-
-                        ////关闭拍照中信号
-                        //if (!Write(DO.Triggering, false)) return;
-
-                        if (stop) return;
-                        if (bEnd) break;
-                        if (bAbort) break;
-
-                        //回复触发OFF信号
-
-                        if (partResult || isDemoMode)
-                        {
-                            //SocketSend(0);
-                            if (!robot.Write(DO.Result, 1)) return;
-
-                        }
-                        else
-                        {
-                            //SocketSend(-1);
-                            if (!robot.Write(DO.Result, -1)) return;
-
-                        }
-
-                        //判断段数是否足够
-                        if (indexImageCut + 1 >= set.CutSets.Count)
-                        {
-                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.TheNumberOfCameraSegmentsIsSufficient + $"({indexImageCut + 1}/{set.CutSets.Count})，" + _3DLaserGlueInspection.Resources.LanguageDict.ExitThePhotoLoop);
-                            break;
-                        }
-                        else
-                        {
-                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.InsufficientNumberOfPhotoSegments + $"({indexImageCut + 1}/{set.CutSets.Count})，" + _3DLaserGlueInspection.Resources.LanguageDict.ContinueThePhotoLoop);
-                        }
-                    }
-
-
-                    if (stop) return;
-                    if (bAbort) continue;
-                    bRobotRun = false;
-
-                    //等待机器人处理完成
-                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForTheRobotToCompleteProcessing);
-                    while (!taskRobot.IsCompleted)
-                    {
-                        Thread.Sleep(10);
-                        if (stop) return;
-                    }
-                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.RobotProcessingCompleted);
-
-
-                    //等待图像处理完成
-                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForImageProcessingToComplete);
-                    foreach (var item in tasks.Values)
-                    {
-                        while (!item.IsCompleted)
-                        {
-                            Thread.Sleep(10);
-                            if (stop) return;
-                        }
-                    }
-
-                    //等待2d结果显示完毕
-                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingFor2DResultDisplayToComplete);
-                    while (!taskShow2D.IsCompleted)
-                    {
-                        Thread.Sleep(10);
-                        if (stop) return;
-                    }
-
-
-                    RefreshOFFEvent();
-                    RefreshPointsEvent();
-
-                    ////等待3d显示完毕
-                    //while (!taskShow3D.IsCompleted)
-                    //{
-                    //    Thread.Sleep(10);
-                    //    if (stop) return;
-                    //}
-
-                    //等待3d处理完成
-                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForTheCompletionOf3DImageProcessing);
-
-                    //while (!taskPoint3D.IsCompleted)
-                    //{
-                    //    Thread.Sleep(10);
-                    //    if (stop) return;
-                    //}
-                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ImageProcessingCompleted);
-
-                    //保存检测结果文件
-                    if (true && simulation)
-                    {
-                        foreach (var camID in glueDataDict.Keys)
-                        {
-                            var camResultDir = glueDataDict[camID];
-                            for (int partID = 0; partID < camResultDir.Count; partID++)
-                            {
-                                var partResultDict = camResultDir[partID];
-
-                                string path = simulationPath + $"\\{camID}_{partID}_result.csv";
-                                if (!File.Exists(path))
-                                    File.Create(path).Close();
-
-                                using (StreamWriter sw = new StreamWriter(path, true, Encoding.UTF8))
-                                {
-
-                                    foreach (var imageID in partResultDict.Keys)
-                                    {
-                                        var imageResult = partResultDict[imageID];
-                                        sw.Write($"{imageResult.glueWidth},");
-                                        sw.Write($"{imageResult.glueHeight},");
-                                        sw.Write($"{imageResult.glueArea}\r\n");
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-
-                    // 暂时屏蔽
-                    if (partResult)
-                    {
-                        mainModel.OKCountControl++;
-                    }
-                    else
-                    {
-                        mainModel.NGCountControl++;
-                    }
-                    mainModel.totalCountControl = mainModel.OKCountControl + mainModel.NGCountControl;
-
-                    mainModel.passRateControl = ((double)mainModel.OKCountControl * 100 / mainModel.totalCountControl).ToString("0.00") + "%";
-
-                    mainModel.resultControl = partResult ? "OK" : "NG";
-                    mainModel.resultColorControl = partResult ? "#FF06BD00" : "Red";
-                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        CarResultRecord carResultRecord = new CarResultRecord();
-                        carResultRecord.CarDetTime = dateTime.ToString("yyyy-MM-dd HH:mm:ss");
-                        carResultRecord.CarID = ID.ToString();
-                        carResultRecord.CarResult = partResult ? "OK" : "NG";
-
-                        mainModel.CarResultRecords.Insert(0, carResultRecord);
-
-                    });
-
-                    //存图
-                    if (!simulation)
-                    {
-                        if ((partResult && set.OtherSet.SaveOKImage) || (!partResult && set.OtherSet.SaveNGImage))
-                        {
-                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.StartSavingImages);
-                            try
-                            {
-                                string OKNG = partResult ? "OK" : "NG";
-                                string basePath = $"{set.OtherSet.SaveImagePath}\\{car.Name}\\{dateTime:yyyy-MM-dd HH_mm_ss} {OKNG} [{inVIN}]";
-                                Directory.CreateDirectory(basePath);
-
-                                foreach (var camValue in Images)//相机
-                                {
-                                    for (int i = 0; i < camValue.Value.Count; i++)//段数
-                                    {
-                                        if (camValue.Value[i].Count > 0)
-                                        {
-                                            string imageDirectory = $"{basePath}\\{i}\\{camValue.Key}";
-                                            Directory.CreateDirectory(imageDirectory);
-                                            foreach (var image in camValue.Value[i])//图片
-                                            {
-                                                //image.Value.WriteImage("png 1", 0, $"{imageDirectory}\\{image.Key:000000000000}.png");
-                                                Cv2.ImWrite($"{imageDirectory}\\{image.Key:000000000000}.png", image.Value);
-
-                                            }
-                                        }
-                                    }
-                                }
-                                using (FileStream stream = new FileStream($"{basePath}\\robotPoseKeys.xml", FileMode.Create))
-                                {
-                                    new XmlSerializer(robotPoseKeys.GetType()).Serialize(stream, robotPoseKeys);
-                                }
-                                using (FileStream stream = new FileStream($"{basePath}\\robotPoseValues.xml", FileMode.Create))
-                                {
-                                    //转化
-                                    List<double[]> pose = new List<double[]>();
-                                    foreach (var poseKey in robotPoseValues)
-                                    {
-                                        pose.Add(sevenAxisRobot
-                                            ? new double[] { poseKey.x, poseKey.y, poseKey.z, poseKey.rx, poseKey.ry, poseKey.rz, poseKey.R7, poseKey.PoseType }
-                                            : new double[] { poseKey.x, poseKey.y, poseKey.z, poseKey.rx, poseKey.ry, poseKey.rz, poseKey.PoseType });
-                                    }
-                                    new XmlSerializer(pose.GetType()).Serialize(stream, pose);
-                                }
-                                using (FileStream stream = new FileStream($"{basePath}\\robotPoseValues", FileMode.Create))
-                                {
-                                    new BinaryFormatter().Serialize(stream, robotPoseValues);
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ImageStorageException + ex.ToString(), LogType.ng);
-                            }
-                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ImageStorageCompleted);
-                        }
-                    }
-
-                    //等待开始信号OFF
-                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForTheStartSignalToTurnOff);
-                    while (true)
-                    {
-                        bool val;
-                        if (robot.Read(DI.isStartEnd, out val))
-                        {
-                            if (val == true)
-                            {
-                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceiveTheStartSignalToTurnOff);
-                                break;
-                            }
-                        }
-                        else
-                        {
-                            ShowMessage(robot.ErrMsg, LogType.warn);
-                            return;
-                        }
-
-                        //if (isStartEnd)
-                        //{
-                        //    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceiveTheStartSignalToTurnOff);
-                        //    break;
-                        //}
-
-                        Thread.Sleep(60);
-                        if (stop) return;
-                    }
-                    //收到信号后，就立刻恢复状态
-                    switch (robotType)
-                    {
-                        case RobotType.KukaRobot:
-                            ((KukaRobot)robot).resetSignal();
-                            break;
-                        case RobotType.KawasakiRobot:
-
-                            ((KawasakiRobot)robot).resetSignal();
-                            break;
-                    }
-                    //SocketSend(0);
-                    if (!robot.Write(DO.Result, 1)) return;
-
-                }
-            }
-            catch (Exception ex)
-            {
-                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ProcessException + ex.ToString(), LogType.ng);
-            }
-            finally
-            {
-                robot.Close();
-                plc.Close();
-
-                //关闭激光和相机
-                foreach (var cam in cams.Values)
-                {
-                    if (cam.IsOpen)
-                    {
-                        if (cam.SetLine1Inverter(false))
-                        {
-                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.LaserSuccessfullyTurnedOff);
-                        }
-                        else
-                        {
-                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.LaserShutdownFailed + cam.ErrMsg, LogType.ng);
-                        }
-                        if (cam.Close())
-                        {
-                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.CloseSuccessfully);
-                        }
-                        else
-                        {
-                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.ClosingFailed + cam.ErrMsg, LogType.ng);
-                        }
-                    }
-                }
-                try
-                {
-                    //BeginInvoke(new Action(() =>
-                    //{
-                    //    button启停.Text = _3DLaserGlueInspection.Resources.LanguageDict.启动");
-                    //    button启停.Image = Resources._2;
-                    //}));
-
-                    mainModel.buttonRunContentControl = _3DLaserGlueInspection.Resources.LanguageDict.Start;
-                    mainModel.buttonRunTagControl = "\uE658";
-                    //Invoke(new Action(() =>
-                    //{
-                    //    e灯颜色 = 灯颜色.红;
-                    //    label软件.Refresh();
-                    //}));
-
-                    mainModel.softwareRunLabelColorControl = labelColorEnum["red"];
-
-                }
-                catch { }
-                ClearCurrentRunID();
-            }
-        }
-
 
         private bool initRun(out ushort ID, out Car car, out string inVIN, out DateTime dateTime, out Dictionary<string, CamParam> camParam, out Setting set)
         {

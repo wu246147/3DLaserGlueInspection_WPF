@@ -77,10 +77,13 @@ namespace _3DLaserGlueInspection
                     break;
                 case RobotType.KukaRobot:
                     model.robot = new KukaRobot();
+                    ((KukaRobot)model.robot).robotConnectType = model.robotConnectType;
                     ((KukaRobot) model.robot).InitCommunicationConnection();
                     break;
                 case RobotType.KawasakiRobot:
                     model.robot = new KawasakiRobot();
+                    ((KawasakiRobot)model.robot).robotConnectType = model.robotConnectType;
+
                     ((KawasakiRobot)model.robot).InitCommunicationConnection();
 
                     break;
@@ -202,8 +205,8 @@ namespace _3DLaserGlueInspection
                 return;
             }
 
-            if (userType != WindowPassWord.PasswordUserType.Administrator
-                 && userType != WindowPassWord.PasswordUserType.SuperAdministrator)
+            if (userType == WindowPassWord.PasswordUserType.Administrator
+                 || userType == WindowPassWord.PasswordUserType.SuperAdministrator)
             {
                 model.ShowMessage($"{userType} 关闭软件");
                this.Close();

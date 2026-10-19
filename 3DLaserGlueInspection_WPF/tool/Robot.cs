@@ -1,5 +1,6 @@
 //using HalconDotNet;
 using _3DLaserGlueInspection.subForm;
+using _3DLaserGlueInspection.tool;
 using BaslerCamera.IO;
 using HslCommunication;
 using HslCommunication.Core;
@@ -7,8 +8,10 @@ using HslCommunication.ModBus;
 using HslCommunication.Profinet.Siemens.S7PlusHelper;
 using HslCommunication.Robot.YASKAWA;
 using Kitware.VTK;
+using MySqlX.XDevAPI.Relational;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Globalization;
@@ -20,6 +23,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+using System.Windows.Markup;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using TCPIP;
@@ -39,7 +43,11 @@ namespace _3DLaserGlueInspection
         KawasakiRobot,
     }
 
-
+    public enum RobotConnectType
+    {
+        TCPIP = 0,
+        Profinet,
+    }
 
     public interface IRobot
     {
@@ -1031,10 +1039,19 @@ namespace _3DLaserGlueInspection
 
         public HslCommunication.Robot.KUKA.KukaTcpNet robot = new HslCommunication.Robot.KUKA.KukaTcpNet();
 
+        // 通讯类型
+        public RobotConnectType robotConnectType = RobotConnectType.TCPIP;
+
+
         // TCP 通讯
         public TCP_Server Server;
         //socket通讯，获取io信号
         Thread threadReconnect = null; // 通讯重连线程
+
+
+        // P/D网通讯
+        public DioCtr dioCtr;
+
 
         #region
         /// <summary>
@@ -1093,17 +1110,17 @@ namespace _3DLaserGlueInspection
         /// <summary>
         /// 根据通讯方式初始化连接线程
         /// </summary>
-        public void InitCommunicationConnection()
+        public bool InitCommunicationConnection()
         {
 
-            IniTCPSocketServer();
+            return IniTCPSocketServer();
 
         }
 
         /// <summary>
         /// 停止通讯线程
         /// </summary>
-        public void StopCommunicationThread()
+        public bool StopCommunicationThread()
         {
             if (Server != null)
             {
@@ -1131,13 +1148,17 @@ namespace _3DLaserGlueInspection
                     threadReconnect = null;
                 }
             }
+
+            return true;
             
         }
 
-        private void IniTCPSocketServer()
+        private bool IniTCPSocketServer()
         {
             threadReconnect = new Thread(IniRobotTCPserver);
             threadReconnect.Start();
+
+            return true;
         }
         private void IniRobotTCPserver()
         {
@@ -1333,7 +1354,16 @@ namespace _3DLaserGlueInspection
         public void ShowForm()
         {
             StopCommunicationThread();
-            new WindowRobot2(this).ShowDialog();
+            if (robotConnectType == RobotConnectType.TCPIP)
+            {
+                new WindowRobot2(this).ShowDialog();
+
+            }
+            else
+            {
+                new WindowRobot3(this).ShowDialog();
+
+            }
             InitCommunicationConnection() ;
         }
 
@@ -2085,10 +2115,17 @@ namespace _3DLaserGlueInspection
         // UDP通讯，只用于获取坐标，并且直接收，不发送
         public UDP robot;
 
+
+        // 通讯类型
+        public RobotConnectType robotConnectType = RobotConnectType.TCPIP;
+
         // TCP 通讯
         public TCP_Server Server;
         //socket通讯，获取io信号
         Thread threadReconnect = null; // 通讯重连线程
+
+        // P/D网通讯
+        public DioCtr dioCtr;
 
         /// <summary>
         /// 开始信号
@@ -2219,6 +2256,52 @@ namespace _3DLaserGlueInspection
         {
             StopCommunicationThread();
         }
+
+        /// <summary>
+        /// 根据通讯方式初始化连接线程
+        /// </summary>
+        public bool InitCommunicationConnection()
+        {
+            switch (robotConnectType)
+            {
+                case RobotConnectType.TCPIP:
+                    return IniTCPSocketServer();
+                    break;
+
+                case RobotConnectType.Profinet:
+                    return IniProfinet();
+                    break;
+                default:
+                    break;
+            }
+
+            return false;
+
+        }
+
+        /// <summary>
+        /// 停止通讯线程
+        /// </summary>
+        public bool StopCommunicationThread()
+        {
+
+            switch (robotConnectType)
+            {
+                case RobotConnectType.TCPIP:
+                    return StopTCPSocketServer();
+                    break;
+
+                case RobotConnectType.Profinet:
+                    return StopProfinet();
+                    break;
+                default:
+                    break;
+            }
+            return false;
+        }
+
+
+        #region TCP 通讯函数
         private static bool deserializationInfo(
             string info,
             out float X,
@@ -2364,20 +2447,8 @@ namespace _3DLaserGlueInspection
         }
 
 
-        /// <summary>
-        /// 根据通讯方式初始化连接线程
-        /// </summary>
-        public void InitCommunicationConnection()
-        {
-
-            IniTCPSocketServer();
-
-        }
-
-        /// <summary>
-        /// 停止通讯线程
-        /// </summary>
-        public void StopCommunicationThread()
+      
+        private bool StopTCPSocketServer()
         {
             if (Server != null)
             {
@@ -2403,15 +2474,16 @@ namespace _3DLaserGlueInspection
                     }
                     threadReconnect = null;
                 }
-                
+
             }
-
+            
+            return true;
         }
-
-        private void IniTCPSocketServer()
+        private bool IniTCPSocketServer()
         {
             threadReconnect = new Thread(IniRobotTCPserver);
             threadReconnect.Start();
+            return true;
         }
         private void IniRobotTCPserver()
         {
@@ -2542,6 +2614,13 @@ namespace _3DLaserGlueInspection
 
         }
 
+        void SocketSend(int RESULT = 0)
+        {
+            string msg = serializationInfoServer(RESULT);
+            //ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.SendSignal + ":" + msg);
+            Server.Send(msg);
+
+        }
 
         private static bool deserializationInfoServer(string info, out int programID, out int commandID, out int pointID)
         {
@@ -2574,14 +2653,118 @@ namespace _3DLaserGlueInspection
             return msg;
         }
 
+        #endregion
 
-        void SocketSend(int RESULT = 0)
+        #region Profinet 通讯函数
+
+        // 初始化
+        private bool IniProfinet()
         {
-            string msg = serializationInfoServer(RESULT);
-            //ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.SendSignal + ":" + msg);
-            Server.Send(msg);
+            bool rt = false;
+            //打开IO通讯
+            if (dioCtr == null)
+            {
+                dioCtr = new DioCtr();
+            }
+            rt = dioCtr.Open();
 
+            //打开心跳循环线程
+            StartHeartbeat();
+
+            if (!rt)
+            {
+                _errMsg = dioCtr.ErrMsg;
+            }
+            return rt;
         }
+        // 析构函数
+        private bool StopProfinet()
+        {
+            bool rt = false;
+
+            //关闭心跳循环线程
+            StopHeartbeat();
+
+            rt = dioCtr.CloseCard();
+
+            if (!rt)
+            {
+                _errMsg = dioCtr.ErrMsg;
+            }
+
+            //关闭IO通讯
+            return rt;
+            
+        }
+        // 线程,主要实现心跳输出
+        private CancellationTokenSource _cts;
+        private Task _heartbeatTask;
+        bool aliveSignl = true;
+        public void StartHeartbeat()
+        {
+            _cts = new CancellationTokenSource();
+
+            _heartbeatTask = Task.Run(async () =>
+            {
+                while (!_cts.Token.IsCancellationRequested)
+                {
+                    try
+                    {
+                        //心跳输出
+                        Write(DO.Alive, aliveSignl);
+                        aliveSignl = !aliveSignl;
+
+                        await Task.Delay(1000, _cts.Token);
+
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"心跳线程异常：{ex}");
+                    }
+                }
+            });
+        }
+
+        public void StopHeartbeat()
+        {
+            _cts?.Cancel();
+        }
+
+
+        // 字典解析
+        private void deserializationIODict(string serializationInfo, ref int offset, ref int id)
+        {
+            offset = -1;
+            id = -1;
+
+            if (string.IsNullOrWhiteSpace(serializationInfo))
+                return;
+
+            string[] parts = serializationInfo.Split('.');
+
+            // 点前面的数字 -> offset，减 1
+            if (int.TryParse(parts[0], out int offsetValue))
+            {
+                offset = offsetValue - 1;
+            }
+
+            // 有点，并且点后面有数字 -> id，减 1
+            if (parts.Length > 1 && int.TryParse(parts[1], out int idValue))
+            {
+                id = idValue - 1;
+            }
+        }
+
+
+
+
+        #endregion
+
+
         #region 位姿读取
 
         public bool ReadPose(out PoseParameters hPose)
@@ -2627,16 +2810,9 @@ namespace _3DLaserGlueInspection
 
         #endregion
 
-        #region TCP 接收处理
+        #region UDP 接收处理
 
-        /// <summary>
-        /// TCP 接收回调。
-        ///
-        /// 注意：
-        /// TCP 一次接收不一定对应一条完整消息，
-        /// 也可能一次接收半条消息或多条消息。
-        /// 所以这里先进行消息分帧。
-        /// </summary>
+
         private void ProcessInfo(string incomingData)
         {
             if (string.IsNullOrEmpty(incomingData))
@@ -2693,8 +2869,17 @@ namespace _3DLaserGlueInspection
 
         public void ShowForm()
         {
-             StopCommunicationThread();
-            new WindowRobot2(this).ShowDialog();
+            StopCommunicationThread();
+            if (robotConnectType == RobotConnectType.TCPIP)
+            {
+                new WindowRobot2(this).ShowDialog();
+
+            }
+            else
+            {
+                new WindowRobot3(this).ShowDialog();
+
+            }
             InitCommunicationConnection();
         }
 
@@ -3032,29 +3217,74 @@ namespace _3DLaserGlueInspection
             out bool value)
         {
             value = false;
-            switch (eDI.ToString())
-            {
-                case "Start":
-                    value = isStart;
-                    return true;
-                case "Abort":
-                    value = isAbort;
-                    return true;
-                case "PGON":
-                    value = isPGON;
-                    return true;
-                case "isStartEnd":
-                    value = isStartEnd;
-                    return true;
-                case "isPGONEnd":
-                    value = isPGONEnd;
-                    return true;
-                case "END":
-                    value = isEND;
-                    return true;
 
+            switch (robotConnectType)
+            {
+                case RobotConnectType.TCPIP:
+                    switch (eDI.ToString())
+                    {
+                        case "Start":
+                            value = isStart;
+                            return true;
+                        case "Abort":
+                            value = isAbort;
+                            return true;
+                        case "PGON":
+                            value = isPGON;
+                            return true;
+                        case "isStartEnd":
+                            value = isStartEnd;
+                            return true;
+                        case "isPGONEnd":
+                            value = isPGONEnd;
+                            return true;
+                        case "END":
+                            value = isEND;
+                            return true;
+
+                        default:
+                            _errMsg = eDI.ToString() + _3DLaserGlueInspection.Resources.LanguageDict.AddressNotAssigned;
+                            break;
+                    }
+
+                    break;
+                case RobotConnectType.Profinet:
+
+                    if (IoDict.ContainsKey(eDI.ToString()))
+                    {
+                        string ioAddress = IoDict[eDI.ToString()].Address.Trim();
+                        if (!string.IsNullOrEmpty(ioAddress))
+                        {
+                            int offset = 0;
+                            int id = 0;
+                            deserializationIODict(ioAddress, ref offset, ref id);
+
+                            byte[] sts = new byte[2];
+                            bool rt = dioCtr.ReadDI((UInt16)offset,(UInt16)id,out value);
+
+                            if (rt)
+                            {
+                                return true;
+                            }
+                            else
+                            {
+                                return false;
+                            }
+
+                        }
+                        else
+                        {
+                            value = false;
+                            return true;
+                        }
+                    }
+                    else
+                    {
+                        _errMsg = eDI.ToString() + _3DLaserGlueInspection.Resources.LanguageDict.AddressNotAssigned;
+                    }
+
+                    break;
                 default:
-                    _errMsg = eDI.ToString() + _3DLaserGlueInspection.Resources.LanguageDict.AddressNotAssigned;
                     break;
             }
 
@@ -3080,16 +3310,68 @@ namespace _3DLaserGlueInspection
             out ushort value)
         {
             value = 0;
-            switch (eDI.ToString())
-            {
-                case "CarNumber":
-                    value = (ushort)CarNumber;
-                    return true;
 
+            switch (robotConnectType)
+            {
+                case RobotConnectType.TCPIP:
+                    switch (eDI.ToString())
+                    {
+                        case "CarNumber":
+                            value = (ushort)CarNumber;
+                            return true;
+
+                        default:
+                            _errMsg = eDI.ToString() + _3DLaserGlueInspection.Resources.LanguageDict.AddressNotAssigned;
+                            break;
+                    }
+                    break;
+                case RobotConnectType.Profinet:
+
+                    if (IoDict.ContainsKey(eDI.ToString()))
+                    {
+                        string ioAddress = IoDict[eDI.ToString()].Address.Trim();
+                        if (!string.IsNullOrEmpty(ioAddress))
+                        {
+                            int offset = 0;
+                            int id = 0;
+                            deserializationIODict(ioAddress, ref offset, ref id);
+
+                            byte[] sts = new byte[2];
+                            bool rt = dioCtr.ReadDI((UInt16)offset, ref sts);
+
+                            if (rt)
+                            {
+                                // 使用计算机的字节序
+                                value = BitConverter.ToUInt16(sts, 0);
+                                // //小端序
+                                //value = BinaryPrimitives.ReadUInt16LittleEndian(sts);
+                                // //大端序
+                                //value = BinaryPrimitives.ReadUInt16BigEndian(sts);
+
+                                return true;    
+                            }
+                            else
+                            {
+                                return false;
+                            }
+
+                        }
+                        else
+                        {
+                            value = 0;
+                            return true;
+                        }
+                    }
+                    else
+                    {
+                        _errMsg = eDI.ToString() + _3DLaserGlueInspection.Resources.LanguageDict.AddressNotAssigned;
+                    }
+                    value = 0;
+                    break;
                 default:
-                    _errMsg = eDI.ToString() + _3DLaserGlueInspection.Resources.LanguageDict.AddressNotAssigned;
                     break;
             }
+            
 
             return false;
         }
@@ -3108,6 +3390,8 @@ namespace _3DLaserGlueInspection
                 out value);
         }
 
+        //object iolock = new object();
+
         /// <summary>
         /// 写入 DO，并阻塞等待机器人响应。
         /// </summary>
@@ -3116,16 +3400,67 @@ namespace _3DLaserGlueInspection
             object value)
     
         {
-            switch (eDO.ToString())
-            {
-                case "Result":
-                    SocketSend((int)value);
-                    return true;
 
+            switch (robotConnectType)
+            {
+                case RobotConnectType.TCPIP:
+                    switch (eDO.ToString())
+                    {
+                        case "TotalResultOK":
+                            SocketSend(1);
+                            return true;
+                        case "TotalResultNG":
+                            SocketSend(0);
+                            return true;
+                        default:
+                            _errMsg = eDO.ToString() + _3DLaserGlueInspection.Resources.LanguageDict.AddressNotAssigned;
+                            break;
+                    }
+                    break;
+                case RobotConnectType.Profinet:
+
+                    if (IoDict.ContainsKey(eDO.ToString()))
+                    {
+                        string ioAddress = IoDict[eDO.ToString()].Address.Trim();
+                        if (!string.IsNullOrEmpty(ioAddress))
+                        {
+                            lock (_ioLock)
+                            {
+                                int offset = 0;
+                                int id = 0;
+
+                                deserializationIODict(ioAddress, ref offset, ref id);
+                                if (id == -1)
+                                {
+                                    bool rt = dioCtr.WriteBit((UInt16)offset, (UInt16)id, (bool)value);
+                                    return rt;
+
+                                }
+                                else
+                                {
+                                    _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.WritingFormatNotSupported;
+                                    return false;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            return true;
+                        }
+                    }
+                    else
+                    {
+                        _errMsg = eDO.ToString() + _3DLaserGlueInspection.Resources.LanguageDict.AddressNotAssigned;
+                    }
+
+
+                    break;
                 default:
-                    _errMsg = eDO.ToString() + _3DLaserGlueInspection.Resources.LanguageDict.AddressNotAssigned;
                     break;
             }
+
+
+          
             return false;
         }
 

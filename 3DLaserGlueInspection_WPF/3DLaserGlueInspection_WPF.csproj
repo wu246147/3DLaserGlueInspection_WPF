@@ -195,6 +195,9 @@
     <Compile Include="subForm\WindowPLC.xaml.cs">
       <DependentUpon>WindowPLC.xaml</DependentUpon>
     </Compile>
+    <Compile Include="subForm\WindowRobot3.xaml.cs">
+      <DependentUpon>WindowRobot3.xaml</DependentUpon>
+    </Compile>
     <Compile Include="subForm\WindowRobot.xaml.cs">
       <DependentUpon>WindowRobot.xaml</DependentUpon>
     </Compile>
@@ -213,7 +216,9 @@
     <Compile Include="subForm\WindowStandardBlockTest.xaml.cs">
       <DependentUpon>WindowStandardBlockTest.xaml</DependentUpon>
     </Compile>
+    <Compile Include="tool\CIFX.cs" />
     <Compile Include="tool\Controls.cs" />
+    <Compile Include="tool\DioCtr.cs" />
     <Compile Include="tool\HFileIO.cs" />
     <Compile Include="tool\HMatrixTransform.cs" />
     <Compile Include="tool\PISerialPort.cs" />
@@ -287,6 +292,10 @@
     <Page Include="subForm\WindowPLC.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="subForm\WindowRobot3.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="subForm\WindowRobot.xaml">
       <SubType>Designer</SubType>

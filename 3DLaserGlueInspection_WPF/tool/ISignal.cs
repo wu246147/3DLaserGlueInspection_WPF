@@ -49,9 +49,29 @@ namespace _3DLaserGlueInspection
         Triggering,
 
         /// <summary>
-        /// 检测结果
+        /// 段检测结果OK
         /// </summary>
         Result,
+
+        /// <summary>
+        /// 段检测结果OK
+        /// </summary>
+        PartResultOK,
+
+        /// <summary>
+        /// 段检测结果NG
+        /// </summary>
+        PartResultNG,
+
+        /// <summary>
+        /// 总检测结果OK
+        /// </summary>
+        TotalResultOK,
+
+        /// <summary>
+        /// 总检测结果NG
+        /// </summary>
+        TotalResultNG,
 
         /// <summary>
         /// 结果可读信号
