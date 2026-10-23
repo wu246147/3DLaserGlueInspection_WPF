@@ -12,7 +12,7 @@ namespace _3DLaserGlueInspection.tool
     {
 
         CIFX user = new CIFX();
-        private object _ioLock;
+        private object _ioLock = new object();
 
         public DioCtr()
         {
@@ -88,8 +88,8 @@ namespace _3DLaserGlueInspection.tool
         public bool ReadDI(UInt16 pvoffset, ref byte[] pvDataOut)
         {
             int index = 0;
-            byte[] pvData = new byte[2];
-            UInt32 ulDataLen = 2;
+            byte[] pvData = new byte[1];
+            UInt32 ulDataLen = 1;
             UInt32 ulAreaNumber = 0;
             while (true)
             {
@@ -105,9 +105,9 @@ namespace _3DLaserGlueInspection.tool
         }
         public virtual bool ReadDI(UInt16 pvoffset, int ID, out bool bresult)
         {
-            byte[] pvData = new byte[2];
+            byte[] pvData = new byte[1];
             bresult = false;
-            UInt32 ulDataLen = 2;
+            UInt32 ulDataLen = 1;
             UInt32 ulAreaNumber = 0;
             int rtn = -1;
             int index = 0;
@@ -136,11 +136,6 @@ namespace _3DLaserGlueInspection.tool
                 pvindex = 0;
                 IDindex = ID;
             }
-            else if (ID > 7 && ID < 16)
-            {
-                pvindex = 1;
-                IDindex = ID - 8;
-            }
             else
             {
                 return false;
@@ -157,8 +152,8 @@ namespace _3DLaserGlueInspection.tool
 
         public virtual bool ReadDI(UInt16 pvoffset, out bool[] sts)
         {
-            sts = new bool[16];
-            byte[] pvData = new byte[2];
+            sts = new bool[8];
+            byte[] pvData = new byte[1];
             bool brtn = ReadDI(pvoffset,ref pvData);
             if (brtn == false) return false;
             for (int i = 0; i < 8; i++)
@@ -171,24 +166,14 @@ namespace _3DLaserGlueInspection.tool
                 }
                 else sts[i] = false;
             }
-            for (int i = 0; i < 8; i++)
-            {
-                byte pvData1 = pvData[1];
-                string ss = Convert.ToString(pvData1, 2).PadLeft(8, '0');
-                if (ss[8 - i - 1] == '1')
-                {
-                    sts[i + 8] = true;
-                }
-                else sts[i + 8] = false;
-            }
             return true;
         }
 
         public bool ReadDO(UInt16 pvoffset, ref byte[] pvDataOut)
         {
             int index = 0;
-            byte[] pvData = new byte[2];
-            UInt32 ulDataLen = 2;
+            byte[] pvData = new byte[1];
+            UInt32 ulDataLen = 1;
             UInt32 ulAreaNumber = 0;
 
             while (true)
@@ -209,12 +194,8 @@ namespace _3DLaserGlueInspection.tool
             sts = false;
             byte[] pvData = new byte[1];
             UInt16 IDIndex = 0;
-            if (ID > 7)
-            {
-                IDIndex = (UInt16)(ID - 8);
-            }
-            else
-                IDIndex = (UInt16)ID;
+            IDIndex = (UInt16)ID;
+
             bool rtn = ReadDO(pvoffset,ref pvData);
             if (rtn == false) return false;
             string ss = Convert.ToString(pvData[0], 2).PadLeft(8, '0');
@@ -229,14 +210,13 @@ namespace _3DLaserGlueInspection.tool
         public virtual bool WriteBit(UInt16 pvoffset, int ID, bool sts)
         {
             if (!m_bOpen) return false;
-            byte[] pvData = new byte[2];
+            byte[] pvData = new byte[1];
             byte pvData2 = new byte();
             int ID2 = 0;
             UInt16 pvoffsetWrite = pvoffset;
             bool rtn = ReadDO(pvoffsetWrite, ref pvData);
             if (rtn == false) return false;
             if (ID < 0) return false;
-            else if (ID > 15) return false;
             else if (ID < 8)
             {
                 pvData2 = pvData[0];
@@ -272,5 +252,27 @@ namespace _3DLaserGlueInspection.tool
             else return false;
         }
 
+
+        public virtual bool WriteBit(UInt16 pvoffset, ushort sts)
+        {
+            byte b = BitConverter.GetBytes(sts)[0];
+            byte[] bySts = new Byte[1] { b };
+            int index = 0;
+            int ltn = -1;
+
+            lock (_ioLock)
+            {
+                while (true)
+                {
+                    ltn = user.xChannelIOWrite(0, pvoffset, 1, ref bySts);
+                    if (ltn == 0) break;
+                    index++;
+                    if (index > 1500) return false;
+                }
+            }
+            //int ltn = user.xChannelIOWrite(0, pvoffset, 1, ref bySts);
+            if (ltn == 0) return true;
+            else return false;
+        }
     }
 }

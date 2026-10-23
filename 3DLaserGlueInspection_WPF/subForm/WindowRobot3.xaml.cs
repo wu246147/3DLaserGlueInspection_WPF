@@ -178,7 +178,15 @@ namespace _3DLaserGlueInspection.subForm
                     }
                     else if ((int)eDO < 1024)
                     {
-
+                        if (ushort.TryParse(doValueTextBoxs[i].Text, out ushort value))
+                        {
+                            if (!signal.Write(eDO, value))
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WriteFailed + signal.ErrMsg);
+                        }
+                        else
+                        {
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ConversionFailedFormatError);
+                        }
                     }
                     else if ((int)eDO < 2048)
                     {
@@ -279,7 +287,7 @@ namespace _3DLaserGlueInspection.subForm
                 textBoxValue.VerticalAlignment = System.Windows.VerticalAlignment.Top;
                 textBoxValue.FontSize = 14;
                 textBoxValue.Margin = new Thickness((int)outputValueLabel.Margin.Left, (int)(outputValueLabel.Margin.Top - 5 + (outputValueLabel.Height * 1.5 * (i + 1))), 0, 0);
-                textBoxValue.IsReadOnly = true;
+                //textBoxValue.IsReadOnly = true;
                 doValueTextBoxs.Add(textBoxValue);
                 this.outputGrip.Children.Add(textBoxValue);
             }

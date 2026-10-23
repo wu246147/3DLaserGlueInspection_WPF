@@ -455,6 +455,8 @@ namespace _3DLaserGlueInspection
 
                     if (!robot.Write(DO.Running, false)) return;
                     if (!robot.Write(DO.Triggering, false)) return;
+                    if (!robot.Write(DO.ChangeOK, false)) return;
+
                     //输出准备号好
                     if (!robot.Write(DO.Ready, true)) return;
 
@@ -463,16 +465,16 @@ namespace _3DLaserGlueInspection
 
                     ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.OutputReadySignal);
 
-                    //等待开始信号
-                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForTheStartSignal);
+                    //等待切换车型信号
+                    ShowMessage("等待切换车型信号");
                     while (true)
                     {
                         bool val;
-                        if (robot.Read(DI.Start, out val))
+                        if (robot.Read(DI.Change, out val))
                         {
                             if (val == true)
                             {
-                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedStartSignal);
+                                ShowMessage("收到切换车型信号");
                                 break;
                             }
                         }
@@ -501,10 +503,6 @@ namespace _3DLaserGlueInspection
                             break;
                     }
 
-
-
-
-
                     ushort ID;
                     //Car car;
                     DateTime dateTime;
@@ -514,6 +512,46 @@ namespace _3DLaserGlueInspection
                     string inVIN;
 
                     bool rt = initRun(out ID, out car, out inVIN, out dateTime, out camParam, out set);
+
+                    //回复切换完成信号
+
+                    if (rt)
+                    {
+                        if (!robot.Write(DO.ChangeOK, true)) return;
+                        if (!robot.Write(DO.ReturnCarNumber, ID)) return;
+
+                        //SocketSend(0);
+
+                    }
+                    else
+                    {
+                        if (!robot.Write(DO.ChangeOK, false)) return;
+                        //SocketSend(-1);
+                        return;
+                    }
+
+                    //等待开始信号
+                    ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.WaitingForTheStartSignal);
+                    while (true)
+                    {
+                        bool val;
+                        if (robot.Read(DI.Start, out val))
+                        {
+                            if (val == true)
+                            {
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedStartSignal);
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            ShowMessage(robot.ErrMsg, LogType.warn);
+                            return;
+                        }
+                        Thread.Sleep(60);
+                        if (stop) return;
+
+                    }
 
                     //回复开始ON信号
                     if (rt)

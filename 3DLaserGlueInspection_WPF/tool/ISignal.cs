@@ -38,6 +38,12 @@ namespace _3DLaserGlueInspection
         /// </summary>
         Ready,
 
+
+        /// <summary>
+        /// 切换好信号
+        /// </summary>
+        ChangeOK,
+
         /// <summary>
         /// 运行信号
         /// </summary>
@@ -78,6 +84,13 @@ namespace _3DLaserGlueInspection
         /// </summary>
         IsRead,
 
+        //ushort 256
+
+        /// <summary>
+        /// 反馈车型号
+        /// </summary>
+        ReturnCarNumber = 256,
+
     }
 
     public enum DI
@@ -113,9 +126,14 @@ namespace _3DLaserGlueInspection
         isPGONEnd,
 
         /// <summary>
-        /// 结束信号
+        /// 结束信号，已收到这个就直接跳过这段检测
         /// </summary>
         END,
+
+        /// <summary>
+        /// 切换车型信号
+        /// </summary>
+        Change,
 
         //ushort 256
 

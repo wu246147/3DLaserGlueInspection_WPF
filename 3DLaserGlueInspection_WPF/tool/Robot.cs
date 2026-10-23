@@ -1029,7 +1029,7 @@ namespace _3DLaserGlueInspection
     {
         public string ErrMsg => _errMsg;
         string _errMsg;
-        public bool IsOpen => _isOpen;
+        public bool IsOpen => robotConnectType == RobotConnectType.Profinet ? _profinetOpen : _isOpen;
         bool _isOpen = false;
 
         RobotParam param = new RobotParam();
@@ -1051,6 +1051,9 @@ namespace _3DLaserGlueInspection
 
         // P/D网通讯
         public DioCtr dioCtr;
+        private bool _profinetOpen;
+        private CancellationTokenSource _heartbeatCts;
+        private Task _heartbeatTask;
 
 
         #region
@@ -1112,9 +1115,18 @@ namespace _3DLaserGlueInspection
         /// </summary>
         public bool InitCommunicationConnection()
         {
-
-            return IniTCPSocketServer();
-
+            switch (robotConnectType)
+            {
+                case RobotConnectType.TCPIP:
+                    if (!StopProfinet()) return false;
+                    return IniTCPSocketServer();
+                case RobotConnectType.Profinet:
+                    StopTCPSocketServer();
+                    return IniProfinet();
+                default:
+                    _errMsg = "不支持的机器人通讯类型";
+                    return false;
+            }
         }
 
         /// <summary>
@@ -1122,40 +1134,37 @@ namespace _3DLaserGlueInspection
         /// </summary>
         public bool StopCommunicationThread()
         {
+            StopTCPSocketServer();
+            return StopProfinet();
+        }
+
+        private bool StopTCPSocketServer()
+        {
+            // 先结束初始化线程，避免停止后又创建 TCP 服务。
+            if (threadReconnect != null)
+            {
+                if (!threadReconnect.Join(1000))
+                {
+                    threadReconnect.Abort();
+                    threadReconnect.Join();
+                }
+                threadReconnect = null;
+            }
             if (Server != null)
             {
-
-                // TCP 停止监听并null
-                if (Server != null)
-                {
-                    Server.StopListen();
-                    Server = null;
-
-                    //_timer.Stop();
-                }
-                // 等待线程结束
-                if (threadReconnect != null)
-                {
-                    // 等待线程结束
-                    if (!threadReconnect.Join(1000))  // 等待最多1秒
-                    {
-                        try
-                        {
-                            threadReconnect.Abort();  // 强制终止（不推荐，但有时必要）
-                        }
-                        catch { }
-                    }
-                    threadReconnect = null;
-                }
+                Server.reserveInfoSignal -= ProcessInfo;
+                Server.StopListen();
+                Server = null;
             }
-
             return true;
-            
         }
 
         private bool IniTCPSocketServer()
         {
-            threadReconnect = new Thread(IniRobotTCPserver);
+            if (Server != null || (threadReconnect != null && threadReconnect.IsAlive))
+                return true;
+
+            threadReconnect = new Thread(IniRobotTCPserver) { IsBackground = true };
             threadReconnect.Start();
 
             return true;
@@ -1340,6 +1349,173 @@ namespace _3DLaserGlueInspection
 
 
 
+        #region Profinet 通讯
+
+        private bool IniProfinet()
+        {
+            lock (iolock)
+            {
+                if (_profinetOpen) return true;
+                if (dioCtr == null) dioCtr = new DioCtr();
+                if (!dioCtr.Open())
+                {
+                    _errMsg = dioCtr.ErrMsg;
+                    return false;
+                }
+                _profinetOpen = true;
+            }
+            StartHeartbeat();
+            return true;
+        }
+
+        private bool StopProfinet()
+        {
+            StopHeartbeat();
+            lock (iolock)
+            {
+                if (!_profinetOpen) return true;
+                _profinetOpen = false;
+                bool result = dioCtr.CloseCard();
+                if (!result) _errMsg = dioCtr.ErrMsg;
+                return result;
+            }
+        }
+
+        private void StartHeartbeat()
+        {
+            _heartbeatCts = new CancellationTokenSource();
+            CancellationToken token = _heartbeatCts.Token;
+            _heartbeatTask = Task.Run(async () =>
+            {
+                bool aliveSignal = true;
+                while (!token.IsCancellationRequested)
+                {
+                    try
+                    {
+                        Write(DO.Alive, aliveSignal);
+                        aliveSignal = !aliveSignal;
+                        await Task.Delay(1000, token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        _errMsg = "心跳输出失败：" + ex.Message;
+                        // 写入异常也限制重试频率。
+                        try { await Task.Delay(1000, token); }
+                        catch (OperationCanceledException) { break; }
+                    }
+                }
+            });
+        }
+
+        private void StopHeartbeat()
+        {
+            if (_heartbeatCts == null) return;
+            _heartbeatCts.Cancel();
+            _heartbeatTask?.GetAwaiter().GetResult();
+            _heartbeatCts.Dispose();
+            _heartbeatCts = null;
+            _heartbeatTask = null;
+        }
+
+        // 与川崎相同：字节和位均从 1 开始；空地址表示不使用该信号。
+        private bool TryGetProfinetAddress(string name, bool bitAddress, out int offset, out int bit)
+        {
+            offset = -1;
+            bit = -1;
+            if (!IoDict.TryGetValue(name, out IoAddress io) || io == null)
+            {
+                _errMsg = name + _3DLaserGlueInspection.Resources.LanguageDict.AddressNotAssigned;
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(io.Address)) return true;
+
+            string[] parts = io.Address.Trim().Split('.');
+            if (parts.Length != (bitAddress ? 2 : 1)
+                || !int.TryParse(parts[0], NumberStyles.None, CultureInfo.InvariantCulture, out int byteNumber)
+                || byteNumber < 1 || byteNumber > ushort.MaxValue + 1
+                || (bitAddress && (!int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out bit)
+                    || bit < 1 || bit > 8)))
+            {
+                _errMsg = name + " Profinet 地址格式错误，位信号使用 字节.位（位为1~8），数值信号使用字节号";
+                return false;
+            }
+            offset = byteNumber - 1;
+            if (bitAddress) bit--;
+            return true;
+        }
+
+        private bool CheckProfinetConnection()
+        {
+            if (_profinetOpen && dioCtr != null) return true;
+            _errMsg = "Profinet 控制卡未打开";
+            return false;
+        }
+
+        private bool CheckProfinetResult(bool result, string name)
+        {
+            if (!result) _errMsg = name + " Profinet 读写失败：" + dioCtr.ErrMsg;
+            return result;
+        }
+
+        private bool ReadProfinetBit(string name, bool input, out bool value)
+        {
+            value = false;
+            lock (iolock)
+            {
+                if (!CheckProfinetConnection()
+                    || !TryGetProfinetAddress(name, true, out int offset, out int bit)) return false;
+                if (offset < 0) return true;
+                bool result = input
+                    ? dioCtr.ReadDI((ushort)offset, bit, out value)
+                    : dioCtr.ReadDOBit((ushort)offset, bit, out value);
+                return CheckProfinetResult(result, name);
+            }
+        }
+
+        private bool ReadProfinetByte(string name, bool input, out ushort value)
+        {
+            value = 0;
+            lock (iolock)
+            {
+                if (!CheckProfinetConnection()
+                    || !TryGetProfinetAddress(name, false, out int offset, out int bit)) return false;
+                if (offset < 0) return true;
+                // 沿用川崎的单字节数值协议，ISignal 接口以 ushort 返回。
+                byte[] data = new byte[1];
+                bool result = input
+                    ? dioCtr.ReadDI((ushort)offset, ref data)
+                    : dioCtr.ReadDO((ushort)offset, ref data);
+                if (!CheckProfinetResult(result, name)) return false;
+                value = data[0];
+                return true;
+            }
+        }
+
+        private bool WriteProfinet(DO signal, object value)
+        {
+            string name = signal.ToString();
+            bool isBit = (int)signal < 256;
+            lock (iolock)
+            {
+                if (!CheckProfinetConnection()
+                    || !TryGetProfinetAddress(name, isBit, out int offset, out int bit)) return false;
+                if (offset < 0) return true;
+                if (isBit && value is bool bitValue)
+                    return CheckProfinetResult(dioCtr.WriteBit((ushort)offset, bit, bitValue), name);
+                if (!isBit && value is ushort byteValue && byteValue <= byte.MaxValue)
+                    return CheckProfinetResult(dioCtr.WriteBit((ushort)offset, byteValue), name);
+                _errMsg = name + " " + _3DLaserGlueInspection.Resources.LanguageDict.WritingFormatNotSupported
+                    + "（位信号为 bool，数值信号为 0~255 的 ushort）";
+                return false;
+            }
+        }
+
+        #endregion
+
         public KukaRobot() 
         {
             
@@ -1349,6 +1525,7 @@ namespace _3DLaserGlueInspection
         public void Dispose()
         {
             StopCommunicationThread();
+            Close();
         }
 
         public void ShowForm()
@@ -1609,6 +1786,9 @@ namespace _3DLaserGlueInspection
 
         public bool Read(DI eDI, out bool value)
         {
+            if (robotConnectType == RobotConnectType.Profinet)
+                return ReadProfinetBit(eDI.ToString(), true, out value);
+
             value = false;
             switch (eDI.ToString())
             {
@@ -1640,6 +1820,9 @@ namespace _3DLaserGlueInspection
         }
         public bool Read(DO eDO, out bool value)
         {
+            if (robotConnectType == RobotConnectType.Profinet)
+                return ReadProfinetBit(eDO.ToString(), false, out value);
+
             _errMsg = _3DLaserGlueInspection.Resources.LanguageDict.UnsupportedBool;
             value = false;
 
@@ -1648,6 +1831,9 @@ namespace _3DLaserGlueInspection
 
         public bool Read(DI eDI, out ushort value)
         {
+            if (robotConnectType == RobotConnectType.Profinet)
+                return ReadProfinetByte(eDI.ToString(), true, out value);
+
             value = 0;
             switch (eDI.ToString())
             {
@@ -1664,6 +1850,9 @@ namespace _3DLaserGlueInspection
         }
         public bool Read(DO eDO, out ushort value)
         {
+            if (robotConnectType == RobotConnectType.Profinet)
+                return ReadProfinetByte(eDO.ToString(), false, out value);
+
             _errMsg = "不支持读取输出";
             value = 0;
             return false;
@@ -1672,6 +1861,9 @@ namespace _3DLaserGlueInspection
         object iolock = new object();
         public bool Write(DO eDO, object value)
         {
+            if (robotConnectType == RobotConnectType.Profinet)
+                return WriteProfinet(eDO, value);
+
             switch (eDO.ToString())
             {
                 case "Result":
@@ -2660,6 +2852,10 @@ namespace _3DLaserGlueInspection
         // 初始化
         private bool IniProfinet()
         {
+            if (_isOpen)
+            {
+                return true;
+            }
             bool rt = false;
             //打开IO通讯
             if (dioCtr == null)
@@ -2673,8 +2869,10 @@ namespace _3DLaserGlueInspection
 
             if (!rt)
             {
+                _isOpen = false;
                 _errMsg = dioCtr.ErrMsg;
             }
+            _isOpen = true;
             return rt;
         }
         // 析构函数
@@ -2686,9 +2884,12 @@ namespace _3DLaserGlueInspection
             StopHeartbeat();
 
             rt = dioCtr.CloseCard();
+            _isOpen = false;
 
             if (!rt)
             {
+                _isOpen = false;
+
                 _errMsg = dioCtr.ErrMsg;
             }
 
@@ -2711,7 +2912,7 @@ namespace _3DLaserGlueInspection
                     try
                     {
                         //心跳输出
-                        Write(DO.Alive, aliveSignl);
+                        bool rt = Write(DO.Alive, aliveSignl);
                         aliveSignl = !aliveSignl;
 
                         await Task.Delay(1000, _cts.Token);
@@ -2887,8 +3088,8 @@ namespace _3DLaserGlueInspection
         {
             try
             {
-                if (_isOpen)
-                    return true;
+                //if (_isOpen)
+                //    return true;
 
                 robot = new UDP(
                     _param.IpAddress,
@@ -2902,7 +3103,7 @@ namespace _3DLaserGlueInspection
 
                 robot.Connect();
 
-                _isOpen = true;
+                //_isOpen = true;
                 _isConnected = true;
                 _errMsg = string.Empty;
 
@@ -2910,7 +3111,7 @@ namespace _3DLaserGlueInspection
             }
             catch (Exception ex)
             {
-                _isOpen = false;
+                //_isOpen = false;
                 _isConnected = false;
                 _errMsg = ex.Message;
 
@@ -2944,7 +3145,7 @@ namespace _3DLaserGlueInspection
                     robot = null;
                 }
 
-                _isOpen = false;
+                //_isOpen = false;
                 _isConnected = false;
 
                 return true;
@@ -2953,7 +3154,7 @@ namespace _3DLaserGlueInspection
             {
                 _errMsg = ex.Message;
 
-                _isOpen = false;
+                //_isOpen = false;
                 _isConnected = false;
 
                 return false;
@@ -3336,13 +3537,14 @@ namespace _3DLaserGlueInspection
                             int id = 0;
                             deserializationIODict(ioAddress, ref offset, ref id);
 
-                            byte[] sts = new byte[2];
+                            byte[] sts = new byte[1];
                             bool rt = dioCtr.ReadDI((UInt16)offset, ref sts);
-
                             if (rt)
                             {
                                 // 使用计算机的字节序
-                                value = BitConverter.ToUInt16(sts, 0);
+                                //value = BitConverter.ToUInt16(sts, 0);
+                                value = (ushort)sts[0];
+
                                 // //小端序
                                 //value = BinaryPrimitives.ReadUInt16LittleEndian(sts);
                                 // //大端序
@@ -3430,11 +3632,16 @@ namespace _3DLaserGlueInspection
                                 int id = 0;
 
                                 deserializationIODict(ioAddress, ref offset, ref id);
-                                if (id == -1)
+                                if (id != -1)
                                 {
                                     bool rt = dioCtr.WriteBit((UInt16)offset, (UInt16)id, (bool)value);
                                     return rt;
 
+                                }
+                                else if (id == -1)
+                                {
+                                    bool rt = dioCtr.WriteBit((UInt16)offset, (ushort)value);
+                                    return rt;
                                 }
                                 else
                                 {
