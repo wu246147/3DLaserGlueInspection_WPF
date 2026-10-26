@@ -1208,10 +1208,10 @@ namespace _3DLaserGlueInspection
 
         void ProcessInfo(string info)
         {
-            int PROGRAM_ID = 0;
-            int COMMAND_ID = 0;
-            int POINT_ID = 0;
-            Thread cameraThread;
+            //int PROGRAM_ID = 0;
+            //int COMMAND_ID = 0;
+            //int POINT_ID = 0;
+            //Thread cameraThread;
             try
             {
                 //ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.ReceivedSignal + ":" + info);

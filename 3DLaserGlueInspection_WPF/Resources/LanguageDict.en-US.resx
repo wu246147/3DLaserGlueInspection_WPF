@@ -820,7 +820,7 @@ Glue Inspection</value>
     <value>Robot attitude acquisition task has been initiated and completed</value>
   </data>
   <data name="RobotConnectionFailed" xml:space="preserve">
-    <value>Robot connection failed:</value>
+    <value>Robot background connection failed:</value>
   </data>
   <data name="RobotParameterLoadingFailed" xml:space="preserve">
     <value>Robot parameter loading failed:</value>
@@ -835,7 +835,7 @@ Glue Inspection</value>
     <value>Robot settings</value>
   </data>
   <data name="RobotSuccessfullyConnected" xml:space="preserve">
-    <value>Robot successfully connected</value>
+    <value>Robot background successfully connected</value>
   </data>
   <data name="SaveCache" xml:space="preserve">
     <value>Save Cache</value>

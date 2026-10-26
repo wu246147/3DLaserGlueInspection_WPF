@@ -39,9 +39,9 @@ namespace _3DLaserGlueInspection.subForm
         vtkUnsignedCharArray _colors_rgb = vtkUnsignedCharArray.New();
         vtkAxesActor axes = vtkAxesActor.New();
 
-        double[] xCoords;
-        double[] yCoords;
-        double[] zCoords;
+        //double[] xCoords;
+        //double[] yCoords;
+        //double[] zCoords;
 
         Task taskRefresh;
         bool bRefresh = false;

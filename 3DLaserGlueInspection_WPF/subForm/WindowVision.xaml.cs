@@ -3036,7 +3036,7 @@ namespace _3DLaserGlueInspection.subForm
                             }
 
                             //根据情况提取手眼标定参数
-                            double row = 0, col = 0, angle = 0;
+                            double row = 0, col = 0,angle = 0;
 
                             if (handEyeType == CameraHandEyeType.EyeInHand)
                             {
@@ -3347,7 +3347,7 @@ namespace _3DLaserGlueInspection.subForm
 
                             // 结果保存变量
                             bool getOutlineResult = false;
-                            bool singleFrameExisOutline = false;
+                            //bool singleFrameExisOutline = false;
                             bool singleFrameExistGlue = false;
                             Data resultData = new Data();
                             BResult bResult = new BResult();

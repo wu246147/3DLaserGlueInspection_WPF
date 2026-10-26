@@ -877,8 +877,8 @@ namespace _3DLaserGlueInspection
             for (int index = 0; index < points.Rows; index++)
             {
                 matrix.Transform(points.At<double>(index, 0), points.At<double>(index, 1), out double x, out double y);
-                if (!SizeCorrectionMatrix.IsFinite(x) || !SizeCorrectionMatrix.IsFinite(y))
-                    throw new InvalidOperationException("矫正轮廓包含无效坐标。");
+                //if (!SizeCorrectionMatrix.IsFinite(x) || !SizeCorrectionMatrix.IsFinite(y))
+                //    throw new InvalidOperationException("矫正轮廓包含无效坐标。");
                 points.At<double>(index, 0) = x;
                 points.At<double>(index, 1) = y;
             }

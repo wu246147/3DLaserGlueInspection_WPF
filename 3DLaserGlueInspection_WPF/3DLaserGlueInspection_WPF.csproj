@@ -415,9 +415,6 @@
     <Resource Include="Icon\48X48.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="48X48.ico" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="Icon\3Dicon.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

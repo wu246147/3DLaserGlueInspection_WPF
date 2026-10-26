@@ -818,7 +818,7 @@
     <value>机器人姿态获取任务启动完成</value>
   </data>
   <data name="RobotConnectionFailed" xml:space="preserve">
-    <value>机器人连接失败：</value>
+    <value>机器人后台连接失败：</value>
   </data>
   <data name="RobotParameterLoadingFailed" xml:space="preserve">
     <value>机器人参数加载失败：</value>
@@ -833,7 +833,7 @@
     <value>机器人设置</value>
   </data>
   <data name="RobotSuccessfullyConnected" xml:space="preserve">
-    <value>机器人连接成功</value>
+    <value>机器人后台连接成功</value>
   </data>
   <data name="SaveCache" xml:space="preserve">
     <value>保存缓存</value>

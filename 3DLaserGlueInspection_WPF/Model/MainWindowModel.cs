@@ -95,7 +95,6 @@ namespace _3DLaserGlueInspection
         public bool stop = true;
         private readonly object runLogLock = new object();
         private string currentRunID = null;
-        Thread mainThread = null;
 
         CarNameIdSet cars = new CarNameIdSet();
 
@@ -239,7 +238,6 @@ namespace _3DLaserGlueInspection
 
         // 2d 结果显示点
         public System.Windows.Shapes.Polygon showCheckPoint = new System.Windows.Shapes.Polygon();
-
 
         Task taskShow2D = null;
 
@@ -408,6 +406,7 @@ namespace _3DLaserGlueInspection
                         return;
                     }
                 }
+                ShowMessage("开始PLC连接");
 
                 if (isUsePLC)
                 {
@@ -421,6 +420,7 @@ namespace _3DLaserGlueInspection
                         return;
                     }
                 }
+                ShowMessage("完成PLC连接");
 
 
                 //if (io.Open())
@@ -436,6 +436,8 @@ namespace _3DLaserGlueInspection
 
                 mainModel.softwareRunLabelColorControl = labelColorEnum["green"];
                 //初始化
+                ShowMessage("机器人信号初始化");
+
                 switch (robotType)
                 {
                     case RobotType.KukaRobot:
@@ -456,6 +458,9 @@ namespace _3DLaserGlueInspection
                     if (!robot.Write(DO.Running, false)) return;
                     if (!robot.Write(DO.Triggering, false)) return;
                     if (!robot.Write(DO.ChangeOK, false)) return;
+
+                    ShowMessage("机器人信号初始化完成");
+
 
                     //输出准备号好
                     if (!robot.Write(DO.Ready, true)) return;
@@ -1603,7 +1608,23 @@ namespace _3DLaserGlueInspection
             car = new Car();
 
             ushort CarNumber;
+
             if (!robot.Read(DI.CarNumber, out CarNumber)) return false;
+            if (CarNumber == 0)
+            {
+                ShowMessage($"读取车型为0，重读中");
+                while (CarNumber == 0)
+                {
+
+                    if (!robot.Read(DI.CarNumber, out CarNumber)) return false;
+                    Thread.Sleep(100);
+
+                }
+            }
+           
+
+
+
             ID = CarNumber;
 
             if (isHandVIN)

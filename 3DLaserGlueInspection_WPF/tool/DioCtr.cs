@@ -100,7 +100,13 @@ namespace _3DLaserGlueInspection.tool
                     return true;
                 }
                 index++;
-                if (index > 2000) return false;
+                if (index > 2000)
+                {
+                    _errMsg = "读取多次失败";
+                    return false;
+                }
+                Thread.Sleep(5);
+
             }
         }
         public virtual bool ReadDI(UInt16 pvoffset, int ID, out bool bresult)
@@ -127,8 +133,10 @@ namespace _3DLaserGlueInspection.tool
                 if (index > 600)
                 {
                     //Data.SaveLogFile("DI读取失败！");
+                    _errMsg = "读取多次失败";
                     return false;
                 }
+                Thread.Sleep(5);
             }
             int pvindex = 0, IDindex = 0;
             if (ID >= 0 && ID < 8)
@@ -185,7 +193,14 @@ namespace _3DLaserGlueInspection.tool
                     return true;
                 }
                 index++;
-                if (index > 2000) return false;
+                if (index > 2000)
+                {
+                    _errMsg = "读取多次失败";
+                    return false;
+                }
+                Thread.Sleep(5);
+
+
             }
         }
 
@@ -244,7 +259,12 @@ namespace _3DLaserGlueInspection.tool
                     ltn = user.xChannelIOWrite(0, pvoffsetWrite, 1, ref bySts);
                     if (ltn == 0) break;
                     index++;
-                    if (index > 1500) return false;
+                    if (index > 1500)
+                    {
+                        _errMsg = "写入多次失败";
+                        return false;
+                    }
+                    Thread.Sleep(5);
                 }
             }
             //int ltn = user.xChannelIOWrite(0, pvoffset, 1, ref bySts);
@@ -267,7 +287,13 @@ namespace _3DLaserGlueInspection.tool
                     ltn = user.xChannelIOWrite(0, pvoffset, 1, ref bySts);
                     if (ltn == 0) break;
                     index++;
-                    if (index > 1500) return false;
+                    if (index > 1500)
+                    {
+                        _errMsg = "写入多次失败";
+                        return false;
+                    }
+                    Thread.Sleep(5);
+
                 }
             }
             //int ltn = user.xChannelIOWrite(0, pvoffset, 1, ref bySts);
