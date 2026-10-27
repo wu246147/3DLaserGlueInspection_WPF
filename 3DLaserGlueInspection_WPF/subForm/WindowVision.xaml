@@ -136,6 +136,10 @@
                              VerticalScrollBarVisibility="Auto"
                             >
                             <Grid Name="imageSetGrid">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
                                 <CheckBox  x:Name="outlineCheck" Content="{x:Static resx:LanguageDict.ContourDet}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" >
                                 </CheckBox>
                                 <Label  Content="{x:Static resx:LanguageDict.MinThre}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" Margin="10,32,0,0" VerticalAlignment="Top"/>
@@ -144,7 +148,9 @@
                                 <TextBox x:Name="laserMinWidthNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="132,71,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="116" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
 
                                 <CheckBox  x:Name="singleFrameCheck" Content="{x:Static resx:LanguageDict.SingleFrameDet}" HorizontalAlignment="Left" Margin="10,71,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" Visibility="Hidden"/>
-                                <Border BorderBrush="White" BorderThickness="1" Margin="5,133,10,0" VerticalAlignment="Top">
+                                <StackPanel Margin="5,133,10,24" VerticalAlignment="Top">
+                                    <TextBlock Text="{x:Static resx:LanguageDict.YellowRange}" FontSize="14" Foreground="White" Margin="5,0,0,4" />
+                                <Border BorderBrush="White" BorderThickness="1">
                                     <Grid x:Name="toleranceRangeGrid">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto" />
@@ -225,7 +231,46 @@
                                         <TextBox Grid.Row="4" x:Name="glueAreaMaxNumericUpDown" FontSize="14" HorizontalAlignment="Left" Margin="167,6,0,0" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
                                     </Grid>
                                 </Border>
-                                <Grid Margin="5,290,10,0" Height="119" VerticalAlignment="Top" Visibility="Visible">
+                                    <TextBlock Text="{x:Static resx:LanguageDict.GreenRange}" FontSize="14" Foreground="White" Margin="5,12,0,4" />
+                                    <Border BorderBrush="White" BorderThickness="1">
+                                        <Grid x:Name="greenToleranceRangeGrid" ToolTip="{x:Static resx:LanguageDict.GreenRangeDescription}">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="36" />
+                                                <RowDefinition Height="38" />
+                                            </Grid.RowDefinitions>
+                                            <Grid x:Name="greenWholeGlueWidthRangeGrid" Height="36" Visibility="{Binding Visibility, ElementName=wholeGlueWidthRangeGrid}">
+                                                <Label Content="{x:Static resx:LanguageDict.GlueWidth}" FontSize="14" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,4,0,0" />
+                                                <TextBox x:Name="greenGlueWidthMinNumericUpDown" FontSize="14" HorizontalAlignment="Left" Margin="71,6,0,0" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                                <Label Content="~" FontSize="14" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,4,0,0" />
+                                                <TextBox x:Name="greenGlueWidthMaxNumericUpDown" FontSize="14" HorizontalAlignment="Left" Margin="167,6,0,0" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                            </Grid>
+                                            <Grid x:Name="greenLeftGlueWidthRangeGrid" Grid.Row="1" Height="36" Visibility="{Binding Visibility, ElementName=leftGlueWidthRangeGrid}">
+                                                <Label Content="{x:Static resx:LanguageDict.LeftGlueWidth}" FontSize="14" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,4,0,0" />
+                                                <TextBox x:Name="greenLeftGlueWidthMinNumericUpDown" FontSize="14" HorizontalAlignment="Left" Margin="90,6,0,0" Text="0" VerticalAlignment="Top" Width="60" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                                <Label Content="~" FontSize="14" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="151,4,0,0" />
+                                                <TextBox x:Name="greenLeftGlueWidthMaxNumericUpDown" FontSize="14" HorizontalAlignment="Left" Margin="176,6,0,0" Text="0" VerticalAlignment="Top" Width="62" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                            </Grid>
+                                            <Grid x:Name="greenRightGlueWidthRangeGrid" Grid.Row="2" Height="36" Visibility="{Binding Visibility, ElementName=rightGlueWidthRangeGrid}">
+                                                <Label Content="{x:Static resx:LanguageDict.RightGlueWidth}" FontSize="14" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,4,0,0" />
+                                                <TextBox x:Name="greenRightGlueWidthMinNumericUpDown" FontSize="14" HorizontalAlignment="Left" Margin="90,6,0,0" Text="0" VerticalAlignment="Top" Width="60" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                                <Label Content="~" FontSize="14" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="151,4,0,0" />
+                                                <TextBox x:Name="greenRightGlueWidthMaxNumericUpDown" FontSize="14" HorizontalAlignment="Left" Margin="176,6,0,0" Text="0" VerticalAlignment="Top" Width="62" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                            </Grid>
+                                            <Label Grid.Row="3" Content="{x:Static resx:LanguageDict.GlueHeight}" FontSize="14" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,4,0,0" />
+                                            <TextBox Grid.Row="3" x:Name="greenGlueHeightMinNumericUpDown" FontSize="14" HorizontalAlignment="Left" Margin="71,6,0,0" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                            <Label Grid.Row="3" Content="~" FontSize="14" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,4,0,0" />
+                                            <TextBox Grid.Row="3" x:Name="greenGlueHeightMaxNumericUpDown" FontSize="14" HorizontalAlignment="Left" Margin="167,6,0,0" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                            <Label Grid.Row="4" Content="{x:Static resx:LanguageDict.Area}" FontSize="14" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,4,0,0" />
+                                            <TextBox Grid.Row="4" x:Name="greenGlueAreaMinNumericUpDown" FontSize="14" HorizontalAlignment="Left" Margin="71,6,0,0" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                            <Label Grid.Row="4" Content="~" FontSize="14" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="142,4,0,0" />
+                                            <TextBox Grid.Row="4" x:Name="greenGlueAreaMaxNumericUpDown" FontSize="14" HorizontalAlignment="Left" Margin="167,6,0,0" Text="0" VerticalAlignment="Top" Width="71" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="TextBox_PreviewTextInput" />
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+                                <Grid Grid.Row="1" Margin="5,0,10,0" Height="119" VerticalAlignment="Top" Visibility="Visible">
                                     <Border BorderBrush="White" BorderThickness="1" Height="83" VerticalAlignment="Top" Margin="0,33,0,0">
                                         <Grid Name="cropGrid" ShowGridLines="True" Height="85" VerticalAlignment="Top" Margin="0,-1,0,0">
                                             <Label  Content="{x:Static resx:LanguageDict.HorizontalRange}" FontSize="14" Foreground="White"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5,9,0,0"/>
@@ -247,7 +292,7 @@
 
 
                                 <CheckBox  x:Name="_3DCloudDetCheck" Content="{x:Static resx:LanguageDict._3DGluingDetection}" HorizontalAlignment="Left" Margin="5,108,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
-                                <Grid x:Name="imageSetOther" Margin="0,739,0,0">
+                                <Grid x:Name="imageSetOther" Grid.Row="1" Margin="0,449,0,0">
                                     <Label  Content="{x:Static resx:LanguageDict.CameraAndMovementDirectionAngle}" FontSize="14" Foreground="White" HorizontalAlignment="Left" Width="183" Height="55" Margin="0,12,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
                                     <TextBox x:Name="robotAndCamAngleNumericUpDown" FontSize="14"  HorizontalAlignment="Left" Margin="188,27,0,0" TextWrapping="Wrap" Text="0" Width="75" InputMethod.IsInputMethodEnabled="False" IsEnabled="False" VerticalAlignment="Top" />
                                     <CheckBox  x:Name="isUseAngleOptCheck" Content="{x:Static resx:LanguageDict.UseAngleOptimization}" HorizontalAlignment="Left" Margin="10,70,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
@@ -301,9 +346,9 @@
                                     </Border>
 
                                 </Grid>
-                                <CheckBox x:Name="useBaseLineDetCheck" Content="{x:Static resx:LanguageDict.useBaseLineDet}" HorizontalAlignment="Left" Margin="5,414,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
-                                <CheckBox x:Name="useHalfGlueWidthCheck" Content="{x:Static resx:LanguageDict.HalfGlueWidthDetection}" HorizontalAlignment="Left" Margin="145,414,0,0" VerticalAlignment="Top" FontSize="12" Foreground="White" IsEnabled="{Binding IsChecked, ElementName=useBaseLineDetCheck}" ToolTip="{x:Static resx:LanguageDict.HalfGlueWidthDescription}" ToolTipService.ShowOnDisabled="True" />
-                                <Grid Name="baseLineGrid" Margin="5,409,10,0" Height="230" VerticalAlignment="Top" Visibility="Visible">
+                                <CheckBox x:Name="useBaseLineDetCheck" Grid.Row="1" Content="{x:Static resx:LanguageDict.useBaseLineDet}" HorizontalAlignment="Left" Margin="5,124,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
+                                <CheckBox x:Name="useHalfGlueWidthCheck" Grid.Row="1" Content="{x:Static resx:LanguageDict.HalfGlueWidthDetection}" HorizontalAlignment="Left" Margin="145,124,0,0" VerticalAlignment="Top" FontSize="12" Foreground="White" IsEnabled="{Binding IsChecked, ElementName=useBaseLineDetCheck}" ToolTip="{x:Static resx:LanguageDict.HalfGlueWidthDescription}" ToolTipService.ShowOnDisabled="True" />
+                                <Grid Name="baseLineGrid" Grid.Row="1" Margin="5,119,10,0" Height="230" VerticalAlignment="Top" Visibility="Visible">
                                     <Border BorderBrush="White" BorderThickness="1" Margin="0,33,0,0">
                                         <Grid Margin="0,0,0,0"  Visibility="Visible">
                                             <Label  Content="mm" FontSize="14" Foreground="White" Margin="0,46,10,0" VerticalAlignment="Top" HorizontalAlignment="Right"/>
@@ -342,8 +387,8 @@
                                 </Grid>
 
                                 <!-- 气泡检测参数：每个图像参数可单独启用，并设置点间最小间隔。 -->
-                                <CheckBox x:Name="useBubbleDetCheck" Content="{x:Static resx:LanguageDict.EnableBubbleDetection}" HorizontalAlignment="Left" Margin="5,652,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
-                                <Grid x:Name="bubbleGrid" Margin="5,647,10,0" Height="83" VerticalAlignment="Top" Visibility="Visible">
+                                <CheckBox x:Name="useBubbleDetCheck" Grid.Row="1" Content="{x:Static resx:LanguageDict.EnableBubbleDetection}" HorizontalAlignment="Left" Margin="5,362,0,0" VerticalAlignment="Top" FontSize="14" Foreground="White" />
+                                <Grid x:Name="bubbleGrid" Grid.Row="1" Margin="5,357,10,0" Height="83" VerticalAlignment="Top" Visibility="Visible">
                                     <Border BorderBrush="White" BorderThickness="1" Margin="0,33,0,0">
                                         <Grid Margin="0,0,0,0"  Visibility="Visible">
                                             <Label  Content="mm" FontSize="14" Foreground="White" Margin="0,10,9,0" VerticalAlignment="Top" HorizontalAlignment="Right"/>

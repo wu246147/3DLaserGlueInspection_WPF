@@ -2191,11 +2191,18 @@ namespace _3DLaserGlueInspection
         public int laserMinWidth = 2;
         public bool 单帧检测 = false;
         public bool _3DGlueDet = false;
+        // 原有黄色范围继续参与检测判断。
         public double widthMin = 2, widthMax = 4;
         public double leftGlueWidthMin = 1, leftGlueWidthMax = 2;
         public double rightGlueWidthMin = 1, rightGlueWidthMax = 2;
         public double heightMin = 2, heightMax = 4;
         public double areaMin = 4, areaMax = 16;
+        // 绿色范围仅供设置和保存，不参与检测判断；旧配置未设置时沿用对应黄色范围。
+        public double? greenWidthMin, greenWidthMax;
+        public double? greenLeftGlueWidthMin, greenLeftGlueWidthMax;
+        public double? greenRightGlueWidthMin, greenRightGlueWidthMax;
+        public double? greenHeightMin, greenHeightMax;
+        public double? greenAreaMin, greenAreaMax;
         public bool 启用裁剪 = false;
         public double LeftX = 0.25, TopY = 0.25, RightX = 0.75, DownY = 0.75;
         public bool 离散去噪 = false;

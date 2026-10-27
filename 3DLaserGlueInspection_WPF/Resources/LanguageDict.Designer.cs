@@ -1565,6 +1565,33 @@ namespace _3DLaserGlueInspection.Resources {
         }
         
         /// <summary>
+        ///   查找类似 绿色范围 的本地化字符串。
+        /// </summary>
+        public static string GreenRange {
+            get {
+                return ResourceManager.GetString("GreenRange", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   查找类似 黄色范围 的本地化字符串。
+        /// </summary>
+        public static string YellowRange {
+            get {
+                return ResourceManager.GetString("YellowRange", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   查找类似 绿色范围说明 的本地化字符串。
+        /// </summary>
+        public static string GreenRangeDescription {
+            get {
+                return ResourceManager.GetString("GreenRangeDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   查找类似 胶高 的本地化字符串。
         /// </summary>
         public static string GlueHeight {

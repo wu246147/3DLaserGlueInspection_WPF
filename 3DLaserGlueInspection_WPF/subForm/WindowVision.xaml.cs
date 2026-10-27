@@ -175,6 +175,11 @@ namespace _3DLaserGlueInspection.subForm
             {
                 CreateRightClickMenu((System.Windows.Controls.ContextMenu)s, CopyToleranceRange);
             };
+            greenToleranceRangeGrid.ContextMenu = new System.Windows.Controls.ContextMenu();
+            greenToleranceRangeGrid.ContextMenu.Opened += (s, e) =>
+            {
+                CreateRightClickMenu((System.Windows.Controls.ContextMenu)s, CopyGreenToleranceRange);
+            };
             useCroppintCheck.ContextMenu = new System.Windows.Controls.ContextMenu();
             useCroppintCheck.ContextMenu.Opened += (s, e) =>
             {
@@ -672,6 +677,20 @@ namespace _3DLaserGlueInspection.subForm
             srcImageSet.areaMax = dstImageSet.areaMax;
             isAlter = true;
         }
+        private void CopyGreenToleranceRange(ImageSet srcImageSet, ImageSet dstImageSet)
+        {
+            srcImageSet.greenWidthMin = dstImageSet.greenWidthMin ?? dstImageSet.widthMin;
+            srcImageSet.greenWidthMax = dstImageSet.greenWidthMax ?? dstImageSet.widthMax;
+            srcImageSet.greenLeftGlueWidthMin = dstImageSet.greenLeftGlueWidthMin ?? dstImageSet.leftGlueWidthMin;
+            srcImageSet.greenLeftGlueWidthMax = dstImageSet.greenLeftGlueWidthMax ?? dstImageSet.leftGlueWidthMax;
+            srcImageSet.greenRightGlueWidthMin = dstImageSet.greenRightGlueWidthMin ?? dstImageSet.rightGlueWidthMin;
+            srcImageSet.greenRightGlueWidthMax = dstImageSet.greenRightGlueWidthMax ?? dstImageSet.rightGlueWidthMax;
+            srcImageSet.greenHeightMin = dstImageSet.greenHeightMin ?? dstImageSet.heightMin;
+            srcImageSet.greenHeightMax = dstImageSet.greenHeightMax ?? dstImageSet.heightMax;
+            srcImageSet.greenAreaMin = dstImageSet.greenAreaMin ?? dstImageSet.areaMin;
+            srcImageSet.greenAreaMax = dstImageSet.greenAreaMax ?? dstImageSet.areaMax;
+            isAlter = true;
+        }
         private void CopyUseCrop(ImageSet srcImageSet, ImageSet dstImageSet)
         {
             srcImageSet.启用裁剪 = dstImageSet.启用裁剪;
@@ -909,6 +928,16 @@ namespace _3DLaserGlueInspection.subForm
             glueHeightMaxNumericUpDown.TextChanged += UpData;
             glueAreaMinNumericUpDown.TextChanged += UpData;
             glueAreaMaxNumericUpDown.TextChanged += UpData;
+            greenGlueWidthMinNumericUpDown.TextChanged += UpData;
+            greenGlueWidthMaxNumericUpDown.TextChanged += UpData;
+            greenLeftGlueWidthMinNumericUpDown.TextChanged += UpData;
+            greenLeftGlueWidthMaxNumericUpDown.TextChanged += UpData;
+            greenRightGlueWidthMinNumericUpDown.TextChanged += UpData;
+            greenRightGlueWidthMaxNumericUpDown.TextChanged += UpData;
+            greenGlueHeightMinNumericUpDown.TextChanged += UpData;
+            greenGlueHeightMaxNumericUpDown.TextChanged += UpData;
+            greenGlueAreaMinNumericUpDown.TextChanged += UpData;
+            greenGlueAreaMaxNumericUpDown.TextChanged += UpData;
             useCroppintCheck.Checked += UpData;
             useCroppintCheck.Unchecked += UpData;
 
@@ -991,6 +1020,16 @@ namespace _3DLaserGlueInspection.subForm
             glueHeightMaxNumericUpDown.TextChanged -= UpData;
             glueAreaMinNumericUpDown.TextChanged -= UpData;
             glueAreaMaxNumericUpDown.TextChanged -= UpData;
+            greenGlueWidthMinNumericUpDown.TextChanged -= UpData;
+            greenGlueWidthMaxNumericUpDown.TextChanged -= UpData;
+            greenLeftGlueWidthMinNumericUpDown.TextChanged -= UpData;
+            greenLeftGlueWidthMaxNumericUpDown.TextChanged -= UpData;
+            greenRightGlueWidthMinNumericUpDown.TextChanged -= UpData;
+            greenRightGlueWidthMaxNumericUpDown.TextChanged -= UpData;
+            greenGlueHeightMinNumericUpDown.TextChanged -= UpData;
+            greenGlueHeightMaxNumericUpDown.TextChanged -= UpData;
+            greenGlueAreaMinNumericUpDown.TextChanged -= UpData;
+            greenGlueAreaMaxNumericUpDown.TextChanged -= UpData;
             useCroppintCheck.Checked -= UpData;
             useCroppintCheck.Unchecked -= UpData;
 
@@ -1127,6 +1166,16 @@ namespace _3DLaserGlueInspection.subForm
                 imageSet.heightMax = Convert.ToDouble(glueHeightMaxNumericUpDown.Text);
                 imageSet.areaMin = Convert.ToDouble(glueAreaMinNumericUpDown.Text);
                 imageSet.areaMax = Convert.ToDouble(glueAreaMaxNumericUpDown.Text);
+                imageSet.greenWidthMin = Convert.ToDouble(greenGlueWidthMinNumericUpDown.Text);
+                imageSet.greenWidthMax = Convert.ToDouble(greenGlueWidthMaxNumericUpDown.Text);
+                imageSet.greenLeftGlueWidthMin = Convert.ToDouble(greenLeftGlueWidthMinNumericUpDown.Text);
+                imageSet.greenLeftGlueWidthMax = Convert.ToDouble(greenLeftGlueWidthMaxNumericUpDown.Text);
+                imageSet.greenRightGlueWidthMin = Convert.ToDouble(greenRightGlueWidthMinNumericUpDown.Text);
+                imageSet.greenRightGlueWidthMax = Convert.ToDouble(greenRightGlueWidthMaxNumericUpDown.Text);
+                imageSet.greenHeightMin = Convert.ToDouble(greenGlueHeightMinNumericUpDown.Text);
+                imageSet.greenHeightMax = Convert.ToDouble(greenGlueHeightMaxNumericUpDown.Text);
+                imageSet.greenAreaMin = Convert.ToDouble(greenGlueAreaMinNumericUpDown.Text);
+                imageSet.greenAreaMax = Convert.ToDouble(greenGlueAreaMaxNumericUpDown.Text);
                 imageSet.启用裁剪 = (bool)useCroppintCheck.IsChecked;
                 imageSet.LeftX = Convert.ToDouble(leftRangeMinNumericUpDown.Text);
                 imageSet.RightX = Convert.ToDouble(leftRangeMaxNumericUpDown.Text);
@@ -1357,6 +1406,16 @@ namespace _3DLaserGlueInspection.subForm
                     glueHeightMaxNumericUpDown.Text = imageSet.heightMax.ToString();
                     glueAreaMinNumericUpDown.Text = imageSet.areaMin.ToString();
                     glueAreaMaxNumericUpDown.Text = imageSet.areaMax.ToString();
+                    greenGlueWidthMinNumericUpDown.Text = (imageSet.greenWidthMin ?? imageSet.widthMin).ToString();
+                    greenGlueWidthMaxNumericUpDown.Text = (imageSet.greenWidthMax ?? imageSet.widthMax).ToString();
+                    greenLeftGlueWidthMinNumericUpDown.Text = (imageSet.greenLeftGlueWidthMin ?? imageSet.leftGlueWidthMin).ToString();
+                    greenLeftGlueWidthMaxNumericUpDown.Text = (imageSet.greenLeftGlueWidthMax ?? imageSet.leftGlueWidthMax).ToString();
+                    greenRightGlueWidthMinNumericUpDown.Text = (imageSet.greenRightGlueWidthMin ?? imageSet.rightGlueWidthMin).ToString();
+                    greenRightGlueWidthMaxNumericUpDown.Text = (imageSet.greenRightGlueWidthMax ?? imageSet.rightGlueWidthMax).ToString();
+                    greenGlueHeightMinNumericUpDown.Text = (imageSet.greenHeightMin ?? imageSet.heightMin).ToString();
+                    greenGlueHeightMaxNumericUpDown.Text = (imageSet.greenHeightMax ?? imageSet.heightMax).ToString();
+                    greenGlueAreaMinNumericUpDown.Text = (imageSet.greenAreaMin ?? imageSet.areaMin).ToString();
+                    greenGlueAreaMaxNumericUpDown.Text = (imageSet.greenAreaMax ?? imageSet.areaMax).ToString();
                     useCroppintCheck.IsChecked = imageSet.启用裁剪;
                     leftRangeMinNumericUpDown.Text = imageSet.LeftX.ToString();
                     leftRangeMaxNumericUpDown.Text = imageSet.RightX.ToString();

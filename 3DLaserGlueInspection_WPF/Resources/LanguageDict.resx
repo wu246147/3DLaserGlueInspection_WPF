@@ -1548,4 +1548,13 @@
   <data name="GlueWidthSide" xml:space="preserve">
     <value>保留侧</value>
   </data>
+  <data name="GreenRange" xml:space="preserve">
+    <value>绿色范围</value>
+  </data>
+  <data name="YellowRange" xml:space="preserve">
+    <value>黄色范围</value>
+  </data>
+  <data name="GreenRangeDescription" xml:space="preserve">
+    <value>绿色范围内为正常；超出绿色范围但仍在黄色范围内为轻微偏离，目前不触发操作；超出黄色范围为异常，按原有逻辑报警。绿色范围通常包含在黄色范围内，目前仅供设置和保存。</value>
+  </data>
 </root>

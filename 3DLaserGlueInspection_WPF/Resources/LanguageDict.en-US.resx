@@ -1551,4 +1551,13 @@ on Original Image</value>
   <data name="GlueWidthSide" xml:space="preserve">
     <value>Keep side</value>
   </data>
+  <data name="GreenRange" xml:space="preserve">
+    <value>Green range</value>
+  </data>
+  <data name="YellowRange" xml:space="preserve">
+    <value>Yellow range</value>
+  </data>
+  <data name="GreenRangeDescription" xml:space="preserve">
+    <value>Within green: normal. Outside green but within yellow: slight deviation, with no action currently. Outside yellow: abnormal, following the existing alarm logic. The green range is normally contained within the yellow range and is currently saved for future use.</value>
+  </data>
 </root>
