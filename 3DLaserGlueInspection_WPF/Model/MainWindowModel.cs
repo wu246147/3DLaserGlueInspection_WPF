@@ -264,11 +264,11 @@ namespace _3DLaserGlueInspection
 
 
 
-        private void SetCurrentRunID(ushort id)
+        private void SetCurrentRunID(string VIN)
         {
             lock (runLogLock)
             {
-                currentRunID = id.ToString();
+                currentRunID = VIN;
             }
         }
 
@@ -1331,7 +1331,7 @@ namespace _3DLaserGlueInspection
                             try
                             {
                                 string OKNG = partResult ? "OK" : "NG";
-                                string basePath = $"{set.OtherSet.SaveImagePath}\\{car.Name}\\{dateTime:yyyy-MM-dd}\\{dateTime:yyyy-MM-dd HH_mm_ss} {OKNG} [{inVIN}]";
+                                string basePath = $"{set.OtherSet.SaveImagePath}\\{car.Name}\\{dateTime:yyyy-MM-dd}\\{dateTime:yyyy-MM-dd HH_mm_ss} {inVIN} {OKNG}";
                                 Directory.CreateDirectory(basePath);
 
                                 foreach (var camValue in Images)//相机
@@ -1651,7 +1651,7 @@ namespace _3DLaserGlueInspection
 
 
 
-            SetCurrentRunID(ID);
+            SetCurrentRunID(inVIN);
             bool isExist = false;
             foreach (var item in cars.Cars.Values)
             {

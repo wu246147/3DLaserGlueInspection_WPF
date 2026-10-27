@@ -1063,6 +1063,12 @@ namespace _3DLaserGlueInspection
 
         bool isStart = false;
 
+        /// <summary>
+        /// 切换作业信号
+        /// </summary>
+
+        bool isChange = false;
+
 
         /// <summary>
         /// 触发信号
@@ -1102,6 +1108,7 @@ namespace _3DLaserGlueInspection
         public void resetSignal()
         {
             isStart = false;
+            isChange = false;
             isPGON = false;
             isAbort = false;
             isEND = false;
@@ -1298,6 +1305,17 @@ namespace _3DLaserGlueInspection
                         else if (pointId == 0)
                         {
                             isEND = false;
+                        }
+                        break; 
+                    case 6:
+                        //切换作业信号
+                        if (pointId == 1)
+                        {
+                            isChange = true;
+                        }
+                        else if (pointId == 0)
+                        {
+                            isChange = false;
                         }
                         break;
                 }
@@ -1810,7 +1828,9 @@ namespace _3DLaserGlueInspection
                 case "END":
                     value = isEND;
                     return true;
-
+                case "Change":
+                    value = isChange;
+                    return true;
                 default:
                     _errMsg = eDI.ToString() + _3DLaserGlueInspection.Resources.LanguageDict.AddressNotAssigned;
                     break;
@@ -1866,13 +1886,14 @@ namespace _3DLaserGlueInspection
 
             switch (eDO.ToString())
             {
-                case "Result":
-                    SocketSend((int)value);
+                case "TotalResultOK":
+                    SocketSend(1);
                     return true;
-
+                case "TotalResultNG":
+                    SocketSend(0);
+                    return true;
                 default:
-                    _errMsg = eDO.ToString() + _3DLaserGlueInspection.Resources.LanguageDict.AddressNotAssigned;
-                    break;
+                    return true;
             }
             return false;
         }
@@ -2325,6 +2346,13 @@ namespace _3DLaserGlueInspection
 
         bool isStart = false;
 
+        /// <summary>
+        /// 切换作业信号
+        /// </summary>
+
+        bool isChange = false;
+
+
 
         /// <summary>
         /// 触发信号
@@ -2364,6 +2392,7 @@ namespace _3DLaserGlueInspection
         public void resetSignal()
         {
             isStart = false;
+            isChange = false;
             isPGON = false;
             isAbort = false;
             isEND = false;
@@ -2795,6 +2824,18 @@ namespace _3DLaserGlueInspection
                         else if (pointId == 0)
                         {
                             isEND = false;
+                        }
+                        break;
+
+                    case 6:
+                        //开始信号
+                        if (pointId == 1)
+                        {
+                            isChange = true;
+                        }
+                        else if (pointId == 0)
+                        {
+                            isChange = false;
                         }
                         break;
                 }
@@ -3442,7 +3483,9 @@ namespace _3DLaserGlueInspection
                         case "END":
                             value = isEND;
                             return true;
-
+                        case "Change":
+                            value = isChange;
+                            return true;
                         default:
                             _errMsg = eDI.ToString() + _3DLaserGlueInspection.Resources.LanguageDict.AddressNotAssigned;
                             break;
@@ -3615,8 +3658,7 @@ namespace _3DLaserGlueInspection
                             SocketSend(0);
                             return true;
                         default:
-                            _errMsg = eDO.ToString() + _3DLaserGlueInspection.Resources.LanguageDict.AddressNotAssigned;
-                            break;
+                            return true;
                     }
                     break;
                 case RobotConnectType.Profinet:
