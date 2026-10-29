@@ -580,9 +580,22 @@ namespace _3DLaserGlueInspection.subForm
             isAlter = true;
         }
 
+        /// <summary>
+        /// 将基准线启用状态及其两组检测框复制到目标图片，并为每张图片保留独立的框对象。
+        /// 检测框随启用基准线检测的右键复制操作一起复制，原图坐标标记和尺寸也同步复制，避免框坐标被误解。
+        /// </summary>
+        /// <param name="srcImageSet">接收复制结果的目标图片参数；该对象的基准线状态与检测框会被修改。</param>
+        /// <param name="dstImageSet">提供基准线启用状态、检测框及原图坐标信息的源图片参数。</param>
+        /// <exception cref="System.NullReferenceException">任一参数为 null 时，读取或写入图片参数会失败。</exception>
         private void CopyUseBaseLine(ImageSet srcImageSet, ImageSet dstImageSet)
         {
             srcImageSet.isUseBaseLine = dstImageSet.isUseBaseLine;
+            // 每张图片拥有独立的检测框，避免后续拖动或矫正影响其他图片。
+            srcImageSet.baseLineRegion1 = CloneCorrectionRegion(dstImageSet.baseLineRegion1);
+            srcImageSet.baseLineRegion2 = CloneCorrectionRegion(dstImageSet.baseLineRegion2);
+            srcImageSet.baseLineInImageCoordinates = dstImageSet.baseLineInImageCoordinates;
+            srcImageSet.baseLineImageWidth = dstImageSet.baseLineImageWidth;
+            srcImageSet.baseLineImageHeight = dstImageSet.baseLineImageHeight;
             isAlter = true;
         }
         private void CopyUseHalfGlueWidth(ImageSet srcImageSet, ImageSet dstImageSet)
@@ -591,18 +604,19 @@ namespace _3DLaserGlueInspection.subForm
             isAlter = true;
         }
 
+        /// <summary>
+        /// 将基准线侧别、忽略高度阈值和屏蔽区间复制到目标图片，不复制基准线检测框。
+        /// 检测框由启用基准线检测控件的右键复制操作统一复制。
+        /// </summary>
+        /// <param name="srcImageSet">接收复制结果的目标图片参数；该对象的基准线检测设置会被修改。</param>
+        /// <param name="dstImageSet">提供基准线侧别、忽略高度阈值及屏蔽区间的源图片参数。</param>
+        /// <exception cref="System.NullReferenceException">任一参数为 null 时，读取或写入图片参数会失败。</exception>
         private void CopyBaseLine(ImageSet srcImageSet, ImageSet dstImageSet)
         {
             srcImageSet.glueWidthSide = dstImageSet.glueWidthSide;
             srcImageSet.distBaseLineThre = dstImageSet.distBaseLineThre;
             srcImageSet.distBaseLineRangeLower = dstImageSet.distBaseLineRangeLower;
             srcImageSet.distBaseLineRangeUpper = dstImageSet.distBaseLineRangeUpper;
-            // 每张图片拥有独立的检测框，避免后续拖动或矫正影响其他图片。
-            srcImageSet.baseLineRegion1 = CloneCorrectionRegion(dstImageSet.baseLineRegion1);
-            srcImageSet.baseLineRegion2 = CloneCorrectionRegion(dstImageSet.baseLineRegion2);
-            srcImageSet.baseLineInImageCoordinates = dstImageSet.baseLineInImageCoordinates;
-            srcImageSet.baseLineImageWidth = dstImageSet.baseLineImageWidth;
-            srcImageSet.baseLineImageHeight = dstImageSet.baseLineImageHeight;
             isAlter = true;
         }
 
