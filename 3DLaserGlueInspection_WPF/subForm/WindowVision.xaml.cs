@@ -4116,82 +4116,86 @@ namespace _3DLaserGlueInspection.subForm
                     //单帧检测速度测试
                     if (getOutlineResult)
                     {
-                        if (lightXY.Rows > 0)
+                        if (imageSet._3DGlueDet)
                         {
-                            singleFrameExistOutline = true;
-                            //单帧检测(使用激光坐标系)
-                            Vision.scalePoint(lightXY, cutSet, 90 - LightInCam.rx, out hXLDCont10mm);
-                            //Vision.showMatPoint(lightXY, "lightXY");
-
-                            ////添加
-
-                            //Console.WriteLine($"lightXY:\r\n");
-
-                            //for (int i = 0; i < lightXY.Rows; i++)
-                            //{
-                            //    Console.WriteLine($"x:{lightXY.At<double>(i,0)}");
-                            //    Console.WriteLine($"y:{lightXY.At<double>(i, 1)},\r\n");
-
-                            //}
-
-
-
-                            if (imageSet.isUseAngleOpt)
+                             if (lightXY.Rows > 0)
                             {
-                                //涂胶角度优化
-                                //对x方向进行矫正
-                                double scaleX = 1;
-                                scaleX = Math.Cos(robotAndCamAngle / 180 * Math.PI);
-                                Mat correctionPoints = new Mat();
-                                correctionPoints = hXLDCont10mm.Clone();
+                                singleFrameExistOutline = true;
+                                //单帧检测(使用激光坐标系)
+                                Vision.scalePoint(lightXY, cutSet, 90 - LightInCam.rx, out hXLDCont10mm);
+                                //Vision.showMatPoint(lightXY, "lightXY");
 
-                                for (int id = 0; id < correctionPoints.Rows; id++)
+                                ////添加
+
+                                //Console.WriteLine($"lightXY:\r\n");
+
+                                //for (int i = 0; i < lightXY.Rows; i++)
+                                //{
+                                //    Console.WriteLine($"x:{lightXY.At<double>(i,0)}");
+                                //    Console.WriteLine($"y:{lightXY.At<double>(i, 1)},\r\n");
+
+                                //}
+
+
+
+                                if (imageSet.isUseAngleOpt)
                                 {
-                                    correctionPoints.At<double>(id, 0) = correctionPoints.At<double>(id, 0) * scaleX;
+                                    //涂胶角度优化
+                                    //对x方向进行矫正
+                                    double scaleX = 1;
+                                    scaleX = Math.Cos(robotAndCamAngle / 180 * Math.PI);
+                                    Mat correctionPoints = new Mat();
+                                    correctionPoints = hXLDCont10mm.Clone();
+
+                                    for (int id = 0; id < correctionPoints.Rows; id++)
+                                    {
+                                        correctionPoints.At<double>(id, 0) = correctionPoints.At<double>(id, 0) * scaleX;
+                                    }
+
+                                    hXLDCont10mm = correctionPoints.Clone();
                                 }
 
-                                hXLDCont10mm = correctionPoints.Clone();
-                            }
 
+                                Vision.ApplySizeCorrection(hXLDCont10mm, imageSet);
 
-                            Vision.ApplySizeCorrection(hXLDCont10mm, imageSet);
+                                //Vision.showMatPoint(hXLDCont10mm, "hXLDCont10mm");
+                                ////添加
+                                //Vision.printPoint(hXLDCont10mm, "hXLDCont10mm");
 
-                            //Vision.showMatPoint(hXLDCont10mm, "hXLDCont10mm");
-                            ////添加
-                            //Vision.printPoint(hXLDCont10mm, "hXLDCont10mm");
+                                //Console.WriteLine($"hXLDCont10mm:\r\n");
 
-                            //Console.WriteLine($"hXLDCont10mm:\r\n");
+                                //for (int i = 0; i < hXLDCont10mm.Rows; i++)
+                                //{
+                                //    Console.WriteLine($"x:{hXLDCont10mm.At<double>(i, 0)}");
+                                //    Console.WriteLine($"y:{hXLDCont10mm.At<double>(i, 1)},\r\n");
 
-                            //for (int i = 0; i < hXLDCont10mm.Rows; i++)
-                            //{
-                            //    Console.WriteLine($"x:{hXLDCont10mm.At<double>(i, 0)}");
-                            //    Console.WriteLine($"y:{hXLDCont10mm.At<double>(i, 1)},\r\n");
+                                //}
 
-                            //}
-
-                            //如果存在
-                            if (!hXLDCont10mm.Empty())
-                            {
-                                //Vision.singleFrameDetAndResult(hXLDCont10mm, imageSet, ref singleFrameExistGlue, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2);
-
-                                //离散滤波
-                                if (imageSet.离散去噪)
+                                //如果存在
+                                if (!hXLDCont10mm.Empty())
                                 {
-                                    Vision.TrajectoryDiscreteFilter(hXLDCont10mm, out hXLDCont10mm3D, imageSet.分段距离 * cutSet.scaleSize, imageSet.成段点数);
-                                }
-                                else
-                                {
-                                    hXLDCont10mm3D = hXLDCont10mm.Clone();
-                                }
+                                    //Vision.singleFrameDetAndResult(hXLDCont10mm, imageSet, ref singleFrameExistGlue, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2);
+
+                                    //离散滤波
+                                    if (imageSet.离散去噪)
+                                    {
+                                        Vision.TrajectoryDiscreteFilter(hXLDCont10mm, out hXLDCont10mm3D, imageSet.分段距离 * cutSet.scaleSize, imageSet.成段点数);
+                                    }
+                                    else
+                                    {
+                                        hXLDCont10mm3D = hXLDCont10mm.Clone();
+                                    }
                                 
-                                // 气泡检测使用修正后的 hXLDCont10mm 原始点，胶水检测仍使用离散滤波后的点。
-                                Vision.singleFrameDetAndResult(hXLDCont10mm3D, imageSet, cutSet, ref singleFrameExistGlue, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2, hXLDCont10mm,
-                                    baseLine: Vision.PrepareImageBaseLine(hImage, camParam, hCamPar, LightInCam, imageSet, cutSet,
-                                        imageSet.isUseAngleOpt ? Math.Cos(robotAndCamAngle / 180 * Math.PI) : 1, extractedPixels: xy));
+                                    // 气泡检测使用修正后的 hXLDCont10mm 原始点，胶水检测仍使用离散滤波后的点。
+                                    Vision.singleFrameDetAndResult(hXLDCont10mm3D, imageSet, cutSet, ref singleFrameExistGlue, ref resultData, ref bResult, ref outMaxRegion, ref outRegionRectangle2, hXLDCont10mm,
+                                        baseLine: Vision.PrepareImageBaseLine(hImage, camParam, hCamPar, LightInCam, imageSet, cutSet,
+                                            imageSet.isUseAngleOpt ? Math.Cos(robotAndCamAngle / 180 * Math.PI) : 1, extractedPixels: xy));
                                
                                    
+                                }
                             }
                         }
+                       
                     }
                 }
 

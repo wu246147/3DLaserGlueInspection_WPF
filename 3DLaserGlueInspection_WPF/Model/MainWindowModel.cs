@@ -2625,7 +2625,7 @@ namespace _3DLaserGlueInspection
 
 
                                             //胶检测结果整理
-                                            if (imageSet.轮廓检测)
+                                            if (imageSet.轮廓检测&&imageSet._3DGlueDet)
                                             {
                                                 int requiredNGCount = cutSet.consecutiveNGCount > 0 ? cutSet.consecutiveNGCount : 5;
                                                 if (bResult.Result)
