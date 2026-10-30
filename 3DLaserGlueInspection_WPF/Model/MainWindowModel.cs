@@ -493,6 +493,7 @@ namespace _3DLaserGlueInspection
 
                     }
 
+
                     // 复位
                     if (!robot.Write(DO.TotalResultOK, false)) return;
                     if (!robot.Write(DO.TotalResultNG, false)) return;
@@ -556,6 +557,11 @@ namespace _3DLaserGlueInspection
                         Thread.Sleep(60);
                         if (stop) return;
 
+                    }
+                    // 回复信号
+                    if (robotType == RobotType.KukaRobot && robotConnectType == RobotConnectType.TCPIP)
+                    {
+                        if (!robot.Write(DO.TotalResultOK, true)) return;
                     }
 
                     //回复开始ON信号
@@ -667,6 +673,12 @@ namespace _3DLaserGlueInspection
                         }
                         if (bEnd) break;
                         if (bAbort) break;
+
+                        // 回复信号
+                        if (robotType == RobotType.KukaRobot && robotConnectType == RobotConnectType.TCPIP)
+                        {
+                            if (!robot.Write(DO.TotalResultOK, true)) return;
+                        }
                         //回复触发ON信号
                         //收到信号后，就立刻恢复状态
                         switch (robotType)
@@ -1083,6 +1095,11 @@ namespace _3DLaserGlueInspection
                             //    break;
                             //}
                             Thread.Sleep(1);
+                        }
+                        // 回复信号
+                        if (robotType == RobotType.KukaRobot && robotConnectType == RobotConnectType.TCPIP)
+                        {
+                            if (!robot.Write(DO.TotalResultOK, true)) return;
                         }
                         //收到信号后，就立刻恢复状态
                         switch (robotType)
