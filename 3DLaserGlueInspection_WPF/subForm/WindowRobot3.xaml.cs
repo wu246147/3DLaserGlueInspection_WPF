@@ -47,7 +47,10 @@ namespace _3DLaserGlueInspection.subForm
 
         void ShowMessage(string message)
         {
-            logTextBox.Text += DateTime.Now.TimeOfDay.ToString("hh\\:mm\\:ss") + "  " + message + "\r\n";
+            logTextBox.Dispatcher.Invoke(() =>
+            {
+                logTextBox.Text += DateTime.Now.TimeOfDay.ToString("hh\\:mm\\:ss") + "  " + message + "\r\n";
+            });
         }
 
         private void UpData(object sender, EventArgs e)

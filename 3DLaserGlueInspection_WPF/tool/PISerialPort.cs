@@ -59,6 +59,7 @@ namespace _3DLaserGlueInspection
         private readonly object lifecycleLock = new object();
         private readonly object sendLock = new object();
         private readonly object stateLock = new object();
+        private readonly Random testRandom = new Random();
         private PISerialPortParam param = new PISerialPortParam();
         private PISerialPortParam activeParam;
         private SerialPort serialPort;
@@ -149,6 +150,11 @@ namespace _3DLaserGlueInspection
                         Name = "PI RS232 receive"
                     };
                     receiveThread.Start();
+
+                    //开始连接后，先发一个心跳给PI
+                    byte[] frame = { 0x02 , 0x30, 0x30 , 0x41, 0x41, 0x33, 0x03};
+                    SendReply(frame);
+
                     return true;
                 }
                 catch (Exception ex)
@@ -263,9 +269,11 @@ namespace _3DLaserGlueInspection
                 switch ((char)pending[3])
                 {
                     case 'A':
+                    case 'F':
                     case 'D': length = reply ? 9 : 7; break;
                     case 'B': length = reply ? 11 : 52; break;
                     case 'E': length = reply ? 9 : 44; break;
+
                     default:
                         Fail("PI 收到不支持的命令：" + pending[3].ToString("X2"));
                         pending.RemoveAt(0);
@@ -293,8 +301,8 @@ namespace _3DLaserGlueInspection
                 Fail("PI 报文 SUM 校验失败。");
                 return;
             }
-            // 现场约定：D/E 收到后都置位并回复，包括 E 结果应答帧。
-            if (frame[3] == (byte)'D' || frame[3] == (byte)'E')
+            // 现场约定：D/F 收到后都置位并回复，包括 F 结果应答帧。
+            if (frame[3] == (byte)'D' || frame[3] == (byte)'F')
             {
                 lock (stateLock)
                     isEnd = true;
@@ -350,6 +358,39 @@ namespace _3DLaserGlueInspection
             return Encoding.ASCII.GetBytes((sum & 0xFF).ToString("X2", CultureInfo.InvariantCulture));
         }
 
+        internal bool SendTestReply(char command)
+        {
+            if (command != 'A' && command != 'B' && command != 'D' && command != 'F')
+                return Fail("PI 手动回复仅支持 A/B/D/F。");
+            lock (lifecycleLock)
+            {
+                if (!isOpen)
+                    return Fail("PI 串口未打开。");
+                return SendReply(CreateTestCommand(command));
+            }
+        }
+
+        internal bool SendTestResult(bool isOk)
+        {
+            lock (lifecycleLock)
+            {
+                if (!isOpen)
+                    return Fail("PI 串口未打开。");
+                byte[] command;
+                lock (stateLock)
+                    command = lastCommand;
+                // 手动测试不改变业务结果状态；没有 B 指令时也能独立发送。
+                return SendResult(command ?? CreateTestCommand('E'), isOk ? '1' : '0');
+            }
+        }
+
+        private byte[] CreateTestCommand(char command)
+        {
+            // 由 lifecycleLock 保护随机数生成，通讯连号始终为两位 ASCII 数字。
+            int sequence = testRandom.Next(100);
+            return new[] { STX, (byte)('0' + sequence / 10), (byte)('0' + sequence % 10), (byte)command };
+        }
+
         private bool SendReply(byte[] command)
         {
             bool isB = command[3] == (byte)'B';
@@ -381,6 +422,13 @@ namespace _3DLaserGlueInspection
                 frame[i] = (byte)'0';
             frame[4] = (byte)'1';
             frame[5] = (byte)judgement;
+
+            frame[6] = 0x40;
+            frame[7] = 0x40;
+            frame[8] = 0x40;
+            frame[9] = 0x40;
+            frame[10] = 0x40;
+
             return SendFrame(frame);
         }
 

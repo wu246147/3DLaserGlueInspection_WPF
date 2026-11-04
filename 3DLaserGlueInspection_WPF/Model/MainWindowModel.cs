@@ -59,6 +59,9 @@ namespace _3DLaserGlueInspection
         // 当 initRun 中确定了相机参数数量时，通知 UI 调整列显示
         public event Action<int> CamCountChanged;
 
+        // 主流程退出并完成清理后，通知窗口恢复菜单。
+        public event Action RunFinished;
+
         public MainModel mainModel { get; set; } = new MainModel();
 
         public event DispImageHWindowEventHandler DispImageHWindowNumericalModelDiagramEvent;
@@ -413,6 +416,7 @@ namespace _3DLaserGlueInspection
                     if (plc.Open())
                     {
                         ShowMessage("PLC连接成功");
+
                     }
                     else
                     {
@@ -1559,54 +1563,63 @@ namespace _3DLaserGlueInspection
             }
             finally
             {
-                robot.Write(DO.Ready, false);
-
-                robot.Close();
-                plc.Close();
-                //io.Close();
-                //关闭激光和相机
-                foreach (var cam in cams.Values)
+                try
                 {
-                    if (cam.IsOpen)
+                    robot.Write(DO.Ready, false);
+
+                    robot.Close();
+                    plc.Close();
+                    //io.Close();
+                    //关闭激光和相机
+                    foreach (var cam in cams.Values)
                     {
-                        if (cam.SetLine1Inverter(false))
+                        if (cam.IsOpen)
                         {
-                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.LaserSuccessfullyTurnedOff);
-                        }
-                        else
-                        {
-                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.LaserShutdownFailed + cam.ErrMsg, LogType.ng);
-                        }
-                        if (cam.Close())
-                        {
-                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.CloseSuccessfully);
-                        }
-                        else
-                        {
-                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.ClosingFailed + cam.ErrMsg, LogType.ng);
+                            if (cam.SetLine1Inverter(false))
+                            {
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.LaserSuccessfullyTurnedOff);
+                            }
+                            else
+                            {
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.LaserShutdownFailed + cam.ErrMsg, LogType.ng);
+                            }
+                            if (cam.Close())
+                            {
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.CloseSuccessfully);
+                            }
+                            else
+                            {
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.ClosingFailed + cam.ErrMsg, LogType.ng);
+                            }
                         }
                     }
                 }
-                try
+                finally
                 {
-                    //BeginInvoke(new Action(() =>
-                    //{
-                    //    button启停.Text = _3DLaserGlueInspection.Resources.LanguageDict.启动");
-                    //    button启停.Image = Resources._2;
-                    //}));
+                    try
+                    {
+                        //BeginInvoke(new Action(() =>
+                        //{
+                        //    button启停.Text = _3DLaserGlueInspection.Resources.LanguageDict.启动");
+                        //    button启停.Image = Resources._2;
+                        //}));
 
-                    mainModel.buttonRunContentControl = _3DLaserGlueInspection.Resources.LanguageDict.Start;
-                    mainModel.buttonRunTagControl = "\uE658";
-                    //Invoke(new Action(() =>
-                    //{
-                    //    e灯颜色 = 灯颜色.红;
-                    //    label软件.Refresh();
-                    //}));
+                        mainModel.buttonRunContentControl = _3DLaserGlueInspection.Resources.LanguageDict.Start;
+                        mainModel.buttonRunTagControl = "\uE658";
+                        //Invoke(new Action(() =>
+                        //{
+                        //    e灯颜色 = 灯颜色.红;
+                        //    label软件.Refresh();
+                        //}));
 
-                    mainModel.softwareRunLabelColorControl = labelColorEnum["red"];
-
+                        mainModel.softwareRunLabelColorControl = labelColorEnum["red"];
+                    }
+                    catch { }
+                    finally
+                    {
+                        RunFinished?.Invoke();
+                    }
                 }
-                catch { }
             }
         }
 
@@ -3256,31 +3269,9 @@ namespace _3DLaserGlueInspection
             [CallerFilePath] string callerFilePath = "",
             [CallerLineNumber] int callerLineNumber = 0)
         {
-            string idForLog;
-            lock (runLogLock)
-            {
-                idForLog = currentRunID;
-            }
-            if (idForLog != null)
-            {
-                message = $"[VIN:{idForLog}] {message}";
-            }
-            
-            int threadId = Thread.CurrentThread.ManagedThreadId;
-            string callerFile = System.IO.Path.GetFileName(callerFilePath);
-            string callerLocation = $"{callerFile}:{callerLineNumber} {callerMemberName}";
-            message = $"[ThreadId:{threadId}][Caller:{callerLocation}] {message} ";
-
-            if (type == LogType.warn)
-            {
-                message = "[error]" + message;
-            }
-
-           
+            message = ProcessMessage(message, type, callerMemberName, callerFilePath, callerLineNumber);
 
             DateTime dateTime = DateTime.Now;
-            string day = dateTime.ToString("yyyy-MM-dd");
-            string time = dateTime.ToString("HH:mm:ss.fff");
 
 
             LogRecord logRecord = new LogRecord();
@@ -3310,15 +3301,24 @@ namespace _3DLaserGlueInspection
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
                 while (mainModel.LogRecords.Count > 10000)
-                    //while (mainModel.LogRecords.Count > 0)
+                //while (mainModel.LogRecords.Count > 0)
                 {
                     mainModel.LogRecords.RemoveAt(mainModel.LogRecords.Count - 1);
                 }
                 mainModel.LogRecords.Insert(0, logRecord);
             });
 
+            WriteLog(message, type, dateTime);
+
+        }
+
+        public void WriteLog(string message, LogType type, DateTime dateTime)
+        {
             lock (olock)
             {
+                string day = dateTime.ToString("yyyy-MM-dd");
+                string time = dateTime.ToString("HH:mm:ss.fff");
+
                 if (!Directory.Exists("RunLog"))
                 {
                     Directory.CreateDirectory("RunLog");
@@ -3336,9 +3336,35 @@ namespace _3DLaserGlueInspection
                     catch { }
                 }
             }
-
         }
 
+        public string ProcessMessage(string message, LogType type,
+            [CallerMemberName] string callerMemberName = "",
+            [CallerFilePath] string callerFilePath = "",
+            [CallerLineNumber] int callerLineNumber = 0)
+        {
+            string idForLog;
+            lock (runLogLock)
+            {
+                idForLog = currentRunID;
+            }
+            if (idForLog != null)
+            {
+                message = $"[VIN:{idForLog}] {message}";
+            }
+
+            int threadId = Thread.CurrentThread.ManagedThreadId;
+            string callerFile = System.IO.Path.GetFileName(callerFilePath);
+            string callerLocation = $"{callerFile}:{callerLineNumber} {callerMemberName}";
+            message = $"[ThreadId:{threadId}][Caller:{callerLocation}] {message} ";
+
+            if (type == LogType.warn)
+            {
+                message = "[error]" + message;
+            }
+
+            return message;
+        }
 
         object olockShow = new object();
         bool showing = false;

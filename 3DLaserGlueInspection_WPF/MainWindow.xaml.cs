@@ -59,6 +59,7 @@ namespace _3DLaserGlueInspection
             InitializeComponent();
             model = new MainWindowModel();
             this.DataContext = model.mainModel;
+            model.RunFinished += OnRunFinished;
 
 
             //打开通讯
@@ -102,6 +103,10 @@ namespace _3DLaserGlueInspection
                     break;
                 case PlcType.PISerialPort:
                     model.plc = new PISerialPort();
+                    //添加日志记录
+                    ((PISerialPort)model.plc).DataReceived += OnDataReceived;
+                    ((PISerialPort)model.plc).DataSent += OnDataSent;
+
                     break;
             }
 
@@ -114,6 +119,8 @@ namespace _3DLaserGlueInspection
             {
                 MenuItem_englishLanguage.IsChecked = true;
             }
+
+
         }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -147,11 +154,39 @@ namespace _3DLaserGlueInspection
                 Dispatcher.Invoke(() => Adjust2DResultDataGridColumns(count));
             };
 
+            //点击启动按键
+            ButtonRun_Click(null, null);
+
+        }
+
+        private void OnDataReceived(object sender, PISerialPortDataEventArgs e)
+        {
+            string message = model.ProcessMessage("[PI 输入/RX] " + BitConverter.ToString(e.Data).Replace('-', ' '), LogType.normal);
+            model.WriteLog(message, LogType.normal, e.Timestamp);
+        }
+
+        private void OnDataSent(object sender, PISerialPortDataEventArgs e)
+        {
+            string message = model.ProcessMessage("[PI 输出/TX] " + BitConverter.ToString(e.Data).Replace('-', ' '), LogType.normal);
+            model.WriteLog(message, LogType.normal, e.Timestamp);
         }
 
         private void Window_Closing(object sender, CancelEventArgs e)
         {
             model.stop = true;
+            model.RunFinished -= OnRunFinished;
+
+            switch (model.plcType)
+            {
+                case PlcType.PISerialPort:
+                    //添加日志记录
+                    ((PISerialPort)model.plc).DataReceived -= OnDataReceived;
+                    ((PISerialPort)model.plc).DataSent -= OnDataSent;
+
+                    break;
+            }
+
+
             //model.StopCommunicationThread();
 
         }
@@ -220,6 +255,28 @@ namespace _3DLaserGlueInspection
                 this.DragMove();
         }
 
+        private void SetMenusEnabled(bool enabled)
+        {
+            MenuItem_standardBlockTest.IsEnabled = enabled;
+            MenuItem_signalSetting.IsEnabled = enabled;
+            MenuItem_camSetting.IsEnabled = enabled;
+            MenuItem_productSetting.IsEnabled = enabled;
+        }
+
+        private void OnRunFinished()
+        {
+            if (Dispatcher.HasShutdownStarted || Dispatcher.HasShutdownFinished)
+                return;
+
+            Thread finishedThread = Thread.CurrentThread;
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                // 只恢复本次运行的菜单，避免旧通知影响已经启动的新流程。
+                if (mainThread == finishedThread)
+                    SetMenusEnabled(true);
+            }));
+        }
+
         private void ButtonRun_Click(object sender, RoutedEventArgs e)
         {
             //正常启动
@@ -238,49 +295,29 @@ namespace _3DLaserGlueInspection
                         return;
                     }
                 }
-                if (mainThread == null || !mainThread.IsAlive)
-                {
-                    model.stop = false;
-                    mainThread = new Thread(model.MainRun);
-
-                    ////测试取像问题
-                    //mainThread = new Thread(model.AcqAndRobotTest);
-
-                    mainThread.Start();
-                }
-                else
+                if (mainThread != null && mainThread.IsAlive)
                 {
                     model.ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.TheMainThreadIsAlreadyRunning, LogType.warn);
+                    return;
                 }
-                //ButtonRun.Content = _3DLaserGlueInspection.Resources.LanguageDict.停止");
-                //button启停.Image = Resources._3;
+
+                model.stop = false;
+                mainThread = new Thread(model.MainRun);
 
                 model.mainModel.buttonRunContentControl = _3DLaserGlueInspection.Resources.LanguageDict.Stop;
                 model.mainModel.buttonRunTagControl = "\uE67A";
 
-                //禁止菜单
-                //MenuItem_paraSetting.IsEnabled = false;
-                MenuItem_standardBlockTest.IsEnabled = false;
-                MenuItem_signalSetting.IsEnabled = false;
-                MenuItem_camSetting.IsEnabled = false;
-                MenuItem_productSetting.IsEnabled = false;
+                // 在线程启动前禁用菜单，避免 MainRun 快速退出后再次被禁用。
+                SetMenusEnabled(false);
+                mainThread.Start();
             }
             else
             {
-                if (mainThread != null && mainThread.IsAlive)
-                {
-
-                }
                 model.stop = true;
                 model.mainModel.buttonRunContentControl = _3DLaserGlueInspection.Resources.LanguageDict.Start;
                 model.mainModel.buttonRunTagControl = "\uE658";
 
-                //允许菜单
-                //MenuItem_paraSetting.IsEnabled = true;
-                MenuItem_standardBlockTest.IsEnabled = true;
-                MenuItem_signalSetting.IsEnabled = true;
-                MenuItem_camSetting.IsEnabled = true;
-                MenuItem_productSetting.IsEnabled = true;
+                // 菜单由 RunFinished 通知在主流程清理结束后恢复。
             }
 
             ////测试
