@@ -59,9 +59,6 @@ namespace _3DLaserGlueInspection
         // 当 initRun 中确定了相机参数数量时，通知 UI 调整列显示
         public event Action<int> CamCountChanged;
 
-        // 主流程退出并完成清理后，通知窗口恢复菜单。
-        public event Action RunFinished;
-
         public MainModel mainModel { get; set; } = new MainModel();
 
         public event DispImageHWindowEventHandler DispImageHWindowNumericalModelDiagramEvent;
@@ -416,7 +413,6 @@ namespace _3DLaserGlueInspection
                     if (plc.Open())
                     {
                         ShowMessage("PLC连接成功");
-
                     }
                     else
                     {
@@ -489,8 +485,22 @@ namespace _3DLaserGlueInspection
                         }
                         else
                         {
-                            ShowMessage(robot.ErrMsg, LogType.warn);
-                            return;
+                            ShowMessage("读取信号失败："+robot.ErrMsg, LogType.warn);
+                            ShowMessage("重新读取切换车型信号");
+
+                            if (robot.Read(DI.Change, out val))
+                            {
+                                if (val == true)
+                                {
+                                    ShowMessage("收到切换车型信号");
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                ShowMessage("读取信号失败：" + robot.ErrMsg, LogType.warn);
+                                return;
+                            }
                         }
                         Thread.Sleep(60);
                         if (stop) return;
@@ -1563,63 +1573,54 @@ namespace _3DLaserGlueInspection
             }
             finally
             {
-                try
-                {
-                    robot.Write(DO.Ready, false);
+                robot.Write(DO.Ready, false);
 
-                    robot.Close();
-                    plc.Close();
-                    //io.Close();
-                    //关闭激光和相机
-                    foreach (var cam in cams.Values)
+                robot.Close();
+                plc.Close();
+                //io.Close();
+                //关闭激光和相机
+                foreach (var cam in cams.Values)
+                {
+                    if (cam.IsOpen)
                     {
-                        if (cam.IsOpen)
+                        if (cam.SetLine1Inverter(false))
                         {
-                            if (cam.SetLine1Inverter(false))
-                            {
-                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.LaserSuccessfullyTurnedOff);
-                            }
-                            else
-                            {
-                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.LaserShutdownFailed + cam.ErrMsg, LogType.ng);
-                            }
-                            if (cam.Close())
-                            {
-                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.CloseSuccessfully);
-                            }
-                            else
-                            {
-                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.ClosingFailed + cam.ErrMsg, LogType.ng);
-                            }
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.LaserSuccessfullyTurnedOff);
+                        }
+                        else
+                        {
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.LaserShutdownFailed + cam.ErrMsg, LogType.ng);
+                        }
+                        if (cam.Close())
+                        {
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.CloseSuccessfully);
+                        }
+                        else
+                        {
+                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.ClosingFailed + cam.ErrMsg, LogType.ng);
                         }
                     }
                 }
-                finally
+                try
                 {
-                    try
-                    {
-                        //BeginInvoke(new Action(() =>
-                        //{
-                        //    button启停.Text = _3DLaserGlueInspection.Resources.LanguageDict.启动");
-                        //    button启停.Image = Resources._2;
-                        //}));
+                    //BeginInvoke(new Action(() =>
+                    //{
+                    //    button启停.Text = _3DLaserGlueInspection.Resources.LanguageDict.启动");
+                    //    button启停.Image = Resources._2;
+                    //}));
 
-                        mainModel.buttonRunContentControl = _3DLaserGlueInspection.Resources.LanguageDict.Start;
-                        mainModel.buttonRunTagControl = "\uE658";
-                        //Invoke(new Action(() =>
-                        //{
-                        //    e灯颜色 = 灯颜色.红;
-                        //    label软件.Refresh();
-                        //}));
+                    mainModel.buttonRunContentControl = _3DLaserGlueInspection.Resources.LanguageDict.Start;
+                    mainModel.buttonRunTagControl = "\uE658";
+                    //Invoke(new Action(() =>
+                    //{
+                    //    e灯颜色 = 灯颜色.红;
+                    //    label软件.Refresh();
+                    //}));
 
-                        mainModel.softwareRunLabelColorControl = labelColorEnum["red"];
-                    }
-                    catch { }
-                    finally
-                    {
-                        RunFinished?.Invoke();
-                    }
+                    mainModel.softwareRunLabelColorControl = labelColorEnum["red"];
+
                 }
+                catch { }
             }
         }
 
@@ -3269,9 +3270,31 @@ namespace _3DLaserGlueInspection
             [CallerFilePath] string callerFilePath = "",
             [CallerLineNumber] int callerLineNumber = 0)
         {
-            message = ProcessMessage(message, type, callerMemberName, callerFilePath, callerLineNumber);
+            string idForLog;
+            lock (runLogLock)
+            {
+                idForLog = currentRunID;
+            }
+            if (idForLog != null)
+            {
+                message = $"[VIN:{idForLog}] {message}";
+            }
+            
+            int threadId = Thread.CurrentThread.ManagedThreadId;
+            string callerFile = System.IO.Path.GetFileName(callerFilePath);
+            string callerLocation = $"{callerFile}:{callerLineNumber} {callerMemberName}";
+            message = $"[ThreadId:{threadId}][Caller:{callerLocation}] {message} ";
+
+            if (type == LogType.warn)
+            {
+                message = "[error]" + message;
+            }
+
+           
 
             DateTime dateTime = DateTime.Now;
+            string day = dateTime.ToString("yyyy-MM-dd");
+            string time = dateTime.ToString("HH:mm:ss.fff");
 
 
             LogRecord logRecord = new LogRecord();
@@ -3301,24 +3324,15 @@ namespace _3DLaserGlueInspection
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
                 while (mainModel.LogRecords.Count > 10000)
-                //while (mainModel.LogRecords.Count > 0)
+                    //while (mainModel.LogRecords.Count > 0)
                 {
                     mainModel.LogRecords.RemoveAt(mainModel.LogRecords.Count - 1);
                 }
                 mainModel.LogRecords.Insert(0, logRecord);
             });
 
-            WriteLog(message, type, dateTime);
-
-        }
-
-        public void WriteLog(string message, LogType type, DateTime dateTime)
-        {
             lock (olock)
             {
-                string day = dateTime.ToString("yyyy-MM-dd");
-                string time = dateTime.ToString("HH:mm:ss.fff");
-
                 if (!Directory.Exists("RunLog"))
                 {
                     Directory.CreateDirectory("RunLog");
@@ -3336,35 +3350,9 @@ namespace _3DLaserGlueInspection
                     catch { }
                 }
             }
+
         }
 
-        public string ProcessMessage(string message, LogType type,
-            [CallerMemberName] string callerMemberName = "",
-            [CallerFilePath] string callerFilePath = "",
-            [CallerLineNumber] int callerLineNumber = 0)
-        {
-            string idForLog;
-            lock (runLogLock)
-            {
-                idForLog = currentRunID;
-            }
-            if (idForLog != null)
-            {
-                message = $"[VIN:{idForLog}] {message}";
-            }
-
-            int threadId = Thread.CurrentThread.ManagedThreadId;
-            string callerFile = System.IO.Path.GetFileName(callerFilePath);
-            string callerLocation = $"{callerFile}:{callerLineNumber} {callerMemberName}";
-            message = $"[ThreadId:{threadId}][Caller:{callerLocation}] {message} ";
-
-            if (type == LogType.warn)
-            {
-                message = "[error]" + message;
-            }
-
-            return message;
-        }
 
         object olockShow = new object();
         bool showing = false;

@@ -100,13 +100,9 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <TextBlock Text="串口通讯参数" FontWeight="Bold" Margin="0,0,0,12"/>
-                <StackPanel Grid.Row="1" Margin="0,0,0,14">
-                    <StackPanel Orientation="Horizontal">
-                        <Ellipse x:Name="connectionIndicator" Width="10" Height="10" Fill="#FF9CA9B8" Margin="0,0,8,0"/>
-                        <TextBlock x:Name="connectionStatusText" Text="未连接" Foreground="#FFB9C5D3"/>
-                    </StackPanel>
-                    <Label x:Name="serialNumberLabel" Content="连番号：—" Foreground="#FFE3EBF5" Padding="0" Margin="0,10,0,0"/>
-                    <Label x:Name="vinLabel" Content="VIN码：—" Foreground="#FFE3EBF5" Padding="0" Margin="0,6,0,0" FontSize="13"/>
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,14">
+                    <Ellipse x:Name="connectionIndicator" Width="10" Height="10" Fill="#FF9CA9B8" Margin="0,0,8,0"/>
+                    <TextBlock x:Name="connectionStatusText" Text="未连接" Foreground="#FFB9C5D3"/>
                 </StackPanel>
                 <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <Grid x:Name="parametersPanel" Margin="0,0,4,0">
@@ -161,41 +157,19 @@
         </Border>
         <Grid Grid.Column="2">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="32"/><RowDefinition Height="*"/>
                 <RowDefinition Height="40"/><RowDefinition Height="*"/>
                 <RowDefinition Height="36"/><RowDefinition Height="104"/>
             </Grid.RowDefinitions>
-            <Border BorderBrush="#FF48576A" BorderThickness="1" Padding="10" Margin="0,0,0,10">
-                <StackPanel>
-                    <TextBlock Text="手动信号测试" FontWeight="Bold" Margin="0,0,0,8"/>
-                    <WrapPanel x:Name="manualSignalsPanel" IsEnabled="False">
-                        <Button Content="回复 A" Tag="A" Width="82" Margin="0,0,8,8" Click="ReplySignal_Click"/>
-                        <Button Content="回复 B" Tag="B" Width="82" Margin="0,0,8,8" Click="ReplySignal_Click"/>
-                        <Button Content="回复 D" Tag="D" Width="82" Margin="0,0,8,8" Click="ReplySignal_Click"/>
-                        <Button Content="回复 F" Tag="F" Width="82" Margin="0,0,8,8" Click="ReplySignal_Click"/>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                            <TextBlock Text="E 结果：" Margin="0,0,6,0"/>
-                            <ComboBox x:Name="testResultComboBox" Width="70" SelectedIndex="0" Margin="0,0,8,0">
-                                <ComboBoxItem Content="OK"/>
-                                <ComboBoxItem Content="NG"/>
-                            </ComboBox>
-                            <Button Content="发送 E 结果" Click="SendResultSignal_Click"/>
-                        </StackPanel>
-                    </WrapPanel>
-                    <TextBlock FontSize="12" Foreground="#FFB9C5D3" TextWrapping="Wrap"
-                               Text="A/B/D/F 使用随机通讯连号回复 ACK；E 优先沿用最近 B 的通讯连号，未收到 B 时随机生成。"/>
-                </StackPanel>
-            </Border>
-            <DockPanel Grid.Row="1">
+            <DockPanel>
                 <Button Content="清空记录" DockPanel.Dock="Right" Width="94" Height="26" Click="ClearLogs_Click"/>
                 <TextBlock x:Name="receiveCountText" Text="接收（0 条）" FontWeight="Bold" Foreground="#FF93D8B3"/>
             </DockPanel>
-            <TextBox x:Name="receiveLogTextBox" Grid.Row="2" Style="{StaticResource CommunicationLogStyle}" Foreground="#FFB4E5C8"/>
-            <TextBlock x:Name="sendCountText" Grid.Row="3" Text="发送（0 条）" FontWeight="Bold" Foreground="#FF94C3F2"/>
-            <TextBox x:Name="sendLogTextBox" Grid.Row="4" Style="{StaticResource CommunicationLogStyle}" Foreground="#FFB8D8F8"/>
-            <TextBlock Grid.Row="5" Text="操作信息" FontWeight="Bold"/>
-            <TextBox x:Name="statusLogTextBox" Grid.Row="6" Style="{StaticResource CommunicationLogStyle}" FontFamily="Microsoft YaHei"/>
+            <TextBox x:Name="receiveLogTextBox" Grid.Row="1" Style="{StaticResource CommunicationLogStyle}" Foreground="#FFB4E5C8"/>
+            <TextBlock x:Name="sendCountText" Grid.Row="2" Text="发送（0 条）" FontWeight="Bold" Foreground="#FF94C3F2"/>
+            <TextBox x:Name="sendLogTextBox" Grid.Row="3" Style="{StaticResource CommunicationLogStyle}" Foreground="#FFB8D8F8"/>
+            <TextBlock Grid.Row="4" Text="操作信息" FontWeight="Bold"/>
+            <TextBox x:Name="statusLogTextBox" Grid.Row="5" Style="{StaticResource CommunicationLogStyle}" FontFamily="Microsoft YaHei"/>
         </Grid>
     </Grid>
 </Window>

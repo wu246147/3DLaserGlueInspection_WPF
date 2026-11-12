@@ -2290,6 +2290,16 @@ namespace _3DLaserGlueInspection
     }
 
 
+    /// <summary>
+    /// 实现川崎机器人的信号通信、位姿缓存和通信配置管理。
+    /// robotConnectType 选择 TCP 信号服务或 Profinet 板卡通信，IoDict 保存信号地址映射；
+    /// UDP 连接用于接收位姿，Profinet 连接有效时由后台任务输出心跳。
+    /// </summary>
+    /// <remarks>
+    /// 初始化和停止 Profinet 时串行管理板卡与心跳生命周期，关卡前等待心跳退出。
+    /// Dispose 停止通信服务；配置与公开对象的替换仍应由调用方在停止业务访问后执行，
+    /// 本类型不保证任意并发配置修改安全。板卡本机调用的互斥由 CIFX 封装负责。
+    /// </remarks>
     public class KawasakiRobot : IRobot, ISignal
     {
         #region 基础属性
@@ -2890,90 +2900,162 @@ namespace _3DLaserGlueInspection
 
         #region Profinet 通讯函数
 
-        // 初始化
+        /// <summary>
+        /// 初始化 Profinet 板卡并在打开成功后启动唯一的心跳任务。
+        /// 重复初始化复用已打开的板卡，失败时不启动心跳，也不标记为已打开。
+        /// </summary>
+        /// <returns>板卡已打开且已请求启动心跳时返回 true；开卡失败时返回 false 并保存板卡错误。</returns>
+        /// <remarks>与停止操作共用生命周期锁；创建的心跳由 StopHeartbeat 或 StopProfinet 取消并等待退出。</remarks>
         private bool IniProfinet()
         {
-            if (_isOpen)
+            lock (_heartbeatLock)
             {
+                if (!_isOpen)
+                {
+                    if (dioCtr == null)
+                    {
+                        dioCtr = new DioCtr();
+                    }
+                    if (!dioCtr.Open())
+                    {
+                        _errMsg = dioCtr.ErrMsg;
+                        return false;
+                    }
+                    _isOpen = true;
+                }
+                StartHeartbeat();
                 return true;
             }
-            bool rt = false;
-            //打开IO通讯
-            if (dioCtr == null)
-            {
-                dioCtr = new DioCtr();
-            }
-            rt = dioCtr.Open();
-
-            //打开心跳循环线程
-            StartHeartbeat();
-
-            if (!rt)
-            {
-                _isOpen = false;
-                _errMsg = dioCtr.ErrMsg;
-            }
-            _isOpen = true;
-            return rt;
         }
-        // 析构函数
+
+        /// <summary>
+        /// 停止并等待 Profinet 心跳任务退出，然后关闭板卡，避免旧任务访问已关闭的句柄。
+        /// 允许重复调用，底层会跳过已清空的本机句柄；开卡失败后也尝试释放可能已经打开的系统设备。
+        /// </summary>
+        /// <returns>无需关卡或关卡成功时返回 true；关卡失败时返回 false 并保存板卡错误。</returns>
+        /// <remarks>
+        /// 与初始化共用生命周期锁。等待心跳时不持有 I/O 锁；正在进行的板卡写入须按原重试策略结束后才能完成停止。
+        /// 调用方仍应先停止主流程，避免主流程在关卡后发起新的访问。
+        /// </remarks>
         private bool StopProfinet()
         {
-            bool rt = false;
-
-            //关闭心跳循环线程
-            StopHeartbeat();
-
-            rt = dioCtr.CloseCard();
-            _isOpen = false;
-
-            if (!rt)
+            lock (_heartbeatLock)
             {
+                StopHeartbeat();
+                if (dioCtr == null)
+                {
+                    return true;
+                }
+                bool rt = dioCtr.CloseCard();
                 _isOpen = false;
-
-                _errMsg = dioCtr.ErrMsg;
+                if (!rt)
+                {
+                    _errMsg = dioCtr.ErrMsg;
+                }
+                return rt;
             }
-
-            //关闭IO通讯
-            return rt;
-            
         }
-        // 线程,主要实现心跳输出
+
+        /// <summary>
+        /// 串行保护心跳的启动、取消、等待和释放；心跳任务自身不取得此锁，避免停止等待时死锁。
+        /// </summary>
+        private readonly object _heartbeatLock = new object();
+
+        /// <summary>
+        /// 当前心跳任务专用的取消源，由生命周期锁保护；任务只使用创建时捕获的令牌。
+        /// </summary>
         private CancellationTokenSource _cts;
+
+        /// <summary>
+        /// 当前唯一的心跳任务；取消后必须等待其结束，才能释放取消源或关闭板卡。
+        /// </summary>
         private Task _heartbeatTask;
-        bool aliveSignl = true;
+
+        /// <summary>
+        /// 为已打开的 Profinet 板卡启动心跳，已有任务运行时直接复用，防止重复启动多个写入任务。
+        /// 每次新任务捕获独立的取消令牌，不在循环中读取可能被下一次启动替换的取消源。
+        /// </summary>
+        /// <remarks>
+        /// 未打开板卡时不启动。与停止方法互斥管理任务，任务在后台运行且不访问 UI；
+        /// 调用方应在关卡前调用 StopHeartbeat，并等待本方法返回后再修改通信配置。
+        /// </remarks>
         public void StartHeartbeat()
         {
-            _cts = new CancellationTokenSource();
-
-            _heartbeatTask = Task.Run(async () =>
+            lock (_heartbeatLock)
             {
-                while (!_cts.Token.IsCancellationRequested)
-                {
-                    try
-                    {
-                        //心跳输出
-                        bool rt = Write(DO.Alive, aliveSignl);
-                        aliveSignl = !aliveSignl;
+                if (!_isOpen || dioCtr == null) return;
+                if (_heartbeatTask != null && !_heartbeatTask.IsCompleted) return;
 
-                        await Task.Delay(1000, _cts.Token);
-
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"心跳线程异常：{ex}");
-                    }
-                }
-            });
+                _cts?.Dispose();
+                _cts = new CancellationTokenSource();
+                CancellationToken token = _cts.Token;
+                _heartbeatTask = Task.Run(() => RunHeartbeatAsync(token));
+            }
         }
 
+        /// <summary>
+        /// 在后台交替输出 Alive 信号，每轮输出结束后等待 1000 毫秒；异常轮次也限速，避免忙循环。
+        /// 心跳电平保存在任务局部变量中，停止后不会与后续任务共享电平状态。
+        /// </summary>
+        /// <param name="token">本次任务独占的取消令牌；取消后结束等待，已进入的同步写入按原重试策略完成。</param>
+        /// <returns>表示心跳完整生命周期的任务；取消请求正常结束任务，写入异常按原方式输出到控制台。</returns>
+        /// <remarks>不取得生命周期锁，不访问 UI；调用方通过 StopHeartbeat 等待结束后才能关闭板卡。</remarks>
+        private async Task RunHeartbeatAsync(CancellationToken token)
+        {
+            bool aliveSignal = true;
+            while (!token.IsCancellationRequested)
+            {
+                try
+                {
+                    Write(DO.Alive, aliveSignal);
+                    aliveSignal = !aliveSignal;
+                }
+                catch (OperationCanceledException) when (token.IsCancellationRequested)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"心跳线程异常：{ex}");
+                }
+
+                try
+                {
+                    await Task.Delay(1000, token).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) when (token.IsCancellationRequested)
+                {
+                    break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 请求取消当前心跳并同步等待任务退出，随后释放取消源并清空任务引用；允许重复调用。
+        /// 在停止完成前阻止新心跳启动，避免重启后旧任务继续使用新取消源。
+        /// </summary>
+        /// <remarks>
+        /// 可能等待当前同步写入完成，不得从心跳任务自身或持有其所需 I/O 锁的线程调用。
+        /// 此方法只停止心跳，不关闭板卡；关卡由 StopProfinet 在等待完成后执行。
+        /// </remarks>
         public void StopHeartbeat()
         {
-            _cts?.Cancel();
+            lock (_heartbeatLock)
+            {
+                if (_cts == null) return;
+                _cts.Cancel();
+                try
+                {
+                    // 心跳不使用生命周期锁，等待时也不能占用其写入所需的 I/O 锁。
+                    _heartbeatTask?.GetAwaiter().GetResult();
+                }
+                finally
+                {
+                    _cts.Dispose();
+                    _cts = null;
+                    _heartbeatTask = null;
+                }
+            }
         }
 
 
@@ -3512,6 +3594,7 @@ namespace _3DLaserGlueInspection
                             }
                             else
                             {
+                                _errMsg = dioCtr.ErrMsg;
                                 return false;
                             }
 
@@ -3597,12 +3680,14 @@ namespace _3DLaserGlueInspection
                             }
                             else
                             {
+                                _errMsg = dioCtr.ErrMsg;
                                 return false;
                             }
 
                         }
                         else
                         {
+
                             value = 0;
                             return true;
                         }

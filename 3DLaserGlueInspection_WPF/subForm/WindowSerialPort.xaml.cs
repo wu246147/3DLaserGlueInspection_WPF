@@ -54,7 +54,6 @@ namespace _3DLaserGlueInspection.subForm
             };
             displayTimer.Tick += DisplayTimer_Tick;
             UpdateConnectionState();
-            UpdateReceivedInfo();
         }
 
         private void PopulateParameters()
@@ -209,41 +208,6 @@ namespace _3DLaserGlueInspection.subForm
                 SaveParameters();
         }
 
-        private async void ReplySignal_Click(object sender, RoutedEventArgs e)
-        {
-            string command = (sender as Button)?.Tag as string;
-            if (command == null || command.Length != 1)
-                return;
-            await SendTestSignalAsync("回复 " + command, () => signal.SendTestReply(command[0]));
-        }
-
-        private async void SendResultSignal_Click(object sender, RoutedEventArgs e)
-        {
-            bool isOk = testResultComboBox.SelectedIndex == 0;
-            await SendTestSignalAsync("发送 E 结果（" + (isOk ? "OK" : "NG") + "）", () => signal.SendTestResult(isOk));
-        }
-
-        private async Task SendTestSignalAsync(string description, Func<bool> send)
-        {
-            if (busy)
-                return;
-            if (!signal.IsOpen)
-            {
-                ShowMessage("请先连接串口，再发送测试信号。");
-                return;
-            }
-            busy = true;
-            UpdateConnectionState();
-            try
-            {
-                bool success = await Task.Run(send);
-                ShowMessage(description + (success ? "成功。" : "失败：" + signal.ErrMsg));
-                lastError = signal.ErrMsg;
-            }
-            catch (Exception ex) { ShowMessage(description + "失败：" + ex.Message); }
-            finally { busy = false; UpdateConnectionState(); }
-        }
-
         private void OnDataReceived(object sender, PISerialPortDataEventArgs e) { QueueLog(true, e); }
         private void OnDataSent(object sender, PISerialPortDataEventArgs e) { QueueLog(false, e); }
 
@@ -291,16 +255,6 @@ namespace _3DLaserGlueInspection.subForm
                 ShowMessage(error);
             lastError = error;
             UpdateConnectionState();
-            // 原始接收事件早于 B 帧解析，在 UI 定时刷新时读取已校验的字段。
-            UpdateReceivedInfo();
-        }
-
-        private void UpdateReceivedInfo()
-        {
-            string serialNumber = signal.SerialNumber;
-            string vin = signal.VIN;
-            serialNumberLabel.Content = "连番号：" + (string.IsNullOrEmpty(serialNumber) ? "—" : serialNumber);
-            vinLabel.Content = "VIN码：" + (string.IsNullOrEmpty(vin) ? "—" : vin);
         }
 
         private static string FormatData(PISerialPortDataEventArgs args)
@@ -351,7 +305,6 @@ namespace _3DLaserGlueInspection.subForm
             connectButton.IsEnabled = !busy && !connected;
             disconnectButton.IsEnabled = !busy && connected;
             saveButton.IsEnabled = !busy;
-            manualSignalsPanel.IsEnabled = !busy && connected;
             connectionStatusText.Text = busy ? "操作中…" : connected ? "已连接：" + signal.SerialParam.PortName : "未连接";
             connectionStatusText.Foreground = connected ? Brushes.LightGreen : Brushes.LightGray;
             connectionIndicator.Fill = connected ? Brushes.LightGreen : Brushes.Gray;
@@ -379,7 +332,7 @@ namespace _3DLaserGlueInspection.subForm
         {
             if (busy)
             {
-                ShowMessage("正在执行串口操作，请等待操作完成后再关闭窗口。");
+                ShowMessage("正在连接或断开，请等待操作完成后再关闭窗口。");
                 e.Cancel = true;
                 return;
             }

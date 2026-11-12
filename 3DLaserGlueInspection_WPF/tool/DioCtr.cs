@@ -96,6 +96,7 @@ namespace _3DLaserGlueInspection.tool
                 int rtn = user.xChannelIORead(ulAreaNumber, pvoffset, ulDataLen, ref pvData);
                 if (rtn == 0)
                 {
+                    Console.WriteLine("ReadDI index:" + index);
                     pvDataOut = pvData;
                     return true;
                 }
@@ -122,6 +123,8 @@ namespace _3DLaserGlueInspection.tool
                 rtn = user.xChannelIORead(ulAreaNumber, pvoffset, ulDataLen, ref pvData);
                 if (rtn == 0)
                 {
+                    Console.WriteLine("ReadDI index:" + index);
+
                     // Console.WriteLine("aaaa= " + index);
                     //Data.SaveLogFile("####DI读取成功！"+ index.ToString());
                     Thread.Sleep(1);
@@ -133,7 +136,7 @@ namespace _3DLaserGlueInspection.tool
                 if (index > 600)
                 {
                     //Data.SaveLogFile("DI读取失败！");
-                    _errMsg = "读取多次失败";
+                    _errMsg = $"读取多次失败：错误码=0x{unchecked((uint)rtn):X8}，字节偏移={pvoffset}，位号={ID}，失败次数={index}";
                     return false;
                 }
                 Thread.Sleep(5);
@@ -195,7 +198,7 @@ namespace _3DLaserGlueInspection.tool
                 index++;
                 if (index > 2000)
                 {
-                    _errMsg = "读取多次失败";
+                    _errMsg = $"读取多次失败：错误码=0x{unchecked((uint)rtn):X8}，字节偏移={pvoffset}，失败次数={index}";
                     return false;
                 }
                 Thread.Sleep(5);
