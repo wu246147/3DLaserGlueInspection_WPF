@@ -14,6 +14,11 @@ using System.Windows.Threading;
 
 namespace _3DLaserGlueInspection.subForm
 {
+    /// <summary>
+    /// PI 串口参数与通讯调试窗口，提供连接管理、收发监视、连番号/VIN 显示以及手动 ACK 和结果发送。
+    /// 复用主流程持有的 PISerialPort，通过队列和 UI 定时器显示后台收发数据。
+    /// </summary>
+    /// <remarks>必须在 UI 线程创建和操作；关闭窗口会解除事件和定时器，但不会关闭外部传入的串口。后台操作期间禁止关闭窗口和重复发送。</remarks>
     public partial class WindowSerialPort : Window
     {
         private const int MaxPendingLogs = 2000;
@@ -37,6 +42,13 @@ namespace _3DLaserGlueInspection.subForm
             public PISerialPortDataEventArgs Data;
         }
 
+        /// <summary>
+        /// 初始化串口调试窗口，加载当前串口参数并订阅收发事件，创建每 200 毫秒刷新一次的 UI 定时器。
+        /// 初始化连接状态及最近接收的产品信息；定时器在窗口加载后启动。
+        /// </summary>
+        /// <param name="serialPort">非空 PI 通讯实例；可处于连接或断开状态，窗口只借用实例，不负责其最终释放。</param>
+        /// <exception cref="ArgumentNullException">serialPort 为 null 时抛出。</exception>
+        /// <remarks>调用方必须在 UI 线程创建；窗口关闭时解除本窗口的订阅并停止定时器。</remarks>
         public WindowSerialPort(PISerialPort serialPort)
         {
             signal = serialPort ?? throw new ArgumentNullException(nameof(serialPort));
@@ -54,6 +66,7 @@ namespace _3DLaserGlueInspection.subForm
             };
             displayTimer.Tick += DisplayTimer_Tick;
             UpdateConnectionState();
+            UpdateReceivedInfo();
         }
 
         private void PopulateParameters()
@@ -208,6 +221,57 @@ namespace _3DLaserGlueInspection.subForm
                 SaveParameters();
         }
 
+        /// <summary>从按钮 Tag 读取 A/B/D/F 命令，交给统一异步发送流程执行手动 ACK 测试；无效 Tag 不执行发送。</summary>
+        /// <param name="sender">触发事件的按钮，Tag 应为单字符命令字符串；不是按钮或 Tag 无效时忽略。</param>
+        /// <param name="e">WPF 点击事件参数，本方法不读取其内容。</param>
+        /// <remarks>从 UI 线程调用，发送期间禁用操作；异步异常由统一发送流程记录到窗口。</remarks>
+        private async void ReplySignal_Click(object sender, RoutedEventArgs e)
+        {
+            string command = (sender as Button)?.Tag as string;
+            if (command == null || command.Length != 1)
+                return;
+            await SendTestSignalAsync("回复 " + command, () => signal.SendTestReply(command[0]));
+        }
+
+        /// <summary>读取界面的 OK/NG 选择并异步发送 E 结果测试帧，不修改生产结果缓存。</summary>
+        /// <param name="sender">触发发送的按钮，本方法不读取该参数。</param>
+        /// <param name="e">WPF 点击事件参数，本方法不读取其内容。</param>
+        /// <remarks>从 UI 线程调用；索引 0 发送 OK，其余选择发送 NG，操作状态和异常由统一发送流程管理。</remarks>
+        private async void SendResultSignal_Click(object sender, RoutedEventArgs e)
+        {
+            bool isOk = testResultComboBox.SelectedIndex == 0;
+            await SendTestSignalAsync("发送 E 结果（" + (isOk ? "OK" : "NG") + "）", () => signal.SendTestResult(isOk));
+        }
+
+        /// <summary>
+        /// 在连接有效且窗口空闲时禁用操作，将阻塞串口发送放到后台任务，完成后在 UI 线程显示成功或错误。
+        /// 忙碌时忽略请求，未连接时提示；无论发送成功、失败或异常，均恢复窗口操作状态。
+        /// </summary>
+        /// <param name="description">用于显示操作结果的非空中文描述，不包含报文内容。</param>
+        /// <param name="send">非空同步发送委托；返回 true 表示成功，false 时从 signal.ErrMsg 读取失败原因，不得访问 UI。</param>
+        /// <returns>表示发送及 UI 状态恢复完成的任务；发送异常会显示到操作记录。</returns>
+        /// <remarks>必须从 UI 线程调用并保留其同步上下文；等待期间窗口禁止关闭，串口实例由外部继续持有。</remarks>
+        private async Task SendTestSignalAsync(string description, Func<bool> send)
+        {
+            if (busy)
+                return;
+            if (!signal.IsOpen)
+            {
+                ShowMessage("请先连接串口，再发送测试信号。");
+                return;
+            }
+            busy = true;
+            UpdateConnectionState();
+            try
+            {
+                bool success = await Task.Run(send);
+                ShowMessage(description + (success ? "成功。" : "失败：" + signal.ErrMsg));
+                lastError = signal.ErrMsg;
+            }
+            catch (Exception ex) { ShowMessage(description + "失败：" + ex.Message); }
+            finally { busy = false; UpdateConnectionState(); }
+        }
+
         private void OnDataReceived(object sender, PISerialPortDataEventArgs e) { QueueLog(true, e); }
         private void OnDataSent(object sender, PISerialPortDataEventArgs e) { QueueLog(false, e); }
 
@@ -226,6 +290,10 @@ namespace _3DLaserGlueInspection.subForm
             }
         }
 
+        /// <summary>每次最多取出 250 条后台收发记录批量显示，更新计数、缓冲丢弃提示、错误、连接状态及已解析的产品信息。</summary>
+        /// <param name="sender">触发刷新的 UI 定时器，本方法不读取该参数。</param>
+        /// <param name="e">定时事件参数，本方法不读取其内容。</param>
+        /// <remarks>仅在 UI 线程执行；队列通过 logLock 与收发线程同步，显示字段在协议校验后读取。</remarks>
         private void DisplayTimer_Tick(object sender, EventArgs e)
         {
             var received = new StringBuilder();
@@ -255,6 +323,18 @@ namespace _3DLaserGlueInspection.subForm
                 ShowMessage(error);
             lastError = error;
             UpdateConnectionState();
+            // 原始接收事件早于 B 帧解析，在 UI 定时刷新时读取已校验的字段。
+            UpdateReceivedInfo();
+        }
+
+        /// <summary>读取串口最近校验通过的连番号和 VIN 并更新标签；空值显示破折号，不解析未经校验的原始报文。</summary>
+        /// <remarks>仅在 UI 线程调用；各字段由串口内部状态锁读取，不修改业务状态。</remarks>
+        private void UpdateReceivedInfo()
+        {
+            string serialNumber = signal.SerialNumber;
+            string vin = signal.VIN;
+            serialNumberLabel.Content = "连番号：" + (string.IsNullOrEmpty(serialNumber) ? "—" : serialNumber);
+            vinLabel.Content = "VIN码：" + (string.IsNullOrEmpty(vin) ? "—" : vin);
         }
 
         private static string FormatData(PISerialPortDataEventArgs args)
@@ -298,6 +378,8 @@ namespace _3DLaserGlueInspection.subForm
             AppendLog(statusLogTextBox, DateTime.Now.ToString("HH:mm:ss.fff") + "  " + message + "\r\n");
         }
 
+        /// <summary>根据连接状态及 busy 标志更新参数区、连接按钮、手动测试区和状态灯，防止连接期间改参数或重复执行串口操作。</summary>
+        /// <remarks>仅在 UI 线程调用；只改变控件状态，不建立或关闭串口连接。</remarks>
         private void UpdateConnectionState()
         {
             bool connected = signal.IsOpen;
@@ -305,6 +387,7 @@ namespace _3DLaserGlueInspection.subForm
             connectButton.IsEnabled = !busy && !connected;
             disconnectButton.IsEnabled = !busy && connected;
             saveButton.IsEnabled = !busy;
+            manualSignalsPanel.IsEnabled = !busy && connected;
             connectionStatusText.Text = busy ? "操作中…" : connected ? "已连接：" + signal.SerialParam.PortName : "未连接";
             connectionStatusText.Foreground = connected ? Brushes.LightGreen : Brushes.LightGray;
             connectionIndicator.Fill = connected ? Brushes.LightGreen : Brushes.Gray;
@@ -328,11 +411,15 @@ namespace _3DLaserGlueInspection.subForm
             ShowMessage("串口收发监视已开启。连接后自动显示收到和发出的数据。");
         }
 
+        /// <summary>关闭前检查异步串口操作和未保存参数；操作中取消关闭，参数有变化时按用户选择保存或取消。</summary>
+        /// <param name="sender">正在关闭的窗口，本方法不读取该参数。</param>
+        /// <param name="e">关闭取消参数；操作未结束、用户取消或保存失败时将 Cancel 设为 true。</param>
+        /// <remarks>仅在 UI 线程调用；可能弹出保存确认并写入串口配置，不关闭通讯实例。</remarks>
         private void Window_Closing(object sender, CancelEventArgs e)
         {
             if (busy)
             {
-                ShowMessage("正在连接或断开，请等待操作完成后再关闭窗口。");
+                ShowMessage("正在执行串口操作，请等待操作完成后再关闭窗口。");
                 e.Cancel = true;
                 return;
             }

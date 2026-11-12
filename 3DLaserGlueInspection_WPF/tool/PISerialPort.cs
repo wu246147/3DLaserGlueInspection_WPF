@@ -49,7 +49,12 @@ namespace _3DLaserGlueInspection
     /// <summary>
     /// PI 工具卡 RS232 通讯。接收线程更新缓存，Read 不主动发送报文。
     /// B 接收并保存后回复 ACK，Write(DO.Result, ...) 使用该 B 的通讯连号发送 E 结果报文。
+    /// D/F 表示结束信号，调试接口可独立发送 A/B/D/F 应答及 E 结果。
     /// </summary>
+    /// <remarks>
+    /// 实例持有串口和后台接收线程，调用方使用结束后必须调用 Close 或 Dispose。
+    /// 生命周期、发送和业务缓存分别加锁；收发事件在实际通讯线程同步触发，订阅方不得直接访问 UI。
+    /// </remarks>
     public class PISerialPort : ISignal, IHsl, IDisposable
     {
         private const byte STX = 0x02;
@@ -59,6 +64,8 @@ namespace _3DLaserGlueInspection
         private readonly object lifecycleLock = new object();
         private readonly object sendLock = new object();
         private readonly object stateLock = new object();
+        // 仅在持有 lifecycleLock 时使用，生成手动调试报文的两位 ASCII 通讯连号。
+        private readonly Random testRandom = new Random();
         private PISerialPortParam param = new PISerialPortParam();
         private PISerialPortParam activeParam;
         private SerialPort serialPort;
@@ -104,6 +111,12 @@ namespace _3DLaserGlueInspection
         public string ToolNumber { get { lock (stateLock) return toolNumber; } }
         public string ProgramNumber { get { lock (stateLock) return programNumber; } }
 
+        /// <summary>
+        /// 按当前参数打开 PI 串口，清空上次业务缓存并启动后台接收线程，随后发送一次 A 心跳应答。
+        /// 已打开时直接成功；旧接收线程尚未结束或读写超时设置无效时拒绝重新打开。
+        /// </summary>
+        /// <returns>串口成功打开并启动接收时返回 true；打开失败返回 false，原因保存在 ErrMsg，心跳发送失败也会记录 ErrMsg。</returns>
+        /// <remarks>通过生命周期锁串行执行；成功后由实例持有串口，调用方负责最终关闭。可能等待串口打开及首次发送，不应在实时采集线程调用。</remarks>
         public bool Open()
         {
             lock (lifecycleLock)
@@ -149,6 +162,8 @@ namespace _3DLaserGlueInspection
                         Name = "PI RS232 receive"
                     };
                     receiveThread.Start();
+                    // 沿用 PI 调试版本的握手方式：连接后主动发送通讯连号为 00 的 A 应答。
+                    SendReply(new byte[] { STX, (byte)'0', (byte)'0', (byte)'A' });
                     return true;
                 }
                 catch (Exception ex)
@@ -241,6 +256,14 @@ namespace _3DLaserGlueInspection
             }
         }
 
+        /// <summary>
+        /// 将本次串口字节追加到接收缓存，按命令和 ACK/NAK 类型确定帧长，逐帧交给协议处理。
+        /// 遇到未知命令或帧尾错误时逐字节重新同步，残帧保留到下次接收。
+        /// </summary>
+        /// <param name="pending">接收线程独占的非空缓存；本方法会追加字节并移除已经处理或无效的内容。</param>
+        /// <param name="bytes">本次读取的非空字节缓冲区；调用期间内容必须保持有效。</param>
+        /// <param name="count">有效字节数，范围为 0 到 bytes.Length；只追加此范围内的内容。</param>
+        /// <remarks>仅由接收线程调用，不可并发共享 pending；完整帧可能更新业务状态并同步发送应答。</remarks>
         private void ProcessReceivedBytes(List<byte> pending, byte[] bytes, int count)
         {
             for (int i = 0; i < count; i++)
@@ -263,6 +286,7 @@ namespace _3DLaserGlueInspection
                 switch ((char)pending[3])
                 {
                     case 'A':
+                    case 'F':
                     case 'D': length = reply ? 9 : 7; break;
                     case 'B': length = reply ? 11 : 52; break;
                     case 'E': length = reply ? 9 : 44; break;
@@ -285,6 +309,13 @@ namespace _3DLaserGlueInspection
             }
         }
 
+        /// <summary>
+        /// 校验完整帧的 SUM，处理 A 心跳、B 产品信息以及 D/F 结束信号。
+        /// B 帧校验通过后更新连番号、VIN 和启动状态；D/F 的请求及应答均置位结束状态并回复。
+        /// </summary>
+        /// <param name="frame">由接收解析器取得的完整非空帧，必须满足对应命令的固定长度和 ETX 约定。</param>
+        /// <param name="reply">第 5 字节是否为 ACK/NAK；普通应答不更新业务状态，D/F 应答按现场协议单独处理。</param>
+        /// <remarks>仅由接收线程调用，业务状态通过 stateLock 更新；校验或字段错误记录 ErrMsg，不接收该帧的业务数据。</remarks>
         private void ProcessFrame(byte[] frame, bool reply)
         {
             byte[] sum = GetChecksum(frame, activeParam);
@@ -293,8 +324,8 @@ namespace _3DLaserGlueInspection
                 Fail("PI 报文 SUM 校验失败。");
                 return;
             }
-            // 现场约定：D/E 收到后都置位并回复，包括 E 结果应答帧。
-            if (frame[3] == (byte)'D' || frame[3] == (byte)'E')
+            // 现场约定：D/F 收到后都置位并回复，包括 F 结果应答帧；E 应答不再结束本次业务。
+            if (frame[3] == (byte)'D' || frame[3] == (byte)'F')
             {
                 lock (stateLock)
                     isEnd = true;
@@ -350,6 +381,59 @@ namespace _3DLaserGlueInspection
             return Encoding.ASCII.GetBytes((sum & 0xFF).ToString("X2", CultureInfo.InvariantCulture));
         }
 
+        /// <summary>
+        /// 手动发送 A/B/D/F 的 ACK 应答，用于串口联调；每次生成新的两位 ASCII 通讯连号。
+        /// 不修改业务启动、结束或结果状态。
+        /// </summary>
+        /// <param name="command">要回复的命令，仅允许大写 A、B、D 或 F；其他值记录错误并返回失败。</param>
+        /// <returns>串口已打开且完整应答写入成功时返回 true；命令无效、未连接或写入失败返回 false，原因保存在 ErrMsg。</returns>
+        /// <remarks>内部通过生命周期锁保护随机数和连接状态，发送由发送锁串行执行；可能阻塞至写超时，界面应在后台任务调用。</remarks>
+        internal bool SendTestReply(char command)
+        {
+            if (command != 'A' && command != 'B' && command != 'D' && command != 'F')
+                return Fail("PI 手动回复仅支持 A/B/D/F。");
+            lock (lifecycleLock)
+            {
+                if (!isOpen)
+                    return Fail("PI 串口未打开。");
+                return SendReply(CreateTestCommand(command));
+            }
+        }
+
+        /// <summary>
+        /// 手动发送 E 结果报文，优先使用最近 B 帧的通讯连号，未收到 B 时生成随机通讯连号。
+        /// 仅发送测试数据，不更新业务结果及已发送标志。
+        /// </summary>
+        /// <param name="isOk">测试综合判定；true 发送字符 1（OK），false 发送字符 0（NG）。</param>
+        /// <returns>串口已连接且结果报文写入成功时返回 true；未连接或发送失败返回 false，原因保存在 ErrMsg。</returns>
+        /// <remarks>通过生命周期锁保护连接，通过状态锁读取 B 帧快照；可能等待串口写入，界面应在后台任务调用。</remarks>
+        internal bool SendTestResult(bool isOk)
+        {
+            lock (lifecycleLock)
+            {
+                if (!isOpen)
+                    return Fail("PI 串口未打开。");
+                byte[] command;
+                lock (stateLock)
+                    command = lastCommand;
+                // 手动测试不改变业务结果状态；没有 B 指令时也能独立发送。
+                return SendResult(command ?? CreateTestCommand('E'), isOk ? '1' : '0');
+            }
+        }
+
+        /// <summary>
+        /// 生成测试报文所需的四字节命令头，使用 00～99 的随机 ASCII 通讯连号。
+        /// 实际应答或结果帧由后续发送方法构建并添加校验。
+        /// </summary>
+        /// <param name="command">ASCII 命令字符；调用方仅传入 A、B、D、F 或 E，本方法不校验命令范围。</param>
+        /// <returns>新分配的 STX、两位通讯连号和命令数组；所有权属于调用方。</returns>
+        /// <remarks>调用方必须持有 lifecycleLock，以串行访问实例的 Random；不会发送数据或修改业务状态。</remarks>
+        private byte[] CreateTestCommand(char command)
+        {
+            int sequence = testRandom.Next(100);
+            return new[] { STX, (byte)('0' + sequence / 10), (byte)('0' + sequence % 10), (byte)command };
+        }
+
         private bool SendReply(byte[] command)
         {
             bool isB = command[3] == (byte)'B';
@@ -369,6 +453,14 @@ namespace _3DLaserGlueInspection
             return SendFrame(frame);
         }
 
+        /// <summary>
+        /// 构建并发送固定 44 字节的 E 结果帧，沿用命令头通讯连号，程序号固定为 1。
+        /// 五项分项结果按 PI 现场约定填充 @（0x40），品质数据保持字符 0，由 SendFrame 添加 SUM 和 ETX。
+        /// </summary>
+        /// <param name="command">非空命令头或完整 B 帧，至少含三个字节；索引 1、2 是要沿用的通讯连号，调用期间不得修改。</param>
+        /// <param name="judgement">写入综合判定位的单个 ASCII 字符；业务入口已限制为 0～9，调试入口仅传入 0 或 1。</param>
+        /// <returns>完整帧写入成功返回 true；串口未打开或写入失败返回 false，原因保存在 ErrMsg。</returns>
+        /// <remarks>不更新业务结果状态；调用方负责保证连接参数已初始化，实际串口写入由 SendFrame 串行执行。</remarks>
         private bool SendResult(byte[] command, char judgement)
         {
             // E：程序号 1 位、综合判定 1 位、分项结果 5 位、品质数据 5 * 6 位。
@@ -381,6 +473,9 @@ namespace _3DLaserGlueInspection
                 frame[i] = (byte)'0';
             frame[4] = (byte)'1';
             frame[5] = (byte)judgement;
+            // 分项判定使用 PI 调试确认的固定占位字符，不能继续按数值字符 0 发送。
+            for (int i = 6; i <= 10; i++)
+                frame[i] = (byte)'@';
             return SendFrame(frame);
         }
 

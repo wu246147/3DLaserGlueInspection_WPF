@@ -33,8 +33,10 @@ namespace _3DLaserGlueInspection
 {
 
     /// <summary>
-    /// MainWindow.xaml 的交互逻辑
+    /// 主窗口的交互逻辑，创建机器人与 PLC 通讯实例，连接图像显示和主流程，并提供参数入口。
+    /// PI 收发记录写入业务日志，主流程运行期间禁用设置菜单，清理结束后再由 UI 线程恢复。
     /// </summary>
+    /// <remarks>窗口及其控件由 UI 线程管理；主流程使用独立线程，关闭时请求停止并解除本次新增的事件订阅。</remarks>
     public partial class MainWindow : System.Windows.Window
     {
         MainWindowModel model;
@@ -49,6 +51,11 @@ namespace _3DLaserGlueInspection
         //readonly Wpf_halcon.ImageControl2 hWindowModel = new Wpf_halcon.ImageControl2();
         //readonly Wpf_halcon.ImageControl2 hWindowControl = new Wpf_halcon.ImageControl2();
 
+        /// <summary>
+        /// 初始化主窗口和数据模型，按现有配置创建机器人与 PLC 实例，绑定界面及运行完成通知。
+        /// 选择 PI 通讯时订阅收发日志；保留各机器人现有的连接方式初始化和语言选择。
+        /// </summary>
+        /// <remarks>必须在 UI 线程创建；通讯和运行通知订阅在 Window_Closing 中解除，设备的运行及清理由主流程负责。</remarks>
         public MainWindow()
         {
             if (!HslCommunication.Authorization.SetAuthorizationCode("0293fde5-6e7c-4c76-bacd-e3bdb0ee6187"))
@@ -59,6 +66,7 @@ namespace _3DLaserGlueInspection
             InitializeComponent();
             model = new MainWindowModel();
             this.DataContext = model.mainModel;
+            model.RunFinished += OnRunFinished;
 
 
             //打开通讯
@@ -102,6 +110,8 @@ namespace _3DLaserGlueInspection
                     break;
                 case PlcType.PISerialPort:
                     model.plc = new PISerialPort();
+                    ((PISerialPort)model.plc).DataReceived += OnDataReceived;
+                    ((PISerialPort)model.plc).DataSent += OnDataSent;
                     break;
             }
 
@@ -115,6 +125,13 @@ namespace _3DLaserGlueInspection
                 MenuItem_englishLanguage.IsChecked = true;
             }
         }
+        /// <summary>
+        /// 主窗口加载后绑定图像、点云及相机数量通知，完成显示订阅后自动调用启停入口启动主流程。
+        /// 自动启动复用按钮入口的仿真路径检查、线程检查和菜单状态控制，与 PI 调试版本保持一致。
+        /// </summary>
+        /// <param name="sender">触发 Loaded 事件的主窗口，本方法不读取该参数。</param>
+        /// <param name="e">WPF 加载事件参数，本方法不读取其内容。</param>
+        /// <remarks>仅在 UI 线程执行；自动启动会创建主流程线程，按当前配置加载参数并连接设备，退出清理由主流程负责。</remarks>
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
 
@@ -147,11 +164,43 @@ namespace _3DLaserGlueInspection
                 Dispatcher.Invoke(() => Adjust2DResultDataGridColumns(count));
             };
 
+            // 显示订阅完成后复用现有启动入口，保持参数校验和运行状态控制一致。
+            ButtonRun_Click(null, null);
         }
 
+        /// <summary>将 PI 接收数据转换为十六进制日志，添加当前 VIN 和调用信息后，按原始收发时间写入日志文件。</summary>
+        /// <param name="sender">产生事件的 PI 通讯实例，本方法不读取该参数。</param>
+        /// <param name="e">非空接收事件参数，包含本次原始字节快照及接收时间。</param>
+        /// <remarks>在串口接收线程同步执行，不访问 UI；日志异常由 PI 的事件通知边界记录到调试输出。</remarks>
+        private void OnDataReceived(object sender, PISerialPortDataEventArgs e)
+        {
+            string message = model.ProcessMessage("[PI 输入/RX] " + BitConverter.ToString(e.Data).Replace('-', ' '), LogType.normal);
+            model.WriteLog(message, LogType.normal, e.Timestamp);
+        }
+
+        /// <summary>将 PI 已发送数据转换为十六进制日志，添加当前 VIN 和调用信息后，按实际发送时间写入日志文件。</summary>
+        /// <param name="sender">产生事件的 PI 通讯实例，本方法不读取该参数。</param>
+        /// <param name="e">非空发送事件参数，包含本次完整报文快照及发送时间。</param>
+        /// <remarks>在实际发送线程同步执行，不访问 UI；日志异常由 PI 的事件通知边界记录到调试输出。</remarks>
+        private void OnDataSent(object sender, PISerialPortDataEventArgs e)
+        {
+            string message = model.ProcessMessage("[PI 输出/TX] " + BitConverter.ToString(e.Data).Replace('-', ' '), LogType.normal);
+            model.WriteLog(message, LogType.normal, e.Timestamp);
+        }
+
+        /// <summary>窗口关闭时请求主流程停止，并解除运行完成和 PI 收发日志订阅，避免退出期间继续回调窗口。</summary>
+        /// <param name="sender">正在关闭的主窗口，本方法不读取该参数。</param>
+        /// <param name="e">WPF 关闭事件参数，本方法不更改取消状态。</param>
+        /// <remarks>仅在 UI 线程调用；此处不等待主线程退出，通讯和相机仍由主流程的 finally 负责关闭。</remarks>
         private void Window_Closing(object sender, CancelEventArgs e)
         {
             model.stop = true;
+            model.RunFinished -= OnRunFinished;
+            if (model.plc is PISerialPort piSerialPort)
+            {
+                piSerialPort.DataReceived -= OnDataReceived;
+                piSerialPort.DataSent -= OnDataSent;
+            }
             //model.StopCommunicationThread();
 
         }
@@ -220,6 +269,40 @@ namespace _3DLaserGlueInspection
                 this.DragMove();
         }
 
+        /// <summary>统一设置标准块、通讯、相机和产品设置菜单的可用状态，使运行过程和清理过程共用同一组限制。</summary>
+        /// <param name="enabled">true 表示允许进入设置，false 表示禁用这些入口。</param>
+        /// <remarks>必须在 UI 线程调用，只更新菜单控件。</remarks>
+        private void SetMenusEnabled(bool enabled)
+        {
+            MenuItem_standardBlockTest.IsEnabled = enabled;
+            MenuItem_signalSetting.IsEnabled = enabled;
+            MenuItem_camSetting.IsEnabled = enabled;
+            MenuItem_productSetting.IsEnabled = enabled;
+        }
+
+        /// <summary>接收主流程清理完成通知，将菜单恢复安排到 UI 线程，并校验通知仍属于当前运行线程。</summary>
+        /// <remarks>由结束中的主流程线程同步调用；窗口已进入关闭时忽略，通过线程身份避免旧通知影响随后启动的新流程。</remarks>
+        private void OnRunFinished()
+        {
+            if (Dispatcher.HasShutdownStarted || Dispatcher.HasShutdownFinished)
+                return;
+
+            Thread finishedThread = Thread.CurrentThread;
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                // 只恢复本次运行的菜单，避免旧通知影响已经启动的新流程。
+                if (mainThread == finishedThread)
+                    SetMenusEnabled(true);
+            }));
+        }
+
+        /// <summary>
+        /// 按启停按钮状态启动主流程或请求停止；启动前检查仿真目录和已有线程，先禁用设置菜单再启动工作线程。
+        /// 停止只设置退出请求，等待主流程清理完成通知恢复菜单，避免关闭设备时进入调试界面。
+        /// </summary>
+        /// <param name="sender">触发启停的按钮；本方法不读取该参数。</param>
+        /// <param name="e">WPF 点击事件参数；本方法不读取该参数。</param>
+        /// <remarks>仅在 UI 线程调用；创建主流程线程并修改运行按钮及模型停止状态，不同步等待主流程结束。</remarks>
         private void ButtonRun_Click(object sender, RoutedEventArgs e)
         {
             //正常启动
@@ -238,49 +321,29 @@ namespace _3DLaserGlueInspection
                         return;
                     }
                 }
-                if (mainThread == null || !mainThread.IsAlive)
-                {
-                    model.stop = false;
-                    mainThread = new Thread(model.MainRun);
-
-                    ////测试取像问题
-                    //mainThread = new Thread(model.AcqAndRobotTest);
-
-                    mainThread.Start();
-                }
-                else
+                if (mainThread != null && mainThread.IsAlive)
                 {
                     model.ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.TheMainThreadIsAlreadyRunning, LogType.warn);
+                    return;
                 }
-                //ButtonRun.Content = _3DLaserGlueInspection.Resources.LanguageDict.停止");
-                //button启停.Image = Resources._3;
+
+                model.stop = false;
+                mainThread = new Thread(model.MainRun);
 
                 model.mainModel.buttonRunContentControl = _3DLaserGlueInspection.Resources.LanguageDict.Stop;
                 model.mainModel.buttonRunTagControl = "\uE67A";
 
-                //禁止菜单
-                //MenuItem_paraSetting.IsEnabled = false;
-                MenuItem_standardBlockTest.IsEnabled = false;
-                MenuItem_signalSetting.IsEnabled = false;
-                MenuItem_camSetting.IsEnabled = false;
-                MenuItem_productSetting.IsEnabled = false;
+                // 在线程启动前禁用菜单，避免 MainRun 快速退出后再次被禁用。
+                SetMenusEnabled(false);
+                mainThread.Start();
             }
             else
             {
-                if (mainThread != null && mainThread.IsAlive)
-                {
-
-                }
                 model.stop = true;
                 model.mainModel.buttonRunContentControl = _3DLaserGlueInspection.Resources.LanguageDict.Start;
                 model.mainModel.buttonRunTagControl = "\uE658";
 
-                //允许菜单
-                //MenuItem_paraSetting.IsEnabled = true;
-                MenuItem_standardBlockTest.IsEnabled = true;
-                MenuItem_signalSetting.IsEnabled = true;
-                MenuItem_camSetting.IsEnabled = true;
-                MenuItem_productSetting.IsEnabled = true;
+                // 菜单由 RunFinished 通知在主流程清理结束后恢复。
             }
 
             ////测试

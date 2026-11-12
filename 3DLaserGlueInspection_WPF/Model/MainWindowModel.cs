@@ -54,10 +54,18 @@ namespace _3DLaserGlueInspection
     public delegate void RefreshOnEventHandler(int time, bool autoSize);
     public delegate void RefreshOFFEventHandler();
 
+    /// <summary>
+    /// 协调检测主流程、设备通讯、相机与图像显示，并向 MainModel 发布界面状态和运行日志。
+    /// 主流程负责设备初始化、循环检测及退出清理；RunFinished 用于通知主窗口恢复设置入口。
+    /// </summary>
+    /// <remarks>同一实例只允许一个 MainRun 线程；设备和检测状态由主流程管理。日志文件通过 olock 串行写入，UI 记录由应用 Dispatcher 更新。</remarks>
     public class MainWindowModel : NotifyBase
     {
         // 当 initRun 中确定了相机参数数量时，通知 UI 调整列显示
         public event Action<int> CamCountChanged;
+
+        /// <summary>主流程退出清理的 finally 结束时同步通知；订阅方负责切换到 UI 线程，不应阻塞或抛出异常。</summary>
+        public event Action RunFinished;
 
         public MainModel mainModel { get; set; } = new MainModel();
 
@@ -279,6 +287,14 @@ namespace _3DLaserGlueInspection
                 currentRunID = null;
             }
         }
+        /// <summary>
+        /// 加载检测与设备参数，连接机器人、PLC 和相机，并在停止请求前循环执行产品识别、采集、检测及结果输出。
+        /// 退出时撤销 Ready、关闭通讯和相机，恢复运行显示，并在清理的 finally 中发出 RunFinished 通知。
+        /// </summary>
+        /// <remarks>
+        /// 由主窗口创建的独立线程调用，同一实例不可重入；通过 stop 请求结束，设备和当前检测状态在整个任务期间由本流程管理。
+        /// 检测异常按现有逻辑写入日志；清理或通知中的异常仍可能向调用线程传播，RunFinished 不代表所有设备均已成功关闭。
+        /// </remarks>
         public void MainRun()
         {
             ClearCurrentRunID();
@@ -1573,54 +1589,55 @@ namespace _3DLaserGlueInspection
             }
             finally
             {
-                robot.Write(DO.Ready, false);
-
-                robot.Close();
-                plc.Close();
-                //io.Close();
-                //关闭激光和相机
-                foreach (var cam in cams.Values)
+                try
                 {
-                    if (cam.IsOpen)
+                    robot.Write(DO.Ready, false);
+
+                    robot.Close();
+                    plc.Close();
+                    //io.Close();
+                    //关闭激光和相机
+                    foreach (var cam in cams.Values)
                     {
-                        if (cam.SetLine1Inverter(false))
+                        if (cam.IsOpen)
                         {
-                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.LaserSuccessfullyTurnedOff);
-                        }
-                        else
-                        {
-                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.LaserShutdownFailed + cam.ErrMsg, LogType.ng);
-                        }
-                        if (cam.Close())
-                        {
-                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.CloseSuccessfully);
-                        }
-                        else
-                        {
-                            ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.ClosingFailed + cam.ErrMsg, LogType.ng);
+                            if (cam.SetLine1Inverter(false))
+                            {
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.LaserSuccessfullyTurnedOff);
+                            }
+                            else
+                            {
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.LaserShutdownFailed + cam.ErrMsg, LogType.ng);
+                            }
+                            if (cam.Close())
+                            {
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.CloseSuccessfully);
+                            }
+                            else
+                            {
+                                ShowMessage(_3DLaserGlueInspection.Resources.LanguageDict.Cam1 + "(" + cam.Name + ")" + _3DLaserGlueInspection.Resources.LanguageDict.ClosingFailed + cam.ErrMsg, LogType.ng);
+                            }
                         }
                     }
                 }
-                try
+                finally
                 {
-                    //BeginInvoke(new Action(() =>
-                    //{
-                    //    button启停.Text = _3DLaserGlueInspection.Resources.LanguageDict.启动");
-                    //    button启停.Image = Resources._2;
-                    //}));
-
-                    mainModel.buttonRunContentControl = _3DLaserGlueInspection.Resources.LanguageDict.Start;
-                    mainModel.buttonRunTagControl = "\uE658";
-                    //Invoke(new Action(() =>
-                    //{
-                    //    e灯颜色 = 灯颜色.红;
-                    //    label软件.Refresh();
-                    //}));
-
-                    mainModel.softwareRunLabelColorControl = labelColorEnum["red"];
-
+                    try
+                    {
+                        mainModel.buttonRunContentControl = _3DLaserGlueInspection.Resources.LanguageDict.Start;
+                        mainModel.buttonRunTagControl = "\uE658";
+                        mainModel.softwareRunLabelColorControl = labelColorEnum["red"];
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine("恢复运行显示失败：" + ex);
+                    }
+                    finally
+                    {
+                        // 即使清理或显示恢复异常，也必须让窗口收到运行结束通知。
+                        RunFinished?.Invoke();
+                    }
                 }
-                catch { }
             }
         }
 
@@ -3263,6 +3280,16 @@ namespace _3DLaserGlueInspection
 
         object olock = new object();
 
+        /// <summary>
+        /// 为消息添加 VIN、线程和调用位置，按日志类型更新界面记录，再写入按日期划分的运行日志。
+        /// 警告和 NG 同时沿用原有 Error.log 记录方式。
+        /// </summary>
+        /// <param name="message">待记录的业务消息，不会被作为格式字符串解析。</param>
+        /// <param name="type">日志类型，用于界面分类、警告前缀和错误文件分流。</param>
+        /// <param name="callerMemberName">调用成员名，默认由编译器提供，也可由包装方法传入原始调用位置。</param>
+        /// <param name="callerFilePath">调用源码路径，默认由编译器提供；日志只保留文件名。</param>
+        /// <param name="callerLineNumber">调用源码行号，默认由编译器提供，包装调用可保持默认值 0。</param>
+        /// <remarks>可从工作线程调用，但会同步等待应用 Dispatcher 更新 UI；文件写入通过 olock 串行执行，运行日志 I/O 异常按原有方式传播。</remarks>
         public void ShowMessage(
             string message,
             LogType type,
@@ -3270,31 +3297,9 @@ namespace _3DLaserGlueInspection
             [CallerFilePath] string callerFilePath = "",
             [CallerLineNumber] int callerLineNumber = 0)
         {
-            string idForLog;
-            lock (runLogLock)
-            {
-                idForLog = currentRunID;
-            }
-            if (idForLog != null)
-            {
-                message = $"[VIN:{idForLog}] {message}";
-            }
-            
-            int threadId = Thread.CurrentThread.ManagedThreadId;
-            string callerFile = System.IO.Path.GetFileName(callerFilePath);
-            string callerLocation = $"{callerFile}:{callerLineNumber} {callerMemberName}";
-            message = $"[ThreadId:{threadId}][Caller:{callerLocation}] {message} ";
-
-            if (type == LogType.warn)
-            {
-                message = "[error]" + message;
-            }
-
-           
+            message = ProcessMessage(message, type, callerMemberName, callerFilePath, callerLineNumber);
 
             DateTime dateTime = DateTime.Now;
-            string day = dateTime.ToString("yyyy-MM-dd");
-            string time = dateTime.ToString("HH:mm:ss.fff");
 
 
             LogRecord logRecord = new LogRecord();
@@ -3331,8 +3336,23 @@ namespace _3DLaserGlueInspection
                 mainModel.LogRecords.Insert(0, logRecord);
             });
 
+            WriteLog(message, type, dateTime);
+        }
+
+        /// <summary>
+        /// 将已经格式化的消息按指定时间写入 RunLog/yyyy-MM-dd.log，保留 PI 收发事件的实际时间。
+        /// 不访问 UI；警告和 NG 另写 Error.log，沿用既有错误日志兼容处理。
+        /// </summary>
+        /// <param name="message">已经添加所需前缀的日志内容；本方法不会再次格式化调用位置或 VIN。</param>
+        /// <param name="type">日志类别；warn 和 ng 额外写入 Error.log，其他类别只写运行日志。</param>
+        /// <param name="dateTime">记录对应的本地时间，用于选择日志日期和行首时间，PI 事件应传入事件 Timestamp。</param>
+        /// <remarks>通过 olock 串行执行目录创建及文件追加，每次关闭文件句柄；运行日志的权限和 I/O 异常向调用方传播，Error.log 写入失败沿用原有忽略策略。</remarks>
+        public void WriteLog(string message, LogType type, DateTime dateTime)
+        {
             lock (olock)
             {
+                string day = dateTime.ToString("yyyy-MM-dd");
+                string time = dateTime.ToString("HH:mm:ss.fff");
                 if (!Directory.Exists("RunLog"))
                 {
                     Directory.CreateDirectory("RunLog");
@@ -3353,6 +3373,44 @@ namespace _3DLaserGlueInspection
 
         }
 
+
+        /// <summary>
+        /// 在原始消息前添加当前运行 VIN、线程 ID 和调用位置，警告类别再添加 error 前缀。
+        /// 将格式化与 UI 显示分离，供 PI 收发日志直接写文件复用。
+        /// </summary>
+        /// <param name="message">原始日志内容；允许为空，按字符串插值规则处理。</param>
+        /// <param name="type">日志类型；仅 warn 会添加 error 前缀。</param>
+        /// <param name="callerMemberName">调用成员名，省略时由编译器提供。</param>
+        /// <param name="callerFilePath">调用文件路径，省略时由编译器提供；仅文件名进入日志。</param>
+        /// <param name="callerLineNumber">调用行号，省略时由编译器提供，未提供有效位置时可为 0。</param>
+        /// <returns>添加上下文后的日志字符串，不包含行首时间。</returns>
+        /// <remarks>通过 runLogLock 读取 VIN 快照，不修改运行状态、不写文件或访问 UI，可从通讯线程调用。</remarks>
+        public string ProcessMessage(string message, LogType type,
+            [CallerMemberName] string callerMemberName = "",
+            [CallerFilePath] string callerFilePath = "",
+            [CallerLineNumber] int callerLineNumber = 0)
+        {
+            string idForLog;
+            lock (runLogLock)
+            {
+                idForLog = currentRunID;
+            }
+            if (idForLog != null)
+            {
+                message = $"[VIN:{idForLog}] {message}";
+            }
+
+            int threadId = Thread.CurrentThread.ManagedThreadId;
+            string callerFile = System.IO.Path.GetFileName(callerFilePath);
+            string callerLocation = $"{callerFile}:{callerLineNumber} {callerMemberName}";
+            message = $"[ThreadId:{threadId}][Caller:{callerLocation}] {message} ";
+
+            if (type == LogType.warn)
+            {
+                message = "[error]" + message;
+            }
+            return message;
+        }
 
         object olockShow = new object();
         bool showing = false;

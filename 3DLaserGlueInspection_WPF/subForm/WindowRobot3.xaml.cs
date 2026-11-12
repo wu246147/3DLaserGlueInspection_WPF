@@ -21,8 +21,10 @@ using static System.Net.Mime.MediaTypeNames;
 namespace _3DLaserGlueInspection.subForm
 {
     /// <summary>
-    /// WindowRobot.xaml 的交互逻辑
+    /// 机器人通讯设置与信号调试窗口，编辑连接参数和 DI/DO 映射，并显示通讯操作记录。
+    /// 复用外部传入的机器人实例，日志可从通讯线程通过控件 Dispatcher 安全追加。
     /// </summary>
+    /// <remarks>窗口控件由 UI 线程管理；本窗口只借用机器人实例，通讯生命周期仍由既有连接及主流程控制。</remarks>
     public partial class WindowRobot3 : Window
     {
         List<System.Windows.Controls.Label> diNameLabels = new List<System.Windows.Controls.Label>();
@@ -45,9 +47,15 @@ namespace _3DLaserGlueInspection.subForm
 
         }
 
+        /// <summary>将带本地时间的通讯消息追加到日志控件，通过控件 Dispatcher 同步切换到 UI 线程。</summary>
+        /// <param name="message">要追加的日志内容；允许为空，仍会写入时间和换行。</param>
+        /// <remarks>可由后台通讯回调调用，会等待 UI 处理完成；调用方不得持有 UI 线程正在等待的锁，窗口关闭后不应继续调用。</remarks>
         void ShowMessage(string message)
         {
-            logTextBox.Text += DateTime.Now.TimeOfDay.ToString("hh\\:mm\\:ss") + "  " + message + "\r\n";
+            logTextBox.Dispatcher.Invoke(() =>
+            {
+                logTextBox.Text += DateTime.Now.TimeOfDay.ToString("hh\\:mm\\:ss") + "  " + message + "\r\n";
+            });
         }
 
         private void UpData(object sender, EventArgs e)
