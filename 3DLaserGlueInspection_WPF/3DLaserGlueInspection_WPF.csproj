@@ -189,6 +189,9 @@
     <Compile Include="subForm\WindowCopy.xaml.cs">
       <DependentUpon>WindowCopy.xaml</DependentUpon>
     </Compile>
+    <Compile Include="subForm\WindowMoveImageParameters.xaml.cs">
+      <DependentUpon>WindowMoveImageParameters.xaml</DependentUpon>
+    </Compile>
     <Compile Include="subForm\WindowNewPassWord.xaml.cs">
       <DependentUpon>WindowNewPassWord.xaml</DependentUpon>
     </Compile>
@@ -224,6 +227,7 @@
     <Compile Include="tool\DioCtr.cs" />
     <Compile Include="tool\HFileIO.cs" />
     <Compile Include="tool\HMatrixTransform.cs" />
+    <Compile Include="tool\ImageParameterMover.cs" />
     <Compile Include="tool\PISerialPort.cs" />
     <Compile Include="Model\MainModel.cs" />
     <Compile Include="subForm\User3DShowControl_H.xaml.cs">
@@ -281,6 +285,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="subForm\WindowCopy.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="subForm\WindowMoveImageParameters.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

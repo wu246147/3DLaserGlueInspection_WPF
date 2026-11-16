@@ -466,6 +466,21 @@
                                 </Grid>
                             </Border>
 
+                            <Button x:Name="moveImageParametersButton" Content="图片参数移动" FontSize="14" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Top" Height="28" Width="140" BorderBrush="#FFDDDDDD" Background="#FF263851" Margin="10,580,0,0" Click="moveImageParametersButton_Click" ToolTip="移动当前检测段、当前选中相机的连续图片参数。目标范围原有参数将被覆盖，空出的源位置恢复为默认参数。">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedIndex, ElementName=cutSetListBox}" Value="-1">
+                                                <Setter Property="IsEnabled" Value="False" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding SelectedIndex, ElementName=selectCamListBox}" Value="-1">
+                                                <Setter Property="IsEnabled" Value="False" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+
                         </Grid>
                     </TabItem>
                 </TabControl>

@@ -1225,6 +1225,14 @@ namespace _3DLaserGlueInspection.subForm
 
         }
 
+        /// <summary>
+        /// 在相机或图片选择变化后，先保存离开图片的拖动框，再加载当前图片、位姿及对应参数并刷新视图。
+        /// 参数加载独立于采集图像和机器人位姿，保证未加载采集数据时也能显示及保存移动后的图片参数。
+        /// </summary>
+        /// <remarks>
+        /// 必须在 UI 线程调用；会更新当前图像和参数引用、控件事件订阅及显示框。
+        /// 图像由 Images 集合持有，本方法只切换引用，不释放图像；选中项无效时清空相应视图和参数引用。
+        /// </remarks>
         void SelectedCamAndImage()
         {
             // 列表索引已经改变，但 imageSet 和 hImage 仍属于上一张；必须先保存再加载。
@@ -1398,8 +1406,13 @@ namespace _3DLaserGlueInspection.subForm
                     //System.Windows.Forms.MessageBox.Show(ex.ToString());
                 }
             showImageEnd:
+                ;
+            }
 
-
+            // 图片参数不依赖采集数据，离线移动后也必须刷新控件，防止保存时将旧控件值写回。
+            if (set != null && cutSetListBox.SelectedIndex >= 0 && selectCamListBox.SelectedIndex >= 0
+                && selectPictureListBox.SelectedIndex >= 0)
+            {
                 //参数更新
                 try
                 {
@@ -1526,6 +1539,96 @@ namespace _3DLaserGlueInspection.subForm
 
         }
 
+
+        /// <summary>
+        /// 打开当前检测段、当前选中相机的图片参数移动弹窗，并在二次确认通过后执行整批移动。
+        /// 不要求加载采集图像；运行自动测试或范围矫正时拒绝操作，完成后保留未保存状态。
+        /// </summary>
+        /// <param name="sender">触发事件的图片参数移动按钮，不读取其状态。</param>
+        /// <param name="e">WPF 点击事件参数，不修改事件处理标记。</param>
+        /// <remarks>必须在 UI 线程调用；异常在事件边界显示给用户，不自动写入车型配置。</remarks>
+        private void moveImageParametersButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (isCorrectingRange || isAuto)
+            {
+                System.Windows.MessageBox.Show(this, "请先停止自动测试或等待范围矫正结束，再移动图片参数。", "图片参数移动");
+                return;
+            }
+            int cutIndex = cutSetListBox.SelectedIndex;
+            int cameraIndex = selectCamListBox.SelectedIndex;
+            if (set == null || cutIndex < 0 || cutIndex >= set.CutSets.Count
+                || cameraIndex < 0 || set.CutSets[cutIndex] == null)
+            {
+                System.Windows.MessageBox.Show(this, "请先选择车型、检测段和相机。", "图片参数移动");
+                return;
+            }
+            CutSet currentCut = set.CutSets[cutIndex];
+            if (currentCut.ImageNum <= 0 || currentCut.imageSet == null || cameraIndex >= currentCut.imageSet.Count
+                || currentCut.imageSet[cameraIndex] == null || currentCut.imageSet[cameraIndex].Count < currentCut.ImageNum)
+            {
+                System.Windows.MessageBox.Show(this, "当前相机的图片参数数量不足，请先检查检测段的图片数量配置。", "图片参数移动");
+                return;
+            }
+            string scope = $"车型：{set.Name}\n检测段：{currentCut.Name}，相机：Cam{cameraIndex + 1}";
+            var moveWindow = new WindowMoveImageParameters(selectPictureListBox.SelectedIndex, currentCut.ImageNum, scope)
+            {
+                Owner = this
+            };
+            if (moveWindow.ShowDialog() != true)
+                return;
+            try
+            {
+                ApplyImageParameterMove(currentCut.imageSet[cameraIndex], currentCut.ImageNum,
+                    moveWindow.StartId, moveWindow.EndId, moveWindow.TargetStartId);
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show(this, "图片参数移动未完成：" + ex.Message, "图片参数移动",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            System.Windows.MessageBox.Show(this, "图片参数移动完成，请点击“保存参数”保存修改。", "图片参数移动");
+        }
+
+        /// <summary>
+        /// 保存当前图片尚未写回的拖动框，执行指定相机的参数移动，并清除旧引用及检测结果后刷新当前图片。
+        /// 保持图片选择及显示框勾选状态；刷新前断开旧参数引用，避免旧检测框写回刚移动的参数。
+        /// </summary>
+        /// <param name="frames">当前检测段、当前选中相机的参数列表，不允许为空且须包含 imageCount 个参数。</param>
+        /// <param name="imageCount">当前检测段配置的图片数量，大于 0；超出数量的历史参数保持原样。</param>
+        /// <param name="startId">源区间起始图片 ID，必须在 0 至 endId 之间。</param>
+        /// <param name="endId">源区间结束图片 ID，包含此位置，必须小于 imageCount。</param>
+        /// <param name="targetStartId">目标起始图片 ID，目标完整区间必须位于有效图片范围内。</param>
+        /// <exception cref="ArgumentException">参数列表为空，区间倒置或源、目标区间越界。</exception>
+        /// <exception cref="InvalidOperationException">列表数量不足或源参数为空，准备阶段终止移动。</exception>
+        /// <remarks>
+        /// 仅在 UI 线程且没有自动测试或范围矫正任务时调用，不写配置文件。
+        /// 移动提交后即标记未保存；显示刷新失败时单独提示，保留已提交结果供用户保存。
+        /// </remarks>
+        private void ApplyImageParameterMove(List<ImageSet> frames, int imageCount, int startId, int endId, int targetStartId)
+        {
+            ImageParameterMover.GetTargetEndId(imageCount, startId, endId, targetStartId);
+            if (startId == targetStartId)
+                return;
+            SaveOriginalImageRegions(true);
+            ImageParameterMover.Move(frames, imageCount, startId, endId, targetStartId);
+            isAlter = true;
+            // 当前字段和拖动快照可能仍指向移动前的对象，刷新入口会先保存它们，因此必须先断开引用。
+            imageSet = null;
+            baseLineDragFrame = null;
+            baseLineDragRegions = null;
+            resultData = new Data();
+            bResult = new BResult();
+            try
+            {
+                SelectedCamAndImage();
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show(this, "参数已移动，但当前图片刷新失败：" + ex.Message
+                    + "\n请重新选择图片并保存参数。", "图片参数移动", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
 
         private void saveParametersButton_Click(object sender, RoutedEventArgs e)
         {
