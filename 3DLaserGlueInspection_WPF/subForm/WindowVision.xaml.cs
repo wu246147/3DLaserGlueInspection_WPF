@@ -1226,7 +1226,7 @@ namespace _3DLaserGlueInspection.subForm
         }
 
         /// <summary>
-        /// 在相机或图片选择变化后，先保存离开图片的拖动框，再加载当前图片、位姿及对应参数并刷新视图。
+        /// 在相机或参数位置变化后，保存原参数的拖动框，再按临时映射加载实际图片和位姿。
         /// 参数加载独立于采集图像和机器人位姿，保证未加载采集数据时也能显示及保存移动后的图片参数。
         /// </summary>
         /// <remarks>
@@ -1235,6 +1235,7 @@ namespace _3DLaserGlueInspection.subForm
         /// </remarks>
         void SelectedCamAndImage()
         {
+            if (refreshingParameterImages) return;
             // 列表索引已经改变，但 imageSet 和 hImage 仍属于上一张；必须先保存再加载。
             SaveOriginalImageRegions();
             hWindowModel.RemoveRect("detRect");
@@ -1243,18 +1244,21 @@ namespace _3DLaserGlueInspection.subForm
             camKey = null;
             bool existImage = false;
             bool showPara = false;
+            int actualImageId = GetAlignedImageId(cutSetListBox.SelectedIndex, selectCamListBox.SelectedIndex, selectPictureListBox.SelectedIndex);
+            currentRobotPose = null;
+            lastRobotPose = null;
 
 
-            if (cutSetListBox.SelectedIndex >= 0 && selectCamListBox.SelectedIndex >= 0 && selectPictureListBox.SelectedIndex >= 0 && robotPoseKeys.Count > 0)
+            if (cutSetListBox.SelectedIndex >= 0 && selectCamListBox.SelectedIndex >= 0 && actualImageId >= 0)
             {
                 
                 //图片更新
                 try
                 {
                     camKey = $"Cam{selectCamListBox.SelectedIndex + 1}";
-                    if (ImageKeys.Count > cutSetListBox.SelectedIndex && ImageKeys[cutSetListBox.SelectedIndex].ContainsKey(camKey) && ImageKeys[cutSetListBox.SelectedIndex][camKey].Count > selectPictureListBox.SelectedIndex)
+                    if (ImageKeys.Count > cutSetListBox.SelectedIndex && ImageKeys[cutSetListBox.SelectedIndex].ContainsKey(camKey) && ImageKeys[cutSetListBox.SelectedIndex][camKey].Count > actualImageId)
                     {
-                        long imageKey = ImageKeys[cutSetListBox.SelectedIndex][camKey][selectPictureListBox.SelectedIndex];
+                        long imageKey = ImageKeys[cutSetListBox.SelectedIndex][camKey][actualImageId];
 
 
                         hImage = Images[cutSetListBox.SelectedIndex][camKey][imageKey];
@@ -1268,6 +1272,7 @@ namespace _3DLaserGlueInspection.subForm
 
                         robotAndCamAngleNumericUpDown.Text = "NaN";
                         robotAndCamAngle = double.NaN;
+                        if (robotPoseKeys.Count == 0) goto showImageEnd;
 
 
                         //获取当前图片的机器人位姿
@@ -1292,10 +1297,10 @@ namespace _3DLaserGlueInspection.subForm
                         }
 
                         //如果是第一张图片，不用进行检测
-                        if (selectPictureListBox.SelectedIndex > 0)
+                        if (actualImageId > 0)
                         {
                             //先获取上一张图片的机器人位姿
-                            long lastImageKey = ImageKeys[cutSetListBox.SelectedIndex][camKey][selectPictureListBox.SelectedIndex - 1];
+                            long lastImageKey = ImageKeys[cutSetListBox.SelectedIndex][camKey][actualImageId - 1];
 
                             for (int i = 0; i < robotPoseKeys.Count; i++)
                             {
@@ -1505,6 +1510,7 @@ namespace _3DLaserGlueInspection.subForm
                 imageSet = null;
             }
 
+            UpdateImageAlignmentStatus();
             //刷新界面
             int showImageComboboxIndex = showImageComboBox.SelectedIndex;
 
@@ -1664,6 +1670,10 @@ namespace _3DLaserGlueInspection.subForm
             }
         }
 
+        /// <summary>切换车型并加载其参数，重新计算已加载图片与新车型参数的临时对应关系。</summary>
+        /// <param name="sender">车型选择控件，不读取其实例。</param>
+        /// <param name="e">选择变化事件，不修改事件标记。</param>
+        /// <remarks>UI 线程调用；沿用既有未保存参数提示及车型资源释放流程。</remarks>
         private void carTypeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (isAlter && set != null)
@@ -1684,6 +1694,8 @@ namespace _3DLaserGlueInspection.subForm
                 isAlter = false;
             }
 
+            imageParameterOffsets.Clear();
+            imageAlignmentMessages.Clear();
             CamParamName = null;
             if (carTypeComboBox.SelectedIndex >= 0)
             {
@@ -1722,6 +1734,9 @@ namespace _3DLaserGlueInspection.subForm
                 set = null;
                 addButton.IsEnabled = deleteButton.IsEnabled = false;
             }
+            RebuildImageParameterAlignment();
+            RefreshParameterImageList();
+            SelectedCamAndImage();
         }
 
         private void cutSetListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1927,8 +1942,13 @@ namespace _3DLaserGlueInspection.subForm
             selectPictureListBox.ScrollIntoView(selectPictureListBox.SelectedItem);
         }
 
+        /// <summary>切换相机后刷新参数双列列表，再按该相机映射加载图片。</summary>
+        /// <param name="sender">相机选择控件，不读取其实例。</param>
+        /// <param name="e">选择变化事件，不修改事件标记。</param>
+        /// <remarks>仅在 UI 线程运行，参数修改仍绑定原有 ImageSet 对象。</remarks>
         private void selectCamListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            RefreshParameterImageList();
             SelectedCamAndImage();
 
         }
@@ -1960,8 +1980,18 @@ namespace _3DLaserGlueInspection.subForm
             }
         }
 
+        /// <summary>加载本批原图和机器人记录，清除旧数据结果并按车型起点自动建立临时对应关系。</summary>
+        /// <param name="sender">数据源选择控件，不读取其实例。</param>
+        /// <param name="e">选择变化事件，不修改事件标记。</param>
+        /// <remarks>在 UI 线程替换图像资源；无起点基准时使用相同 ID，不修改参数内容和保存状态。</remarks>
         private void dataScoreComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            SaveOriginalImageRegions(true);
+            imageParameterOffsets.Clear();
+            imageAlignmentMessages.Clear();
+            hImage = null;
+            currentRobotPose = lastRobotPose = null;
+            hWindowModel.Clear();
             // 无论是否选中了新的数据源，都不能沿用上一次数据源的姿态格式状态。
             recordedRobotPoseHasR7 = null;
 
@@ -1989,6 +2019,8 @@ namespace _3DLaserGlueInspection.subForm
             }
             Images.Clear();
 
+            RefreshParameterImageList();
+            UpdateImageAlignmentStatus();
             if (dataScoreComboBox.SelectedIndex >= 0)
             {
                 string basePath = dataScoreComboBox.Items[dataScoreComboBox.SelectedIndex].ToString();
@@ -2146,6 +2178,9 @@ namespace _3DLaserGlueInspection.subForm
                     return;
                 }
             }
+            RebuildImageParameterAlignment();
+            RefreshParameterImageList();
+            SelectedCamAndImage();
         }
 
         private void lastSourecButton_Click(object sender, RoutedEventArgs e)
@@ -2600,6 +2635,10 @@ namespace _3DLaserGlueInspection.subForm
 
         }
 
+        /// <summary>按显示设置的参数 ID 范围取得映射后位姿，并显示已标定的二维检测轨迹。</summary>
+        /// <param name="sender">轨迹显示按钮，不读取其状态。</param>
+        /// <param name="e">点击事件，不修改事件标记。</param>
+        /// <remarks>UI 线程调用；范围缺少实际图片或提取位姿时提示并终止。</remarks>
         private void showTrajectoryButton_Click(object sender, RoutedEventArgs e)
         {
             if (cutSetListBox.SelectedIndex >= 0 && selectCamListBox.SelectedIndex >= 0)
@@ -2648,15 +2687,7 @@ namespace _3DLaserGlueInspection.subForm
                             return;
                         }
 
-                        var poseKey = CamCenter3DPoseDict[camKey][cutSetListBox.SelectedIndex].Keys.ToList();
-
-
-                        for (int i = set.CutSets[cutSetListBox.SelectedIndex].StartImageIndex; i < set.CutSets[cutSetListBox.SelectedIndex].EndImageIndex; i++)
-                        {
-
-                            var poseVal = CamCenter3DPoseDict[camKey][cutSetListBox.SelectedIndex][poseKey[i]];
-                            pose3D.Add(new double[] { poseVal.x, poseVal.y, poseVal.z, poseVal.rx, poseVal.ry, poseVal.rz, poseVal.PoseType });
-                        }
+                        if (!TryLoadAlignedPoseRange(cutSetListBox.SelectedIndex, camKey)) return;
 
                         if (pose3D.Count == 0)
                         {
@@ -2817,9 +2848,13 @@ namespace _3DLaserGlueInspection.subForm
         }
 
 
+        /// <summary>按参数数量调整导航列表，显示每个固定参数 ID 对应的本批实际图片 ID。</summary>
+        /// <param name="sender">参数数量输入框，不读取其具体实例。</param>
+        /// <param name="e">文本变化事件，不修改事件标记。</param>
+        /// <remarks>UI 线程调用；输入不完整时等待后续输入，不改变实际采集图片数量。</remarks>
         private void imageCountNumericUpDown_TextChanged(object sender, TextChangedEventArgs e)
         {
-            int ImageNum = Convert.ToInt32(imageCountNumericUpDown.Text);
+            if (!int.TryParse(imageCountNumericUpDown.Text, out int ImageNum) || ImageNum < 0) return;
             if (selectPictureListBox != null)
             {
                 while (selectPictureListBox.Items.Count < ImageNum)
@@ -2831,7 +2866,7 @@ namespace _3DLaserGlueInspection.subForm
                     selectPictureListBox.Items.RemoveAt(selectPictureListBox.Items.Count - 1);
                 }
             }
-
+            RefreshParameterImageList();
         }
 
         private void Show2DWindow()
@@ -2847,6 +2882,10 @@ namespace _3DLaserGlueInspection.subForm
 
         }
 
+        /// <summary>切换当前参数位置的显示方式，所有原始时间戳均按本批映射后的图片 ID 读取。</summary>
+        /// <param name="sender">显示方式选择控件，不读取其实例。</param>
+        /// <param name="e">选择变化事件，不修改事件标记。</param>
+        /// <remarks>在 UI 线程更新二维、三维显示；依赖图片的位置显示在缺图时清空，不沿用旧图。</remarks>
         private void showImageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (cutSetListBox.SelectedIndex < 0 || selectCamListBox.SelectedIndex < 0 || selectPictureListBox.SelectedIndex < 0 || robotPoseKeys.Count < 0)
@@ -2859,6 +2898,12 @@ namespace _3DLaserGlueInspection.subForm
                 return;
             }
 
+            int actualImageId = GetAlignedImageId(cutSetListBox.SelectedIndex, selectCamListBox.SelectedIndex, selectPictureListBox.SelectedIndex);
+            if ((showImageComboBox.SelectedIndex == 4 || showImageComboBox.SelectedIndex == 5) && actualImageId < 0)
+            {
+                hWindowModel.Clear();
+                return;
+            }
             SaveOriginalImageRegions(true);
             if (showImageComboBox.SelectedIndex != 2 && showImageComboBox.SelectedIndex != 4)
             {
@@ -2940,6 +2985,7 @@ namespace _3DLaserGlueInspection.subForm
                         //显示检测点云
                         foreach (var camKey in Point3DXsDict.Keys) //相机
                         {
+                            int cameraIndex = int.Parse(camKey.Substring(3)) - 1;
                             var dictRobotX = Point3DXsDict[camKey];
                             var dictRobotY = Point3DYsDict[camKey];
                             var dictRobotZ = Point3DZsDict[camKey];
@@ -2951,6 +2997,7 @@ namespace _3DLaserGlueInspection.subForm
 
                                 foreach (var dictRobotPointKey in dictRobotX[i].Keys)
                                 {
+                                    if (!IsWithinDisplayParameterRange(i, cameraIndex, dictRobotPointKey)) continue;
                                     var x = dictRobotX[i][dictRobotPointKey];
                                     var y = dictRobotY[i][dictRobotPointKey];
                                     var z = dictRobotZ[i][dictRobotPointKey];
@@ -3070,7 +3117,7 @@ namespace _3DLaserGlueInspection.subForm
 
 
                                 //获取机器人位姿
-                                long imageKey = ImageKeys[cutSetListBox.SelectedIndex][camKey][selectPictureListBox.SelectedIndex];
+                                long imageKey = ImageKeys[cutSetListBox.SelectedIndex][camKey][actualImageId];
 
                                 if (robotPoseKeys[i] < imageKey)//循环到的姿态晚于等于图片，处理
                                 {
@@ -3104,7 +3151,7 @@ namespace _3DLaserGlueInspection.subForm
 
 
                                 //获取机器人位姿
-                                long imageKey = ImageKeys[cutSetListBox.SelectedIndex][camKey][selectPictureListBox.SelectedIndex];
+                                long imageKey = ImageKeys[cutSetListBox.SelectedIndex][camKey][actualImageId];
 
                                 if (robotPoseKeys[i] < imageKey)//循环到的姿态晚于等于图片，处理
                                 {
@@ -3126,7 +3173,7 @@ namespace _3DLaserGlueInspection.subForm
                             int indexRobotPose = 1;
 
                             //获取机器人位姿
-                            long imageKey = ImageKeys[cutSetListBox.SelectedIndex][camKey][selectPictureListBox.SelectedIndex];
+                            long imageKey = ImageKeys[cutSetListBox.SelectedIndex][camKey][actualImageId];
 
                             while (robotPoseKeys[indexRobotPose] < imageKey)//循环到的姿态晚于等于图片，处理
                             {
@@ -3208,7 +3255,7 @@ namespace _3DLaserGlueInspection.subForm
                             System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.TrajectoryNotMappedSetFirst);
                             return;
                         }
-                        long imageKey = ImageKeys[cutSetListBox.SelectedIndex][camKey][selectPictureListBox.SelectedIndex];
+                        long imageKey = ImageKeys[cutSetListBox.SelectedIndex][camKey][actualImageId];
 
                         getRobotPose(imageKey,out currentRobotPose);
 
@@ -3384,6 +3431,10 @@ namespace _3DLaserGlueInspection.subForm
                 }
             }
         }
+        /// <summary>按实际采集顺序提取各段点云，每张图片使用本批映射后的固定参数 ID。</summary>
+        /// <param name="sender">点云提取按钮，不读取其状态。</param>
+        /// <param name="e">点击事件，不修改事件标记。</param>
+        /// <remarks>UI 线程准备映射后启动既有后台任务；任务只读映射，提取期间沿用既有操作约束。</remarks>
         private void get3DDataButton_Click(object sender, RoutedEventArgs e)
         {
             if (!TryGetCurrentCameraHandEyeType(out CameraHandEyeType handEyeType)
@@ -3416,7 +3467,9 @@ namespace _3DLaserGlueInspection.subForm
             // 3D 每隔100毫秒再刷新一下结果
             _3DShowControl.RefreshOn(100, true);
 
-            var cutSet = set.CutSets[cutSetListBox.SelectedIndex];
+            var selectedCutSet = set.CutSets[cutSetListBox.SelectedIndex];
+            // 后台任务使用启动时的映射快照，界面重新对齐不会改变正在处理的帧所用参数 ID。
+            var alignmentSnapshot = new Dictionary<string, int?>(imageParameterOffsets);
 
             int camID = -1;
 
@@ -3424,13 +3477,13 @@ namespace _3DLaserGlueInspection.subForm
             foreach (var camKey in camKeyList)
             {
                 camID += 1;
-                int currentCamID = camID;
+                int currentCamID = int.Parse(camKey.Substring(3)) - 1;
 
                 //判断是否启用相机
-                bool CamEnabled = camKey == "Cam1" ? cutSet.CamEnabled[0] :
-                        camKey == "Cam2" ? cutSet.CamEnabled[1] :
-                        camKey == "Cam3" ? cutSet.CamEnabled[2] :
-                        cutSet.CamEnabled[3];
+                bool CamEnabled = camKey == "Cam1" ? selectedCutSet.CamEnabled[0] :
+                        camKey == "Cam2" ? selectedCutSet.CamEnabled[1] :
+                        camKey == "Cam3" ? selectedCutSet.CamEnabled[2] :
+                        selectedCutSet.CamEnabled[3];
 
                 if (CamEnabled)
                 {
@@ -3465,6 +3518,9 @@ namespace _3DLaserGlueInspection.subForm
 
                     for (int indexTaskCut = 0; indexTaskCut < Images.Count; indexTaskCut++)
                     {
+                        if (indexTaskCut >= set.CutSets.Count || !Images[indexTaskCut].ContainsKey(camKeyCopy)) continue;
+                        var cutSet = set.CutSets[indexTaskCut];
+                        alignmentSnapshot.TryGetValue(GetAlignmentKey(indexTaskCut, currentCamID), out int? offsetSnapshot);
                         var imageDict = Images[indexTaskCut][camKeyCopy];
 
                         var dictRobotPose = new Dictionary<long, PoseParameters>();
@@ -3482,19 +3538,23 @@ namespace _3DLaserGlueInspection.subForm
                         Point3DZsDict[camKeyCopy].Add(dictZ);
                         // 图片循环
                         int indexImage = -1;
-                        foreach (var camTimeKey in imageDict.Keys)
+                        foreach (var camTimeKey in GetActualImageKeys(indexTaskCut, currentCamID))
                         {
                             indexImage += 1;
 
-                            var imageSet = cutSet.imageSet[currentCamID][indexImage];
+                            int parameterId = ImageParameterAlignment.GetParameterId(indexImage, offsetSnapshot,
+                                Math.Min(cutSet.ImageNum, cutSet.imageSet[currentCamID].Count));
+                            if (parameterId < 0) continue;
+                            var imageSet = cutSet.imageSet[currentCamID][parameterId];
 
 
-                            while (robotPoseKeys[indexRobotPose] < camTimeKey)//循环到的姿态晚于等于图片，处理
+                            while (indexRobotPose < robotPoseKeys.Count && robotPoseKeys[indexRobotPose] < camTimeKey)
                             {
 
                                 indexRobotPose++;
                             }
 
+                            if (indexRobotPose >= robotPoseKeys.Count) continue;
                             Mat hImage_tmp = imageDict[camTimeKey].Clone();
                             if (hImage_tmp == null)
                             {
@@ -3728,7 +3788,9 @@ namespace _3DLaserGlueInspection.subForm
 
                                         int displayIntervalID = 2;
 
-                                        if (indexImage % displayIntervalID == 0)
+                                        bool displayRangeDefined = cutSet.EndImageIndex > cutSet.StartImageIndex;
+                                        if ((!displayRangeDefined || parameterId >= cutSet.StartImageIndex && parameterId <= cutSet.EndImageIndex)
+                                            && (parameterId - (displayRangeDefined ? cutSet.StartImageIndex : 0)) % displayIntervalID == 0)
                                         {
                                             colorScale = new List<double>();
                                             //计算显示颜色
@@ -3889,6 +3951,10 @@ namespace _3DLaserGlueInspection.subForm
 
         }
 
+        /// <summary>对当前参数位置执行三维切片检测，以映射后图片的实际时间戳定位已提取点云。</summary>
+        /// <param name="sender">三维检测按钮，不读取其状态。</param>
+        /// <param name="e">点击事件，不修改事件标记。</param>
+        /// <remarks>UI 线程调用；没有对应采集图片时不执行，沿用既有检测和结果显示流程。</remarks>
         private void runButton_Click(object sender, RoutedEventArgs e)
         {
             if (!TryGetCurrentCameraHandEyeType(out CameraHandEyeType handEyeType)
@@ -3911,7 +3977,8 @@ namespace _3DLaserGlueInspection.subForm
 
 
                     camKey = $"Cam{selectCamListBox.SelectedIndex + 1}";
-                    if (ImageKeys.Count > cutSetListBox.SelectedIndex && ImageKeys[cutSetListBox.SelectedIndex].ContainsKey(camKey) && ImageKeys[cutSetListBox.SelectedIndex][camKey].Count > selectPictureListBox.SelectedIndex)
+                    int actualImageId = GetAlignedImageId(cutSetListBox.SelectedIndex, selectCamListBox.SelectedIndex, selectPictureListBox.SelectedIndex);
+                    if (actualImageId >= 0)
                     {
                         List<string> camKeyList = new List<string> { "Cam1", "Cam2", "Cam3", "Cam4" };
 
@@ -3936,6 +4003,11 @@ namespace _3DLaserGlueInspection.subForm
                             }
                         }
                         long[] imageKeyList = Robot3DPoseDict[camKey_tmp][indexImageCut].Keys.ToArray();
+                        int referenceCameraIndex = int.Parse(camKey_tmp.Substring(3)) - 1;
+                        int referenceImageId = GetAlignedImageId(indexImageCut, referenceCameraIndex, indexImage);
+                        if (referenceImageId < 0) return;
+                        indexImage = Array.IndexOf(imageKeyList, GetActualImageKeys(indexImageCut, referenceCameraIndex)[referenceImageId]);
+                        if (indexImage < 0) return;
                         Mat cloudList = new Mat(), poseList = new Mat();
                         poseList = Mat.Zeros(Robot3DPoseDict[camKey_tmp][indexImageCut].Values.Count, 6, MatType.CV_64FC1);
                         int id = 0;
@@ -4397,6 +4469,9 @@ namespace _3DLaserGlueInspection.subForm
         /// 使用同一组实际胶宽、胶高，逐张矫正当前检测段、当前相机中选定范围的图片。
         /// 不切换列表选中项，也不调用按钮事件，避免自动检测、弹窗和 1000 次测试循环。
         /// </summary>
+        /// <param name="sender">范围矫正按钮，不读取其状态。</param>
+        /// <param name="e">点击事件，不修改事件标记。</param>
+        /// <remarks>范围采用参数 ID，原图与前一帧采用实际图片 ID；执行期间锁定设置及数据源。</remarks>
         private async void correctionRangeButton_Click(object sender, RoutedEventArgs e)
         {
             if (isCorrectingRange || cutSet == null || cutSet.isCoefficientSharing)
@@ -4478,7 +4553,8 @@ namespace _3DLaserGlueInspection.subForm
             {
                 for (int index = startId; index <= endId; index++)
                 {
-                    if (index >= imageKeys.Count)
+                    int actualImageId = GetAlignedImageId(cutIndex, cameraIndex, index);
+                    if (actualImageId < 0)
                     {
                         failures.Add($"图像 ID {index}：没有采集图像。");
                     }
@@ -4486,18 +4562,18 @@ namespace _3DLaserGlueInspection.subForm
                     {
                         failures.Add($"图像 ID {index}：没有对应的图像参数。");
                     }
-                    else if (!cameraImages.TryGetValue(imageKeys[index], out Mat frameImage) || frameImage == null || frameImage.Empty())
+                    else if (!cameraImages.TryGetValue(imageKeys[actualImageId], out Mat frameImage) || frameImage == null || frameImage.Empty())
                     {
                         failures.Add($"图像 ID {index}：图像为空。");
                     }
                     else
                     {
-                        long imageKey = imageKeys[index];
+                        long imageKey = imageKeys[actualImageId];
                         ImageSet original = frameParameters[index];
                         ImageSet candidate = original.Clone();
                         // 在副本上校准；矩阵和外接旋转矩形通过尺寸复检后才提交。
                         // 运动方向仍使用原图像序列的前一帧，不能把所选起始 ID 当成第一帧。
-                        long? previousKey = index > 0 ? (long?)imageKeys[index - 1] : null;
+                        long? previousKey = actualImageId > 0 ? (long?)imageKeys[actualImageId - 1] : null;
 
                         // 串行执行原生算法，后台计算使界面能持续显示进度。
                         using (CorrectionFrameResult outcome = await Task.Run(() => CorrectCalibrationFrame(
@@ -5129,6 +5205,10 @@ namespace _3DLaserGlueInspection.subForm
             return width;
         }
 
+        /// <summary>矫正当前固定参数位置，按临时映射取实际原图及其前一帧，成功后提交参数副本。</summary>
+        /// <param name="sender">单图矫正按钮，不读取其状态。</param>
+        /// <param name="e">点击事件，不修改事件标记。</param>
+        /// <remarks>UI 线程调用；没有实际图片时不执行，异常沿用既有事件边界提示。</remarks>
         private void correctionButton_Click(object sender, RoutedEventArgs e)
         {
             if (isCorrectingRange || cutSet == null || imageSet == null || hImage == null || hImage.Empty())
@@ -5141,7 +5221,7 @@ namespace _3DLaserGlueInspection.subForm
                     throw new InvalidOperationException("请输入有效的实际胶高。");
                 int cutIndex = cutSetListBox.SelectedIndex;
                 int cameraIndex = selectCamListBox.SelectedIndex;
-                int pictureIndex = selectPictureListBox.SelectedIndex;
+                int pictureIndex = GetAlignedImageId(cutIndex, selectCamListBox.SelectedIndex, selectPictureListBox.SelectedIndex);
                 if (cutIndex < 0 || cameraIndex < 0 || pictureIndex < 0 || string.IsNullOrEmpty(camKey)
                     || cutIndex >= ImageKeys.Count || !ImageKeys[cutIndex].TryGetValue(camKey, out var imageKeys)
                     || pictureIndex >= imageKeys.Count)
@@ -5224,6 +5304,10 @@ namespace _3DLaserGlueInspection.subForm
 
         }
 
+        /// <summary>按固定参数 ID 的显示起止范围读取实际位姿，执行既有二维轨迹映射标定。</summary>
+        /// <param name="sender">轨迹映射按钮，不读取其状态。</param>
+        /// <param name="e">点击事件，不修改事件标记。</param>
+        /// <remarks>仅在 UI 线程调用；缺图时拒绝不完整标定，成功后沿用既有参数未保存状态。</remarks>
         private void runMappingTrajectory_Click(object sender, RoutedEventArgs e)
         {
             if (cutSetListBox.SelectedIndex >= 0 && selectCamListBox.SelectedIndex >= 0 )
@@ -5260,7 +5344,7 @@ namespace _3DLaserGlueInspection.subForm
                         }
 
                         //判断长度是否足够
-                        if (set.CutSets[cutSetListBox.SelectedIndex].EndImageIndex > CamCenter3DPoseDict[camKey][cutSetListBox.SelectedIndex].Count - 1)
+                        if (set.CutSets[cutSetListBox.SelectedIndex].EndImageIndex >= set.CutSets[cutSetListBox.SelectedIndex].ImageNum)
                         {
                             //请先选择车型、路线和相机，并执行3D点云提取。
                             System.Windows.Forms.MessageBox.Show(_3DLaserGlueInspection.Resources.LanguageDict.EndPointNumberTooLarge);
@@ -5269,15 +5353,7 @@ namespace _3DLaserGlueInspection.subForm
 
 
 
-                        var poseKey = CamCenter3DPoseDict[camKey][cutSetListBox.SelectedIndex].Keys.ToList();
-
-
-                        for (int i = set.CutSets[cutSetListBox.SelectedIndex].StartImageIndex; i < set.CutSets[cutSetListBox.SelectedIndex].EndImageIndex; i++)
-                        {
-
-                            var poseVal = CamCenter3DPoseDict[camKey][cutSetListBox.SelectedIndex][poseKey[i]]; 
-                            pose3D.Add(new double[] { poseVal.x, poseVal.y, poseVal.z, poseVal.rx, poseVal.ry, poseVal.rz, poseVal.PoseType });
-                        }
+                        if (!TryLoadAlignedPoseRange(cutSetListBox.SelectedIndex, camKey)) return;
 
                         // 显示3d
 
@@ -5377,6 +5453,10 @@ namespace _3DLaserGlueInspection.subForm
 
         }
 
+        /// <summary>按胶长检测的参数 ID 范围遍历对应实际图片，累计胶长及参数起止 ID。</summary>
+        /// <param name="sender">胶长检测按钮，不读取其状态。</param>
+        /// <param name="e">点击事件，不修改事件标记。</param>
+        /// <remarks>在 UI 线程串行试检；缺少对应图片的位置不参与计算，结束后恢复交互状态。</remarks>
         private void glueLenthDetButton_Click(object sender, RoutedEventArgs e)
         {
             showImageComboBox.SelectedIndex = 3;
@@ -5391,10 +5471,10 @@ namespace _3DLaserGlueInspection.subForm
             isAuto = true;
             //遍历推理
 
-            var imageDict = Images[cutSetListBox.SelectedIndex][camKey];
-            for (int i = 0; i < imageDict.Count; i++)
+            for (int i = 0; i < cutSet.ImageNum; i++)
             {
-                if (i >= cutSet.glueStartID && cutSet.glueEndID > i)
+                if (i >= cutSet.glueStartID && cutSet.glueEndID > i
+                    && GetAlignedImageId(cutSetListBox.SelectedIndex, selectCamListBox.SelectedIndex, i) >= 0)
                 {
                     //切换图片
                     selectPictureListBox.SelectedIndex = i;

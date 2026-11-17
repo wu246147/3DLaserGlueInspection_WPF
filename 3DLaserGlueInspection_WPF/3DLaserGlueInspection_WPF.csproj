@@ -30,7 +30,7 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.4.0.%2a</ApplicationVersion>
+    <ApplicationVersion>1.10.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -228,6 +228,11 @@
     <Compile Include="tool\HFileIO.cs" />
     <Compile Include="tool\HMatrixTransform.cs" />
     <Compile Include="tool\ImageParameterMover.cs" />
+    <Compile Include="tool\ImageParameterAlignment.cs" />
+    <Compile Include="subForm\WindowVision.Alignment.cs" />
+    <Compile Include="subForm\WindowImageStart.xaml.cs">
+      <DependentUpon>WindowImageStart.xaml</DependentUpon>
+    </Compile>
     <Compile Include="tool\PISerialPort.cs" />
     <Compile Include="Model\MainModel.cs" />
     <Compile Include="subForm\User3DShowControl_H.xaml.cs">
@@ -289,6 +294,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="subForm\WindowMoveImageParameters.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="subForm\WindowImageStart.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

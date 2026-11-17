@@ -2064,12 +2064,22 @@ namespace _3DLaserGlueInspection
         public string SaveImagePath = "D:\\image";
     }
 
+    /// <summary>
+    /// 保存一个检测段的显示、胶长及各相机逐位置检测参数；所有业务起止 ID 均为固定参数 ID。
+    /// 各相机的起点基准独立保存，实际图片映射由每次采集或离线数据集临时计算。
+    /// </summary>
+    /// <remarks>通过车型配置持久化；UI 修改后应使用 Clone 为后台检测提供独立参数快照。</remarks>
     [Serializable]
     public class CutSet
     {
         public string Name;
-        //图像数量
+        // 参数位置数量；未定义起点时同时沿用原有采集数量上限。
         public int ImageNum = 0;
+        /// <summary>
+        /// 各相机的涂胶起点基准，索引与 imageSet 的相机索引一致；空项表示未定义起点。
+        /// 这里只保存参数起点及参考坐标，实际图片编号的临时偏移不写入车型配置。
+        /// </summary>
+        public ImageStartReference[] ImageStartReferences = new ImageStartReference[4];
         //相机启用情况
         public bool Cam1Enabled = true;
         public bool Cam2Enabled = true;
@@ -2140,9 +2150,14 @@ namespace _3DLaserGlueInspection
             this.Name = name;
         }
         CutSet() { }
+        /// <summary>复制检测段及逐位置参数和起点基准，供后台检测独立读取。</summary>
+        /// <returns>检测参数及起点数组均独立的副本；其余既有成员保留原有复制约定。</returns>
+        /// <remarks>调用期间原配置不得被其他线程修改。</remarks>
         public CutSet Clone()
         {
             CutSet clone = (CutSet)this.MemberwiseClone();
+            clone.ImageStartReferences = ImageStartReferences == null ? new ImageStartReference[4]
+                : ImageStartReferences.Select(reference => reference?.Clone()).ToArray();
             clone.imageSet = new List<List<ImageSet>>();
             for (int i = 0; i < imageSet.Count; i++)
             {

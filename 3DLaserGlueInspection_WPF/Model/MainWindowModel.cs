@@ -9,6 +9,7 @@ using OpenCvSharp;
 using RAIVASCS.Common;
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -200,6 +201,30 @@ namespace _3DLaserGlueInspection
 
         object olockDataGridViewImageList = new object();
         Stopwatch watch = new Stopwatch();
+        /// <summary>本次检测各相机、各段的临时起点偏移；只有匹配成功或未定义起点时才写入。</summary>
+        private readonly ConcurrentDictionary<long, int> runtimeImageParameterOffsets = new ConcurrentDictionary<long, int>();
+
+        /// <summary>将相机编号和检测段打包成值类型键，避免逐帧读取偏移时分配字符串。</summary>
+        /// <param name="cameraKey">既有相机键 Cam1 至 Cam4，须由已校验的相机配置提供。</param>
+        /// <param name="segmentIndex">从零开始的检测段索引，须为非负数。</param>
+        /// <returns>高位保存检测段、低位保存相机索引的唯一键。</returns>
+        private static long GetRuntimeAlignmentKey(string cameraKey, int segmentIndex)
+        {
+            return ((long)segmentIndex << 32) | (uint)(cameraKey[3] - '1');
+        }
+
+        /// <summary>按相机与检测段的临时偏移，将实际采集 ID 换算为固定参数 ID。</summary>
+        /// <param name="cameraKey">相机键，例如 Cam1。</param>
+        /// <param name="segmentIndex">从零开始的检测段索引。</param>
+        /// <param name="imageId">从零开始的本段实际采集图片 ID。</param>
+        /// <param name="parameterCount">当前相机在该段可用的参数数量。</param>
+        /// <returns>有效参数 ID；起点尚未匹配或超出参数范围时为 -1。</returns>
+        /// <remarks>使用并发字典供处理与显示任务读取；不修改车型配置。</remarks>
+        private int GetRuntimeParameterId(string cameraKey, int segmentIndex, int imageId, int parameterCount)
+        {
+            int? offset = runtimeImageParameterOffsets.TryGetValue(GetRuntimeAlignmentKey(cameraKey, segmentIndex), out int value) ? value : (int?)null;
+            return ImageParameterAlignment.GetParameterId(imageId, offset, parameterCount);
+        }
         bool bRobotRun = true;//控制机器人线程是否运行
 
 
@@ -796,6 +821,10 @@ namespace _3DLaserGlueInspection
 
                                 var cam = cams[item.Value.CamName];
                                 int segmentIndex = indexImageCut + 1;
+                                int captureCameraIndex = int.Parse(item.Key.Substring(3)) - 1;
+                                var captureReferences = set.CutSets[segmentIndex].ImageStartReferences;
+                                bool alignCapture = captureReferences != null && captureCameraIndex < captureReferences.Length
+                                    && captureReferences[captureCameraIndex] != null;
                                 bool CamEnabled = item.Key == "Cam1" ? set.CutSets[segmentIndex].CamEnabled[0] :
                                     item.Key == "Cam2" ? set.CutSets[segmentIndex].CamEnabled[1] :
                                     item.Key == "Cam3" ? set.CutSets[segmentIndex].CamEnabled[2] :
@@ -809,7 +838,8 @@ namespace _3DLaserGlueInspection
                                         {
                                             long key = watch.ElapsedTicks;
                                             {
-                                                if (dictImageKey.Count < set.CutSets[segmentIndex].ImageNum)
+                                                // 已定义起点时按原有段结束信号停止采集，避免前置帧占满参数数量后截掉尾部。
+                                                if (alignCapture || dictImageKey.Count < set.CutSets[segmentIndex].ImageNum)
                                                 {
                                                     //先更新界面，要不容易出现更新慢而结果显示出问题
                                                     var dictImageKeyCount = dictImageKey.Count + 1;
@@ -940,7 +970,7 @@ namespace _3DLaserGlueInspection
                                                 {
                                                     if (long.TryParse(System.IO.Path.GetFileNameWithoutExtension(filePaths[i]), out long key))
                                                     {
-                                                        if (dictImageKey.Count < set.CutSets[segmentIndex].ImageNum)
+                                                        if (alignCapture || dictImageKey.Count < set.CutSets[segmentIndex].ImageNum)
                                                         {
                                                             try
                                                             {
@@ -1641,8 +1671,21 @@ namespace _3DLaserGlueInspection
             }
         }
 
+        /// <summary>
+        /// 初始化本次车型检测、设备参数和结果容器，并启动姿态采集、逐帧处理及结果显示任务。
+        /// 各相机、各段独立匹配 A/B 起点，检测及显示范围统一使用固定参数 ID。
+        /// </summary>
+        /// <param name="ID">输出当前通讯车型编号。</param>
+        /// <param name="car">输出读取的车型与相机参数组配置。</param>
+        /// <param name="inVIN">输出本次产品标识，未取得时沿用既有空值约定。</param>
+        /// <param name="dateTime">输出本次检测的本地记录时间。</param>
+        /// <param name="camParam">输出当前参数组的相机配置集合。</param>
+        /// <param name="set">输出已加载的车型检测参数；资源由主流程的既有清理逻辑管理。</param>
+        /// <returns>初始化并安排任务成功时为 true，设备、参数或停止条件不满足时为 false。</returns>
+        /// <remarks>由唯一主流程线程调用；后台任务使用参数快照，临时映射不写入配置文件。</remarks>
         private bool initRun(out ushort ID, out Car car, out string inVIN, out DateTime dateTime, out Dictionary<string, CamParam> camParam, out Setting set)
         {
+            runtimeImageParameterOffsets.Clear();
             set = new Setting("1");
             inVIN = "1";
             camParam = new Dictionary<string, CamParam>();
@@ -2266,6 +2309,13 @@ namespace _3DLaserGlueInspection
                             var glueLenthResultStartPose =  glueLenthResultStartPoseDict[item.Key][indexImageCutProcessDict[item.Key]];
 
                             int indexImage = 0;
+                            int segmentIndex = indexImageCutProcessDict[item.Key];
+                            int cameraIndex = int.Parse(item.Key.Substring(3)) - 1;
+                            var segmentSettings = set_copy.CutSets[segmentIndex];
+                            var startReference = segmentSettings.ImageStartReferences != null && cameraIndex < segmentSettings.ImageStartReferences.Length
+                                ? segmentSettings.ImageStartReferences[cameraIndex] : null;
+                            long alignmentKey = GetRuntimeAlignmentKey(item.Key, segmentIndex);
+                            if (startReference == null) runtimeImageParameterOffsets[alignmentKey] = 0;
                             // 计数仅属于当前相机、当前检测段，每次采集重新开始。
                             int consecutiveNGCount = 0;
                             bool bRun = true;
@@ -2315,6 +2365,7 @@ namespace _3DLaserGlueInspection
 
                                     if (bAdd)
                                     {
+                                        bool replayAlignedFrames = false;
                                         Mat outMaxRegion = null;
                                         Mat outRegionRectangle2 = null;
                                         Mat hXLDCont10mm = null;
@@ -2327,10 +2378,9 @@ namespace _3DLaserGlueInspection
                                         try
                                     {
                                         int camIndex = item.Key == "Cam1" ? 0 : item.Key == "Cam2" ? 1 : item.Key == "Cam3" ? 2 : 3;
-                                        if (set_copy.CutSets.Count > indexImageCutProcessDict[item.Key] && set_copy.CutSets[indexImageCutProcessDict[item.Key]].imageSet.Count > camIndex && set_copy.CutSets[indexImageCutProcessDict[item.Key]].imageSet[camIndex].Count > indexImage)
+                                        if (set_copy.CutSets.Count > indexImageCutProcessDict[item.Key] && set_copy.CutSets[indexImageCutProcessDict[item.Key]].imageSet.Count > camIndex)
                                         {
                                             var cutSet = set_copy.CutSets[indexImageCutProcessDict[item.Key]];
-                                            var imageSet = set_copy.CutSets[indexImageCutProcessDict[item.Key]].imageSet[camIndex][indexImage];
                                             // 结果保存变量
                                             bool getOutlineResult = false;
                                             bool singleFrameExistOutline = false;
@@ -2396,10 +2446,9 @@ namespace _3DLaserGlueInspection
                                                     nextCam1ToBase?.Dispose();
                                                 }
                                             }
-                                            if (dictRobotPose.Count > 0)
+                                            if (indexImage > 0 && dictRobotPose.TryGetValue(dictImageKey[indexImage - 1], out var previousFramePose))
                                             {
-                                                var last = dictRobotPose.Last();
-                                                var lastRobotPose = last.Value;
+                                                var lastRobotPose = previousFramePose;
 
                                                 PoseD = Math.Sqrt(Math.Pow((robotPose.x - lastRobotPose.x), 2) +
                                                     Math.Pow((robotPose.y - lastRobotPose.y), 2) +
@@ -2428,7 +2477,7 @@ namespace _3DLaserGlueInspection
                                                         centerInBase.rz = centerRZ;
                                                     }
                                                 }
-                                                dictCamCenter3DPose.Add(imageKey, centerInBase);
+                                                dictCamCenter3DPose[imageKey] = centerInBase;
                                             }
                                             else
                                             {
@@ -2452,9 +2501,37 @@ namespace _3DLaserGlueInspection
                                                         centerInTool.rz = centerRZ;
                                                     }
                                                 }
-                                                dictCamCenter3DPose.Add(imageKey, centerInTool);
+                                                dictCamCenter3DPose[imageKey] = centerInTool;
                                             }
-                                            dictRobotPose.Add(imageKey, robotPose);
+                                            dictRobotPose[imageKey] = robotPose;
+
+                                            if (startReference != null && !runtimeImageParameterOffsets.ContainsKey(alignmentKey)
+                                                && startReference.ParameterId < cutSet.ImageNum
+                                                && startReference.HandEyeType == (int)handEyeType)
+                                            {
+                                                var center = dictCamCenter3DPose[imageKey];
+                                                if (startReference.IsStartCandidate(center.x, center.y, center.z))
+                                                {
+                                                    runtimeImageParameterOffsets[alignmentKey] = indexImage - startReference.ParameterId;
+                                                    // 起点前收到的原图仍在采集集合内；锁定偏移后从本段首帧重放，
+                                                    // 保证起点参数 ID 大于零时，其前面的有效参数也能正常检测。
+                                                    replayAlignedFrames = true;
+                                                }
+                                            }
+                                            if (replayAlignedFrames) goto FrameProcessingComplete;
+                                            if (!runtimeImageParameterOffsets.ContainsKey(alignmentKey))
+                                                goto FrameProcessingComplete;
+                                            int parameterId = GetRuntimeParameterId(item.Key, segmentIndex, indexImage,
+                                                Math.Min(cutSet.ImageNum, cutSet.imageSet[camIndex].Count));
+                                            if (parameterId < 0)
+                                            {
+                                                // 不属于参数范围的前后缀仅保留原图和位姿，结果列表显示为未检测。
+                                                dictResult[imageKey] = new BResult { Result = true };
+                                                dictData[imageKey] = resultData;
+                                                consecutiveNGCount = 0;
+                                                goto FrameProcessingComplete;
+                                            }
+                                            var imageSet = cutSet.imageSet[camIndex][parameterId];
 
                                             if (imageSet.轮廓检测)
                                             {
@@ -2493,14 +2570,11 @@ namespace _3DLaserGlueInspection
                                                 #region 使用机器人移动轨迹计算夹角
                                                 // 必须要机器人有移动
                                                 int intervalCount = 1;
-                                                if (dictRobotPose.Count > intervalCount + 1 && PoseD > 0)
+                                                if (indexImage > intervalCount && PoseD > 0
+                                                    && dictRobotPose.TryGetValue(dictImageKey[indexImage - intervalCount], out var anglePreviousPose))
                                                 {
-                                                    //计算CamToTool的矩阵
-                                                    //打包前后机器人pose
-                                                    //var last = dictRobotPose.Last();
-                                                    //var last = dictRobotPose.Skip(dictRobotPose.Count - 2).First();
-                                                    var last = dictRobotPose.Skip(dictRobotPose.Count - intervalCount - 1).First();
-                                                    var lastRobotPose = last.Value;
+                                                    // 按真实图片序列取历史位姿，避免重放时误用已预读的后续姿态。
+                                                    var lastRobotPose = anglePreviousPose;
 
                                                     robotAndCamAngle = Vision.GetRobotAndCamAngle(
                                                         SevenAxisRobotSupport.GetLegacyAngleType(handEyeType),
@@ -2604,15 +2678,15 @@ namespace _3DLaserGlueInspection
                                             if (cutSet.glueLenthDetEnable && getOutlineResult)
                                             {
 
-                                                if (resultData.glueWidth > cutSet.glueWidthThre && indexImage > cutSet.glueStartID && indexImage < cutSet.glueEndID)
+                                                if (resultData.glueWidth > cutSet.glueWidthThre && parameterId > cutSet.glueStartID && parameterId < cutSet.glueEndID)
                                                 {
                                                     if (glueLenthResultStartID == -1)
                                                     {
-                                                        glueLenthResultStartID = indexImage;
+                                                        glueLenthResultStartID = parameterId;
                                                         glueLenthResultStartPose = robotPose;
 
                                                     }
-                                                    glueLenthResultEndID = indexImage;
+                                                    glueLenthResultEndID = parameterId;
                                                     glueLenthResultEndPose = robotPose;
 
 
@@ -2644,7 +2718,7 @@ namespace _3DLaserGlueInspection
                                                 if (xy != null && xy.Rows > 0 && dictRobotPose.Count > 0 && PoseD > 0)
                                                 {
                                                     //如果还没到开始id，则跳过显示
-                                                    int indexCross = indexImage - cutSet.StartImageIndex;
+                                                    int indexCross = parameterId - cutSet.StartImageIndex;
                                                     int setCount = cutSet.EndImageIndex - cutSet.StartImageIndex + 1;
                                                     if (indexCross >= 0 && indexCross < setCount)
                                                     {
@@ -2813,7 +2887,16 @@ namespace _3DLaserGlueInspection
                                         lightXY?.Dispose();
                                         xy?.Dispose();
                                     }
-                                    indexImage++;
+                                FrameProcessingComplete:
+                                    if (replayAlignedFrames)
+                                    {
+                                        indexImage = 0;
+                                        indexRobotPose = 1;
+                                    }
+                                    else
+                                    {
+                                        indexImage++;
+                                    }
                                 }
                                 if (!bTaskRun) 
                                     return;
@@ -2821,7 +2904,17 @@ namespace _3DLaserGlueInspection
                                     return;
                             }
 
-                           
+                            if (startReference != null && !runtimeImageParameterOffsets.ContainsKey(alignmentKey))
+                            {
+                                // 整段未匹配时补齐未检测记录，释放显示任务对本段结果的等待。
+                                foreach (long pendingKey in dictImageKey)
+                                {
+                                    dictResult[pendingKey] = new BResult { Result = true };
+                                    dictData[pendingKey] = new Data();
+                                }
+                                partResult = totalResult = false;
+                                ShowMessage($"{item.Key} 第 {segmentIndex + 1} 段未找到涂胶对齐起点。", LogType.ng);
+                            }
 
                             if (!bTaskRun) 
                                 return;
@@ -2967,6 +3060,9 @@ namespace _3DLaserGlueInspection
 
                                     imageKey = dictImageKey[indexImage];
                                     var bResult = glueResultDict[item.Key][indexResultShowDict[item.Key]][imageKey];
+                                    int parameterId = GetRuntimeParameterId(item.Key, indexResultShowDict[item.Key], indexImage,
+                                        set_copy.CutSets[indexResultShowDict[item.Key]].ImageNum);
+                                    string resultText = parameterId < 0 ? "未检测" : bResult.Result ? "OK" : "NG";
 
                                     //加个延迟显示
                                     while (mainModel.ImageResultRecords.Count<= dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage)
@@ -2982,16 +3078,16 @@ namespace _3DLaserGlueInspection
                                     switch (item.Key)
                                     {
                                         case "Cam1":
-                                            mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam1Result = bResult.Result ? "OK" : "NG";
+                                            mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam1Result = resultText;
                                             break;
                                         case "Cam2":
-                                            mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam2Result = bResult.Result ? "OK" : "NG";
+                                            mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam2Result = resultText;
                                             break;
                                         case "Cam3":
-                                            mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam3Result = bResult.Result ? "OK" : "NG";
+                                            mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam3Result = resultText;
                                             break;
                                         case "Cam4":
-                                            mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam4Result = bResult.Result ? "OK" : "NG";
+                                            mainModel.ImageResultRecords[dataGridViewImageListRowsStartPoint[indexImageCut] + indexImage].Cam4Result = resultText;
                                             break;
                                     }
                                 }
@@ -3029,9 +3125,12 @@ namespace _3DLaserGlueInspection
                                 }
                             }
 
-                            int indexCross = indexImage - cutSet.StartImageIndex;
-                            int setCount = set_copy.CutSets[indexImageCutProcessDict[camParamTmp.Keys.ToArray()[0]]].EndImageIndex - 
-                            set_copy.CutSets[indexImageCutProcessDict[camParamTmp.Keys.ToArray()[0]]].StartImageIndex + 1;
+                            string referenceCamera = camParamTmp.Keys.FirstOrDefault(camera => camParamTmp[camera].Enable
+                                && cutSet.CamEnabled[int.Parse(camera.Substring(3)) - 1]);
+                            int referenceParameterId = referenceCamera == null ? -1
+                                : GetRuntimeParameterId(referenceCamera, indexResultShowDict[referenceCamera], indexImage, cutSet.ImageNum);
+                            int indexCross = referenceParameterId - cutSet.StartImageIndex;
+                            int setCount = cutSet.EndImageIndex - cutSet.StartImageIndex + 1;
 
                             if (indexCross >= 0 && indexCross < setCount)
                             {
@@ -3051,7 +3150,7 @@ namespace _3DLaserGlueInspection
 
                                             imageKey = dictImageKey[indexImage];
 
-                                            var dictCamCenter3DPose = CamCenter3DPoseDict[item.Key][indexResultShowDict[item.Key]][imageKey];
+                                            if (!CamCenter3DPoseDict[item.Key][indexResultShowDict[item.Key]].TryGetValue(imageKey, out var dictCamCenter3DPose)) continue;
 
                                             double[] _3dPose = new double[3] { dictCamCenter3DPose.x, dictCamCenter3DPose.y, dictCamCenter3DPose.z, };
                                             double[] _2dPoint = mapper.To2D(_3dPose);
@@ -3097,8 +3196,9 @@ namespace _3DLaserGlueInspection
                             
 
 
-                            hWindowNumericalModelDiagramDispCross(row, col,
-                                        angle, cutSet.Size, showResult ? Colors.Green : Colors.Red);
+                            if (indexCross >= 0 && indexCross < setCount)
+                                hWindowNumericalModelDiagramDispCross(row, col,
+                                            angle, cutSet.Size, showResult ? Colors.Green : Colors.Red);
 
                             indexImage++;
 
