@@ -1893,6 +1893,40 @@ namespace _3DLaserGlueInspection.subForm
             }
         }
 
+        /// <summary>
+        /// 在设置界面已选好作业、检测段、相机和图片时，使用 Ctrl+D 切换下一张、Ctrl+A 切换上一张。
+        /// 通过修改图片列表选中项复用现有的参数保存、图片加载和显示刷新流程，并将目标项滚动到可见区域；
+        /// 到达首尾时保持当前图片，不循环切换，也不跨检测段或相机。
+        /// </summary>
+        /// <param name="sender">触发预览键盘事件的设置窗口；本方法不修改此参数。</param>
+        /// <param name="e">当前键盘事件，用于读取按键并标记已处理；由 WPF 事件系统提供，不允许为空。</param>
+        /// <remarks>
+        /// 仅在窗口 UI 线程执行；自动检测、批量矫正或图片列表禁用期间不切换图片。
+        /// 仅匹配单独的 Ctrl 修饰键；条件齐备时在预览阶段处理事件，使子控件获得焦点时快捷键仍有效，
+        /// 并阻止 Ctrl+A 继续触发子控件的全选行为。未选齐时保留控件原有键盘行为。
+        /// 本方法不分配或释放图片资源，图片切换产生的参数和显示更新由原有选中项变更事件负责。
+        /// </remarks>
+        private void WindowVision_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Handled || Keyboard.Modifiers != ModifierKeys.Control || (e.Key != Key.D && e.Key != Key.A))
+                return;
+
+            if (isAuto || isCorrectingRange || !visionSettingsGrid.IsEnabled || !selectPictureListBox.IsEnabled
+                || set == null || cutSet == null || carTypeComboBox.SelectedIndex < 0
+                || cutSetListBox.SelectedIndex < 0 || selectCamListBox.SelectedIndex < 0
+                || selectPictureListBox.SelectedIndex < 0)
+                return;
+
+            // 即使已到首尾也消费快捷键，避免 Ctrl+A 在列表或参数输入框中继续执行全选。
+            e.Handled = true;
+            int nextIndex = selectPictureListBox.SelectedIndex + (e.Key == Key.D ? 1 : -1);
+            if (nextIndex < 0 || nextIndex >= selectPictureListBox.Items.Count)
+                return;
+
+            selectPictureListBox.SelectedIndex = nextIndex;
+            selectPictureListBox.ScrollIntoView(selectPictureListBox.SelectedItem);
+        }
+
         private void selectCamListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             SelectedCamAndImage();
